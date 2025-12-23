@@ -31,7 +31,7 @@ export const UrlBar: React.FC<UrlBarProps> = ({
       <select
         value={method}
         onChange={(e) => onMethodChange(e.target.value as HttpMethod)}
-        className="bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors"
+        className="bg-surface-raised/50 border border-base/50 rounded-md px-3 py-2 text-sm text-main focus:outline-none focus:border-primary/50 transition-colors"
       >
         {HTTP_METHODS.map((m) => (
           <option key={m} value={m}>
@@ -46,7 +46,7 @@ export const UrlBar: React.FC<UrlBarProps> = ({
         onChange={(e) => onUrlChange(e.target.value)}
         onBlur={onUrlBlur}
         placeholder="https://api.example.com/endpoint"
-        className="flex-1 bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors"
+        className="flex-1 bg-surface-raised/50 border border-base/50 rounded-md px-3 py-2 text-sm text-main placeholder-muted focus:outline-none focus:border-primary/50 transition-colors"
       />
     </div>
   );

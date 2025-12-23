@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Editor } from "@monaco-editor/react";
-import { Clock, AlertTriangle, Key, FileDown } from "lucide-react";
+import { Clock, Key, FileDown } from "lucide-react";
 import { signJwt, formatTimestamp, getTimeDifference } from "../utils/jwtUtils";
 import { KeyInput } from "./ui/KeyInput";
 import { Button } from "./ui/Button";
@@ -14,6 +14,7 @@ import {
   JWT_TEMPLATES,
 } from "../types";
 import { SensitiveDataManager } from "../../../utils/sensitiveDataManager";
+import { useThemeStore } from "../../../stores/themeStore";
 
 interface JwtEditorProps {
   header: Record<string, any>;
@@ -49,6 +50,7 @@ export const JwtEditor: React.FC<JwtEditorProps> = ({
   storedKeys,
   onUseStoredKey,
 }) => {
+  const { isDarkMode } = useThemeStore();
   const [headerJson, setHeaderJson] = useState("");
   const [payloadJson, setPayloadJson] = useState("");
   const [headerError, setHeaderError] = useState<string | null>(null);
@@ -225,7 +227,7 @@ export const JwtEditor: React.FC<JwtEditorProps> = ({
     if (!STANDARD_CLAIMS[claim]?.isTimestamp) return null;
 
     return (
-      <div className="text-xs text-gray-400 mt-1">
+      <div className="text-xs text-muted mt-1">
         <div className="flex items-center">
           <Clock size={12} className="mr-1" />
           <span>{formatTimestamp(value)}</span>
@@ -239,7 +241,7 @@ export const JwtEditor: React.FC<JwtEditorProps> = ({
     <div className="p-6 space-y-6">
       {/* Templates */}
       <div className="space-y-2">
-        <h3 className="text-sm font-medium text-gray-300">Templates</h3>
+        <h3 className="text-sm font-medium text-secondary">Templates</h3>
         <div className="flex flex-wrap gap-2">
           {JWT_TEMPLATES.map((template, index) => (
             <Button
@@ -257,18 +259,18 @@ export const JwtEditor: React.FC<JwtEditorProps> = ({
       {/* Header Editor */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-gray-300">Header</h3>
+          <h3 className="text-sm font-medium text-secondary">Header</h3>
           {headerError && (
-            <span className="text-xs text-red-400">{headerError}</span>
+            <span className="text-xs text-danger">{headerError}</span>
           )}
         </div>
-        <div className="border border-gray-700/50 rounded-md overflow-hidden">
+        <div className="border border-base rounded-md overflow-hidden">
           <Editor
             height="150px"
-            language="json"
+            defaultLanguage="json"
             value={headerJson}
             onChange={handleHeaderChange}
-            theme="vs-dark"
+            theme={isDarkMode ? "vs-dark" : "vs"}
             options={{
               minimap: { enabled: false },
               fontSize: 14,
@@ -282,20 +284,20 @@ export const JwtEditor: React.FC<JwtEditorProps> = ({
       {/* Payload Editor */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-gray-300">Payload</h3>
+          <h3 className="text-sm font-medium text-secondary">Payload</h3>
           {payloadError && (
-            <span className="text-xs text-red-400">{payloadError}</span>
+            <span className="text-xs text-danger">{payloadError}</span>
           )}
         </div>
 
         {/* Standard Claims Helpers */}
         <div className="flex flex-wrap gap-2 mb-2">
-          <span className="text-xs text-gray-400">Add standard claim:</span>
+          <span className="text-xs text-muted">Add standard claim:</span>
           {Object.keys(STANDARD_CLAIMS).map((claim) => (
             <button
               key={claim}
               onClick={() => handleAddStandardClaim(claim)}
-              className="px-2 py-0.5 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-gray-300 transition-colors"
+              className="px-2 py-0.5 text-xs bg-surface-secondary hover:bg-element-hover rounded-md text-secondary transition-colors"
               title={STANDARD_CLAIMS[claim].description}
             >
               {claim}
@@ -306,32 +308,32 @@ export const JwtEditor: React.FC<JwtEditorProps> = ({
         {/* Expiration Helpers */}
         {payload.exp && (
           <div className="flex items-center space-x-2 mb-2">
-            <span className="text-xs text-gray-400">Set expiration:</span>
+            <span className="text-xs text-muted">Set expiration:</span>
             <button
               key="5min"
               onClick={() => handleSetExpiration(5)}
-              className="px-2 py-0.5 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-gray-300 transition-colors"
+              className="px-2 py-0.5 text-xs bg-surface-secondary hover:bg-element-hover rounded-md text-secondary transition-colors"
             >
               5 min
             </button>
             <button
               key="1hour"
               onClick={() => handleSetExpiration(60)}
-              className="px-2 py-0.5 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-gray-300 transition-colors"
+              className="px-2 py-0.5 text-xs bg-surface-secondary hover:bg-element-hover rounded-md text-secondary transition-colors"
             >
               1 hour
             </button>
             <button
               key="1day"
               onClick={() => handleSetExpiration(1440)}
-              className="px-2 py-0.5 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-gray-300 transition-colors"
+              className="px-2 py-0.5 text-xs bg-surface-secondary hover:bg-element-hover rounded-md text-secondary transition-colors"
             >
               1 day
             </button>
             <button
               key="1week"
               onClick={() => handleSetExpiration(10080)}
-              className="px-2 py-0.5 text-xs bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-gray-300 transition-colors"
+              className="px-2 py-0.5 text-xs bg-surface-secondary hover:bg-element-hover rounded-md text-secondary transition-colors"
             >
               1 week
             </button>
@@ -345,13 +347,13 @@ export const JwtEditor: React.FC<JwtEditorProps> = ({
           ) : null,
         )}
 
-        <div className="border border-gray-700/50 rounded-md overflow-hidden">
+        <div className="border border-base rounded-md overflow-hidden">
           <Editor
             height="250px"
-            language="json"
+            defaultLanguage="json"
             value={payloadJson}
             onChange={handlePayloadChange}
-            theme="vs-dark"
+            theme={isDarkMode ? "vs-dark" : "vs"}
             options={{
               minimap: { enabled: false },
               fontSize: 14,
@@ -364,11 +366,11 @@ export const JwtEditor: React.FC<JwtEditorProps> = ({
 
       {/* Signing Options */}
       <div className="space-y-4">
-        <h3 className="text-sm font-medium text-gray-300">Signing Options</h3>
+        <h3 className="text-sm font-medium text-secondary">Signing Options</h3>
 
         {/* Signing Algorithm */}
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-gray-300">
+          <h3 className="text-sm font-medium text-secondary">
             Signing Algorithm
           </h3>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
@@ -403,8 +405,8 @@ export const JwtEditor: React.FC<JwtEditorProps> = ({
         {/* Stored Keys */}
         {filteredStoredKeys.length > 0 && (
           <div className="space-y-2">
-            <h3 className="text-sm font-medium text-gray-300">Stored Keys</h3>
-            <div className="bg-gray-800/50 border border-gray-700/50 rounded-md p-3">
+            <h3 className="text-sm font-medium text-secondary">Stored Keys</h3>
+            <div className="bg-surface-raised border border-base rounded-md p-3">
               <div className="space-y-2">
                 {filteredStoredKeys.map((key) => (
                   <div
@@ -412,10 +414,10 @@ export const JwtEditor: React.FC<JwtEditorProps> = ({
                     className="flex items-center justify-between"
                   >
                     <div>
-                      <p className="text-sm font-medium text-gray-200">
+                      <p className="text-sm font-medium text-main">
                         {key.name}
                       </p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-muted">
                         {key.algorithm || "Any"} • {key.type} •{" "}
                         {key.isPublic ? "Public" : "Private"}
                       </p>
@@ -447,7 +449,7 @@ export const JwtEditor: React.FC<JwtEditorProps> = ({
           >
             {isGenerating ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500 mr-2"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-primary-foreground mr-2"></div>
                 Generating...
               </>
             ) : (
@@ -456,7 +458,7 @@ export const JwtEditor: React.FC<JwtEditorProps> = ({
           </Button>
 
           {signingError && (
-            <span className="text-sm text-red-400">{signingError}</span>
+            <span className="text-sm text-danger">{signingError}</span>
           )}
         </div>
       </div>
@@ -465,7 +467,7 @@ export const JwtEditor: React.FC<JwtEditorProps> = ({
       {generatedToken && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-gray-300">
+            <h3 className="text-sm font-medium text-secondary">
               Generated Token
             </h3>
             <div className="flex items-center space-x-2">
@@ -481,8 +483,8 @@ export const JwtEditor: React.FC<JwtEditorProps> = ({
               </Button>
             </div>
           </div>
-          <div className="bg-gray-800/50 border border-gray-700/50 rounded-md p-3">
-            <div className="font-mono text-sm text-gray-300 break-all">
+          <div className="bg-surface-raised border border-base rounded-md p-3">
+            <div className="font-mono text-sm text-main break-all">
               {generatedToken}
             </div>
           </div>

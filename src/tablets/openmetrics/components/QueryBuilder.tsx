@@ -91,9 +91,9 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
   };
 
   return (
-    <div className="p-3 border-b border-gray-700">
+    <div className="p-3 border-b border-base">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-medium text-gray-300">Query Builder</h3>
+        <h3 className="text-sm font-medium text-secondary">Query Builder</h3>
       </div>
 
       <div className="flex space-x-2">
@@ -103,7 +103,7 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
             value={queryString}
             onChange={(e) => onUpdateQuery(e.target.value)}
             placeholder='Enter query (e.g., "http_requests_total" or "sum(http_requests_total{method=\"post\"})")'
-            className="w-full bg-gray-800 border border-gray-700 rounded pl-9 pr-9 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
+            className="w-full bg-surface-raised border border-base rounded pl-9 pr-9 py-2 text-sm text-main placeholder-muted focus:outline-none focus:border-primary"
             onFocus={() => {
               if (!queryString) {
                 setShowMetricSuggestions(true);
@@ -117,12 +117,12 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
           />
           <Search
             size={16}
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted"
           />
           {queryString && (
             <button
               onClick={handleClearQuery}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-300"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted hover:text-secondary"
             >
               <X size={14} />
             </button>
@@ -130,18 +130,18 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
 
           {/* Metric suggestions */}
           {showMetricSuggestions && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10 max-h-48 overflow-y-auto custom-scrollbar">
+            <div className="absolute top-full left-0 right-0 mt-1 bg-surface-raised border border-base rounded-md shadow-lg z-10 max-h-48 overflow-y-auto custom-scrollbar">
               {getFilteredMetrics().map((metric) => (
                 <div
                   key={metric}
-                  className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-sm"
+                  className="px-3 py-2 hover:bg-surface-secondary cursor-pointer text-sm"
                   onClick={() => handleSelectMetric(metric)}
                 >
                   {metric}
                 </div>
               ))}
               {getFilteredMetrics().length === 0 && (
-                <div className="px-3 py-2 text-sm text-gray-500">
+                <div className="px-3 py-2 text-sm text-muted">
                   No matching metrics
                 </div>
               )}
@@ -152,7 +152,7 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
         <button
           onClick={handleExecute}
           disabled={!queryString.trim()}
-          className="px-3 py-2 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 disabled:opacity-50 flex items-center"
+          className="px-3 py-2 bg-primary/20 text-primary rounded hover:bg-primary/30 disabled:opacity-50 flex items-center"
         >
           <Play size={16} className="mr-1" />
           Execute
@@ -163,22 +163,22 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
       {queryString && !queryString.includes("(") && (
         <div className="mt-3">
           <div className="flex items-center justify-between mb-1">
-            <div className="text-xs text-gray-400">Add Label Filters</div>
+            <div className="text-xs text-muted">Add Label Filters</div>
             <button
               onClick={() => setShowLabelSuggestions(!showLabelSuggestions)}
-              className="text-xs text-blue-400 hover:text-blue-300"
+              className="text-xs text-primary hover:text-primary"
             >
               {showLabelSuggestions ? "Hide" : "Show"} Labels
             </button>
           </div>
 
           {showLabelSuggestions && (
-            <div className="bg-gray-800 border border-gray-700 rounded p-2 max-h-32 overflow-y-auto custom-scrollbar">
+            <div className="bg-surface-raised border border-base rounded p-2 max-h-32 overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-2 gap-1">
                 {labelKeys.map((labelKey) => (
                   <button
                     key={labelKey}
-                    className="text-xs text-left px-2 py-1 hover:bg-gray-700 rounded"
+                    className="text-xs text-left px-2 py-1 hover:bg-surface-secondary rounded"
                     onClick={() => handleAddLabelFilter(labelKey)}
                   >
                     {labelKey}
@@ -193,15 +193,15 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
             currentLabelKey &&
             labelValues[currentLabelKey] && (
               <div className="mt-2">
-                <div className="text-xs text-gray-400 mb-1">
+                <div className="text-xs text-muted mb-1">
                   Select value for "{currentLabelKey}"
                 </div>
-                <div className="bg-gray-800 border border-gray-700 rounded p-2 max-h-32 overflow-y-auto custom-scrollbar">
+                <div className="bg-surface-raised border border-base rounded p-2 max-h-32 overflow-y-auto custom-scrollbar">
                   <div className="grid grid-cols-2 gap-1">
                     {labelValues[currentLabelKey].map((value) => (
                       <button
                         key={value}
-                        className="text-xs text-left px-2 py-1 hover:bg-gray-700 rounded"
+                        className="text-xs text-left px-2 py-1 hover:bg-surface-secondary rounded"
                         onClick={() => handleSelectValue(value)}
                       >
                         {value}
@@ -219,14 +219,14 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
         !showLabelSuggestions &&
         !showValueSuggestions && (
           <div className="mt-3">
-            <div className="text-xs text-gray-400 mb-1">
+            <div className="text-xs text-muted mb-1">
               Aggregation Functions
             </div>
             <div className="flex flex-wrap gap-1">
               {["sum", "avg", "min", "max", "count"].map((func) => (
                 <button
                   key={func}
-                  className="text-xs px-2 py-1 bg-gray-800 hover:bg-gray-700 rounded"
+                  className="text-xs px-2 py-1 bg-surface-raised hover:bg-surface-secondary rounded"
                   onClick={() => onUpdateQuery(`${func}(${queryString || ""})`)}
                 >
                   {func}()

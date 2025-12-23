@@ -28,11 +28,11 @@ function parseUrlEncodedBody(body: string): { key: string; value: string; enable
   if (!body || body.trim() === '') {
     return [];
   }
-  
+
   try {
     const pairs: { key: string; value: string; enabled: boolean }[] = [];
     const urlParams = new URLSearchParams(body);
-    
+
     for (const [key, value] of urlParams.entries()) {
       pairs.push({
         key: decodeURIComponent(key),
@@ -40,7 +40,7 @@ function parseUrlEncodedBody(body: string): { key: string; value: string; enable
         enabled: true,
       });
     }
-    
+
     return pairs;
   } catch (error) {
     // If parsing fails, return a single pair with the raw body
@@ -66,25 +66,25 @@ export const RestClientTablet: Tablet = {
     // Handle cURL request import from Smart View
     if (payload && typeof payload === 'object' && 'method' in payload && 'url' in payload) {
       const curlRequest = payload as CurlRequestImport;
-      
+
       // Convert headers to KeyValuePair format
       const headers = (curlRequest.headers || []).map(header => ({
         key: header.key,
         value: header.value,
         enabled: true,
       }));
-      
+
       // Determine body type based on content-type header and presence of body
       let bodyType: "none" | "form-data" | "x-www-form-urlencoded" | "raw" | "binary" = "none";
       let bodyFormat: "json" | "xml" | "html" | "text" | "javascript" | undefined = undefined;
       let bodyContent = "";
       let bodyParams: { key: string; value: string; enabled: boolean }[] = [];
-      
+
       if (curlRequest.body) {
-        const contentTypeHeader = headers.find(h => 
+        const contentTypeHeader = headers.find(h =>
           h.key.toLowerCase() === 'content-type'
         );
-        
+
         if (contentTypeHeader) {
           const contentType = contentTypeHeader.value.toLowerCase();
           if (contentType.includes('application/x-www-form-urlencoded')) {
@@ -133,7 +133,7 @@ export const RestClientTablet: Tablet = {
           }
         }
       }
-      
+
       return {
         type: "restclient",
         data: {
@@ -187,7 +187,7 @@ export const RestClientTablet: Tablet = {
         },
       };
     }
-    
+
     // Default empty state
     return {
       type: "restclient",
@@ -254,7 +254,7 @@ export const RestClientTablet: Tablet = {
         if (!parsed.data.requestHistory) {
           parsed.data.requestHistory = [];
         }
-        
+
         if (!parsed.data.comparison) {
           parsed.data.comparison = {
             isComparing: false,
@@ -382,7 +382,7 @@ export const RestClientTablet: Tablet = {
   render(state: RestClientTabletState, onChange) {
     const { data } = state;
     const currentRequestHistory = data.requestHistory || []; // This line is key!
-    
+
     // Ensure comparison object exists with defaults (for backward compatibility)
     const comparison = data.comparison || {
       isComparing: false,
@@ -480,15 +480,15 @@ export const RestClientTablet: Tablet = {
         });
       } catch (error) {
         console.error("Request execution error:", error);
-        
+
         let errorMessage = "Failed to execute request";
-        
+
         if (error instanceof Error) {
           errorMessage = error.message;
         } else {
           errorMessage = String(error);
         }
-        
+
         updateState({
           isExecuting: false,
           error: errorMessage,
@@ -621,15 +621,15 @@ export const RestClientTablet: Tablet = {
     }, [data.responseHistory, currentRequestHistory]);
 
     return (
-      <div className="h-full bg-gray-900 flex flex-col">
+      <div className="h-full bg-canvas flex flex-col">
         {/* Header */}
-        <div className="flex-none p-4 border-b border-gray-700/50">
+        <div className="flex-none p-4 border-b border-base/50">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <Network className="text-gray-400" size={24} />
-              <h2 className="text-xl font-semibold text-gray-100">REST Client</h2>
+              <Network className="text-muted" size={24} />
+              <h2 className="text-xl font-semibold text-main">REST Client</h2>
             </div>
-            <div className="text-xs text-gray-500 flex items-center">
+            <div className="text-xs text-muted flex items-center">
               <AlertCircle size={12} className="mr-1" />
               <span>Browser CORS limitations may apply</span>
             </div>
@@ -639,7 +639,7 @@ export const RestClientTablet: Tablet = {
         {/* Main Content */}
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           {/* Left Panel - Request Builder */}
-          <div className="w-full md:w-1/2 flex flex-col overflow-hidden border-r border-gray-700/50">
+          <div className="w-full md:w-1/2 flex flex-col overflow-hidden border-r border-base/50">
             <RequestBuilder
               request={data.request}
               onUpdateRequest={updateRequest}
@@ -653,7 +653,7 @@ export const RestClientTablet: Tablet = {
           {/* Right Panel - Conversion, Response */}
           <div className="w-full md:w-1/2 flex flex-col overflow-hidden">
             {/* Conversion Panel / Request History */}
-            <div className="flex-none p-4 border-b border-gray-700/50">
+            <div className="flex-none p-4 border-b border-base/50">
               {showRequestHistory ? (
                 <RequestHistoryViewer
                   history={currentRequestHistory}

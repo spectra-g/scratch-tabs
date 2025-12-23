@@ -4,6 +4,7 @@ import { Copy, Code, History, Check } from "lucide-react";
 import { HttpRequest } from "../types";
 import { converters, getConverter } from "../converters";
 import { requestToCurl } from "../converters/curlConverter";
+import { useThemeStore } from "../../../stores/themeStore";
 
 interface RequestConverterProps {
   request: HttpRequest;
@@ -22,6 +23,7 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
   onShowRequestHistory,
   requestHistoryCount,
 }) => {
+  const { isDarkMode } = useThemeStore();
   const [convertedText, setConvertedText] = useState("");
   const [isError, setIsError] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -108,11 +110,11 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
     <div className="space-y-3">
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-2">
-          <label className="text-sm font-medium text-gray-300">Format:</label>
+          <label className="text-sm font-medium text-secondary">Format:</label>
           <select
             value={format}
             onChange={(e) => onFormatChange(e.target.value)}
-            className="bg-gray-800/50 border border-gray-700/50 rounded-md px-2 py-1 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors"
+            className="bg-surface-raised/50 border border-base/50 rounded-md px-2 py-1 text-sm text-main focus:outline-none focus:border-primary/50 transition-colors"
           >
             {converters.map((converter) => (
               <option key={converter.id} value={converter.id}>
@@ -126,7 +128,7 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
           {format !== "curl" && (
             <button
               onClick={handleCopyCurl}
-              className="flex items-center space-x-1 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-sm text-gray-300 transition-colors"
+              className="flex items-center space-x-1 px-2 py-1 bg-surface-raised/50 hover:bg-surface-secondary/50 rounded-md text-sm text-secondary transition-colors"
               title="Copy as cURL"
             >
               <Code size={14} />
@@ -136,11 +138,10 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
 
           <button
             onClick={handleCopy}
-            className={`p-2 rounded-md transition-colors ${
-              isCopied
-                ? "text-green-400"
-                : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
-            }`}
+            className={`p-2 rounded-md transition-colors ${isCopied
+              ? "text-green-400"
+              : "text-muted hover:text-main hover:bg-surface-secondary/50"
+              }`}
             title="Copy"
           >
             {isCopied ? <Check size={14} /> : <Copy size={14} />}
@@ -148,12 +149,12 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
 
           <button
             onClick={onShowRequestHistory}
-            className="p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-md transition-colors relative"
+            className="p-2 text-muted hover:text-main hover:bg-surface-secondary/50 rounded-md transition-colors relative"
             title="View request history"
           >
             <History size={14} />
             {requestHistoryCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
                 {requestHistoryCount}
               </span>
             )}
@@ -162,14 +163,14 @@ export const RequestConverter: React.FC<RequestConverterProps> = ({
       </div>
 
       <div
-        className={`border rounded-md overflow-hidden ${isError ? "border-red-500/50" : "border-gray-700/50"}`}
+        className={`border rounded-md overflow-hidden ${isError ? "border-red-500/50" : "border-base/50"}`}
       >
         <Editor
           height="150px"
           language={getLanguage()}
           value={convertedText}
           onChange={handleEditorChange}
-          theme="vs-dark"
+          theme={isDarkMode ? "vs-dark" : "vs"}
           options={{
             minimap: { enabled: false },
             fontSize: 14,

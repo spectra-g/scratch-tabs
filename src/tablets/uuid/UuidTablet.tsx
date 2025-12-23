@@ -257,7 +257,7 @@ const UuidItemComponent: React.FC<{
     casing === "upper" ? formattedId.toUpperCase() : formattedId.toLowerCase();
 
   return (
-    <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-3 hover:border-gray-600/50 transition-colors">
+    <div className="bg-surface-secondary border border-base rounded-lg p-3 hover:border-focus/50 transition-colors">
       <div className="flex justify-between items-center mb-2">
         <div className="flex items-center space-x-2">
           <span
@@ -273,13 +273,13 @@ const UuidItemComponent: React.FC<{
           >
             {item.type === "ulid" ? "ULID" : `UUID ${item.type}`}
           </span>
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-secondary">
             {item.timestamp.toLocaleTimeString()}
           </span>
         </div>
         <button
           onClick={() => onCopy(displayId)}
-          className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
+          className="p-1 text-secondary hover:bg-element-hover rounded transition-colors"
           title="Copy to clipboard"
         >
           {item.copied ? (
@@ -290,7 +290,7 @@ const UuidItemComponent: React.FC<{
         </button>
       </div>
       <div
-        className="font-mono text-sm text-gray-200 break-all cursor-pointer"
+        className="font-mono text-sm text-main break-all cursor-pointer"
         onClick={() => onCopy(displayId)}
         title="Click to copy"
       >
@@ -660,11 +660,11 @@ export const UuidTablet: Tablet = {
     }, []);
 
     return (
-      <div className="h-full bg-gray-900 text-gray-200 flex flex-col">
+      <div className="h-full bg-canvas text-main flex flex-col">
         {/* Header */}
-        <div className="border-b border-gray-700/50 p-4">
+        <div className="border-b border-base p-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-100">
+            <h2 className="text-lg font-semibold text-main">
               UUID Generator
             </h2>
             <div className="flex items-center space-x-2">
@@ -673,7 +673,7 @@ export const UuidTablet: Tablet = {
                 className={`p-2 rounded-md transition-colors ${
                   showSettings
                     ? "bg-blue-500/20 text-blue-400"
-                    : "hover:bg-gray-700/50"
+                    : "hover:bg-element-hover"
                 }`}
                 title="Settings"
               >
@@ -684,17 +684,17 @@ export const UuidTablet: Tablet = {
 
           {/* Settings Panel */}
           {showSettings && (
-            <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 mb-4 animate-fadeIn">
+            <div className="bg-surface-secondary border border-base rounded-lg p-4 mb-4 animate-fadeIn">
               <div className="flex flex-col space-y-4">
                 <div className="flex flex-col space-y-1">
-                  <label className="text-sm text-gray-400">UUID Type</label>
+                  <label className="text-sm text-secondary">UUID Type</label>
                   <div className="flex space-x-2">
                     <button
                       onClick={() => updateSettings({ selectedType: "v1" })}
                       className={`px-3 py-1.5 rounded-md text-sm ${
                         settings.selectedType === "v1"
                           ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
-                          : "bg-gray-700/50 hover:bg-gray-700 border border-transparent"
+                          : "bg-element hover:bg-element-hover border border-transparent"
                       }`}
                     >
                       UUID v1
@@ -704,7 +704,7 @@ export const UuidTablet: Tablet = {
                       className={`px-3 py-1.5 rounded-md text-sm ${
                         settings.selectedType === "v4"
                           ? "bg-green-500/20 text-green-400 border border-green-500/50"
-                          : "bg-gray-700/50 hover:bg-gray-700 border border-transparent"
+                          : "bg-element hover:bg-element-hover border border-transparent"
                       }`}
                     >
                       UUID v4
@@ -714,7 +714,7 @@ export const UuidTablet: Tablet = {
                       className={`px-3 py-1.5 rounded-md text-sm ${
                         settings.selectedType === "v7"
                           ? "bg-purple-500/20 text-purple-400 border border-purple-500/50"
-                          : "bg-gray-700/50 hover:bg-gray-700 border border-transparent"
+                          : "bg-element hover:bg-element-hover border border-transparent"
                       }`}
                     >
                       UUID v7
@@ -724,7 +724,7 @@ export const UuidTablet: Tablet = {
                       className={`px-3 py-1.5 rounded-md text-sm ${
                         settings.selectedType === "ulid"
                           ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/50"
-                          : "bg-gray-700/50 hover:bg-gray-700 border border-transparent"
+                          : "bg-element hover:bg-element-hover border border-transparent"
                       }`}
                     >
                       ULID
@@ -734,14 +734,14 @@ export const UuidTablet: Tablet = {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex flex-col space-y-1">
-                    <label className="text-sm text-gray-400">Format</label>
+                    <label className="text-sm text-secondary">Format</label>
                     <div className="flex space-x-2">
                       <button
                         onClick={() => updateSettings({ format: "hyphenated" })}
                         className={`px-3 py-1.5 rounded-md text-sm flex-1 ${
                           settings.format === "hyphenated"
                             ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
-                            : "bg-gray-700/50 hover:bg-gray-700 border border-transparent"
+                            : "bg-element hover:bg-element-hover border border-transparent"
                         }`}
                       >
                         Hyphenated
@@ -751,7 +751,7 @@ export const UuidTablet: Tablet = {
                         className={`px-3 py-1.5 rounded-md text-sm flex-1 ${
                           settings.format === "no-hyphens"
                             ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
-                            : "bg-gray-700/50 hover:bg-gray-700 border border-transparent"
+                            : "bg-element hover:bg-element-hover border border-transparent"
                         }`}
                       >
                         No Hyphens
@@ -760,14 +760,14 @@ export const UuidTablet: Tablet = {
                   </div>
 
                   <div className="flex flex-col space-y-1">
-                    <label className="text-sm text-gray-400">Case</label>
+                    <label className="text-sm text-secondary">Case</label>
                     <div className="flex space-x-2">
                       <button
                         onClick={() => updateSettings({ case: "lower" })}
                         className={`px-3 py-1.5 rounded-md text-sm flex-1 ${
                           settings.case === "lower"
                             ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
-                            : "bg-gray-700/50 hover:bg-gray-700 border border-transparent"
+                            : "bg-element hover:bg-element-hover border border-transparent"
                         }`}
                       >
                         Lowercase
@@ -777,7 +777,7 @@ export const UuidTablet: Tablet = {
                         className={`px-3 py-1.5 rounded-md text-sm flex-1 ${
                           settings.case === "upper"
                             ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
-                            : "bg-gray-700/50 hover:bg-gray-700 border border-transparent"
+                            : "bg-element hover:bg-element-hover border border-transparent"
                         }`}
                       >
                         Uppercase
@@ -788,7 +788,7 @@ export const UuidTablet: Tablet = {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex flex-col space-y-1">
-                    <label className="text-sm text-gray-400">
+                    <label className="text-sm text-secondary">
                       Auto-Generate
                     </label>
                     <div className="flex space-x-2">
@@ -801,7 +801,7 @@ export const UuidTablet: Tablet = {
                         className={`px-3 py-1.5 rounded-md text-sm flex-1 ${
                           settings.autoGenerate
                             ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
-                            : "bg-gray-700/50 hover:bg-gray-700 border border-transparent"
+                            : "bg-element hover:bg-element-hover border border-transparent"
                         }`}
                       >
                         {settings.autoGenerate ? "On" : "Off"}
@@ -812,7 +812,7 @@ export const UuidTablet: Tablet = {
                         onChange={(e) =>
                           updateSettings({ interval: Number(e.target.value) })
                         }
-                        className="bg-gray-700/50 border border-gray-600/50 rounded-md px-3 py-1.5 text-sm flex-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="bg-element border border-base rounded-md px-3 py-1.5 text-sm flex-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
                         disabled={!settings.autoGenerate}
                       >
                         <option value="1">Every 1s</option>
@@ -826,14 +826,14 @@ export const UuidTablet: Tablet = {
                   </div>
 
                   <div className="flex flex-col space-y-1">
-                    <label className="text-sm text-gray-400">View Mode</label>
+                    <label className="text-sm text-secondary">View Mode</label>
                     <div className="flex space-x-2">
                       <button
                         onClick={() => updateSettings({ viewMode: "list" })}
                         className={`px-3 py-1.5 rounded-md text-sm flex-1 flex justify-center items-center space-x-1 ${
                           settings.viewMode === "list"
                             ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
-                            : "bg-gray-700/50 hover:bg-gray-700 border border-transparent"
+                            : "bg-element hover:bg-element-hover border border-transparent"
                         }`}
                       >
                         <List size={14} />
@@ -844,7 +844,7 @@ export const UuidTablet: Tablet = {
                         className={`px-3 py-1.5 rounded-md text-sm flex-1 flex justify-center items-center space-x-1 ${
                           settings.viewMode === "grid"
                             ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
-                            : "bg-gray-700/50 hover:bg-gray-700 border border-transparent"
+                            : "bg-element hover:bg-element-hover border border-transparent"
                         }`}
                       >
                         <Grid2X2 size={14} />
@@ -877,7 +877,7 @@ export const UuidTablet: Tablet = {
               className={`px-4 py-2 rounded-md transition-colors flex items-center space-x-2 ${
                 showBulkGeneration
                   ? "bg-purple-500/20 text-purple-400"
-                  : "bg-gray-700/50 hover:bg-gray-700 text-gray-200"
+                  : "bg-element hover:bg-element-hover text-main"
               }`}
             >
               <Database size={16} />
@@ -887,7 +887,7 @@ export const UuidTablet: Tablet = {
             <div className="relative">
               <button
                 onClick={() => setShowExportOptions(!showExportOptions)}
-                className="px-4 py-2 bg-gray-700/50 hover:bg-gray-700 rounded-md transition-colors flex items-center space-x-2"
+                className="px-4 py-2 bg-element hover:bg-element-hover rounded-md transition-colors flex items-center space-x-2"
               >
                 <Download size={16} />
                 <span>Export</span>
@@ -903,27 +903,27 @@ export const UuidTablet: Tablet = {
                     className="fixed inset-0 z-10"
                     onClick={() => setShowExportOptions(false)}
                   />
-                  <div className="absolute right-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-20 min-w-[150px]">
+                  <div className="absolute right-0 mt-1 bg-surface border border-base rounded-lg shadow-xl z-20 min-w-[150px]">
                     <div className="py-1">
                       <button
                         onClick={() => handleExport("json")}
-                        className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-700 transition-colors"
+                        className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-element-hover transition-colors"
                       >
                         <FileText size={14} className="mr-2 text-blue-400" />
                         <span>JSON</span>
                       </button>
                       <button
                         onClick={() => handleExport("csv")}
-                        className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-700 transition-colors"
+                        className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-element-hover transition-colors"
                       >
                         <FileText size={14} className="mr-2 text-green-400" />
                         <span>CSV</span>
                       </button>
                       <button
                         onClick={() => handleExport("txt")}
-                        className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-700 transition-colors"
+                        className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-element-hover transition-colors"
                       >
-                        <FileText size={14} className="mr-2 text-gray-400" />
+                        <FileText size={14} className="mr-2 text-secondary" />
                         <span>Text</span>
                       </button>
                     </div>
@@ -935,7 +935,7 @@ export const UuidTablet: Tablet = {
             {items.length > 0 && (
               <button
                 onClick={handleClearAll}
-                className="px-4 py-2 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-md transition-colors flex items-center space-x-2"
+                className="px-4 py-2 bg-red-500/20 text-danger hover:bg-red-500/30 rounded-md transition-colors flex items-center space-x-2"
               >
                 <Trash2 size={16} />
                 <span>Clear All</span>
@@ -946,14 +946,14 @@ export const UuidTablet: Tablet = {
 
         {/* Bulk Generation Panel */}
         {showBulkGeneration && (
-          <div className="border-b border-gray-700/50 p-4 bg-gray-800/30">
+          <div className="border-b border-base p-4 bg-surface-secondary">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-medium text-gray-200">
+              <h3 className="text-base font-medium text-main">
                 Bulk Generation
               </h3>
               <button
                 onClick={() => setShowBulkGeneration(false)}
-                className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-full transition-colors"
+                className="p-1 text-secondary hover:text-main hover:bg-element-hover rounded-full transition-colors"
               >
                 <X size={16} />
               </button>
@@ -961,13 +961,13 @@ export const UuidTablet: Tablet = {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div className="flex flex-col space-y-1">
-                <label className="text-sm text-gray-400">Count</label>
+                <label className="text-sm text-secondary">Count</label>
                 <select
                   value={bulkGeneration.count}
                   onChange={(e) =>
                     updateBulkGeneration({ count: Number(e.target.value) })
                   }
-                  className="bg-gray-700/50 border border-gray-600/50 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="bg-element border border-base rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   <option value="5">5</option>
                   <option value="10">10</option>
@@ -980,13 +980,13 @@ export const UuidTablet: Tablet = {
               </div>
 
               <div className="flex flex-col space-y-1">
-                <label className="text-sm text-gray-400">Type</label>
+                <label className="text-sm text-secondary">Type</label>
                 <select
                   value={bulkGeneration.type}
                   onChange={(e) =>
                     updateBulkGeneration({ type: e.target.value as any })
                   }
-                  className="bg-gray-700/50 border border-gray-600/50 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="bg-element border border-base rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   <option value="v1">UUID v1 (timestamp)</option>
                   <option value="v4">UUID v4 (random)</option>
@@ -1007,9 +1007,9 @@ export const UuidTablet: Tablet = {
             </div>
 
             {bulkGeneration.result.length > 0 && (
-              <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-3">
+              <div className="bg-surface-secondary border border-base rounded-lg p-3">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-gray-400">
+                  <span className="text-sm text-secondary">
                     Generated {bulkGeneration.result.length}{" "}
                     {bulkGeneration.type === "ulid"
                       ? "ULIDs"
@@ -1017,7 +1017,7 @@ export const UuidTablet: Tablet = {
                   </span>
                   <button
                     onClick={handleCopyBulk}
-                    className="px-3 py-1 bg-gray-700/50 hover:bg-gray-700 rounded-md transition-colors flex items-center space-x-1 text-sm"
+                    className="px-3 py-1 bg-element hover:bg-element-hover rounded-md transition-colors flex items-center space-x-1 text-sm"
                   >
                     {copiedBulk ? (
                       <>
@@ -1032,8 +1032,8 @@ export const UuidTablet: Tablet = {
                     )}
                   </button>
                 </div>
-                <div className="max-h-40 overflow-y-auto custom-scrollbar bg-gray-900/30 rounded-md p-2">
-                  <pre className="text-xs font-mono text-gray-300 whitespace-pre-wrap">
+                <div className="max-h-40 overflow-y-auto custom-scrollbar bg-canvas rounded-md p-2">
+                  <pre className="text-xs font-mono text-main whitespace-pre-wrap">
                     {bulkGeneration.result.join("\n")}
                   </pre>
                 </div>
@@ -1043,8 +1043,8 @@ export const UuidTablet: Tablet = {
         )}
 
         {/* UUID Analyzer */}
-        <div className="border-b border-gray-700/50 p-4">
-          <h3 className="text-base font-medium text-gray-200 mb-3">
+        <div className="border-b border-base p-4">
+          <h3 className="text-base font-medium text-main mb-3">
             UUID Analyzer
           </h3>
           <div className="flex space-x-2 mb-4">
@@ -1054,11 +1054,11 @@ export const UuidTablet: Tablet = {
                 value={idToAnalyze}
                 onChange={(e) => setIdToAnalyze(e.target.value)}
                 placeholder="Paste UUID or ULID to analyze..."
-                className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors"
+                className="w-full bg-surface-secondary border border-base rounded-md px-3 py-2 text-sm text-main placeholder-muted focus:outline-none focus:border-focus transition-colors"
               />
               <button
                 onClick={handlePaste}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
                 title="Paste from clipboard"
               >
                 <ClipboardPaste size={16} />
@@ -1075,14 +1075,14 @@ export const UuidTablet: Tablet = {
           </div>
 
           {analysis && (
-            <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 animate-fadeIn">
+            <div className="bg-surface-secondary border border-base rounded-lg p-4 animate-fadeIn">
               <div className="flex justify-between items-start">
-                <h4 className="text-sm font-medium text-gray-200 mb-2">
+                <h4 className="text-sm font-medium text-main mb-2">
                   Analysis Results
                 </h4>
                 <button
                   onClick={handleClearAnalysis}
-                  className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
+                  className="p-1 text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
                   title="Clear analysis"
                 >
                   <X size={14} />
@@ -1090,14 +1090,14 @@ export const UuidTablet: Tablet = {
               </div>
 
               {!analysis.isValid ? (
-                <div className="text-red-400 text-sm">
+                <div className="text-danger text-sm">
                   Not a valid UUID or ULID format
                 </div>
               ) : (
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Format:</span>
-                    <span className="text-gray-200 font-medium">
+                    <span className="text-secondary">Format:</span>
+                    <span className="text-main font-medium">
                       {analysis.format}
                     </span>
                   </div>
@@ -1105,8 +1105,8 @@ export const UuidTablet: Tablet = {
                   {analysis.isULID ? (
                     <>
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Timestamp:</span>
-                        <span className="text-gray-200 font-medium">
+                        <span className="text-secondary">Timestamp:</span>
+                        <span className="text-main font-medium">
                           {analysis.ulidTimestamp?.toLocaleString()}
                         </span>
                       </div>
@@ -1114,24 +1114,24 @@ export const UuidTablet: Tablet = {
                   ) : (
                     <>
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Version:</span>
-                        <span className="text-gray-200 font-medium">
+                        <span className="text-secondary">Version:</span>
+                        <span className="text-main font-medium">
                           {analysis.version}
                         </span>
                       </div>
 
                       {analysis.timestamp && (
                         <div className="flex justify-between">
-                          <span className="text-gray-400">Timestamp:</span>
-                          <span className="text-gray-200 font-medium">
+                          <span className="text-secondary">Timestamp:</span>
+                          <span className="text-main font-medium">
                             {analysis.timestamp.toLocaleString()}
                           </span>
                         </div>
                       )}
 
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Variant:</span>
-                        <span className="text-gray-200 font-medium">
+                        <span className="text-secondary">Variant:</span>
+                        <span className="text-main font-medium">
                           {analysis.variant}
                         </span>
                       </div>
@@ -1146,7 +1146,7 @@ export const UuidTablet: Tablet = {
         {/* Generated UUIDs List */}
         <div className="flex-1 p-4 overflow-y-auto custom-scrollbar">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-medium text-gray-200">
+            <h3 className="text-base font-medium text-main">
               Generated IDs{" "}
               {settings.autoGenerate && (
                 <span className="text-xs text-blue-400 ml-2 inline-flex items-center">
@@ -1155,13 +1155,13 @@ export const UuidTablet: Tablet = {
                 </span>
               )}
             </h3>
-            <div className="text-sm text-gray-400">
+            <div className="text-sm text-secondary">
               {items.length} {items.length === 1 ? "item" : "items"}
             </div>
           </div>
 
           {items.length === 0 ? (
-            <div className="text-center text-gray-400 py-8">
+            <div className="text-center text-secondary py-8">
               <RefreshCw size={32} className="mx-auto mb-2 opacity-50" />
               <p>No IDs generated yet</p>
               <p className="text-sm mt-1">

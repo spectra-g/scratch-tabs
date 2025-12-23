@@ -92,7 +92,7 @@ const RegexUI: React.FC<{
       JSON.stringify(newData.matches) !== JSON.stringify(currentData.matches) ||
       newData.error?.message !== currentData.error?.message ||
       JSON.stringify(newData.explanation) !==
-        JSON.stringify(currentData.explanation);
+      JSON.stringify(currentData.explanation);
 
     if (hasChanges) {
       onChangeRef.current({
@@ -168,47 +168,44 @@ const RegexUI: React.FC<{
   };
 
   return (
-    <div className="h-full flex flex-col bg-gray-900 text-gray-200">
+    <div className="h-full flex flex-col bg-canvas text-main">
       {/* Header */}
-      <div className="flex-shrink-0 border-b border-gray-700/50 p-4">
+      <div className="flex-shrink-0 border-b border-base/50 p-4">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-xl font-semibold text-gray-100 flex items-center gap-2">
+          <h1 className="text-xl font-semibold text-main flex items-center gap-2">
             <Search size={20} />
             Regex Tester
           </h1>
 
           <div className="flex items-center gap-2">
             {/* View Mode Toggle */}
-            <div className="flex bg-gray-800/50 rounded-lg overflow-hidden border border-gray-700/50">
+            <div className="flex bg-surface-raised/50 rounded-lg overflow-hidden border border-base/50">
               <button
                 onClick={() => setViewMode("test")}
-                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                  viewMode === "test"
-                    ? "bg-blue-500/20 text-blue-400"
-                    : "text-gray-400 hover:text-gray-200"
-                }`}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors ${viewMode === "test"
+                    ? "bg-primary/20 text-primary"
+                    : "text-muted hover:text-main"
+                  }`}
               >
                 <Search size={14} className="inline mr-1" />
                 Test
               </button>
               <button
                 onClick={() => setViewMode("explain")}
-                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                  viewMode === "explain"
-                    ? "bg-blue-500/20 text-blue-400"
-                    : "text-gray-400 hover:text-gray-200"
-                }`}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors ${viewMode === "explain"
+                    ? "bg-primary/20 text-primary"
+                    : "text-muted hover:text-main"
+                  }`}
               >
                 <Eye size={14} className="inline mr-1" />
                 Explain
               </button>
               <button
                 onClick={() => setViewMode("export")}
-                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                  viewMode === "export"
-                    ? "bg-blue-500/20 text-blue-400"
-                    : "text-gray-400 hover:text-gray-200"
-                }`}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors ${viewMode === "export"
+                    ? "bg-primary/20 text-primary"
+                    : "text-muted hover:text-main"
+                  }`}
               >
                 <Code size={14} className="inline mr-1" />
                 Export
@@ -217,7 +214,7 @@ const RegexUI: React.FC<{
 
             <button
               onClick={handleExport}
-              className="p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-md transition-colors"
+              className="p-2 text-muted hover:text-main hover:bg-surface-secondary/50 rounded-md transition-colors"
               title="Export test data"
             >
               <Download size={16} />
@@ -228,7 +225,7 @@ const RegexUI: React.FC<{
         {/* Regex Pattern Input */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <div className="text-sm font-medium text-gray-300">Pattern:</div>
+            <div className="text-sm font-medium text-secondary">Pattern:</div>
             {data.error && (
               <div className="flex items-center text-red-400 text-xs">
                 <AlertCircle size={14} className="mr-1" />
@@ -245,17 +242,16 @@ const RegexUI: React.FC<{
 
           {/* Flags */}
           <div className="flex items-center gap-4">
-            <div className="text-sm font-medium text-gray-300">Flags:</div>
+            <div className="text-sm font-medium text-secondary">Flags:</div>
             <div className="flex gap-2">
               {data.flags.map((flag) => (
                 <button
                   key={flag.flag}
                   onClick={() => handleFlagToggle(flag.flag)}
-                  className={`px-2 py-1 text-xs rounded border transition-colors ${
-                    flag.enabled
-                      ? "bg-blue-500/20 border-blue-500/50 text-blue-400"
-                      : "bg-gray-800/50 border-gray-700/50 text-gray-400 hover:text-gray-200"
-                  }`}
+                  className={`px-2 py-1 text-xs rounded border transition-colors ${flag.enabled
+                      ? "bg-primary/20 border-primary/50 text-primary"
+                      : "bg-surface-raised/50 border-base/50 text-muted hover:text-main"
+                    }`}
                   title={flag.description}
                 >
                   {flag.flag}
@@ -264,7 +260,7 @@ const RegexUI: React.FC<{
             </div>
 
             <div className="ml-auto">
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-muted">
                 {data.matches.length} match
                 {data.matches.length !== 1 ? "es" : ""}
               </div>
@@ -276,9 +272,9 @@ const RegexUI: React.FC<{
       {/* Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel */}
-        <div className="w-1/2 flex flex-col border-r border-gray-700/50">
+        <div className="w-1/2 flex flex-col border-r border-base/50">
           {/* Snippets */}
-          <div className="flex-shrink-0 border-b border-gray-700/50 p-3">
+          <div className="flex-shrink-0 border-b border-base/50 p-3">
             <SnippetSelector
               selectedSnippet={data.selectedSnippet}
               onSnippetSelect={handleSnippetSelect}
@@ -287,17 +283,16 @@ const RegexUI: React.FC<{
 
           {/* Test String */}
           <div className="flex-1 flex flex-col">
-            <div className="flex items-center justify-between p-3 border-b border-gray-700/50">
-              <div className="text-sm font-medium text-gray-300">
+            <div className="flex items-center justify-between p-3 border-b border-base/50">
+              <div className="text-sm font-medium text-secondary">
                 Test String:
               </div>
               <button
                 onClick={() => handleCopy(data.testString, "test-string")}
-                className={`p-1 rounded transition-colors ${
-                  copiedId === "test-string"
+                className={`p-1 rounded transition-colors ${copiedId === "test-string"
                     ? "text-green-400"
-                    : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
-                }`}
+                    : "text-muted hover:text-main hover:bg-surface-secondary/50"
+                  }`}
                 title="Copy test string"
               >
                 {copiedId === "test-string" ? (
@@ -312,7 +307,7 @@ const RegexUI: React.FC<{
               <textarea
                 value={data.testString}
                 onChange={(e) => handleTestStringChange(e.target.value)}
-                className="w-full h-full bg-gray-900/50 border border-gray-700/50 rounded-md p-3 text-sm text-gray-200 font-mono resize-none focus:outline-none focus:border-blue-500/50 transition-colors"
+                className="w-full h-full bg-canvas/50 border border-base/50 rounded-md p-3 text-sm text-main font-mono resize-none focus:outline-none focus:border-primary/50 transition-colors"
                 placeholder="Enter your test string here..."
               />
             </div>
@@ -339,19 +334,19 @@ const RegexUI: React.FC<{
 
           {viewMode === "export" && (
             <div className="flex-1 p-4">
-              <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 h-full">
+              <div className="bg-surface-raised/50 border border-base/50 rounded-lg p-4 h-full">
                 <h3 className="text-lg font-medium text-gray-100 mb-4">
                   Export
                 </h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-secondary mb-2">
                       Notes:
                     </label>
                     <textarea
                       value={data.notes}
                       onChange={(e) => updateData({ notes: e.target.value })}
-                      className="w-full h-24 bg-gray-900/50 border border-gray-700/50 rounded-md p-3 text-sm text-gray-200 resize-none focus:outline-none focus:border-blue-500/50 transition-colors"
+                      className="w-full h-24 bg-canvas/50 border border-base/50 rounded-md p-3 text-sm text-main resize-none focus:outline-none focus:border-primary/50 transition-colors"
                       placeholder="Add notes about this regex pattern..."
                     />
                   </div>
@@ -359,7 +354,7 @@ const RegexUI: React.FC<{
                   <div className="space-y-2">
                     <button
                       onClick={handleExport}
-                      className="w-full p-3 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors flex items-center justify-center gap-2"
+                      className="w-full p-3 bg-primary/20 text-primary rounded-md hover:bg-primary/30 transition-colors flex items-center justify-center gap-2"
                     >
                       <Download size={16} />
                       Export Test Data (JSON)
@@ -367,11 +362,10 @@ const RegexUI: React.FC<{
 
                     <button
                       onClick={() => handleCopy(data.pattern, "pattern")}
-                      className={`w-full p-3 rounded-md transition-colors flex items-center justify-center gap-2 ${
-                        copiedId === "pattern"
+                      className={`w-full p-3 rounded-md transition-colors flex items-center justify-center gap-2 ${copiedId === "pattern"
                           ? "bg-green-500/20 text-green-400"
-                          : "bg-gray-700/50 text-gray-300 hover:bg-gray-700/70"
-                      }`}
+                          : "bg-surface-secondary/50 text-secondary hover:bg-surface-secondary/70"
+                        }`}
                     >
                       {copiedId === "pattern" ? (
                         <Check size={16} />

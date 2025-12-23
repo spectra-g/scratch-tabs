@@ -64,12 +64,12 @@ export const JwtTablet: Tablet = {
           token: parsed.data.token || "",
           header:
             typeof parsed.data.header === "object" &&
-            parsed.data.header !== null
+              parsed.data.header !== null
               ? parsed.data.header
               : {},
           payload:
             typeof parsed.data.payload === "object" &&
-            parsed.data.payload !== null
+              parsed.data.payload !== null
               ? parsed.data.payload
               : {},
           signature: parsed.data.signature || "",
@@ -118,12 +118,12 @@ export const JwtTablet: Tablet = {
                 token: histItem?.token || "",
                 header:
                   typeof histItem?.header === "object" &&
-                  histItem.header !== null
+                    histItem.header !== null
                     ? histItem.header
                     : {}, // Ensure header is an object
                 payload:
                   typeof histItem?.payload === "object" &&
-                  histItem.payload !== null
+                    histItem.payload !== null
                     ? histItem.payload
                     : {}, // Ensure payload is an object
                 signature: histItem?.signature || "",
@@ -239,17 +239,17 @@ export const JwtTablet: Tablet = {
     };
 
     return (
-      <div className="h-full bg-gray-900 flex flex-col">
+      <div className="h-full bg-canvas flex flex-col">
         {/* Header */}
-        <div className="flex-none p-4 border-b border-gray-700/50">
+        <div className="flex-none p-4 border-b border-base">
           <div className="flex items-center space-x-3">
-            <Key className="text-gray-400" size={24} />
-            <h2 className="text-xl font-semibold text-gray-100">JWT</h2>
+            <Key className="text-muted" size={24} />
+            <h2 className="text-xl font-semibold text-main">JWT</h2>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex-none border-b border-gray-700/50">
+        <div className="flex-none border-b border-base">
           <Tabs
             tabs={[
               { id: "decode", label: "Decode" },
@@ -264,7 +264,7 @@ export const JwtTablet: Tablet = {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto custom-scrollbar">
+        <div className="flex-1 overflow-auto custom-scrollbar bg-surface">
           {data.activeTab === "decode" && (
             <JwtDecoder
               token={data.token}

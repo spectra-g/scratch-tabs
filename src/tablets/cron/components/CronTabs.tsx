@@ -11,14 +11,13 @@ export const CronTabs: React.FC<CronTabsProps> = ({
   onTabChange,
 }) => {
   return (
-    <div className="border-b border-gray-700">
+    <div className="border-b border-base">
       <div className="flex">
         <button
-          className={`px-4 py-2 text-sm font-medium flex items-center space-x-2 border-b-2 transition-colors ${
-            activeTab === "natural"
-              ? "border-blue-500 text-blue-400"
-              : "border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600"
-          }`}
+          className={`px-4 py-2 text-sm font-medium flex items-center space-x-2 border-b-2 transition-colors ${activeTab === "natural"
+              ? "border-primary text-primary"
+              : "border-transparent text-secondary hover:text-main hover:border-base"
+            }`}
           onClick={() => onTabChange("natural")}
         >
           <MessageSquare size={16} />
@@ -26,11 +25,10 @@ export const CronTabs: React.FC<CronTabsProps> = ({
         </button>
 
         <button
-          className={`px-4 py-2 text-sm font-medium flex items-center space-x-2 border-b-2 transition-colors ${
-            activeTab === "segmented"
-              ? "border-blue-500 text-blue-400"
-              : "border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600"
-          }`}
+          className={`px-4 py-2 text-sm font-medium flex items-center space-x-2 border-b-2 transition-colors ${activeTab === "segmented"
+              ? "border-primary text-primary"
+              : "border-transparent text-secondary hover:text-main hover:border-base"
+            }`}
           onClick={() => onTabChange("segmented")}
         >
           <Sliders size={16} />
@@ -38,11 +36,10 @@ export const CronTabs: React.FC<CronTabsProps> = ({
         </button>
 
         <button
-          className={`px-4 py-2 text-sm font-medium flex items-center space-x-2 border-b-2 transition-colors ${
-            activeTab === "raw"
-              ? "border-blue-500 text-blue-400"
-              : "border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600"
-          }`}
+          className={`px-4 py-2 text-sm font-medium flex items-center space-x-2 border-b-2 transition-colors ${activeTab === "raw"
+              ? "border-primary text-primary"
+              : "border-transparent text-secondary hover:text-main hover:border-base"
+            }`}
           onClick={() => onTabChange("raw")}
         >
           <Code size={16} />

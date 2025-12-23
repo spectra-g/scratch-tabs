@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { FileText, ClipboardPaste, Trash2, Copy, ExternalLink, Check } from '../../../components/Icons';
 import Editor from '@monaco-editor/react';
 import { useTabletTabCreation } from '../../bridge';
+import { useThemeStore } from '../../../stores/themeStore';
 
 interface WordCountInputProps {
   value: string;
@@ -26,7 +27,10 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
   const [activeTab, setActiveTab] = useState<'text' | 'report'>('text');
   const [copySuccess, setCopySuccess] = useState(false);
   const editorRef = useRef<any>(null);
-  
+
+  // Theme hook
+  const isDarkMode = useThemeStore((state) => state.isDarkMode);
+
   // Bridge hooks
   const { createBackgroundTab } = useTabletTabCreation();
 
@@ -150,30 +154,30 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
         line.split('|').slice(1, -1).map(cell => cell.trim())
       );
       
-      let tableHtml = '<table class="w-full text-xs border-collapse border border-gray-600 mb-4">';
-      
+      let tableHtml = '<table class="w-full text-xs border-collapse border border-base mb-4">';
+
       // Header
-      tableHtml += '<thead class="bg-gray-700/50">';
+      tableHtml += '<thead class="bg-surface-raised">';
       tableHtml += '<tr>';
       headers.forEach(header => {
-        tableHtml += `<th class="border border-gray-600 px-2 py-1 text-left text-gray-300 font-medium">${header}</th>`;
+        tableHtml += `<th class="border border-base px-2 py-1 text-left text-main font-medium">${header}</th>`;
       });
       tableHtml += '</tr>';
       tableHtml += '</thead>';
-      
+
       // Body
       tableHtml += '<tbody>';
       rows.forEach(row => {
-        tableHtml += '<tr class="hover:bg-gray-800/30">';
+        tableHtml += '<tr class="hover:bg-element-hover">';
         row.forEach(cell => {
           // Process cell content for icons and formatting
           const processedCell = cell
             .replace(/✅/g, '<span class="text-green-400">✅</span>')
             .replace(/⚠️/g, '<span class="text-yellow-400">⚠️</span>')
             .replace(/❌/g, '<span class="text-red-400">❌</span>')
-            .replace(/\*\*(.*?)\*\*/g, '<strong class="text-gray-200">$1</strong>');
-          
-          tableHtml += `<td class="border border-gray-600 px-2 py-1 text-gray-300">${processedCell}</td>`;
+            .replace(/\*\*(.*?)\*\*/g, '<strong class="text-main">$1</strong>');
+
+          tableHtml += `<td class="border border-base px-2 py-1 text-main">${processedCell}</td>`;
         });
         tableHtml += '</tr>';
       });
@@ -185,27 +189,27 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
     
     // Process other markdown elements with smaller fonts
     html = html
-      .replace(/^# (.*$)/gm, '<h1 class="text-lg font-bold text-gray-100 mb-3 mt-4">$1</h1>')
-      .replace(/^## (.*$)/gm, '<h2 class="text-base font-semibold text-gray-200 mb-2 mt-4">$1</h2>')
-      .replace(/^### (.*$)/gm, '<h3 class="text-sm font-medium text-gray-300 mb-2 mt-3">$1</h3>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-100">$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em class="italic text-gray-300">$1</em>')
-      .replace(/^- (.*$)/gm, '<li class="text-xs text-gray-300 ml-4 mb-1">• $1</li>')
+      .replace(/^# (.*$)/gm, '<h1 class="text-lg font-bold text-main mb-3 mt-4">$1</h1>')
+      .replace(/^## (.*$)/gm, '<h2 class="text-base font-semibold text-main mb-2 mt-4">$1</h2>')
+      .replace(/^### (.*$)/gm, '<h3 class="text-sm font-medium text-main mb-2 mt-3">$1</h3>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-main">$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em class="italic text-main">$1</em>')
+      .replace(/^- (.*$)/gm, '<li class="text-xs text-main ml-4 mb-1">• $1</li>')
       .replace(/^📚|📈|✂️|🎯|⚡|💪|📱|🔍|🎉/gm, (match) => `<span class="text-sm">${match}</span>`)
-      .replace(/^---$/gm, '<hr class="border-gray-600 my-3">')
-      .replace(/\n\n/g, '</p><p class="text-xs text-gray-300 mb-2">')
-      .replace(/^(?!<[h|l|t|s])/gm, '<p class="text-xs text-gray-300 mb-2">')
+      .replace(/^---$/gm, '<hr class="border-base my-3">')
+      .replace(/\n\n/g, '</p><p class="text-xs text-main mb-2">')
+      .replace(/^(?!<[h|l|t|s])/gm, '<p class="text-xs text-main mb-2">')
       .replace(/\n/g, '<br>');
     
     return html;
   }, []);
 
   return (
-    <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 h-full flex flex-col">
+    <div className="bg-surface-secondary border border-base rounded-lg p-4 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center space-x-2 mb-3 flex-shrink-0">
-        <FileText size={16} className="text-gray-400" />
-        <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">
+        <FileText size={16} className="text-secondary" />
+        <h3 className="text-sm font-semibold text-main uppercase tracking-wide">
           Content
         </h3>
       </div>
@@ -217,7 +221,7 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
           value={title}
           onChange={(e) => onTitleChange?.(e.target.value)}
           placeholder="Enter document title (optional)"
-          className="w-full bg-gray-700/50 border border-gray-600/50 rounded-md px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20"
+          className="w-full bg-element border border-base rounded-md px-3 py-2 text-sm text-main placeholder-muted focus:outline-none focus:border-focus focus:ring-1 focus:ring-focus/20"
         />
       </div>
 
@@ -225,13 +229,13 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
       <div className="flex items-center justify-between mb-3 flex-shrink-0">
         <div className="flex items-center space-x-4">
           {/* Tabs */}
-          <div className="flex space-x-1 bg-gray-700/30 rounded-md p-1">
+          <div className="flex space-x-1 bg-element rounded-md p-1">
             <button
               onClick={() => setActiveTab('text')}
               className={`px-3 py-1 text-xs rounded transition-colors ${
                 activeTab === 'text'
                   ? 'bg-blue-500/20 text-blue-300'
-                  : 'text-gray-400 hover:text-gray-200'
+                  : 'text-secondary hover:text-main'
               }`}
             >
               Text Input
@@ -241,7 +245,7 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
               className={`px-3 py-1 text-xs rounded transition-colors ${
                 activeTab === 'report'
                   ? 'bg-blue-500/20 text-blue-300'
-                  : 'text-gray-400 hover:text-gray-200'
+                  : 'text-secondary hover:text-main'
               }`}
             >
               Report
@@ -255,14 +259,14 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
             <>
               <button
                 onClick={handlePaste}
-                className="p-1.5 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
+                className="p-1.5 text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
                 title="Paste from clipboard"
               >
                 <ClipboardPaste size={16} />
               </button>
               <button
                 onClick={handleCopyText}
-                className="p-1.5 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
+                className="p-1.5 text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
                 title="Copy text to clipboard"
                 disabled={!localValue}
               >
@@ -270,7 +274,7 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
               </button>
               <button
                 onClick={handleClear}
-                className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-700/50 rounded transition-colors"
+                className="p-1.5 text-secondary hover:text-red-400 hover:bg-element-hover rounded transition-colors"
                 title="Clear text"
                 disabled={!localValue}
               >
@@ -284,7 +288,7 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
                 className={`p-1.5 rounded transition-colors ${
                   copySuccess 
                     ? 'text-green-400 bg-green-500/20' 
-                    : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'
+                    : 'text-secondary hover:text-main hover:bg-element-hover'
                 }`}
                 title={copySuccess ? "Copied to clipboard!" : "Copy report to clipboard"}
                 disabled={!reportContent}
@@ -293,7 +297,7 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
               </button>
               <button
                 onClick={handleOpenInNewTab}
-                className="p-1.5 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
+                className="p-1.5 text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
                 title="Open report in new background tab"
                 disabled={!reportContent}
               >
@@ -305,7 +309,7 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
       </div>
       
       {/* Content Area */}
-      <div className="flex-1 border border-gray-600/50 rounded-md overflow-hidden min-h-0 custom-scrollbar">
+      <div className="flex-1 border border-base rounded-md overflow-hidden min-h-0 custom-scrollbar">
         {activeTab === 'text' ? (
           <Editor
             height="100%"
@@ -313,7 +317,7 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
             value={localValue}
             onChange={handleEditorChange}
             onMount={handleEditorMount}
-            theme="vs-dark"
+            theme={isDarkMode ? "vs-dark" : "light"}
             options={{
               minimap: { enabled: false },
               scrollBeyondLastLine: false,
@@ -324,16 +328,16 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
             }}
           />
         ) : (
-          <div className="h-full bg-gray-900/50 p-4 overflow-auto custom-scrollbar">
+          <div className="h-full bg-canvas p-4 overflow-auto custom-scrollbar">
             {reportContent ? (
-              <div 
-                className="prose prose-invert max-w-none"
+              <div
+                className={`prose max-w-none ${isDarkMode ? "prose-invert" : ""}`}
                 dangerouslySetInnerHTML={{ __html: renderMarkdown(reportContent) }}
               />
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-500">
+              <div className="flex items-center justify-center h-full text-muted">
                 <div className="text-center">
-                  <FileText size={48} className="mx-auto mb-4 text-gray-600" />
+                  <FileText size={48} className="mx-auto mb-4 text-muted" />
                   <p className="text-sm">Enter text to generate analysis report</p>
                 </div>
               </div>
@@ -344,7 +348,7 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
       
       {/* Footer Info */}
       {activeTab === 'text' && localValue && (
-        <div className="mt-2 text-xs text-gray-500 flex-shrink-0">
+        <div className="mt-2 text-xs text-muted flex-shrink-0">
           {localValue.length} characters
         </div>
       )}

@@ -109,28 +109,27 @@ export const PaletteGenerator: React.FC<PaletteGeneratorProps> = ({
     <div className="space-y-4">
       {/* Image Upload */}
       <div className="space-y-2">
-        <h3 className="text-sm font-medium text-gray-300">Extract from Image</h3>
+        <h3 className="text-sm font-medium text-main">Extract from Image</h3>
         <div
-          className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-            isDragging
-              ? 'border-blue-400 bg-blue-500/10'
-              : 'border-gray-600 hover:border-gray-500'
-          }`}
+          className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${isDragging
+              ? 'border-primary bg-primary/10'
+              : 'border-base hover:border-secondary'
+            }`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
           {isExtracting ? (
             <div className="flex flex-col items-center space-y-2">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-              <p className="text-sm text-gray-400">Extracting colors...</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+              <p className="text-sm text-secondary">Extracting colors...</p>
             </div>
           ) : (
             <div className="flex flex-col items-center space-y-2">
-              <ImageIcon size={32} className="text-gray-400" />
-              <p className="text-sm text-gray-300">
+              <ImageIcon size={32} className="text-secondary" />
+              <p className="text-sm text-main">
                 Drop an image here or{' '}
-                <label className="text-blue-400 hover:text-blue-300 cursor-pointer">
+                <label className="text-info hover:text-info/80 cursor-pointer">
                   browse
                   <input
                     type="file"
@@ -140,7 +139,7 @@ export const PaletteGenerator: React.FC<PaletteGeneratorProps> = ({
                   />
                 </label>
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted">
                 Colors are extracted locally - your image never leaves your browser
               </p>
             </div>
@@ -150,32 +149,32 @@ export const PaletteGenerator: React.FC<PaletteGeneratorProps> = ({
 
       {/* Color Harmony Generator */}
       <div className="space-y-3">
-        <h3 className="text-sm font-medium text-gray-300">Generate Harmony</h3>
+        <h3 className="text-sm font-medium text-main">Generate Harmony</h3>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Base Color</label>
+            <label className="block text-xs text-secondary mb-1">Base Color</label>
             <div className="flex items-center space-x-2 h-8">
               <input
                 type="color"
                 value={harmonyBase}
                 onChange={(e) => setHarmonyBase(e.target.value)}
-                className="w-8 h-8 rounded border border-gray-600 bg-transparent cursor-pointer"
+                className="w-8 h-8 rounded border border-base bg-transparent cursor-pointer"
               />
               <input
                 type="text"
                 value={harmonyBase}
                 onChange={(e) => setHarmonyBase(e.target.value)}
-                className="flex-1 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-xs text-gray-200 font-mono h-8"
+                className="flex-1 px-2 py-1 bg-surface-secondary border border-base rounded text-xs text-main font-mono h-8"
                 placeholder="#3B82F6"
               />
             </div>
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Harmony Type</label>
+            <label className="block text-xs text-secondary mb-1">Harmony Type</label>
             <select
               value={harmonyType}
               onChange={(e) => setHarmonyType(e.target.value as ColorHarmonyOptions['type'])}
-              className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-xs text-gray-200 h-8"
+              className="w-full px-2 py-1 bg-surface-secondary border border-base rounded text-xs text-main h-8"
             >
               <option value="complementary">Complementary</option>
               <option value="triadic">Triadic</option>
@@ -187,7 +186,7 @@ export const PaletteGenerator: React.FC<PaletteGeneratorProps> = ({
         </div>
         <button
           onClick={handleGenerateHarmony}
-          className="w-full px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm font-medium transition-colors flex items-center justify-center space-x-2"
+          className="w-full px-3 py-2 bg-primary hover:bg-primary/90 text-white rounded text-sm font-medium transition-colors flex items-center justify-center space-x-2"
         >
           <Palette size={16} />
           <span>Generate Harmony</span>
@@ -196,10 +195,10 @@ export const PaletteGenerator: React.FC<PaletteGeneratorProps> = ({
 
       {/* Random Generator */}
       <div className="space-y-2">
-        <h3 className="text-sm font-medium text-gray-300">Random Palette</h3>
+        <h3 className="text-sm font-medium text-main">Random Palette</h3>
         <button
           onClick={handleGenerateRandom}
-          className="w-full px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium transition-colors flex items-center justify-center space-x-2"
+          className="w-full px-3 py-2 bg-primary hover:bg-primary/90 text-white rounded text-sm font-medium transition-colors flex items-center justify-center space-x-2"
         >
           <Shuffle size={16} />
           <span>Generate Random</span>

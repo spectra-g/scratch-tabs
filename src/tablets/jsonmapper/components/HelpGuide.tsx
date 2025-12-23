@@ -7,13 +7,13 @@ interface HelpGuideProps {
   onToggle?: (expanded: boolean) => void;
 }
 
-export const HelpGuide: React.FC<HelpGuideProps> = ({ 
-  className = "", 
+export const HelpGuide: React.FC<HelpGuideProps> = ({
+  className = "",
   isExpanded: externalIsExpanded,
-  onToggle 
+  onToggle
 }) => {
   const [internalIsExpanded, setInternalIsExpanded] = useState(false);
-  
+
   // Use external state if provided, otherwise use internal state
   const isExpanded = externalIsExpanded !== undefined ? externalIsExpanded : internalIsExpanded;
   const setIsExpanded = (expanded: boolean) => {
@@ -68,22 +68,22 @@ export const HelpGuide: React.FC<HelpGuideProps> = ({
   ];
 
   return (
-    <div className={`bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 ${className}`}>
+    <div className={`bg-surface-secondary border border-base rounded-lg p-4 ${className}`}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded transition-colors"
+            className="p-1.5 text-secondary hover:text-primary hover:bg-element-hover rounded transition-colors"
             title={isExpanded ? "Hide help guide" : "Show help guide"}
           >
             <Info size={20} />
           </button>
-          <h3 className="text-lg font-medium text-gray-200">How to use JSON Mapper</h3>
+          <h3 className="text-lg font-medium text-main">How to use JSON Mapper</h3>
         </div>
         {isExpanded && (
           <button
             onClick={() => setIsExpanded(false)}
-            className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-700/50 rounded transition-colors"
+            className="p-1.5 text-secondary hover:text-danger hover:bg-element-hover rounded transition-colors"
             title="Close help guide"
           >
             <X size={16} />
@@ -95,14 +95,14 @@ export const HelpGuide: React.FC<HelpGuideProps> = ({
         <div className="space-y-3">
           {steps.map((step) => (
             <div key={step.step} className="flex space-x-3">
-              <div className="flex-shrink-0 w-6 h-6 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center text-xs font-medium">
+              <div className="flex-shrink-0 w-6 h-6 bg-info-subtle text-info rounded-full flex items-center justify-center text-xs font-medium">
                 {step.step}
               </div>
               <div className="flex-1">
-                <h4 className="text-sm font-medium text-gray-200 mb-1">
+                <h4 className="text-sm font-medium text-main mb-1">
                   {step.title}
                 </h4>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-secondary">
                   {step.description}
                 </p>
               </div>

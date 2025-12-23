@@ -16,16 +16,16 @@ export const MetricValueCard: React.FC<MetricValueCardProps> = ({
   comparison,
 }) => {
   return (
-    <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
+    <div className="p-4 bg-surface-raised rounded-lg border border-base">
       <div className="font-medium text-sm mb-2 truncate">{metric.name}</div>
 
       {Object.keys(metric.labels).length > 0 && (
-        <div className="text-xs text-gray-400 mb-3 font-mono">
+        <div className="text-xs text-muted mb-3 font-mono">
           {formatLabelsForDisplay(metric.labels)}
         </div>
       )}
 
-      <div className="text-2xl font-semibold text-blue-400 mb-2">
+      <div className="text-2xl font-semibold text-primary mb-2">
         {formatNumber(metric.value)}
       </div>
 
@@ -36,7 +36,7 @@ export const MetricValueCard: React.FC<MetricValueCardProps> = ({
               ? "text-green-400"
               : comparison.percentChange < 0
                 ? "text-red-400"
-                : "text-gray-400"
+                : "text-muted"
           }`}
         >
           {comparison.percentChange > 0 ? (
@@ -54,7 +54,7 @@ export const MetricValueCard: React.FC<MetricValueCardProps> = ({
       )}
 
       {metric.timestamp && (
-        <div className="text-xs text-gray-500 mt-2">
+        <div className="text-xs text-muted mt-2">
           Timestamp: {new Date(metric.timestamp).toLocaleString()}
         </div>
       )}

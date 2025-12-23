@@ -235,18 +235,18 @@ export const JsonMapperTablet: Tablet = {
       : null;
 
     return (
-      <div className="h-full bg-gray-900 flex flex-col">
+      <div className="h-full bg-canvas flex flex-col">
         {/* Header */}
-        <div className="flex-none p-4 border-b border-gray-700/50">
+        <div className="flex-none p-4 border-b border-base">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <FileJson className="text-gray-400" size={24} />
-              <h2 className="text-xl font-semibold text-gray-100">
+              <FileJson className="text-secondary" size={24} />
+              <h2 className="text-xl font-semibold text-main">
                 JSON Mapper
               </h2>
               <button
                 onClick={() => setShowHelp(!showHelp)}
-                className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded transition-colors"
+                className="p-1.5 text-secondary hover:text-primary hover:bg-element-hover rounded transition-colors"
                 title="Show help guide"
               >
                 <Info size={16} />
@@ -257,7 +257,7 @@ export const JsonMapperTablet: Tablet = {
               <div className="flex items-center space-x-3">
                 <div className="relative">
                   <Search
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary"
                     size={16}
                   />
                   <input
@@ -265,7 +265,7 @@ export const JsonMapperTablet: Tablet = {
                     value={state.data.searchQuery}
                     onChange={(e) => handleSearchChange(e.target.value)}
                     placeholder="Search mappings..."
-                    className="bg-gray-800/50 border border-gray-700/50 rounded-md pl-10 pr-3 py-1.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors w-64"
+                    className="input-themed pl-10 w-64"
                   />
                 </div>
               </div>
@@ -275,8 +275,8 @@ export const JsonMapperTablet: Tablet = {
 
         {/* Help Guide */}
         {showHelp && (
-          <div className="flex-none p-4 border-b border-gray-700/50">
-            <HelpGuide 
+          <div className="flex-none p-4 border-b border-base bg-surface-secondary">
+            <HelpGuide
               isExpanded={showHelp}
               onToggle={(expanded) => setShowHelp(expanded)}
             />

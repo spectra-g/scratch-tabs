@@ -33,7 +33,6 @@ import {
   detectOperationType,
   extractOperationNames,
   GraphQLSchema,
-  GraphQLType,
   GraphQLField,
 } from "./utils/graphqlUtils";
 import {
@@ -46,6 +45,8 @@ import {
 import { Editor } from "@monaco-editor/react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 
+
+import { useThemeStore } from "../../stores/themeStore";
 
 interface GraphQLTabletStateWrapper extends TabletState {
   type: "graphql";
@@ -61,6 +62,8 @@ const MonacoEditor: React.FC<{
   height?: string;
   onMount?: (editor: monaco.editor.IStandaloneCodeEditor) => void;
 }> = ({ value, onChange, language, readOnly = false, height = "100%", onMount }) => {
+  const { isDarkMode } = useThemeStore();
+
   const handleEditorDidMount = (editor: monaco.editor.IStandaloneCodeEditor) => {
     if (onMount) {
       onMount(editor);
@@ -75,7 +78,7 @@ const MonacoEditor: React.FC<{
         value={value}
         onChange={(val) => onChange(val || "")}
         onMount={handleEditorDidMount}
-        theme="vs-dark"
+        theme={isDarkMode ? "vs-dark" : "vs"}
         options={{
           readOnly,
           minimap: { enabled: false },
@@ -97,18 +100,18 @@ const UrlBar: React.FC<{
   isLoadingSchema: boolean;
 }> = ({ endpoint, onEndpointChange, onLoadSchema, isLoadingSchema }) => {
   return (
-    <div className="flex items-center space-x-2 p-3 border-b border-gray-700/50">
+    <div className="flex items-center space-x-2 p-3 border-b border-base">
       <input
         type="text"
         value={endpoint}
         onChange={(e) => onEndpointChange(e.target.value)}
         placeholder="https://api.example.com/graphql"
-        className="flex-1 bg-gray-800 text-gray-100 px-4 py-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500"
+        className="flex-1 bg-surface-secondary text-main px-4 py-2 rounded border border-input focus:outline-none focus:border-focus"
       />
       <button
         onClick={onLoadSchema}
         disabled={isLoadingSchema || !endpoint}
-        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+        className="px-4 py-2 rounded flex items-center space-x-2 transition-colors disabled:cursor-not-allowed bg-primary text-primary-content hover:bg-primary-hover disabled:bg-element disabled:text-muted disabled:hover:bg-element"
       >
         {isLoadingSchema ? (
           <><Loader2 size={16} className="animate-spin" /><span>Loading...</span></>
@@ -140,19 +143,19 @@ const SchemaExplorer: React.FC<{
     newExpanded.has(typeName) ? newExpanded.delete(typeName) : newExpanded.add(typeName);
     setExpandedTypes(newExpanded);
   };
-  if (schemaError) return <div className="h-full bg-gray-900 p-4"><div className="flex items-center space-x-2 text-red-400 mb-4"><XCircle size={16} /><span className="font-medium">Schema Error</span></div><p className="text-sm text-gray-400">{schemaError}</p></div>;
-  if (!schema) return <div className="h-full bg-gray-900 p-4 flex items-center justify-center"><div className="text-center text-gray-400"><Book size={48} className="mx-auto mb-3 opacity-50" /><p className="text-sm">Load a schema to explore</p></div></div>;
+  if (schemaError) return <div className="h-full bg-surface p-4"><div className="flex items-center space-x-2 text-danger mb-4"><XCircle size={16} /><span className="font-medium">Schema Error</span></div><p className="text-sm text-muted">{schemaError}</p></div>;
+  if (!schema) return <div className="h-full bg-surface p-4 flex items-center justify-center"><div className="text-center text-muted"><Book size={48} className="mx-auto mb-3 opacity-50" /><p className="text-sm">Load a schema to explore</p></div></div>;
   const rootTypes = getRootTypes(schema);
   const userTypes = schema.types.filter(t => !isBuiltInType(t.name || "") && t.kind === "OBJECT");
   const filterFields = (fields: GraphQLField[]) => !searchQuery ? fields : fields.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
-  const renderField = (field: GraphQLField, typeName: string) => <div key={field.name} className="py-2 px-4 hover:bg-gray-700/30 cursor-pointer text-sm" onClick={() => onFieldClick(field.name, typeName)}><div className="flex items-start justify-between"><div className="flex-1"><span className="text-blue-400 font-medium">{field.name}</span>{field.args.length > 0 && <span className="text-gray-500 ml-1">({field.args.map(a => a.name).join(", ")})</span>}<span className="text-gray-500 ml-2">: {formatTypeRef(field.type)}</span></div></div>{field.description && <p className="text-xs text-gray-400 mt-1">{field.description}</p>}</div>;
+  const renderField = (field: GraphQLField, typeName: string) => <div key={field.name} className="py-2 px-4 hover:bg-element-hover cursor-pointer text-sm" onClick={() => onFieldClick(field.name, typeName)}><div className="flex items-start justify-between"><div className="flex-1"><span className="text-info font-medium">{field.name}</span>{field.args.length > 0 && <span className="text-secondary ml-1">({field.args.map(a => a.name).join(", ")})</span>}<span className="text-secondary ml-2">: {formatTypeRef(field.type)}</span></div></div>{field.description && <p className="text-xs text-muted mt-1">{field.description}</p>}</div>;
   const renderSection = (title: string, fields: GraphQLField[], icon: React.ReactNode, sectionKey: string) => {
     const filteredFields = filterFields(fields);
     if (filteredFields.length === 0 && searchQuery) return null;
-    return <div className="border-b border-gray-700/50"><button onClick={() => toggleSection(sectionKey)} className="w-full flex items-center justify-between p-3 hover:bg-gray-700/30 transition-colors"><div className="flex items-center space-x-2">{icon}<span className="font-medium text-gray-100">{title}</span><span className="text-xs text-gray-500">({fields.length})</span></div>{expandedSections.has(sectionKey) ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />}</button>{expandedSections.has(sectionKey) && <div className="bg-gray-800/50">{filteredFields.map(field => renderField(field, sectionKey))}</div>}</div>;
+    return <div className="border-b border-base"><button onClick={() => toggleSection(sectionKey)} className="w-full flex items-center justify-between p-3 hover:bg-element-hover transition-colors"><div className="flex items-center space-x-2">{icon}<span className="font-medium text-main">{title}</span><span className="text-xs text-secondary">({fields.length})</span></div>{expandedSections.has(sectionKey) ? <ChevronDown size={16} className="text-muted" /> : <ChevronRight size={16} className="text-muted" />}</button>{expandedSections.has(sectionKey) && <div className="bg-surface-raised">{filteredFields.map(field => renderField(field, sectionKey))}</div>}</div>;
   };
   const selectedTypeObj = selectedType ? findTypeByName(schema, selectedType) : null;
-  return <div className="h-full bg-gray-900 flex flex-col"><div className="flex-none p-3 border-b border-gray-700/50"><div className="relative"><Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" /><input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search fields..." className="w-full bg-gray-800 text-gray-100 pl-10 pr-4 py-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500 text-sm" /></div></div><div className="flex-1 overflow-y-auto custom-scrollbar">{rootTypes.queries.length > 0 && renderSection("Queries", rootTypes.queries, <Code size={16} className="text-green-400" />, "queries")}{rootTypes.mutations.length > 0 && renderSection("Mutations", rootTypes.mutations, <Zap size={16} className="text-yellow-400" />, "mutations")}{rootTypes.subscriptions.length > 0 && renderSection("Subscriptions", rootTypes.subscriptions, <RefreshCw size={16} className="text-purple-400" />, "subscriptions")}{userTypes.length > 0 && <div className="border-b border-gray-700/50"><button onClick={() => toggleSection("types")} className="w-full flex items-center justify-between p-3 hover:bg-gray-700/30 transition-colors"><div className="flex items-center space-x-2"><Book size={16} className="text-blue-400" /><span className="font-medium text-gray-100">Types</span><span className="text-xs text-gray-500">({userTypes.length})</span></div>{expandedSections.has("types") ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />}</button>{expandedSections.has("types") && <div className="bg-gray-800/50">{userTypes.map(type => <div key={type.name} className="border-b border-gray-700/30"><button onClick={() => { onTypeSelect(type.name!); toggleType(type.name!); }} className="w-full flex items-center justify-between p-2 px-4 hover:bg-gray-700/30 text-sm"><span className="text-blue-300">{type.name}</span>{expandedTypes.has(type.name!) ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronRight size={14} className="text-gray-400" />}</button>{expandedTypes.has(type.name!) && type.fields && <div className="bg-gray-900/50">{type.fields.map(field => renderField(field, type.name!))}</div>}</div>)}</div>}</div>}</div>{selectedTypeObj && <div className="flex-none p-3 border-t border-gray-700/50 bg-gray-800"><div className="text-xs text-gray-400"><div className="font-medium text-gray-300 mb-1">{selectedTypeObj.name}</div>{selectedTypeObj.description && <p>{selectedTypeObj.description}</p>}</div></div>}</div>;
+  return <div className="h-full bg-surface flex flex-col"><div className="flex-none p-3 border-b border-base"><div className="relative"><Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted" /><input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search fields..." className="w-full bg-surface-secondary text-main pl-10 pr-4 py-2 rounded border border-input focus:outline-none focus:border-focus text-sm" /></div></div><div className="flex-1 overflow-y-auto custom-scrollbar">{rootTypes.queries.length > 0 && renderSection("Queries", rootTypes.queries, <Code size={16} className="text-success" />, "queries")}{rootTypes.mutations.length > 0 && renderSection("Mutations", rootTypes.mutations, <Zap size={16} className="text-warning" />, "mutations")}{rootTypes.subscriptions.length > 0 && renderSection("Subscriptions", rootTypes.subscriptions, <RefreshCw size={16} className="text-accent" />, "subscriptions")}{userTypes.length > 0 && <div className="border-b border-base"><button onClick={() => toggleSection("types")} className="w-full flex items-center justify-between p-3 hover:bg-element-hover transition-colors"><div className="flex items-center space-x-2"><Book size={16} className="text-info" /><span className="font-medium text-main">Types</span><span className="text-xs text-secondary">({userTypes.length})</span></div>{expandedSections.has("types") ? <ChevronDown size={16} className="text-muted" /> : <ChevronRight size={16} className="text-muted" />}</button>{expandedSections.has("types") && <div className="bg-surface-raised">{userTypes.map(type => <div key={type.name} className="border-b border-base/50"><button onClick={() => { onTypeSelect(type.name!); toggleType(type.name!); }} className="w-full flex items-center justify-between p-2 px-4 hover:bg-element-hover text-sm"><span className="text-info-hover">{type.name}</span>{expandedTypes.has(type.name!) ? <ChevronDown size={14} className="text-muted" /> : <ChevronRight size={14} className="text-muted" />}</button>{expandedTypes.has(type.name!) && type.fields && <div className="bg-surface-secondary">{type.fields.map(field => renderField(field, type.name!))}</div>}</div>)}</div>}</div>}</div>{selectedTypeObj && <div className="flex-none p-3 border-t border-base bg-surface-raised"><div className="text-xs text-muted"><div className="font-medium text-main mb-1">{selectedTypeObj.name}</div>{selectedTypeObj.description && <p>{selectedTypeObj.description}</p>}</div></div>}</div>;
 };
 
 const QueryHistory: React.FC<{
@@ -167,7 +170,7 @@ const QueryHistory: React.FC<{
     if (!a.isPinned && b.isPinned) return 1;
     return b.timestamp - a.timestamp;
   });
-  return <div className="h-full bg-gray-900 flex flex-col"><div className="flex-none flex items-center justify-between p-3 border-b border-gray-700/50"><div className="flex items-center space-x-2"><History size={18} className="text-gray-400" /><span className="font-medium text-gray-100">Query History</span><span className="text-xs text-gray-500">({history.length})</span></div><button onClick={onClose} className="text-gray-400 hover:text-gray-100 transition-colors"><X size={18} /></button></div><div className="flex-1 overflow-y-auto custom-scrollbar">{sortedHistory.length === 0 ? <div className="p-8 text-center text-gray-400"><Clock size={48} className="mx-auto mb-3 opacity-50" /><p className="text-sm">No query history yet</p></div> : sortedHistory.map(item => <div key={item.id} className="p-3 border-b border-gray-700/50 hover:bg-gray-800/50 transition-colors"><div className="flex items-start justify-between mb-2"><div className="flex-1"><div className="text-sm font-medium text-gray-100 mb-1">{item.name || "Unnamed Query"}</div><div className="text-xs text-gray-400">{new Date(item.timestamp).toLocaleString()}</div></div><div className="flex items-center space-x-2"><button onClick={() => onPin(item.id, !item.isPinned)} className={`${item.isPinned ? "text-yellow-400" : "text-gray-500"} hover:text-yellow-400 transition-colors`}><Pin size={14} /></button><button onClick={() => onDelete(item.id)} className="text-gray-500 hover:text-red-400 transition-colors"><Trash2 size={14} /></button></div></div><pre className="text-xs text-gray-300 bg-gray-800 p-2 rounded overflow-x-auto mb-2">{item.query.substring(0, 100)}{item.query.length > 100 && "..."}</pre><button onClick={() => onRestore(item)} className="text-xs text-blue-400 hover:text-blue-300 transition-colors">Restore</button></div>)}</div></div>;
+  return <div className="h-full bg-surface-raised flex flex-col"><div className="flex-none flex items-center justify-between p-3 border-b border-base"><div className="flex items-center space-x-2"><History size={18} className="text-muted" /><span className="font-medium text-main">Query History</span><span className="text-xs text-secondary">({history.length})</span></div><button onClick={onClose} className="text-muted hover:text-main transition-colors"><X size={18} /></button></div><div className="flex-1 overflow-y-auto custom-scrollbar">{sortedHistory.length === 0 ? <div className="p-8 text-center text-muted"><Clock size={48} className="mx-auto mb-3 opacity-50" /><p className="text-sm">No query history yet</p></div> : sortedHistory.map(item => <div key={item.id} className="p-3 border-b border-base hover:bg-element-hover transition-colors"><div className="flex items-start justify-between mb-2"><div className="flex-1"><div className="text-sm font-medium text-main mb-1">{item.name || "Unnamed Query"}</div><div className="text-xs text-muted">{new Date(item.timestamp).toLocaleString()}</div></div><div className="flex items-center space-x-2"><button onClick={() => onPin(item.id, !item.isPinned)} className={`${item.isPinned ? "text-warning" : "text-secondary"} hover:text-warning transition-colors`}><Pin size={14} /></button><button onClick={() => onDelete(item.id)} className="text-secondary hover:text-danger transition-colors"><Trash2 size={14} /></button></div></div><pre className="text-xs text-secondary bg-surface-secondary p-2 rounded overflow-x-auto mb-2">{item.query.substring(0, 100)}{item.query.length > 100 && "..."}</pre><button onClick={() => onRestore(item)} className="text-xs text-info hover:text-info-hover transition-colors">Restore</button></div>)}</div></div>;
 };
 
 const HeadersEditor: React.FC<{
@@ -181,7 +184,7 @@ const HeadersEditor: React.FC<{
     onChange(newHeaders);
   };
   const removeHeader = (index: number) => onChange(headers.filter((_, i) => i !== index));
-  return <div className="h-full bg-gray-900 flex flex-col"><div className="flex-1 overflow-y-auto p-4"><div className="space-y-2">{headers.map((header, index) => <div key={index} className="flex items-center space-x-2"><input type="checkbox" checked={header.enabled} onChange={e => updateHeader(index, "enabled", e.target.checked)} className="w-4 h-4" /><input type="text" value={header.key} onChange={e => updateHeader(index, "key", e.target.value)} placeholder="Header name" className="flex-1 bg-gray-800 text-gray-100 px-3 py-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500 text-sm" /><input type="text" value={header.value} onChange={e => updateHeader(index, "value", e.target.value)} placeholder="Value" className="flex-1 bg-gray-800 text-gray-100 px-3 py-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500 text-sm" /><button onClick={() => removeHeader(index)} className="text-gray-400 hover:text-red-400 transition-colors"><X size={16} /></button></div>)}</div><button onClick={addHeader} className="mt-4 text-sm text-blue-400 hover:text-blue-300 transition-colors">+ Add Header</button></div></div>;
+  return <div className="h-full bg-surface-raised flex flex-col"><div className="flex-1 overflow-y-auto p-4"><div className="space-y-2">{headers.map((header, index) => <div key={index} className="flex items-center space-x-2"><input type="checkbox" checked={header.enabled} onChange={e => updateHeader(index, "enabled", e.target.checked)} className="w-4 h-4" /><input type="text" value={header.key} onChange={e => updateHeader(index, "key", e.target.value)} placeholder="Header name" className="flex-1 bg-surface-secondary text-main px-3 py-2 rounded border border-input focus:outline-none focus:border-focus text-sm" /><input type="text" value={header.value} onChange={e => updateHeader(index, "value", e.target.value)} placeholder="Value" className="flex-1 bg-surface-secondary text-main px-3 py-2 rounded border border-input focus:outline-none focus:border-focus text-sm" /><button onClick={() => removeHeader(index)} className="text-secondary hover:text-danger transition-colors"><X size={16} /></button></div>)}</div><button onClick={addHeader} className="mt-4 text-sm text-info hover:text-info-hover transition-colors">+ Add Header</button></div></div>;
 };
 
 const ResponseViewer: React.FC<{
@@ -195,7 +198,7 @@ const ResponseViewer: React.FC<{
 }> = ({ response, error, isLoading, subscriptionMessages, isSubscriptionActive, onShowHistory, historyCount }) => {
   const [activeTab, setActiveTab] = useState<"data" | "errors" | "subscription">("data");
   const formatJson = (obj: any) => { try { return JSON.stringify(obj, null, 2); } catch { return String(obj); } };
-  return <div className="h-full bg-gray-900 flex flex-col"><div className="flex-none flex items-center justify-between p-3 border-b border-gray-700/50"><div className="flex items-center space-x-4"><button onClick={() => setActiveTab("data")} className={`text-sm ${activeTab === "data" ? "text-blue-400 border-b-2 border-blue-400" : "text-gray-400 hover:text-gray-100"} pb-1`}>Response</button>{response?.errors && response.errors.length > 0 && <button onClick={() => setActiveTab("errors")} className={`text-sm ${activeTab === "errors" ? "text-red-400 border-b-2 border-red-400" : "text-gray-400 hover:text-gray-100"} pb-1 flex items-center space-x-1`}><XCircle size={14} /><span>Errors ({response.errors.length})</span></button>}{(isSubscriptionActive || subscriptionMessages.length > 0) && <button onClick={() => setActiveTab("subscription")} className={`text-sm ${activeTab === "subscription" ? "text-purple-400 border-b-2 border-purple-400" : "text-gray-400 hover:text-gray-100"} pb-1 flex items-center space-x-1`}><RefreshCw size={14} className={isSubscriptionActive ? "animate-spin" : ""} /><span>Subscription ({subscriptionMessages.length})</span></button>}</div><button onClick={onShowHistory} className="flex items-center space-x-2 text-sm text-gray-400 hover:text-gray-100 transition-colors"><History size={16} /><span>History</span>{historyCount > 0 && <span className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">{historyCount}</span>}</button></div>{response && <div className="flex-none flex items-center justify-between px-4 py-2 bg-gray-800/50 text-xs"><div className="flex items-center space-x-4"><div className="flex items-center space-x-2"><span className="text-gray-400">Status:</span><span className={`font-medium ${response.status === 200 ? "text-green-400" : "text-red-400"}`}>{response.status} {response.statusText}</span></div><div className="flex items-center space-x-2"><Clock size={12} className="text-gray-400" /><span className="text-gray-300">{response.responseTime.toFixed(0)}ms</span></div><div className="flex items-center space-x-2"><span className="text-gray-400">Size:</span><span className="text-gray-300">{(response.size / 1024).toFixed(2)} KB</span></div></div></div>}<div className="flex-1 overflow-hidden">{isLoading ? <div className="h-full flex items-center justify-center"><div className="text-center"><Loader2 size={48} className="mx-auto mb-3 text-blue-400 animate-spin" /><p className="text-sm text-gray-400">Executing query...</p></div></div> : error ? <div className="h-full p-4"><div className="flex items-center space-x-2 text-red-400 mb-3"><XCircle size={16} /><span className="font-medium">Error</span></div><pre className="text-sm text-gray-300 bg-gray-800 p-4 rounded overflow-auto">{error}</pre></div> : response ? <div className="h-full">{activeTab === "data" && <MonacoEditor value={formatJson(response.data)} onChange={() => { }} language="json" readOnly />}{activeTab === "errors" && response.errors && <div className="h-full overflow-y-auto p-4">{response.errors.map((err, index) => <div key={index} className="mb-4 p-4 bg-red-900/20 border border-red-700/50 rounded"><div className="flex items-start space-x-2 mb-2"><XCircle size={16} className="text-red-400 flex-shrink-0 mt-0.5" /><div className="flex-1"><p className="text-sm text-red-300 font-medium">{err.message}</p>{err.path && <p className="text-xs text-gray-400 mt-1">Path: {err.path.join(" > ")}</p>}{err.locations && <p className="text-xs text-gray-400 mt-1">Location: Line {err.locations[0]?.line}, Column {err.locations[0]?.column}</p>}</div></div></div>)}</div>}{activeTab === "subscription" && <div className="h-full overflow-y-auto p-4">{subscriptionMessages.length === 0 ? <div className="text-center text-gray-400 mt-8"><RefreshCw size={48} className="mx-auto mb-3 opacity-50" /><p className="text-sm">{isSubscriptionActive ? "Waiting for subscription data..." : "No subscription messages yet"}</p></div> : <div className="space-y-2">{subscriptionMessages.map(msg => <div key={msg.id} className={`p-3 rounded border ${msg.type === "error" ? "bg-red-900/20 border-red-700/50" : msg.type === "complete" ? "bg-gray-800 border-gray-700" : "bg-green-900/20 border-green-700/50"}`}><div className="flex items-center justify-between mb-2"><div className="flex items-center space-x-2">{msg.type === "error" ? <XCircle size={14} className="text-red-400" /> : msg.type === "complete" ? <CheckCircle size={14} className="text-gray-400" /> : <CheckCircle size={14} className="text-green-400" />}<span className="text-xs text-gray-400">{new Date(msg.timestamp).toLocaleTimeString()}</span></div><span className="text-xs text-gray-500 uppercase">{msg.type}</span></div>{msg.data && <pre className="text-xs text-gray-300 bg-gray-800 p-2 rounded overflow-x-auto">{formatJson(msg.data)}</pre>}{msg.errors && <div className="text-xs text-red-300 mt-2">{msg.errors.map((err, i) => <div key={i}>{err.message}</div>)}</div>}</div>)}</div>}</div>}</div> : <div className="h-full flex items-center justify-center"><div className="text-center text-gray-400"><Play size={48} className="mx-auto mb-3 opacity-50" /><p className="text-sm">Execute a query to see results</p></div></div>}</div></div>;
+  return <div className="h-full bg-canvas flex flex-col"><div className="flex-none flex items-center justify-between p-3 border-b border-base"><div className="flex items-center space-x-4"><button onClick={() => setActiveTab("data")} className={`text-sm ${activeTab === "data" ? "text-info border-b-2 border-info" : "text-muted hover:text-main"} pb-1`}>Response</button>{response?.errors && response.errors.length > 0 && <button onClick={() => setActiveTab("errors")} className={`text-sm ${activeTab === "errors" ? "text-danger border-b-2 border-danger" : "text-muted hover:text-main"} pb-1 flex items-center space-x-1`}><XCircle size={14} /><span>Errors ({response.errors.length})</span></button>}{(isSubscriptionActive || subscriptionMessages.length > 0) && <button onClick={() => setActiveTab("subscription")} className={`text-sm ${activeTab === "subscription" ? "text-accent border-b-2 border-accent" : "text-muted hover:text-main"} pb-1 flex items-center space-x-1`}><RefreshCw size={14} className={isSubscriptionActive ? "animate-spin" : ""} /><span>Subscription ({subscriptionMessages.length})</span></button>}</div><button onClick={onShowHistory} className="flex items-center space-x-2 text-sm text-muted hover:text-main transition-colors"><History size={16} /><span>History</span>{historyCount > 0 && <span className="bg-primary text-primary-content text-xs px-2 py-0.5 rounded-full">{historyCount}</span>}</button></div>{response && <div className="flex-none flex items-center justify-between px-4 py-2 bg-surface-secondary text-xs"><div className="flex items-center space-x-4"><div className="flex items-center space-x-2"><span className="text-muted">Status:</span><span className={`font-medium ${response.status === 200 ? "text-success" : "text-danger"}`}>{response.status} {response.statusText}</span></div><div className="flex items-center space-x-2"><Clock size={12} className="text-muted" /><span className="text-secondary">{response.responseTime.toFixed(0)}ms</span></div><div className="flex items-center space-x-2"><span className="text-muted">Size:</span><span className="text-secondary">{(response.size / 1024).toFixed(2)} KB</span></div></div></div>}<div className="flex-1 overflow-hidden">{isLoading ? <div className="h-full flex items-center justify-center"><div className="text-center"><Loader2 size={48} className="mx-auto mb-3 text-info animate-spin" /><p className="text-sm text-muted">Executing query...</p></div></div> : error ? <div className="h-full p-4"><div className="flex items-center space-x-2 text-danger mb-3"><XCircle size={16} /><span className="font-medium">Error</span></div><pre className="text-sm text-secondary bg-surface-raised p-4 rounded overflow-auto">{error}</pre></div> : response ? <div className="h-full">{activeTab === "data" && <MonacoEditor value={formatJson(response.data)} onChange={() => { }} language="json" readOnly />}{activeTab === "errors" && response.errors && <div className="h-full overflow-y-auto p-4">{response.errors.map((err, index) => <div key={index} className="mb-4 p-4 bg-danger-subtle border border-danger/30 rounded"><div className="flex items-start space-x-2 mb-2"><XCircle size={16} className="text-danger flex-shrink-0 mt-0.5" /><div className="flex-1"><p className="text-sm text-danger font-medium">{err.message}</p>{err.path && <p className="text-xs text-secondary mt-1">Path: {err.path.join(" > ")}</p>}{err.locations && <p className="text-xs text-secondary mt-1">Location: Line {err.locations[0]?.line}, Column {err.locations[0]?.column}</p>}</div></div></div>)}</div>}{activeTab === "subscription" && <div className="h-full overflow-y-auto p-4">{subscriptionMessages.length === 0 ? <div className="text-center text-muted mt-8"><RefreshCw size={48} className="mx-auto mb-3 opacity-50" /><p className="text-sm">{isSubscriptionActive ? "Waiting for subscription data..." : "No subscription messages yet"}</p></div> : <div className="space-y-2">{subscriptionMessages.map(msg => <div key={msg.id} className={`p-3 rounded border ${msg.type === "error" ? "bg-danger-subtle border-danger/30" : msg.type === "complete" ? "bg-surface-raised border-base" : "bg-success-subtle border-success/30"}`}><div className="flex items-center justify-between mb-2"><div className="flex items-center space-x-2">{msg.type === "error" ? <XCircle size={14} className="text-danger" /> : msg.type === "complete" ? <CheckCircle size={14} className="text-muted" /> : <CheckCircle size={14} className="text-success" />}<span className="text-xs text-muted">{new Date(msg.timestamp).toLocaleTimeString()}</span></div><span className="text-xs text-secondary uppercase">{msg.type}</span></div>{msg.data && <pre className="text-xs text-secondary bg-surface-raised p-2 rounded overflow-x-auto">{formatJson(msg.data)}</pre>}{msg.errors && <div className="text-xs text-danger mt-2">{msg.errors.map((err, i) => <div key={i}>{err.message}</div>)}</div>}</div>)}</div>}</div>}</div> : <div className="h-full flex items-center justify-center"><div className="text-center text-muted"><Play size={48} className="mx-auto mb-3 opacity-50" /><p className="text-sm">Execute a query to see results</p></div></div>}</div></div>;
 };
 
 /**
@@ -326,19 +329,19 @@ const GraphQLTabletComponent: React.FC<{
           data: message.payload?.data,
           errors: message.payload?.errors,
         };
-        
+
         // *** THIS IS THE CORRECTED CALL ***
         // We need to build the new state object manually.
         // We use the `state` prop which is guaranteed to be the latest version.
         const newState: GraphQLTabletStateWrapper = {
-            ...state,
-            data: {
-                ...state.data,
-                subscriptionMessages: [
-                    ...state.data.subscriptionMessages,
-                    subscriptionMessage,
-                ],
-            },
+          ...state,
+          data: {
+            ...state.data,
+            subscriptionMessages: [
+              ...state.data.subscriptionMessages,
+              subscriptionMessage,
+            ],
+          },
         };
         onChange(newState);
       });
@@ -385,7 +388,7 @@ const GraphQLTabletComponent: React.FC<{
     updateState({ history: updatedHistory });
   };
 
-  const handleFieldClick = (fieldName: string, typeName: string) => {
+  const handleFieldClick = (fieldName: string) => {
     const editor = queryEditorRef.current;
     if (!editor) {
       // Fallback in case editor is not ready
@@ -434,171 +437,168 @@ const GraphQLTabletComponent: React.FC<{
   const operationType = detectOperationType(data.query);
   const isSubscription = operationType === "subscription";
 
-    return (
-      <div className="h-full bg-gray-900 flex flex-col">
-        <div className="flex-none p-4 border-b border-gray-700/50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Network className="text-gray-400" size={24} />
-              <h2 className="text-xl font-semibold text-gray-100">
-                GraphQL Client
-              </h2>
-            </div>
-            <div className="text-xs text-gray-500 flex items-center">
-              <AlertCircle size={12} className="mr-1" />
-              <span>Browser CORS limitations may apply</span>
-            </div>
+  return (
+    <div className="h-full bg-canvas flex flex-col">
+      <div className="flex-none p-4 border-b border-base">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <Network className="text-muted" size={24} />
+            <h2 className="text-xl font-semibold text-main">
+              GraphQL Client
+            </h2>
           </div>
-        </div>
-        <UrlBar
-          endpoint={data.endpoint}
-          onEndpointChange={(endpoint) => updateState({ endpoint })}
-          onLoadSchema={handleLoadSchema}
-          isLoadingSchema={data.isLoadingSchema}
-        />
-        <div className="flex-1 flex overflow-hidden">
-          <div
-            className="border-r border-gray-700/50 overflow-hidden"
-            style={{ width: `${data.leftPanelWidth}%` }}
-          >
-            <SchemaExplorer
-              schema={data.schema}
-              schemaError={data.schemaError}
-              selectedType={data.selectedTypeInSchema}
-              onTypeSelect={(typeName) =>
-                updateState({ selectedTypeInSchema: typeName })
-              }
-              onFieldClick={handleFieldClick}
-            />
-          </div>
-          <div
-            className="border-r border-gray-700/50 flex flex-col overflow-hidden"
-            style={{ width: `${data.middlePanelWidth}%` }}
-          >
-            <div className="flex-none flex items-center space-x-1 px-4 pt-3 border-b border-gray-700/50">
-              <button
-                onClick={() => updateState({ activeTab: "query" })}
-                className={`px-4 py-2 text-sm rounded-t ${
-                  data.activeTab === "query"
-                    ? "bg-gray-800 text-gray-100"
-                    : "text-gray-400 hover:text-gray-100"
-                }`}
-              >
-                Query
-              </button>
-              <button
-                onClick={() => updateState({ activeTab: "variables" })}
-                className={`px-4 py-2 text-sm rounded-t ${
-                  data.activeTab === "variables"
-                    ? "bg-gray-800 text-gray-100"
-                    : "text-gray-400 hover:text-gray-100"
-                }`}
-              >
-                Variables
-              </button>
-              <button
-                onClick={() => updateState({ activeTab: "headers" })}
-                className={`px-4 py-2 text-sm rounded-t ${
-                  data.activeTab === "headers"
-                    ? "bg-gray-800 text-gray-100"
-                    : "text-gray-400 hover:text-gray-100"
-                }`}
-              >
-                Headers
-              </button>
-            </div>
-            <div className="flex-1 overflow-hidden">
-              {data.activeTab === "query" && (
-                <MonacoEditor
-                  value={data.query}
-                  onChange={(value) => updateState({ query: value })}
-                  language="graphql"
-                  onMount={(editor) => {
-                    queryEditorRef.current = editor;
-                  }}
-                />
-              )}
-              {data.activeTab === "variables" && (
-                <MonacoEditor
-                  value={data.variables}
-                  onChange={(value) => updateState({ variables: value })}
-                  language="json"
-                />
-              )}
-              {data.activeTab === "headers" && (
-                <HeadersEditor
-                  headers={data.headers}
-                  onChange={(headers) => updateState({ headers })}
-                />
-              )}
-            </div>
-            <div className="flex-none p-3 border-t border-gray-700/50">
-              {isSubscription ? (
-                <div className="flex items-center space-x-2">
-                  {data.isSubscriptionActive ? (
-                    <button
-                      onClick={handleStopSubscription}
-                      className="flex-1 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                    >
-                      <X size={16} />
-                      <span>Stop Subscription</span>
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleExecuteQuery}
-                      disabled={data.isExecuting || !data.endpoint}
-                      className="flex-1 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                    >
-                      <RefreshCw size={16} />
-                      <span>Start Subscription</span>
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <button
-                  onClick={handleExecuteQuery}
-                  disabled={data.isExecuting || !data.endpoint}
-                  className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                >
-                  {data.isExecuting ? (
-                    <>
-                      <Loader2 size={16} className="animate-spin" />
-                      <span>Executing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Play size={16} />
-                      <span>Execute {operationType || "Query"}</span>
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
-          </div>
-          <div className="flex-1 overflow-hidden">
-            {showHistory ? (
-              <QueryHistory
-                history={data.history}
-                onRestore={handleRestoreHistory}
-                onPin={handlePinHistory}
-                onDelete={handleDeleteHistory}
-                onClose={() => setShowHistory(false)}
-              />
-            ) : (
-              <ResponseViewer
-                response={data.response}
-                error={data.error}
-                isLoading={data.isExecuting}
-                subscriptionMessages={data.subscriptionMessages}
-                isSubscriptionActive={data.isSubscriptionActive}
-                onShowHistory={() => setShowHistory(true)}
-                historyCount={data.history.length}
-              />
-            )}
+          <div className="text-xs text-muted flex items-center">
+            <AlertCircle size={12} className="mr-1" />
+            <span>Browser CORS limitations may apply</span>
           </div>
         </div>
       </div>
-    );
+      <UrlBar
+        endpoint={data.endpoint}
+        onEndpointChange={(endpoint) => updateState({ endpoint })}
+        onLoadSchema={handleLoadSchema}
+        isLoadingSchema={data.isLoadingSchema}
+      />
+      <div className="flex-1 flex overflow-hidden">
+        <div
+          className="border-r border-base overflow-hidden"
+          style={{ width: `${data.leftPanelWidth}%` }}
+        >
+          <SchemaExplorer
+            schema={data.schema}
+            schemaError={data.schemaError}
+            selectedType={data.selectedTypeInSchema}
+            onTypeSelect={(typeName) =>
+              updateState({ selectedTypeInSchema: typeName })
+            }
+            onFieldClick={(fieldName) => handleFieldClick(fieldName)}
+          />
+        </div>
+        <div
+          className="border-r border-base flex flex-col overflow-hidden"
+          style={{ width: `${data.middlePanelWidth}%` }}
+        >
+          <div className="flex-none flex items-center space-x-1 px-4 pt-3 border-b border-base">
+            <button
+              onClick={() => updateState({ activeTab: "query" })}
+              className={`px-4 py-2 text-sm rounded-t ${data.activeTab === "query"
+                ? "bg-surface-raised text-main"
+                : "text-muted hover:text-main"
+                }`}
+            >
+              Query
+            </button>
+            <button
+              onClick={() => updateState({ activeTab: "variables" })}
+              className={`px-4 py-2 text-sm rounded-t ${data.activeTab === "variables"
+                ? "bg-surface-raised text-main"
+                : "text-muted hover:text-main"
+                }`}
+            >
+              Variables
+            </button>
+            <button
+              onClick={() => updateState({ activeTab: "headers" })}
+              className={`px-4 py-2 text-sm rounded-t ${data.activeTab === "headers"
+                ? "bg-surface-raised text-main"
+                : "text-muted hover:text-main"
+                }`}
+            >
+              Headers
+            </button>
+          </div>
+          <div className="flex-1 overflow-hidden">
+            {data.activeTab === "query" && (
+              <MonacoEditor
+                value={data.query}
+                onChange={(value) => updateState({ query: value })}
+                language="graphql"
+                onMount={(editor) => {
+                  queryEditorRef.current = editor;
+                }}
+              />
+            )}
+            {data.activeTab === "variables" && (
+              <MonacoEditor
+                value={data.variables}
+                onChange={(value) => updateState({ variables: value })}
+                language="json"
+              />
+            )}
+            {data.activeTab === "headers" && (
+              <HeadersEditor
+                headers={data.headers}
+                onChange={(headers) => updateState({ headers })}
+              />
+            )}
+          </div>
+          <div className="flex-none p-3 border-t border-base bg-surface-raised">
+            {isSubscription ? (
+              <div className="flex items-center space-x-2">
+                {data.isSubscriptionActive ? (
+                  <button
+                    onClick={handleStopSubscription}
+                    className="flex-1 bg-danger text-danger-content px-4 py-2 rounded hover:bg-danger-hover disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                  >
+                    <X size={16} />
+                    <span>Stop Subscription</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleExecuteQuery}
+                    disabled={data.isExecuting || !data.endpoint}
+                    className="flex-1 px-4 py-2 rounded flex items-center justify-center space-x-2 transition-colors disabled:cursor-not-allowed bg-accent text-accent-content hover:bg-accent-hover disabled:bg-element disabled:text-muted disabled:hover:bg-element"
+                  >
+                    <RefreshCw size={16} />
+                    <span>Start Subscription</span>
+                  </button>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={handleExecuteQuery}
+                disabled={data.isExecuting || !data.endpoint}
+                className="w-full px-4 py-2 rounded flex items-center justify-center space-x-2 transition-colors disabled:cursor-not-allowed bg-primary text-primary-content hover:bg-primary-hover disabled:bg-element disabled:text-muted disabled:hover:bg-element"
+              >
+                {data.isExecuting ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Executing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Play size={16} />
+                    <span>Execute {operationType || "Query"}</span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="flex-1 overflow-hidden">
+          {showHistory ? (
+            <QueryHistory
+              history={data.history}
+              onRestore={handleRestoreHistory}
+              onPin={handlePinHistory}
+              onDelete={handleDeleteHistory}
+              onClose={() => setShowHistory(false)}
+            />
+          ) : (
+            <ResponseViewer
+              response={data.response}
+              error={data.error}
+              isLoading={data.isExecuting}
+              subscriptionMessages={data.subscriptionMessages}
+              isSubscriptionActive={data.isSubscriptionActive}
+              onShowHistory={() => setShowHistory(true)}
+              historyCount={data.history.length}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
 };
 // *** REMOVED THE EXTRA CLOSING BRACE THAT WAS HERE ***
 

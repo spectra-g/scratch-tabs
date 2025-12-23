@@ -91,7 +91,7 @@ const PomodoroTabletUI: React.FC<{
             <div className="w-full mt-6">
               <label
                 htmlFor="session-goal"
-                className="flex items-center gap-2 mb-2 text-sm font-medium text-gray-400"
+                className="flex items-center gap-2 mb-2 text-sm font-medium text-muted"
               >
                 <ListChecks size={16} />
                 Session Goal
@@ -106,7 +106,7 @@ const PomodoroTabletUI: React.FC<{
                     ? "What's the one thing to focus on?"
                     : "Time to relax..."
                 }
-                className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-gray-200 placeholder-gray-500 text-center"
+                className="w-full bg-surface-raised/50 border border-base/50 rounded-md px-3 py-2 text-main placeholder-muted text-center"
               />
             </div>
             <div className="mt-8 w-full max-w-md">
@@ -120,42 +120,42 @@ const PomodoroTabletUI: React.FC<{
   const SessionIcon = currentSession.type === "focus" ? Brain : Coffee;
   const sessionColor =
     currentSession.type === "focus"
-      ? "text-blue-400"
+      ? "text-primary"
       : currentSession.type === "shortBreak"
         ? "text-green-400"
         : "text-purple-400";
 
   return (
     <div
-      className="h-full bg-gray-900 text-gray-200 flex flex-col"
+      className="h-full bg-canvas text-main flex flex-col"
       data-pomodoro-id={tabletId}
     >
-      <div className="flex-none p-4 border-b border-gray-700/50">
+      <div className="flex-none p-4 border-b border-base/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <Timer className="text-gray-400" size={24} />
-            <h2 className="text-xl font-semibold text-gray-100">
+            <Timer className="text-muted" size={24} />
+            <h2 className="text-xl font-semibold text-main">
               Pomodoro Timer
             </h2>
           </div>
           <div className="flex items-center space-x-2">
             <button
               onClick={() => changeView("timer")}
-              className={`p-2 rounded-md transition-colors ${activeView === "timer" ? "bg-blue-500/20 text-blue-400" : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"}`}
+              className={`p-2 rounded-md transition-colors ${activeView === "timer" ? "bg-primary/20 text-primary" : "text-muted hover:text-main hover:bg-surface-secondary/50"}`}
               title="Timer"
             >
               <Play size={18} />
             </button>
             <button
               onClick={() => changeView("stats")}
-              className={`p-2 rounded-md transition-colors ${activeView === "stats" ? "bg-blue-500/20 text-blue-400" : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"}`}
+              className={`p-2 rounded-md transition-colors ${activeView === "stats" ? "bg-primary/20 text-primary" : "text-muted hover:text-main hover:bg-surface-secondary/50"}`}
               title="Statistics"
             >
               <BarChart2 size={18} />
             </button>
             <button
               onClick={() => changeView("settings")}
-              className={`p-2 rounded-md transition-colors ${activeView === "settings" ? "bg-blue-500/20 text-blue-400" : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"}`}
+              className={`p-2 rounded-md transition-colors ${activeView === "settings" ? "bg-primary/20 text-primary" : "text-muted hover:text-main hover:bg-surface-secondary/50"}`}
               title="Settings"
             >
               <Settings size={18} />
@@ -168,17 +168,17 @@ const PomodoroTabletUI: React.FC<{
         {renderView()}
       </div>
 
-      <div className="flex-none p-4 border-t border-gray-700/50">
+      <div className="flex-none p-4 border-t border-base/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <button
               onClick={toggleSound}
-              className={`p-2 rounded-md transition-colors ${soundEnabled ? "text-gray-300 hover:text-gray-100" : "text-gray-500 hover:text-gray-300"}`}
+              className={`p-2 rounded-md transition-colors ${soundEnabled ? "text-secondary hover:text-main" : "text-muted hover:text-secondary"}`}
               title={soundEnabled ? "Mute Sound" : "Enable Sound"}
             >
               {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
             </button>
-            <div className="text-sm text-gray-400 flex items-center gap-2">
+            <div className="text-sm text-muted flex items-center gap-2">
               <SessionIcon size={16} className={sessionColor} />
               <span>Session {todayStats.focusCompleted + 1}</span>
             </div>
@@ -186,14 +186,14 @@ const PomodoroTabletUI: React.FC<{
           <div className="flex items-center space-x-2">
             <button
               onClick={handleReset}
-              className="p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-md transition-colors"
+              className="p-2 text-muted hover:text-main hover:bg-surface-secondary/50 rounded-md transition-colors"
               title="Reset Timer (R)"
             >
               <RotateCcw size={18} />
             </button>
             <button
               onClick={handleSkip}
-              className="p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-md transition-colors"
+              className="p-2 text-muted hover:text-main hover:bg-surface-secondary/50 rounded-md transition-colors"
               title="Skip to Next Session (S)"
             >
               <SkipForward size={18} />

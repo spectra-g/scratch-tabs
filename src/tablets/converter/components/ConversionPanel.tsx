@@ -25,18 +25,18 @@ export const ConversionPanel: React.FC<ConversionPanelProps> = ({
   };
 
   return (
-    <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg overflow-hidden">
-      <div className="bg-gray-800 px-4 py-3 border-b border-gray-700/50">
-        <h3 className="text-gray-200 font-medium">{title}</h3>
+    <div className="bg-surface-secondary/50 border border-base rounded-lg overflow-hidden">
+      <div className="bg-surface-secondary/80 px-4 py-3 border-b border-base">
+        <h3 className="text-main font-medium">{title}</h3>
         {description && (
-          <p className="text-sm text-gray-400 mt-1">{description}</p>
+          <p className="text-sm text-secondary mt-1">{description}</p>
         )}
       </div>
       <div className="p-4 space-y-4">
         {children}
         {result !== undefined && (
           <div className="flex items-center space-x-2">
-            <div className="flex-1 font-mono text-sm bg-gray-900/50 text-gray-200 px-3 py-2 rounded-md break-all">
+            <div className="flex-1 font-mono text-sm bg-surface-secondary/50 text-main px-3 py-2 rounded-md break-all border border-base">
               {result || "No result"}
             </div>
             <button
@@ -44,10 +44,9 @@ export const ConversionPanel: React.FC<ConversionPanelProps> = ({
               disabled={!result}
               className={`
                 p-2 rounded-md transition-colors
-                ${
-                  result
-                    ? "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
-                    : "text-gray-600 cursor-not-allowed"
+                ${result
+                  ? "text-secondary hover:text-main hover:bg-element-hover"
+                  : "text-muted cursor-not-allowed"
                 }
               `}
               title="Copy to clipboard"

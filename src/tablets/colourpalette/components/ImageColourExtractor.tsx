@@ -57,11 +57,11 @@ export const ImageColourExtractor: React.FC<ImageColourExtractorProps> = ({
 
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLImageElement>) => {
     if (!imageRef.current) return;
-    
+
     const rect = imageRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    
+
     setIsSelecting(true);
     setSelectionStart({ x, y });
     setCurrentSelection(null);
@@ -69,18 +69,18 @@ export const ImageColourExtractor: React.FC<ImageColourExtractorProps> = ({
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLImageElement>) => {
     if (!isSelecting || !selectionStart || !imageRef.current) return;
-    
+
     const rect = imageRef.current.getBoundingClientRect();
     const currentX = e.clientX - rect.left;
     const currentY = e.clientY - rect.top;
-    
+
     const selection = {
       x: Math.min(selectionStart.x, currentX),
       y: Math.min(selectionStart.y, currentY),
       width: Math.abs(currentX - selectionStart.x),
       height: Math.abs(currentY - selectionStart.y),
     };
-    
+
     setCurrentSelection(selection);
   }, [isSelecting, selectionStart]);
 
@@ -138,10 +138,10 @@ export const ImageColourExtractor: React.FC<ImageColourExtractorProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-300">Image Color Extraction</h3>
+        <h3 className="text-sm font-medium text-main">Image Color Extraction</h3>
         <button
           onClick={handleExtractAll}
-          className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors flex items-center space-x-1"
+          className="px-2 py-1 bg-primary hover:bg-primary/90 text-white rounded text-xs font-medium transition-colors flex items-center space-x-1"
         >
           <RefreshCw size={12} />
           <span>Extract All</span>
@@ -153,7 +153,7 @@ export const ImageColourExtractor: React.FC<ImageColourExtractorProps> = ({
           ref={imageRef}
           src={imageUrl}
           alt="Color extraction source"
-          className="w-full max-h-64 object-contain rounded-lg border border-gray-600 cursor-crosshair"
+          className="w-full max-h-64 object-contain rounded-lg border border-base cursor-crosshair"
           onClick={handleImageClick}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
@@ -161,11 +161,11 @@ export const ImageColourExtractor: React.FC<ImageColourExtractorProps> = ({
           onMouseLeave={handleMouseUp}
           draggable={false}
         />
-        
+
         {/* Selection Overlay */}
         {currentSelection && (
           <div
-            className="absolute border-2 border-blue-400 bg-blue-400/20 pointer-events-none"
+            className="absolute border-2 border-primary bg-primary/20 pointer-events-none"
             style={{
               left: currentSelection.x,
               top: currentSelection.y,
@@ -184,21 +184,21 @@ export const ImageColourExtractor: React.FC<ImageColourExtractorProps> = ({
               top: lastExtractionPoint.y - 10,
             }}
           >
-            <div className="w-5 h-5 border-2 border-green-400 bg-green-400/30 rounded-full animate-ping" />
-            <div className="absolute inset-0 w-5 h-5 border-2 border-green-400 bg-green-400/50 rounded-full" />
+            <div className="w-5 h-5 border-2 border-success bg-success/30 rounded-full animate-ping" />
+            <div className="absolute inset-0 w-5 h-5 border-2 border-success bg-success/50 rounded-full" />
           </div>
         )}
 
         {/* Extraction Status Overlay */}
         {isExtracting && (
-          <div className="absolute top-8 left-2 bg-green-600/90 text-white text-xs px-2 py-1 rounded">
+          <div className="absolute top-8 left-2 bg-success text-white text-xs px-2 py-1 rounded">
             <div className="flex items-center space-x-1">
               <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
               <span>Extracting colors...</span>
             </div>
           </div>
         )}
-        
+
         {/* Instructions Overlay */}
         <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
           <div className="flex items-center space-x-1">
@@ -208,7 +208,7 @@ export const ImageColourExtractor: React.FC<ImageColourExtractorProps> = ({
         </div>
       </div>
 
-      <div className="text-xs text-gray-500 text-center">
+      <div className="text-xs text-secondary text-center">
         Click anywhere on the image to extract colors from that region
       </div>
     </div>

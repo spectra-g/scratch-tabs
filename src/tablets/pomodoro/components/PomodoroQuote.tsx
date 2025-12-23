@@ -22,10 +22,10 @@ export const PomodoroQuote: React.FC<PomodoroQuoteProps> = ({ quotes }) => {
 
   return (
     <div className="text-center">
-      <blockquote className="text-gray-300 italic">
+      <blockquote className="text-secondary italic">
         "{currentQuote.text}"
       </blockquote>
-      <cite className="text-sm text-gray-400 mt-2 block">
+      <cite className="text-sm text-muted mt-2 block">
         — {currentQuote.author}
       </cite>
     </div>

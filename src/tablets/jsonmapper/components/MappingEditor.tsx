@@ -15,6 +15,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { useTabletTabCreation } from "../../bridge";
+import { useThemeStore } from "../../../stores/themeStore";
 import { MappingConfig, MappingRule, PathInfo } from "../types";
 import { MappingTable } from "./MappingTable";
 import {
@@ -75,6 +76,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
   const [showExportDropdown, setShowExportDropdown] = useState(false);
   const exportDropdownRef = useRef<HTMLDivElement>(null);
   const { createBackgroundTab } = useTabletTabCreation();
+  const { isDarkMode } = useThemeStore();
 
   // Sync local state changes back to parent (prevents data loss on tab switch)
   useEffect(() => {
@@ -538,9 +540,9 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
       rules.map((rule) =>
         rule.id === id
           ? {
-              ...rule,
-              status: rule.status === "ignored" ? "unmapped" : "ignored",
-            }
+            ...rule,
+            status: rule.status === "ignored" ? "unmapped" : "ignored",
+          }
           : rule,
       ),
     );
@@ -551,15 +553,15 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
       rules.map((rule) =>
         rule.id === id
           ? {
-              ...rule,
-              targetPath: "",
-              transformationType: "none" as const,
-              transformation: "",
-              targetDataType: "unknown" as const,
-              status: "unmapped" as const,
-              confidence: 0,
-              isUserDefined: true,
-            }
+            ...rule,
+            targetPath: "",
+            transformationType: "none" as const,
+            transformation: "",
+            targetDataType: "unknown" as const,
+            status: "unmapped" as const,
+            confidence: 0,
+            isUserDefined: true,
+          }
           : rule,
       ),
     );
@@ -734,24 +736,24 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex-none p-4 border-b border-gray-700/50">
+      <div className="flex-none p-4 border-b border-base">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <button
               onClick={onCancel}
-              className="p-1.5 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
+              className="p-1.5 text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
               title="Back to mappings"
             >
               <ArrowLeft size={20} />
             </button>
-            <h2 className="text-xl font-semibold text-gray-100">
+            <h2 className="text-xl font-semibold text-main">
               {isNew ? "Create Mapping" : "Edit Mapping"}
             </h2>
           </div>
           <div className="flex space-x-3">
             <button
               onClick={handleTest}
-              className="flex text-sm items-center space-x-2 px-3 py-1.5 bg-green-500/20 text-green-400 rounded-md hover:bg-green-500/30 transition-colors"
+              className="flex text-sm items-center space-x-2 px-3 py-1.5 bg-success-subtle text-success hover:bg-success-subtle/80 rounded-md transition-colors"
               disabled={!sourceJson || !!sourceJsonError}
             >
               <Play size={14} />
@@ -759,7 +761,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
             </button>
             <button
               onClick={handleBatchTransform}
-              className="flex text-sm items-center space-x-2 px-3 py-1.5 bg-orange-500/20 text-orange-400 rounded-md hover:bg-orange-500/30 transition-colors"
+              className="flex text-sm items-center space-x-2 px-3 py-1.5 bg-warning-subtle text-warning hover:bg-warning-subtle/80 rounded-md transition-colors"
               disabled={!sourceJson || !!sourceJsonError}
             >
               <Upload size={14} />
@@ -767,7 +769,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
             </button>
             <button
               onClick={handleGenerateCode}
-              className="flex text-sm items-center space-x-2 px-3 py-1.5 bg-purple-500/20 text-purple-400 rounded-md hover:bg-purple-500/30 transition-colors"
+              className="flex text-sm items-center space-x-2 px-3 py-1.5 bg-info-subtle text-info hover:bg-info-subtle/80 rounded-md transition-colors"
               disabled={!sourceJson || !!sourceJsonError}
             >
               <FileCode size={14} />
@@ -775,7 +777,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
             </button>
             <button
               onClick={handleSave}
-              className="flex text-sm items-center space-x-2 px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition-colors"
+              className="flex text-sm items-center space-x-2 px-3 py-1.5 bg-primary text-white hover:opacity-90 rounded-md transition-colors"
             >
               <Save size={14} />
               <span>Save</span>
@@ -790,26 +792,26 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
           {/* Mapping Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-secondary mb-1">
                 Mapping Name
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors"
+                className="input-themed w-full"
                 placeholder="Enter mapping name..."
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-secondary mb-1">
                 Description
               </label>
               <input
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors"
+                className="input-themed w-full"
                 placeholder="Enter description..."
               />
             </div>
@@ -820,11 +822,11 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
             {/* Source JSON */}
             <div>
               <div className="flex justify-between items-center mb-2">
-                <label className="block text-sm font-medium text-gray-300">
+                <label className="block text-sm font-medium text-secondary">
                   Source JSON
                 </label>
                 <div className="flex space-x-2">
-                  <label className="flex items-center space-x-2 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors cursor-pointer">
+                  <label className="flex items-center space-x-2 px-2 py-1 bg-surface-secondary hover:bg-element-hover rounded-md text-xs text-secondary transition-colors cursor-pointer">
                     <Upload size={14} />
                     <span>Load File</span>
                     <input
@@ -844,36 +846,35 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
                   </button>
                 </div>
               </div>
-              <div
-                className={`border rounded-md overflow-hidden ${sourceJsonError ? "border-red-500/50" : "border-gray-700/50"}`}
-              >
+              <div className="border border-base rounded-md overflow-hidden">
                 <Editor
                   height="300px"
-                  language="json"
+                  defaultLanguage="json"
                   value={sourceJson}
                   onChange={handleSourceJsonChange}
-                  theme="vs-dark"
+                  theme={isDarkMode ? "vs-dark" : "vs"}
                   options={{
                     minimap: { enabled: false },
                     fontSize: 14,
                     wordWrap: "on",
+                    scrollBeyondLastLine: false,
                     padding: { top: 8, bottom: 8 },
                   }}
                 />
               </div>
               {sourceJsonError && (
-                <p className="mt-1 text-xs text-red-400">{sourceJsonError}</p>
+                <p className="mt-1 text-xs text-danger">{sourceJsonError}</p>
               )}
             </div>
 
             {/* Target JSON */}
             <div>
               <div className="flex justify-between items-center mb-2">
-                <label className="block text-sm font-medium text-gray-300">
-                  What should the target JSON look like?
+                <label className="block text-sm font-medium text-secondary">
+                  Target JSON (Optional - for structure)
                 </label>
                 <div className="flex space-x-2">
-                  <label className="flex items-center space-x-2 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors cursor-pointer">
+                  <label className="flex items-center space-x-2 px-2 py-1 bg-surface-secondary hover:bg-element-hover rounded-md text-xs text-secondary transition-colors cursor-pointer">
                     <Upload size={14} />
                     <span>Load File</span>
                     <input
@@ -886,32 +887,31 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
                   <button
                     onClick={handleCopyTarget}
                     disabled={!targetJson}
-                    className="flex items-center space-x-2 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-xs text-gray-300 transition-colors"
+                    className="flex items-center space-x-2 px-2 py-1 bg-surface-secondary hover:bg-element-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-xs text-secondary transition-colors"
                   >
                     {targetCopied ? <Check size={14} /> : <Copy size={14} />}
                     <span>{targetCopied ? "Copied!" : "Copy"}</span>
                   </button>
                 </div>
               </div>
-              <div
-                className={`border rounded-md overflow-hidden ${targetJsonError ? "border-red-500/50" : "border-gray-700/50"}`}
-              >
+              <div className="border border-base rounded-md overflow-hidden">
                 <Editor
                   height="300px"
-                  language="json"
+                  defaultLanguage="json"
                   value={targetJson}
                   onChange={handleTargetJsonChange}
-                  theme="vs-dark"
+                  theme={isDarkMode ? "vs-dark" : "vs"}
                   options={{
                     minimap: { enabled: false },
                     fontSize: 14,
                     wordWrap: "on",
+                    scrollBeyondLastLine: false,
                     padding: { top: 8, bottom: 8 },
                   }}
                 />
               </div>
               {targetJsonError && (
-                <p className="mt-1 text-xs text-red-400">{targetJsonError}</p>
+                <p className="mt-1 text-xs text-danger">{targetJsonError}</p>
               )}
             </div>
           </div>
@@ -923,10 +923,9 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
               disabled={!sourceJson || !!sourceJsonError || isAnalyzing}
               className={`
                 flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium
-                ${
-                  !sourceJson || !!sourceJsonError || isAnalyzing
-                    ? "bg-gray-700/50 text-gray-500 cursor-not-allowed"
-                    : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
+                ${!sourceJson || !!sourceJsonError || isAnalyzing
+                  ? "bg-gray-700/50 text-gray-500 cursor-not-allowed"
+                  : "bg-surface-secondary text-primary hover:bg-element-hover"
                 }
                 transition-colors
               `}
@@ -941,20 +940,20 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
           {/* Mapping Table */}
           <div>
             <div className="flex justify-between items-center mb-2">
-              <h3 className="text-sm font-medium text-gray-300">
+              <h3 className="text-sm font-medium text-secondary">
                 Mapping Rules
               </h3>
               <div className="flex space-x-2">
                 <button
                   onClick={handleAddRule}
-                  className="flex items-center space-x-1 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors"
+                  className="flex items-center space-x-1 px-2 py-1 bg-surface-secondary hover:bg-element-hover rounded-md text-xs text-secondary transition-colors"
                 >
                   <Plus size={14} />
                   <span>Add Rule</span>
                 </button>
                 <button
                   onClick={handleReEvaluateAll}
-                  className="flex items-center space-x-1 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors"
+                  className="flex items-center space-x-1 px-2 py-1 bg-surface-secondary hover:bg-element-hover rounded-md text-xs text-secondary transition-colors"
                   disabled={
                     !sourceJson ||
                     !targetJson ||
@@ -969,7 +968,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
                 <div className="relative" ref={exportDropdownRef}>
                   <button
                     onClick={() => setShowExportDropdown(!showExportDropdown)}
-                    className="flex items-center space-x-1 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors"
+                    className="flex items-center space-x-1 px-2 py-1 bg-surface-secondary hover:bg-element-hover rounded-md text-xs text-secondary transition-colors"
                     disabled={rules.length === 0}
                     title="Export rules to CSV"
                   >
@@ -979,17 +978,17 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
                   </button>
 
                   {showExportDropdown && (
-                    <div className="absolute right-0 mt-1 w-48 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10">
+                    <div className="absolute right-0 mt-1 w-48 bg-surface border border-base rounded-md shadow-lg z-10">
                       <button
                         onClick={handleExportRulesToCsv}
-                        className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-gray-700/50 flex items-center space-x-2 transition-colors"
+                        className="w-full text-left px-3 py-2 text-xs text-secondary hover:bg-element-hover flex items-center space-x-2 transition-colors"
                       >
                         <DownloadCloud size={14} />
                         <span>Download CSV</span>
                       </button>
                       <button
                         onClick={handleExportRulesToNewTab}
-                        className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-gray-700/50 flex items-center space-x-2 transition-colors border-t border-gray-700"
+                        className="w-full text-left px-3 py-2 text-xs text-secondary hover:bg-element-hover flex items-center space-x-2 transition-colors border-t border-base"
                       >
                         <ExternalLink size={14} />
                         <span>Open in New Tab</span>
@@ -999,7 +998,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
                 </div>
                 <button
                   onClick={handleClearAllRules}
-                  className="flex items-center space-x-1 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-xs text-gray-300 transition-colors"
+                  className="flex items-center space-x-1 px-2 py-1 bg-surface-secondary hover:bg-element-hover rounded-md text-xs text-secondary transition-colors"
                   disabled={rules.length === 0}
                 >
                   <span>Clear All</span>
@@ -1019,9 +1018,9 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
               onSortedRulesChange={handleSortedRulesChange}
               autoEditRuleId={autoEditRuleId}
             />
-          </div>
-        </div>
-      </div>
-    </div>
+          </div >
+        </div >
+      </div >
+    </div >
   );
 };

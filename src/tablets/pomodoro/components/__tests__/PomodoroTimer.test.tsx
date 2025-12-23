@@ -418,7 +418,7 @@ describe("PomodoroTimer", () => {
       );
 
       const timeDisplay = screen.getByText("25:00");
-      expect(timeDisplay).toHaveClass("text-blue-400");
+      expect(timeDisplay).toHaveClass("text-primary");
     });
 
     it("should apply green color class for short break", () => {

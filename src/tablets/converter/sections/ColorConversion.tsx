@@ -9,7 +9,6 @@ interface Props {
 }
 
 export const ColorConversion: React.FC<Props> = ({
-  searchQuery,
   data,
   onDataChange,
 }) => {
@@ -25,10 +24,10 @@ export const ColorConversion: React.FC<Props> = ({
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result
       ? {
-          r: parseInt(result[1], 16),
-          g: parseInt(result[2], 16),
-          b: parseInt(result[3], 16),
-        }
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+      }
       : null;
   };
 
@@ -213,10 +212,10 @@ export const ColorConversion: React.FC<Props> = ({
             <div className="space-y-2">
               {Object.entries(results).map(([format, value]) => (
                 <div key={format}>
-                  <div className="text-sm font-medium text-gray-400 mb-1">
+                  <div className="text-sm font-medium text-secondary mb-1">
                     {format}:
                   </div>
-                  <div className="font-mono text-sm bg-gray-900/50 text-gray-200 px-3 py-2 rounded-md">
+                  <div className="font-mono text-sm bg-surface-secondary/50 text-main px-3 py-2 rounded-md border border-base">
                     {value}
                   </div>
                 </div>

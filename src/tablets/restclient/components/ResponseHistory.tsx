@@ -22,20 +22,20 @@ export const ResponseHistory: React.FC<ResponseHistoryProps> = ({
   if (history.length === 0) {
     return (
       <div className="h-full flex flex-col">
-        <div className="flex-none p-4 border-b border-gray-700/50 flex justify-between items-center">
-          <h3 className="text-lg font-medium text-gray-200">
+        <div className="flex-none p-4 border-b border-base/50 flex justify-between items-center">
+          <h3 className="text-lg font-medium text-main">
             Response History
           </h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-200 transition-colors"
+            className="text-muted hover:text-main transition-colors"
           >
             <X size={20} />
           </button>
         </div>
 
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center text-gray-400">
+          <div className="text-center text-muted">
             <p>No response history yet.</p>
             <p className="text-sm mt-1">Execute requests to see them here.</p>
           </div>
@@ -46,11 +46,11 @@ export const ResponseHistory: React.FC<ResponseHistoryProps> = ({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-none p-4 border-b border-gray-700/50 flex justify-between items-center">
-        <h3 className="text-lg font-medium text-gray-200">Response History</h3>
+      <div className="flex-none p-4 border-b border-base/50 flex justify-between items-center">
+        <h3 className="text-lg font-medium text-main">Response History</h3>
         <button
           onClick={onClose}
-          className="text-gray-400 hover:text-gray-200 transition-colors"
+          className="text-muted hover:text-main transition-colors"
         >
           <X size={20} />
         </button>
@@ -61,15 +61,15 @@ export const ResponseHistory: React.FC<ResponseHistoryProps> = ({
           {history.map((item) => (
             <div
               key={item.id}
-              className="p-4 hover:bg-gray-800/50 transition-colors"
+              className="p-4 hover:bg-surface-raised/50 transition-colors"
             >
               <div className="flex justify-between items-start">
                 <div>
                   <div className="flex items-center space-x-2">
-                    <span className="font-medium text-gray-200">
+                    <span className="font-medium text-main">
                       {item.method}
                     </span>
-                    <span className="text-gray-400">{item.url}</span>
+                    <span className="text-muted">{item.url}</span>
                   </div>
 
                   <div className="flex items-center space-x-3 mt-1 text-sm">
@@ -79,12 +79,12 @@ export const ResponseHistory: React.FC<ResponseHistoryProps> = ({
                       {item.status} {item.statusText}
                     </span>
 
-                    <span className="text-gray-400 flex items-center">
+                    <span className="text-muted flex items-center">
                       <Clock size={14} className="mr-1" />
                       {formatTime(item.duration)}
                     </span>
 
-                    <span className="text-gray-400">
+                    <span className="text-muted">
                       {new Date(item.timestamp).toLocaleTimeString()}
                     </span>
                   </div>
@@ -98,7 +98,7 @@ export const ResponseHistory: React.FC<ResponseHistoryProps> = ({
                       ${
                         item.isPinned
                           ? "text-yellow-400 hover:bg-yellow-500/20"
-                          : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
+                          : "text-muted hover:text-main hover:bg-surface-secondary/50"
                       }
                     `}
                     title={item.isPinned ? "Unpin" : "Pin"}
@@ -108,7 +108,7 @@ export const ResponseHistory: React.FC<ResponseHistoryProps> = ({
 
                   <button
                     onClick={() => onRestoreItem(item)}
-                    className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded-md transition-colors"
+                    className="p-1.5 text-muted hover:text-primary hover:bg-surface-secondary/50 rounded-md transition-colors"
                     title="Restore this response"
                   >
                     <ArrowRight size={16} />
@@ -116,7 +116,7 @@ export const ResponseHistory: React.FC<ResponseHistoryProps> = ({
 
                   <button
                     onClick={() => onDeleteItem(item.id)}
-                    className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-700/50 rounded-md transition-colors"
+                    className="p-1.5 text-muted hover:text-red-400 hover:bg-surface-secondary/50 rounded-md transition-colors"
                     title="Delete from history"
                   >
                     <Trash2 size={16} />

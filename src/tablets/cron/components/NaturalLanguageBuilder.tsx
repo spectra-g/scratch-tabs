@@ -180,19 +180,19 @@ export const NaturalLanguageBuilder: React.FC<NaturalLanguageBuilderProps> = ({
   ]);
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-      <h3 className="text-sm font-medium text-gray-300 mb-4">
+    <div className="bg-surface-secondary rounded-lg p-4 border border-base">
+      <h3 className="text-sm font-medium text-main mb-4">
         Natural Language Builder
       </h3>
 
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-gray-300">Run</span>
+          <span className="text-secondary">Run</span>
 
           <select
             value={frequency}
             onChange={(e) => setFrequency(e.target.value)}
-            className="bg-gray-700 border border-gray-600 rounded-md px-3 py-1 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="input-themed bg-surface text-main text-sm"
           >
             <option value="minutely">Every minute</option>
             <option value="hourly">Every hour</option>
@@ -205,14 +205,14 @@ export const NaturalLanguageBuilder: React.FC<NaturalLanguageBuilderProps> = ({
 
           {frequency === "hourly" && (
             <>
-              <span className="text-gray-300">at minute</span>
+              <span className="text-secondary">at minute</span>
               <input
                 type="number"
                 min="0"
                 max="59"
                 value={minuteValue}
                 onChange={(e) => setMinuteValue(e.target.value)}
-                className="bg-gray-700 border border-gray-600 rounded-md px-3 py-1 text-sm text-gray-200 w-16 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input-themed bg-surface text-main text-sm w-16"
               />
             </>
           )}
@@ -222,27 +222,27 @@ export const NaturalLanguageBuilder: React.FC<NaturalLanguageBuilderProps> = ({
             frequency === "monthly" ||
             frequency === "yearly" ||
             frequency === "custom") && (
-            <>
-              <span className="text-gray-300">at</span>
-              <input
-                type="number"
-                min="0"
-                max="23"
-                value={hourValue}
-                onChange={(e) => setHourValue(e.target.value)}
-                className="bg-gray-700 border border-gray-600 rounded-md px-3 py-1 text-sm text-gray-200 w-16 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <span className="text-gray-300">:</span>
-              <input
-                type="number"
-                min="0"
-                max="59"
-                value={minuteValue}
-                onChange={(e) => setMinuteValue(e.target.value)}
-                className="bg-gray-700 border border-gray-600 rounded-md px-3 py-1 text-sm text-gray-200 w-16 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </>
-          )}
+              <>
+                <span className="text-secondary">at</span>
+                <input
+                  type="number"
+                  min="0"
+                  max="23"
+                  value={hourValue}
+                  onChange={(e) => setHourValue(e.target.value)}
+                  className="input-themed bg-surface text-main text-sm w-16"
+                />
+                <span className="text-secondary">:</span>
+                <input
+                  type="number"
+                  min="0"
+                  max="59"
+                  value={minuteValue}
+                  onChange={(e) => setMinuteValue(e.target.value)}
+                  className="input-themed bg-surface text-main text-sm w-16"
+                />
+              </>
+            )}
 
           {frequency === "weekly" && (
             <>
@@ -268,27 +268,27 @@ export const NaturalLanguageBuilder: React.FC<NaturalLanguageBuilderProps> = ({
           {(frequency === "monthly" ||
             frequency === "yearly" ||
             frequency === "custom") && (
-            <>
-              <span className="text-gray-300">on day</span>
-              <input
-                type="number"
-                min="1"
-                max="31"
-                value={dayValue === "*" ? "" : dayValue}
-                onChange={(e) => setDayValue(e.target.value || "*")}
-                placeholder="*"
-                className="bg-gray-700 border border-gray-600 rounded-md px-3 py-1 text-sm text-gray-200 w-16 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </>
-          )}
+              <>
+                <span className="text-secondary">on day</span>
+                <input
+                  type="number"
+                  min="1"
+                  max="31"
+                  value={dayValue === "*" ? "" : dayValue}
+                  onChange={(e) => setDayValue(e.target.value || "*")}
+                  placeholder="*"
+                  className="input-themed bg-surface text-main text-sm w-16"
+                />
+              </>
+            )}
 
           {(frequency === "yearly" || frequency === "custom") && (
             <>
-              <span className="text-gray-300">of</span>
+              <span className="text-secondary">of</span>
               <select
                 value={monthValue}
                 onChange={(e) => setMonthValue(e.target.value)}
-                className="bg-gray-700 border border-gray-600 rounded-md px-3 py-1 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input-themed bg-surface text-main text-sm"
               >
                 <option value="*">Every month</option>
                 <option value="1">January</option>
@@ -331,14 +331,14 @@ export const NaturalLanguageBuilder: React.FC<NaturalLanguageBuilderProps> = ({
         </div>
 
         {validationErrors.length > 0 && (
-          <div className="mt-4 p-3 bg-red-900/20 border border-red-900/30 rounded-md">
-            <h4 className="text-sm font-medium text-red-400 mb-1">
+          <div className="mt-4 p-3 bg-danger-subtle border border-danger/30 rounded-md">
+            <h4 className="text-sm font-medium text-danger mb-1">
               Validation Errors
             </h4>
-            <ul className="text-xs text-red-300 space-y-1">
+            <ul className="text-xs text-danger space-y-1">
               {validationErrors.map((error, index) => (
                 <li key={index} className="flex items-start">
-                  <span className="text-red-400 mr-1">•</span>
+                  <span className="text-danger mr-1">•</span>
                   <span>{error.message}</span>
                 </li>
               ))}

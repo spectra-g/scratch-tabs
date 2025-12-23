@@ -36,11 +36,11 @@ export const CronHeader: React.FC<CronHeaderProps> = ({
   const dialectInfo = getDialectInfo(dialect);
 
   return (
-    <div className="border-b border-gray-700 bg-gray-800 p-4">
+    <div className="border-b border-base bg-surface-secondary p-4">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center">
-          <Clock className="text-blue-400 mr-2" size={24} />
-          <h2 className="text-xl font-semibold text-gray-100">
+          <Clock className="text-primary mr-2" size={24} />
+          <h2 className="text-xl font-semibold text-main">
             Cron Expression Builder
           </h2>
         </div>
@@ -52,7 +52,7 @@ export const CronHeader: React.FC<CronHeaderProps> = ({
               <select
                 value={dialect}
                 onChange={(e) => onDialectChange(e.target.value as CronDialect)}
-                className="bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-sm text-gray-200 appearance-none pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input-themed bg-surface text-main text-sm appearance-none pr-8"
               >
                 {dialectOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -80,26 +80,26 @@ export const CronHeader: React.FC<CronHeaderProps> = ({
 
             <button
               onClick={() => setShowDialectInfo(!showDialectInfo)}
-              className="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+              className="absolute -top-2 -right-2 bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
               title="Dialect information"
             >
               ?
             </button>
 
             {showDialectInfo && (
-              <div className="absolute top-full left-0 mt-2 w-64 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10 p-3">
-                <h3 className="text-sm font-medium text-gray-200 mb-1">
+              <div className="absolute top-full left-0 mt-2 w-64 bg-surface-secondary border border-base rounded-md shadow-lg z-10 p-3">
+                <h3 className="text-sm font-medium text-main mb-1">
                   {dialectInfo.name}
                 </h3>
-                <p className="text-xs text-gray-400 mb-2">
+                <p className="text-xs text-muted mb-2">
                   {dialectInfo.description}
                 </p>
-                <div className="text-xs text-gray-300">
+                <div className="text-xs text-secondary">
                   <div className="font-medium mb-1">Fields:</div>
                   <ul className="list-disc list-inside space-y-1">
                     {dialectInfo.fields.map((field) => (
                       <li key={field.name}>
-                        <span className="text-blue-400">{field.name}</span>
+                        <span className="text-primary">{field.name}</span>
                         {field.required ? "" : " (optional)"}
                       </li>
                     ))}
@@ -107,7 +107,7 @@ export const CronHeader: React.FC<CronHeaderProps> = ({
                 </div>
                 <button
                   onClick={() => setShowDialectInfo(false)}
-                  className="mt-2 w-full text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 py-1 rounded"
+                  className="mt-2 w-full text-xs bg-element hover:bg-element-hover text-main py-1 rounded"
                 >
                   Close
                 </button>
@@ -118,7 +118,7 @@ export const CronHeader: React.FC<CronHeaderProps> = ({
           {/* Timezone Selector */}
           <div className="relative">
             <div className="flex items-center">
-              <Globe size={16} className="text-gray-400 mr-2" />
+              <Globe size={16} className="text-secondary mr-2" />
               <select
                 value={timezone.type}
                 onChange={(e) => {
@@ -133,7 +133,7 @@ export const CronHeader: React.FC<CronHeaderProps> = ({
 
                   onTimezoneChange({ type, name });
                 }}
-                className="bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-sm text-gray-200 appearance-none pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input-themed bg-surface text-main text-sm appearance-none pr-8"
               >
                 <option value="local">Local Time</option>
                 <option value="utc">UTC</option>
@@ -158,13 +158,13 @@ export const CronHeader: React.FC<CronHeaderProps> = ({
             </div>
 
             {timezone.type === "custom" && (
-              <div className="absolute top-full left-0 mt-2 w-64 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10 p-3">
+              <div className="absolute top-full left-0 mt-2 w-64 bg-surface-secondary border border-base rounded-md shadow-lg z-10 p-3">
                 <select
                   value={timezone.name}
                   onChange={(e) =>
                     onTimezoneChange({ ...timezone, name: e.target.value })
                   }
-                  className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="input-themed w-full bg-surface text-main text-sm"
                 >
                   {Intl.supportedValuesOf("timeZone").map((tz) => (
                     <option key={tz} value={tz}>
@@ -179,7 +179,7 @@ export const CronHeader: React.FC<CronHeaderProps> = ({
           {/* Action Buttons */}
           <button
             onClick={onShowPatternLibrary}
-            className="flex items-center bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-2 rounded-md text-sm transition-colors"
+            className="flex items-center bg-element hover:bg-element-hover text-main px-3 py-2 rounded-md text-sm transition-colors border border-base"
           >
             <BookOpen size={16} className="mr-2" />
             <span>Patterns</span>
@@ -187,7 +187,7 @@ export const CronHeader: React.FC<CronHeaderProps> = ({
 
           <button
             onClick={onShowCodeExporter}
-            className="flex items-center bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-2 rounded-md text-sm transition-colors"
+            className="flex items-center bg-element hover:bg-element-hover text-main px-3 py-2 rounded-md text-sm transition-colors border border-base"
           >
             <Code size={16} className="mr-2" />
             <span>Code</span>
@@ -195,7 +195,7 @@ export const CronHeader: React.FC<CronHeaderProps> = ({
 
           <button
             onClick={onShowVisualizer}
-            className="flex items-center bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-2 rounded-md text-sm transition-colors"
+            className="flex items-center bg-element hover:bg-element-hover text-main px-3 py-2 rounded-md text-sm transition-colors border border-base"
           >
             <Calendar size={16} className="mr-2" />
             <span>Visualize</span>

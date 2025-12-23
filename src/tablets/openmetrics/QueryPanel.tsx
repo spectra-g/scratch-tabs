@@ -106,55 +106,55 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="p-3 border-b border-gray-700">
+      <div className="p-3 border-b border-base">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-medium text-gray-300">Query Metrics</h3>
+          <h3 className="text-sm font-medium text-secondary">Query Metrics</h3>
           <button
             onClick={() => setShowHelp(!showHelp)}
-            className="text-xs text-blue-400 hover:text-blue-300"
+            className="text-xs text-primary hover:text-primary"
           >
             {showHelp ? "Hide Help" : "Show Help"}
           </button>
         </div>
 
         {showHelp && (
-          <div className="mb-3 p-3 bg-gray-800 rounded-lg text-sm">
-            <h4 className="font-medium text-gray-300 mb-1">Query Syntax</h4>
-            <ul className="list-disc pl-5 text-gray-400 space-y-1">
+          <div className="mb-3 p-3 bg-surface-raised rounded-lg text-sm">
+            <h4 className="font-medium text-secondary mb-1">Query Syntax</h4>
+            <ul className="list-disc pl-5 text-muted space-y-1">
               <li>
-                <code className="text-blue-400">metric_name</code> - Select a
+                <code className="text-primary">metric_name</code> - Select a
                 metric by name
               </li>
               <li>
-                <code className="text-blue-400">
+                <code className="text-primary">
                   metric_name{'{label="value"}'}
                 </code>{" "}
                 - Filter by label
               </li>
               <li>
-                <code className="text-blue-400">
+                <code className="text-primary">
                   metric_name{'{label!="value"}'}
                 </code>{" "}
                 - Exclude by label
               </li>
               <li>
-                <code className="text-blue-400">sum(metric_name)</code> - Sum
+                <code className="text-primary">sum(metric_name)</code> - Sum
                 values
               </li>
               <li>
-                <code className="text-blue-400">avg(metric_name)</code> -
+                <code className="text-primary">avg(metric_name)</code> -
                 Average values
               </li>
               <li>
-                <code className="text-blue-400">count(metric_name)</code> -
+                <code className="text-primary">count(metric_name)</code> -
                 Count samples
               </li>
               <li>
-                <code className="text-blue-400">min(metric_name)</code> -
+                <code className="text-primary">min(metric_name)</code> -
                 Minimum value
               </li>
               <li>
-                <code className="text-blue-400">max(metric_name)</code> -
+                <code className="text-primary">max(metric_name)</code> -
                 Maximum value
               </li>
             </ul>
@@ -163,7 +163,7 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({
 
         {/* Data source selector */}
         <div className="mb-3">
-          <div className="text-xs text-gray-400 mb-2">Data Sources</div>
+          <div className="text-xs text-muted mb-2">Data Sources</div>
           <div className="flex flex-wrap gap-2">
             <label className="flex items-center">
               <input
@@ -172,7 +172,7 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({
                 onChange={() => toggleDataSource("current")}
                 className="mr-2"
               />
-              <span className="text-sm text-gray-300">Current</span>
+              <span className="text-sm text-secondary">Current</span>
             </label>
             {snapshots.map((snapshot) => (
               <label key={snapshot.id} className="flex items-center">
@@ -182,7 +182,7 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({
                   onChange={() => toggleDataSource(snapshot.id)}
                   className="mr-2"
                 />
-                <span className="text-sm text-gray-300">{snapshot.name}</span>
+                <span className="text-sm text-secondary">{snapshot.name}</span>
               </label>
             ))}
           </div>
@@ -195,7 +195,7 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({
               value={queryString}
               onChange={(e) => onUpdateQuery(e.target.value)}
               placeholder='Enter query (e.g., "http_requests_total" or "sum(http_requests_total{method=\"post\"})")'
-              className="w-full bg-gray-800 border border-gray-700 rounded pl-9 pr-9 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
+              className="w-full bg-surface-raised border border-base rounded pl-9 pr-9 py-2 text-sm text-main placeholder-muted focus:outline-none focus:border-primary"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   handleExecuteQuery();
@@ -204,12 +204,12 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({
             />
             <Search
               size={16}
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted"
             />
             {queryString && (
               <button
                 onClick={handleClearQuery}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted hover:text-secondary"
               >
                 <X size={14} />
               </button>
@@ -218,7 +218,7 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({
           <button
             onClick={handleExecuteQuery}
             disabled={isExecuting || !queryString.trim()}
-            className="px-3 py-2 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 disabled:opacity-50 flex items-center"
+            className="px-3 py-2 bg-primary/20 text-primary rounded hover:bg-primary/30 disabled:opacity-50 flex items-center"
           >
             <Play size={16} className="mr-1" />
             Execute
@@ -237,10 +237,10 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({
         {result ? (
           <div>
             <div className="mb-4">
-              <h3 className="text-sm font-medium text-gray-300">
+              <h3 className="text-sm font-medium text-secondary">
                 Query Result
               </h3>
-              <div className="text-xs text-gray-400 mt-1">
+              <div className="text-xs text-muted mt-1">
                 {result.metric}
                 {result.groupedBy.length > 0 && (
                   <span className="ml-2">
@@ -251,17 +251,17 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({
             </div>
 
             {result.values.length === 0 ? (
-              <div className="p-4 bg-gray-800 rounded-lg text-center text-gray-400">
+              <div className="p-4 bg-surface-raised rounded-lg text-center text-muted">
                 No results found for this query
               </div>
             ) : result.values.length === 1 &&
               Object.keys(result.values[0].labels).length === 0 ? (
               // Single scalar result
-              <div className="p-6 bg-gray-800 rounded-lg text-center">
-                <div className="text-3xl font-semibold text-blue-400">
+              <div className="p-6 bg-surface-raised rounded-lg text-center">
+                <div className="text-3xl font-semibold text-primary">
                   {formatValue(result.values[0].value)}
                 </div>
-                <div className="text-sm text-gray-400 mt-2">
+                <div className="text-sm text-muted mt-2">
                   {result.metric}
                 </div>
               </div>
@@ -270,27 +270,27 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr className="bg-gray-800">
+                    <tr className="bg-surface-raised">
                       {result.groupedBy.length > 0 ? (
                         <>
                           {result.groupedBy.map((label) => (
                             <th
                               key={label}
-                              className="px-4 py-2 text-left text-sm font-medium text-gray-300 border-b border-gray-700"
+                              className="px-4 py-2 text-left text-sm font-medium text-secondary border-b border-base"
                             >
                               {label}
                             </th>
                           ))}
-                          <th className="px-4 py-2 text-right text-sm font-medium text-gray-300 border-b border-gray-700">
+                          <th className="px-4 py-2 text-right text-sm font-medium text-secondary border-b border-base">
                             Value
                           </th>
                         </>
                       ) : (
                         <>
-                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-300 border-b border-gray-700">
+                          <th className="px-4 py-2 text-left text-sm font-medium text-secondary border-b border-base">
                             Labels
                           </th>
-                          <th className="px-4 py-2 text-right text-sm font-medium text-gray-300 border-b border-gray-700">
+                          <th className="px-4 py-2 text-right text-sm font-medium text-secondary border-b border-base">
                             Value
                           </th>
                         </>
@@ -299,35 +299,35 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({
                   </thead>
                   <tbody>
                     {result.values.map((value, index) => (
-                      <tr key={index} className="hover:bg-gray-800">
+                      <tr key={index} className="hover:bg-surface-raised">
                         {result.groupedBy.length > 0 ? (
                           <>
                             {result.groupedBy.map((label) => (
                               <td
                                 key={label}
-                                className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700"
+                                className="px-4 py-2 text-sm text-secondary border-b border-base"
                               >
                                 {value.labels[label] || ""}
                               </td>
                             ))}
-                            <td className="px-4 py-2 text-sm text-right text-blue-400 font-mono border-b border-gray-700">
+                            <td className="px-4 py-2 text-sm text-right text-primary font-mono border-b border-base">
                               {formatValue(value.value)}
                             </td>
                           </>
                         ) : (
                           <>
-                            <td className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700">
+                            <td className="px-4 py-2 text-sm text-secondary border-b border-base">
                               {Object.entries(value.labels).length > 0 ? (
                                 <div className="font-mono">
                                   {"{"}
                                   {Object.entries(value.labels).map(
                                     ([key, val], i, arr) => (
                                       <span key={key}>
-                                        <span className="text-gray-400">
+                                        <span className="text-muted">
                                           {key}
                                         </span>
                                         =
-                                        <span className="text-blue-400">
+                                        <span className="text-primary">
                                           "{val}"
                                         </span>
                                         {i < arr.length - 1 && ", "}
@@ -337,12 +337,12 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({
                                   {"}"}
                                 </div>
                               ) : (
-                                <span className="text-gray-500 italic">
+                                <span className="text-muted italic">
                                   no labels
                                 </span>
                               )}
                             </td>
-                            <td className="px-4 py-2 text-sm text-right text-blue-400 font-mono border-b border-gray-700">
+                            <td className="px-4 py-2 text-sm text-right text-primary font-mono border-b border-base">
                               {formatValue(value.value)}
                             </td>
                           </>
@@ -355,7 +355,7 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({
             )}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full text-gray-500">
+          <div className="flex flex-col items-center justify-center h-full text-muted">
             <Search size={48} className="mb-4 opacity-50" />
             <p>Enter a query and click Execute</p>
             <p className="text-sm mt-2">

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
+import { useThemeStore } from '../../../stores/themeStore';
 import type { editor } from 'monaco-editor';
 
 interface MermaidEditorProps {
@@ -30,40 +31,40 @@ export const MermaidEditor: React.FC<MermaidEditorProps> = ({
           root: [
             // Diagram type keywords (first line)
             [/^(flowchart|graph|sequenceDiagram|classDiagram|erDiagram|gantt|pie|journey|gitGraph|mindmap|timeline|quadrantChart|requirementDiagram|stateDiagram-v2)\b/, 'keyword.diagram-type'],
-            
+
             // Direction keywords
             [/\b(TD|TB|BT|RL|LR)\b/, 'keyword.direction'],
-            
+
             // Class diagram keywords
             [/\b(class|interface|enum|abstract|static|public|private|protected)\b/, 'keyword.class'],
-            
+
             // Sequence diagram keywords
             [/\b(participant|actor|note|activate|deactivate|loop|alt|else|opt|par|and|critical|break|ref|autonumber)\b/, 'keyword.sequence'],
-            
+
             // Flowchart shapes and arrows
             [/-->|---|-\.-|==>|===|-.->|<-->|<->|o--o|\|\|--\|\|/, 'operator.arrow'],
             [/[\[\](){}><]/, 'bracket'],
-            
+
             // Strings in quotes
             [/"([^"\\]|\\.)*"/, 'string'],
             [/'([^'\\]|\\.)*'/, 'string'],
-            
+
             // Comments
             [/%%.*$/, 'comment'],
-            
+
             // Node IDs and labels
             [/\b[A-Za-z_][A-Za-z0-9_]*\b/, 'identifier'],
-            
+
             // Numbers
             [/\d+/, 'number'],
-            
+
             // Operators and symbols
             [/[|:;,]/, 'delimiter'],
           ],
         },
       });
 
-      // Define theme for Mermaid syntax highlighting
+      // Define theme for Mermaid syntax highlighting (Dark)
       monaco.editor.defineTheme('mermaid-dark', {
         base: 'vs-dark',
         inherit: true,
@@ -83,14 +84,31 @@ export const MermaidEditor: React.FC<MermaidEditorProps> = ({
         colors: {
           'editor.background': '#1e1e1e',
           'editor.foreground': '#d4d4d4',
-          'editorLineNumber.foreground': '#858585',
-          'editor.selectionBackground': '#264f78',
-          'editor.inactiveSelectionBackground': '#3a3d41',
         },
       });
 
-      // Apply the theme
-      monaco.editor.setTheme('mermaid-dark');
+      // Define theme for Mermaid syntax highlighting (Light)
+      monaco.editor.defineTheme('mermaid-light', {
+        base: 'vs',
+        inherit: true,
+        rules: [
+          { token: 'keyword.diagram-type', foreground: '0000ff', fontStyle: 'bold' },
+          { token: 'keyword.direction', foreground: '008080' },
+          { token: 'keyword.class', foreground: '800080' },
+          { token: 'keyword.sequence', foreground: '795e26' },
+          { token: 'operator.arrow', foreground: '0451a5' },
+          { token: 'bracket', foreground: '000000' },
+          { token: 'string', foreground: 'a31515' },
+          { token: 'comment', foreground: '008000', fontStyle: 'italic' },
+          { token: 'identifier', foreground: '001080' },
+          { token: 'number', foreground: '098658' },
+          { token: 'delimiter', foreground: '000000' },
+        ],
+        colors: {
+          'editor.background': '#ffffff',
+          'editor.foreground': '#000000',
+        },
+      });
     }
 
     // Configure editor options
@@ -130,6 +148,8 @@ export const MermaidEditor: React.FC<MermaidEditorProps> = ({
     }
   }, [onChange]);
 
+  const isDarkMode = useThemeStore(state => state.isDarkMode);
+
   return (
     <div className={`h-full ${className}`}>
       <Editor
@@ -138,7 +158,7 @@ export const MermaidEditor: React.FC<MermaidEditorProps> = ({
         value={value}
         onChange={handleEditorChange}
         onMount={handleEditorDidMount}
-        theme="mermaid-dark"
+        theme={isDarkMode ? "mermaid-dark" : "mermaid-light"}
         options={{
           fontSize: 14,
           fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',

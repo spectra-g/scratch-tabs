@@ -64,13 +64,13 @@ export const UrlParserUI: React.FC<UrlParserUIProps> = ({
   };
 
   return (
-    <div className="h-full bg-gray-900 text-gray-200 flex flex-col overflow-hidden">
+    <div className="h-full bg-canvas text-main flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex-none border-b border-gray-700 p-4">
+      <div className="flex-none border-b border-base p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
             <Link size={20} className="text-blue-400" />
-            <h2 className="text-xl font-semibold text-gray-100">URL Parser</h2>
+            <h2 className="text-xl font-semibold text-main">URL Parser</h2>
           </div>
 
           <ToolbarButtons

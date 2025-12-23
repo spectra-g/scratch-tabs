@@ -48,12 +48,12 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center">
           {icon}
-          <h3 className="text-sm font-medium text-gray-200 ml-2">{label}</h3>
+          <h3 className="text-sm font-medium text-main ml-2">{label}</h3>
         </div>
         <div className="flex items-center space-x-1">
           {hasError && (
             <div
-              className="text-red-500"
+              className="text-danger"
               title={componentWarnings.find((w) => w.type === "error")?.message}
             >
               <AlertTriangle size={14} />
@@ -61,7 +61,7 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
           )}
           {!hasError && hasWarning && (
             <div
-              className="text-yellow-500"
+              className="text-warning"
               title={
                 componentWarnings.find((w) => w.type === "warning")?.message
               }
@@ -72,7 +72,7 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
           {onToggleEncoding && (
             <button
               onClick={onToggleEncoding}
-              className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded"
+              className="p-1 text-secondary hover:bg-element-hover rounded"
               title={isEncoded ? "Show decoded" : "Show encoded"}
             >
               {isEncoded ? <Eye size={14} /> : <EyeOff size={14} />}
@@ -80,7 +80,7 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
           )}
           <button
             onClick={handleCopy}
-            className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded"
+            className="p-1 text-secondary hover:bg-element-hover rounded"
             title="Copy value"
           >
             <Copy size={14} className={isCopied ? "text-green-500" : ""} />
@@ -93,19 +93,19 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
           type={revealed ? "text" : "password"}
           value={displayValue}
           onChange={(e) => onChange(e.target.value, component)}
-          className={`w-full bg-gray-800 border ${
+          className={`w-full bg-element border ${
             hasError
-              ? "border-red-500"
+              ? "border-danger"
               : hasWarning
-                ? "border-yellow-500"
-                : "border-gray-700"
-          } rounded-md px-3 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500`}
+                ? "border-warning"
+                : "border-base"
+          } rounded-md px-3 py-2 text-main placeholder-muted focus:outline-none focus:border-focus`}
         />
 
         {sensitive && (
           <button
             onClick={() => setRevealed(!revealed)}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200"
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-secondary hover:text-main"
             title={revealed ? "Hide value" : "Show value"}
           >
             {revealed ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -119,7 +119,7 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
             <div
               key={index}
               className={`flex items-start mt-1 ${
-                warning.type === "error" ? "text-red-400" : "text-yellow-400"
+                warning.type === "error" ? "text-danger" : "text-warning"
               }`}
             >
               <div className="flex-shrink-0 mt-0.5">

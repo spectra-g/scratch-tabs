@@ -87,22 +87,22 @@ export const CronVisualizer: React.FC<CronVisualizerProps> = ({
 
   // Create empty cells for days before the first day of the month
   const emptyCells = Array.from({ length: firstDayOfWeek }, (_, i) => (
-    <div key={`empty-${i}`} className="h-10 bg-gray-800/50"></div>
+    <div key={`empty-${i}`} className="h-10 bg-surface-secondary/50"></div>
   ));
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-w-3xl w-full">
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+      <div className="bg-surface border border-base rounded-lg shadow-xl max-w-3xl w-full overflow-hidden">
+        <div className="flex items-center justify-between p-4 border-b border-base bg-surface-secondary">
           <div className="flex items-center">
-            <Calendar size={20} className="text-blue-400 mr-2" />
-            <h2 className="text-lg font-medium text-gray-200">
+            <Calendar size={20} className="text-primary mr-2" />
+            <h2 className="text-lg font-medium text-main">
               Cron Visualizer
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded"
+            className="p-1 text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
           >
             <X size={20} />
           </button>
@@ -113,16 +113,16 @@ export const CronVisualizer: React.FC<CronVisualizerProps> = ({
             <div className="flex items-center space-x-2">
               <button
                 onClick={handlePrevMonth}
-                className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded"
+                className="p-1 text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
               >
                 <ChevronLeft size={20} />
               </button>
-              <h3 className="text-lg font-medium text-gray-200">
+              <h3 className="text-lg font-medium text-main">
                 {format(currentMonth, "MMMM yyyy")}
               </h3>
               <button
                 onClick={handleNextMonth}
-                className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded"
+                className="p-1 text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
               >
                 <ChevronRight size={20} />
               </button>
@@ -131,31 +131,28 @@ export const CronVisualizer: React.FC<CronVisualizerProps> = ({
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setViewMode("month")}
-                className={`px-3 py-1 text-sm rounded ${
-                  viewMode === "month"
-                    ? "bg-blue-500/20 text-blue-400"
-                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                }`}
+                className={`px-3 py-1 text-sm rounded transition-colors ${viewMode === "month"
+                    ? "bg-primary/20 text-primary border border-primary/30"
+                    : "bg-element text-main hover:bg-element-hover border border-base"
+                  }`}
               >
                 Month
               </button>
               <button
                 onClick={() => setViewMode("week")}
-                className={`px-3 py-1 text-sm rounded ${
-                  viewMode === "week"
-                    ? "bg-blue-500/20 text-blue-400"
-                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                }`}
+                className={`px-3 py-1 text-sm rounded transition-colors ${viewMode === "week"
+                    ? "bg-primary/20 text-primary border border-primary/30"
+                    : "bg-element text-main hover:bg-element-hover border border-base"
+                  }`}
               >
                 Week
               </button>
               <button
                 onClick={() => setViewMode("day")}
-                className={`px-3 py-1 text-sm rounded ${
-                  viewMode === "day"
-                    ? "bg-blue-500/20 text-blue-400"
-                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                }`}
+                className={`px-3 py-1 text-sm rounded transition-colors ${viewMode === "day"
+                    ? "bg-primary/20 text-primary border border-primary/30"
+                    : "bg-element text-main hover:bg-element-hover border border-base"
+                  }`}
               >
                 Day
               </button>
@@ -163,13 +160,13 @@ export const CronVisualizer: React.FC<CronVisualizerProps> = ({
           </div>
 
           {viewMode === "month" && (
-            <div className="bg-gray-900 rounded-lg p-4">
+            <div className="bg-surface-secondary border border-base rounded-lg p-4 shadow-inner">
               <div className="grid grid-cols-7 gap-1 mb-1">
                 {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
                   (day) => (
                     <div
                       key={day}
-                      className="text-center text-xs font-medium text-gray-400 py-1"
+                      className="text-center text-xs font-medium text-secondary py-1"
                     >
                       {day}
                     </div>
@@ -188,18 +185,17 @@ export const CronVisualizer: React.FC<CronVisualizerProps> = ({
                   return (
                     <div
                       key={day.toISOString()}
-                      className={`h-20 p-1 rounded ${
-                        hasExecutions
-                          ? "bg-blue-900/20 border border-blue-500/30"
-                          : "bg-gray-800/50 border border-gray-700/50"
-                      }`}
+                      className={`h-20 p-1 rounded transition-colors ${hasExecutions
+                          ? "bg-primary/10 border border-primary/30"
+                          : "bg-surface border border-base/50"
+                        }`}
                     >
                       <div className="flex justify-between items-start">
-                        <span className="text-sm font-medium text-gray-300">
+                        <span className="text-sm font-medium text-secondary">
                           {format(day, "d")}
                         </span>
                         {hasExecutions && (
-                          <span className="text-xs bg-blue-500/30 text-blue-300 px-1.5 rounded-full">
+                          <span className="text-xs bg-primary/30 text-primary px-1.5 rounded-full font-medium">
                             {execsOnDay.length}
                           </span>
                         )}
@@ -210,13 +206,13 @@ export const CronVisualizer: React.FC<CronVisualizerProps> = ({
                           {execsOnDay.slice(0, 3).map((exec, i) => (
                             <div
                               key={i}
-                              className="text-xs text-blue-400 truncate"
+                              className="text-xs text-primary truncate"
                             >
                               {format(exec, "HH:mm:ss")}
                             </div>
                           ))}
                           {execsOnDay.length > 3 && (
-                            <div className="text-xs text-gray-400">
+                            <div className="text-xs text-muted">
                               +{execsOnDay.length - 3} more
                             </div>
                           )}
@@ -230,7 +226,7 @@ export const CronVisualizer: React.FC<CronVisualizerProps> = ({
           )}
 
           {viewMode === "week" && (
-            <div className="bg-gray-900 rounded-lg p-4">
+            <div className="bg-surface-secondary border border-base rounded-lg p-4 shadow-inner">
               <div className="space-y-2">
                 {Array.from({ length: 7 }, (_, i) => {
                   const day = [
@@ -248,12 +244,12 @@ export const CronVisualizer: React.FC<CronVisualizerProps> = ({
 
                   return (
                     <div key={day} className="flex items-start">
-                      <div className="w-24 text-sm font-medium text-gray-300 py-1">
+                      <div className="w-24 text-sm font-medium text-main py-1">
                         {day}
                       </div>
                       <div className="flex-1 ml-2">
                         {execsOnDay.length === 0 ? (
-                          <div className="text-xs text-gray-500 py-1">
+                          <div className="text-xs text-muted py-1">
                             No executions
                           </div>
                         ) : (
@@ -261,13 +257,13 @@ export const CronVisualizer: React.FC<CronVisualizerProps> = ({
                             {execsOnDay.slice(0, 10).map((exec, j) => (
                               <div
                                 key={j}
-                                className="text-xs bg-blue-900/20 border border-blue-500/30 rounded px-2 py-1 text-blue-400"
+                                className="text-xs bg-primary/10 border border-primary/30 rounded px-2 py-1 text-primary"
                               >
                                 {format(exec, "HH:mm:ss")}
                               </div>
                             ))}
                             {execsOnDay.length > 10 && (
-                              <div className="text-xs text-gray-400 py-1">
+                              <div className="text-xs text-muted py-1">
                                 +{execsOnDay.length - 10} more
                               </div>
                             )}
@@ -282,7 +278,7 @@ export const CronVisualizer: React.FC<CronVisualizerProps> = ({
           )}
 
           {viewMode === "day" && (
-            <div className="bg-gray-900 rounded-lg p-4">
+            <div className="bg-surface-secondary border border-base rounded-lg p-4 shadow-inner">
               <div className="space-y-2">
                 {Array.from({ length: 24 }, (_, i) => {
                   const hour = i;
@@ -292,12 +288,12 @@ export const CronVisualizer: React.FC<CronVisualizerProps> = ({
 
                   return (
                     <div key={hour} className="flex items-start">
-                      <div className="w-16 text-sm font-medium text-gray-300 py-1">
+                      <div className="w-16 text-sm font-medium text-main py-1">
                         {hour.toString().padStart(2, "0")}:00
                       </div>
                       <div className="flex-1 ml-2">
                         {execsInHour.length === 0 ? (
-                          <div className="text-xs text-gray-500 py-1">
+                          <div className="text-xs text-muted py-1">
                             No executions
                           </div>
                         ) : (
@@ -305,14 +301,14 @@ export const CronVisualizer: React.FC<CronVisualizerProps> = ({
                             {execsInHour.slice(0, 10).map((exec, j) => (
                               <div
                                 key={j}
-                                className="text-xs bg-blue-900/20 border border-blue-500/30 rounded px-2 py-1 text-blue-400"
+                                className="text-xs bg-primary/10 border border-primary/30 rounded px-2 py-1 text-primary"
                               >
                                 {format(exec, "HH:mm:ss")} -{" "}
                                 {format(exec, "dd MMM")}
                               </div>
                             ))}
                             {execsInHour.length > 10 && (
-                              <div className="text-xs text-gray-400 py-1">
+                              <div className="text-xs text-muted py-1">
                                 +{execsInHour.length - 10} more
                               </div>
                             )}
@@ -326,14 +322,14 @@ export const CronVisualizer: React.FC<CronVisualizerProps> = ({
             </div>
           )}
 
-          <div className="mt-4 p-3 bg-gray-700/50 rounded-md">
+          <div className="mt-4 p-3 bg-surface-secondary border border-base rounded-md">
             <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-300">
-                <span className="font-medium">Total executions:</span>{" "}
-                <span className="text-blue-400">{executionDates.length}</span>{" "}
+              <div className="text-sm text-secondary">
+                <span className="font-medium text-main">Total executions:</span>{" "}
+                <span className="text-primary font-bold">{executionDates.length}</span>{" "}
                 in {format(currentMonth, "MMMM yyyy")}
               </div>
-              <div className="text-xs text-gray-400">
+              <div className="text-xs text-muted">
                 Timezone: {timezone.name}
               </div>
             </div>

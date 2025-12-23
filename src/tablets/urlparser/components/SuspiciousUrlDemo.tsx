@@ -16,23 +16,23 @@ export const SuspiciousUrlDemo: React.FC<SuspiciousUrlDemoProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-w-2xl w-full p-4">
+      <div className="bg-surface border border-base rounded-lg shadow-xl max-w-2xl w-full p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
-            <AlertTriangle size={18} className="text-yellow-500" />
-            <h3 className="text-lg font-medium text-gray-200">
+            <AlertTriangle size={18} className="text-warning" />
+            <h3 className="text-lg font-medium text-main">
               Suspicious URL Examples
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded"
+            className="p-1 text-secondary hover:bg-element-hover rounded"
           >
             <X size={18} />
           </button>
         </div>
 
-        <p className="text-gray-300 mb-4">
+        <p className="text-main mb-4">
           These examples demonstrate common URL-based attacks and security
           issues. Select an example to analyze it with the URL Parser.
         </p>
@@ -43,15 +43,15 @@ export const SuspiciousUrlDemo: React.FC<SuspiciousUrlDemoProps> = ({
               key={index}
               className={`p-3 border rounded-md cursor-pointer transition-colors ${
                 selectedExample === index
-                  ? "bg-yellow-900/30 border-yellow-500/50 text-yellow-200"
-                  : "bg-gray-800/50 border-gray-700 text-gray-300 hover:border-yellow-500/30"
+                  ? "bg-warning-subtle border-warning text-warning"
+                  : "bg-surface-secondary border-base text-main hover:border-warning"
               }`}
               onClick={() => setSelectedExample(index)}
             >
               <div className="font-mono text-sm mb-1 break-all">
                 {example.url}
               </div>
-              <div className="text-sm text-gray-400">{example.description}</div>
+              <div className="text-sm text-secondary">{example.description}</div>
             </div>
           ))}
         </div>
@@ -67,8 +67,8 @@ export const SuspiciousUrlDemo: React.FC<SuspiciousUrlDemoProps> = ({
             disabled={selectedExample === null}
             className={`flex items-center space-x-2 px-4 py-2 rounded-md ${
               selectedExample !== null
-                ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30"
-                : "bg-gray-700/50 text-gray-500 cursor-not-allowed"
+                ? "bg-warning/20 text-warning hover:bg-warning/30"
+                : "bg-element text-muted cursor-not-allowed"
             }`}
           >
             <span>Analyze Selected URL</span>

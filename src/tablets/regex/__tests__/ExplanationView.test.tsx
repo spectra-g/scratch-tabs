@@ -60,7 +60,7 @@ describe("ExplanationView", () => {
   describe("rendering", () => {
     it("should render with explanations", () => {
       render(<ExplanationView explanation={mockExplanations} pattern="a+[abc](test)^\\d(?=test)" />);
-      
+
       expect(screen.getByText("Pattern Explanation")).toBeInTheDocument();
       expect(screen.getByText("Literal character 'a'")).toBeInTheDocument();
       expect(screen.getByText("One or more of the preceding element")).toBeInTheDocument();
@@ -69,7 +69,7 @@ describe("ExplanationView", () => {
 
     it("should render with no explanations", () => {
       render(<ExplanationView explanation={[]} pattern="" />);
-      
+
       expect(screen.getByText("Pattern Explanation")).toBeInTheDocument();
       // Use getAllByText since the text appears in multiple places
       const elements = screen.getAllByText("No pattern to explain");
@@ -78,33 +78,33 @@ describe("ExplanationView", () => {
 
     it("should render explanation tokens", () => {
       render(<ExplanationView explanation={mockExplanations} pattern="a+[abc](test)^\\d(?=test)" />);
-      
+
       // Use getAllByText since the text appears in multiple places
       const literalTokens = screen.getAllByText("a");
       expect(literalTokens.length).toBeGreaterThan(0);
-      
+
       const quantifierTokens = screen.getAllByText("+");
       expect(quantifierTokens.length).toBeGreaterThan(0);
-      
+
       const charClassTokens = screen.getAllByText("[abc]");
       expect(charClassTokens.length).toBeGreaterThan(0);
-      
+
       const groupTokens = screen.getAllByText("(test)");
       expect(groupTokens.length).toBeGreaterThan(0);
-      
+
       const anchorTokens = screen.getAllByText("^");
       expect(anchorTokens.length).toBeGreaterThan(0);
-      
+
       const escapeTokens = screen.getAllByText("\\d");
       expect(escapeTokens.length).toBeGreaterThan(0);
-      
+
       const assertionTokens = screen.getAllByText("(?=test)");
       expect(assertionTokens.length).toBeGreaterThan(0);
     });
 
     it("should render explanation descriptions", () => {
       render(<ExplanationView explanation={mockExplanations} pattern="a+[abc](test)^\\d(?=test)" />);
-      
+
       expect(screen.getByText("Literal character 'a'")).toBeInTheDocument();
       expect(screen.getByText("One or more of the preceding element")).toBeInTheDocument();
       expect(screen.getByText("Any character from the set a, b, or c")).toBeInTheDocument();
@@ -118,17 +118,17 @@ describe("ExplanationView", () => {
   describe("token highlighting", () => {
     it("should highlight literal tokens", () => {
       render(<ExplanationView explanation={mockExplanations} pattern="a+[abc](test)^\\d(?=test)" />);
-      
+
       // Get the first element (pattern breakdown) for literal tokens
       const literalTokens = screen.getAllByText("a");
       const patternBreakdownToken = literalTokens[0]; // First one is in pattern breakdown
-      expect(patternBreakdownToken).toHaveClass("bg-gray-500/20");
-      expect(patternBreakdownToken).toHaveClass("text-gray-300");
+      expect(patternBreakdownToken).toHaveClass("bg-surface-secondary/20");
+      expect(patternBreakdownToken).toHaveClass("text-secondary");
     });
 
     it("should highlight quantifier tokens", () => {
       render(<ExplanationView explanation={mockExplanations} pattern="a+[abc](test)^\\d(?=test)" />);
-      
+
       // Get the first element (pattern breakdown) for quantifier tokens
       const quantifierTokens = screen.getAllByText("+");
       const patternBreakdownToken = quantifierTokens[0]; // First one is in pattern breakdown
@@ -138,7 +138,7 @@ describe("ExplanationView", () => {
 
     it("should highlight character class tokens", () => {
       render(<ExplanationView explanation={mockExplanations} pattern="a+[abc](test)^\\d(?=test)" />);
-      
+
       // Get the first element (pattern breakdown) for character class tokens
       const charClassTokens = screen.getAllByText("[abc]");
       const patternBreakdownToken = charClassTokens[0]; // First one is in pattern breakdown
@@ -148,17 +148,17 @@ describe("ExplanationView", () => {
 
     it("should highlight group tokens", () => {
       render(<ExplanationView explanation={mockExplanations} pattern="a+[abc](test)^\\d(?=test)" />);
-      
+
       // Get the first element (pattern breakdown) for group tokens
       const groupTokens = screen.getAllByText("(test)");
       const patternBreakdownToken = groupTokens[0]; // First one is in pattern breakdown
-      expect(patternBreakdownToken).toHaveClass("bg-blue-500/20");
-      expect(patternBreakdownToken).toHaveClass("text-blue-300");
+      expect(patternBreakdownToken).toHaveClass("bg-primary/20");
+      expect(patternBreakdownToken).toHaveClass("text-primary");
     });
 
     it("should highlight anchor tokens", () => {
       render(<ExplanationView explanation={mockExplanations} pattern="a+[abc](test)^\\d(?=test)" />);
-      
+
       // Get the first element (pattern breakdown) for anchor tokens
       const anchorTokens = screen.getAllByText("^");
       const patternBreakdownToken = anchorTokens[0]; // First one is in pattern breakdown
@@ -168,7 +168,7 @@ describe("ExplanationView", () => {
 
     it("should highlight escape tokens", () => {
       render(<ExplanationView explanation={mockExplanations} pattern="a+[abc](test)^\\d(?=test)" />);
-      
+
       // Get the first element (pattern breakdown) for escape tokens
       const escapeTokens = screen.getAllByText("\\d");
       const patternBreakdownToken = escapeTokens[0]; // First one is in pattern breakdown
@@ -178,7 +178,7 @@ describe("ExplanationView", () => {
 
     it("should highlight assertion tokens", () => {
       render(<ExplanationView explanation={mockExplanations} pattern="a+[abc](test)^\\d(?=test)" />);
-      
+
       // Get the first element (pattern breakdown) for assertion tokens
       const assertionTokens = screen.getAllByText("(?=test)");
       const patternBreakdownToken = assertionTokens[0]; // First one is in pattern breakdown
@@ -190,39 +190,39 @@ describe("ExplanationView", () => {
   describe("layout and structure", () => {
     it("should render explanation items in order", () => {
       render(<ExplanationView explanation={mockExplanations} pattern="a+[abc](test)^\\d(?=test)" />);
-      
+
       const explanationItems = screen.getAllByText(/Literal|One or more|Any character|Capturing|Start of|Any digit|Positive lookahead/);
       expect(explanationItems).toHaveLength(7);
     });
 
     it("should render token and description pairs", () => {
       render(<ExplanationView explanation={mockExplanations} pattern="a+[abc](test)^\\d(?=test)" />);
-      
+
       // Check that each token has its corresponding description
       const literalTokens = screen.getAllByText("a");
       expect(literalTokens.length).toBeGreaterThan(0);
       expect(screen.getByText("Literal character 'a'")).toBeInTheDocument();
-      
+
       const quantifierTokens = screen.getAllByText("+");
       expect(quantifierTokens.length).toBeGreaterThan(0);
       expect(screen.getByText("One or more of the preceding element")).toBeInTheDocument();
-      
+
       const charClassTokens = screen.getAllByText("[abc]");
       expect(charClassTokens.length).toBeGreaterThan(0);
       expect(screen.getByText("Any character from the set a, b, or c")).toBeInTheDocument();
-      
+
       const groupTokens = screen.getAllByText("(test)");
       expect(groupTokens.length).toBeGreaterThan(0);
       expect(screen.getByText("Capturing group")).toBeInTheDocument();
-      
+
       const anchorTokens = screen.getAllByText("^");
       expect(anchorTokens.length).toBeGreaterThan(0);
       expect(screen.getByText("Start of string or line")).toBeInTheDocument();
-      
+
       const escapeTokens = screen.getAllByText("\\d");
       expect(escapeTokens.length).toBeGreaterThan(0);
       expect(screen.getByText("Any digit character")).toBeInTheDocument();
-      
+
       const assertionTokens = screen.getAllByText("(?=test)");
       expect(assertionTokens.length).toBeGreaterThan(0);
       expect(screen.getByText("Positive lookahead assertion")).toBeInTheDocument();
@@ -238,9 +238,9 @@ describe("ExplanationView", () => {
           end: 3,
         },
       ];
-      
+
       render(<ExplanationView explanation={singleExplanation} pattern="test" />);
-      
+
       // Use getAllByText since the text appears in multiple places
       const elements = screen.getAllByText("test");
       expect(elements.length).toBeGreaterThan(0);
@@ -251,7 +251,7 @@ describe("ExplanationView", () => {
   describe("edge cases", () => {
     it("should handle empty explanations array", () => {
       render(<ExplanationView explanation={[]} pattern="" />);
-      
+
       // Use getAllByText since the text appears in multiple places
       const elements = screen.getAllByText("No pattern to explain");
       expect(elements.length).toBeGreaterThan(0);
@@ -267,9 +267,9 @@ describe("ExplanationView", () => {
           end: 0,
         },
       ];
-      
+
       render(<ExplanationView explanation={emptyValueExplanations} pattern="" />);
-      
+
       expect(screen.getByText("Empty literal")).toBeInTheDocument();
     });
 
@@ -283,9 +283,9 @@ describe("ExplanationView", () => {
           end: 11,
         },
       ];
-      
+
       render(<ExplanationView explanation={specialCharExplanations} pattern="\\[\\]\\{\\}\\(\\)" />);
-      
+
       // Use getAllByText since the text appears in multiple places
       const elements = screen.getAllByText("\\[\\]\\{\\}\\(\\)");
       expect(elements.length).toBeGreaterThan(0);
@@ -302,9 +302,9 @@ describe("ExplanationView", () => {
           end: 5,
         },
       ];
-      
+
       render(<ExplanationView explanation={unicodeExplanations} pattern="test\u{1F600}" />);
-      
+
       // Use getAllByText since the text appears in multiple places
       const elements = screen.getAllByText("test😀");
       expect(elements.length).toBeGreaterThan(0);
@@ -322,9 +322,9 @@ describe("ExplanationView", () => {
           end: 3,
         },
       ];
-      
+
       render(<ExplanationView explanation={longExplanations} pattern="test" />);
-      
+
       // Use getAllByText since the text appears in multiple places
       const elements = screen.getAllByText("test");
       expect(elements.length).toBeGreaterThan(0);
@@ -342,9 +342,9 @@ describe("ExplanationView", () => {
           end: 100,
         },
       ];
-      
+
       render(<ExplanationView explanation={longValueExplanations} pattern={longValue} />);
-      
+
       const longValueElements = screen.getAllByText(longValue);
       expect(longValueElements.length).toBeGreaterThan(0);
       expect(screen.getByText("Long literal")).toBeInTheDocument();
@@ -354,25 +354,25 @@ describe("ExplanationView", () => {
   describe("styling", () => {
     it("should apply correct container classes", () => {
       render(<ExplanationView explanation={mockExplanations} pattern="a+[abc](test)^\\d(?=test)" />);
-      
+
       const header = screen.getByText("Pattern Explanation");
       expect(header).toHaveClass("text-sm");
       expect(header).toHaveClass("font-medium");
-      expect(header).toHaveClass("text-gray-300");
+      expect(header).toHaveClass("text-secondary");
     });
 
     it("should apply correct explanation item classes", () => {
       render(<ExplanationView explanation={mockExplanations} pattern="a+[abc](test)^\\d(?=test)" />);
-      
+
       // Check for the detailed breakdown container classes
       const detailedBreakdown = screen.getByText("Detailed Breakdown:").closest("div");
-      const explanationItems = detailedBreakdown?.querySelectorAll('[class*="bg-gray-800/30"]');
-      
+      const explanationItems = detailedBreakdown?.querySelectorAll('[class*="bg-surface-raised/30"]');
+
       if (explanationItems) {
         explanationItems.forEach((item) => {
-          expect(item).toHaveClass("bg-gray-800/30");
+          expect(item).toHaveClass("bg-surface-raised/30");
           expect(item).toHaveClass("border");
-          expect(item).toHaveClass("border-gray-700/50");
+          expect(item).toHaveClass("border-base/50");
         });
       }
     });
@@ -381,18 +381,18 @@ describe("ExplanationView", () => {
   describe("accessibility", () => {
     it("should have proper semantic structure", () => {
       render(<ExplanationView explanation={mockExplanations} pattern="a+[abc](test)^\\d(?=test)" />);
-      
+
       // Check that the explanation header is present
       expect(screen.getByText("Pattern Explanation")).toBeInTheDocument();
     });
 
     it("should have proper text contrast", () => {
       render(<ExplanationView explanation={mockExplanations} pattern="a+[abc](test)^\\d(?=test)" />);
-      
+
       // Check that descriptions are readable
       const descriptions = screen.getAllByText(/Literal|One or more|Any character/);
       descriptions.forEach(description => {
-        expect(description).toHaveClass("text-gray-200");
+        expect(description).toHaveClass("text-main");
       });
     });
   });
@@ -401,7 +401,7 @@ describe("ExplanationView", () => {
     it("should handle large number of explanations", () => {
       const manyExplanations: RegexExplanation[] = [];
       const longPattern = "a".repeat(100);
-      
+
       for (let i = 0; i < 100; i++) {
         manyExplanations.push({
           type: "literal",
@@ -411,13 +411,13 @@ describe("ExplanationView", () => {
           end: i + 1,
         });
       }
-      
+
       render(<ExplanationView explanation={manyExplanations} pattern={longPattern} />);
-      
+
       const token0Elements = screen.getAllByText("token0");
       expect(token0Elements.length).toBeGreaterThan(0);
       expect(screen.getByText("Description 0")).toBeInTheDocument();
-      
+
       const token99Elements = screen.getAllByText("token99");
       expect(token99Elements.length).toBeGreaterThan(0);
       expect(screen.getByText("Description 99")).toBeInTheDocument();
@@ -475,27 +475,27 @@ describe("ExplanationView", () => {
           end: 28,
         },
       ];
-      
+
       render(<ExplanationView explanation={complexExplanations} pattern="^(?<name>\\w+)@(\\w+)\\.\\.[a-z]{2,}$" />);
-      
+
       const caretElements = screen.getAllByText("^");
       expect(caretElements.length).toBeGreaterThan(0);
-      
+
       const nameGroupElements = screen.getAllByText("(?<name>\\w+)");
       expect(nameGroupElements.length).toBeGreaterThan(0);
-      
+
       const atElements = screen.getAllByText("@");
       expect(atElements.length).toBeGreaterThan(0);
-      
+
       const wordGroupElements = screen.getAllByText("(\\w+)");
       expect(wordGroupElements.length).toBeGreaterThan(0);
-      
+
       const dotElements = screen.getAllByText("\\.");
       expect(dotElements.length).toBeGreaterThan(0);
-      
+
       const charClassElements = screen.getAllByText("[a-z]{2,}");
       expect(charClassElements.length).toBeGreaterThan(0);
-      
+
       const dollarElements = screen.getAllByText("$");
       expect(dollarElements.length).toBeGreaterThan(0);
     });

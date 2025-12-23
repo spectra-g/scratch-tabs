@@ -81,69 +81,69 @@ export const PomodoroStats: React.FC<PomodoroStatsProps> = ({
       <div className="flex items-center mb-6">
         <button
           onClick={onBack}
-          className="p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-md transition-colors mr-3"
+          className="p-2 text-muted hover:text-main hover:bg-surface-secondary/50 rounded-md transition-colors mr-3"
           title="Back to Timer"
         >
           <ArrowLeft size={20} />
         </button>
-        <h2 className="text-xl font-semibold text-gray-100">
+        <h2 className="text-xl font-semibold text-main">
           Pomodoro Statistics
         </h2>
       </div>
 
       {/* Today's Stats */}
-      <div className="bg-gray-800/30 border border-gray-700/50 rounded-lg p-6 mb-6">
-        <h3 className="text-lg font-medium text-gray-200 mb-4">
+      <div className="bg-surface-raised/30 border border-base/50 rounded-lg p-6 mb-6">
+        <h3 className="text-lg font-medium text-main mb-4">
           Today's Progress
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-gray-800/50 rounded-lg p-4 text-center">
-            <div className="text-3xl font-bold text-blue-400 mb-2">
+          <div className="bg-surface-raised/50 rounded-lg p-4 text-center">
+            <div className="text-3xl font-bold text-primary mb-2">
               {todayStats.focusCompleted}
             </div>
-            <div className="text-sm text-gray-400">Focus Sessions</div>
+            <div className="text-sm text-muted">Focus Sessions</div>
           </div>
 
-          <div className="bg-gray-800/50 rounded-lg p-4 text-center">
+          <div className="bg-surface-raised/50 rounded-lg p-4 text-center">
             <div className="text-3xl font-bold text-green-400 mb-2">
               {todayStats.shortBreakCompleted}
             </div>
-            <div className="text-sm text-gray-400">Short Breaks</div>
+            <div className="text-sm text-muted">Short Breaks</div>
           </div>
 
-          <div className="bg-gray-800/50 rounded-lg p-4 text-center">
+          <div className="bg-surface-raised/50 rounded-lg p-4 text-center">
             <div className="text-3xl font-bold text-purple-400 mb-2">
               {todayStats.longBreakCompleted}
             </div>
-            <div className="text-sm text-gray-400">Long Breaks</div>
+            <div className="text-sm text-muted">Long Breaks</div>
           </div>
         </div>
 
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-gray-800/50 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-gray-300 mb-3">
+          <div className="bg-surface-raised/50 rounded-lg p-4">
+            <h4 className="text-sm font-medium text-secondary mb-3">
               Focus Time
             </h4>
             <div className="flex items-center">
-              <Clock size={20} className="text-blue-400 mr-3" />
-              <div className="text-2xl font-bold text-gray-200">
+              <Clock size={20} className="text-primary mr-3" />
+              <div className="text-2xl font-bold text-main">
                 {Math.floor(todayStats.totalFocusTime / 60)} min
               </div>
             </div>
           </div>
 
-          <div className="bg-gray-800/50 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-gray-300 mb-3">
+          <div className="bg-surface-raised/50 rounded-lg p-4">
+            <h4 className="text-sm font-medium text-secondary mb-3">
               Current Streak
             </h4>
             <div className="flex items-center">
               <CheckCircle2 size={20} className="text-green-400 mr-3" />
-              <div className="text-2xl font-bold text-gray-200">
+              <div className="text-2xl font-bold text-main">
                 {todayStats.currentStreak} sessions
               </div>
             </div>
-            <div className="text-xs text-gray-500 mt-1">
+            <div className="text-xs text-muted mt-1">
               Best: {todayStats.bestStreak} sessions
             </div>
           </div>
@@ -151,13 +151,13 @@ export const PomodoroStats: React.FC<PomodoroStatsProps> = ({
       </div>
 
       {/* Session History */}
-      <div className="bg-gray-800/30 border border-gray-700/50 rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gray-200 mb-4">
+      <div className="bg-surface-raised/30 border border-base/50 rounded-lg p-6">
+        <h3 className="text-lg font-medium text-main mb-4">
           Session History
         </h3>
 
         {dailyStats.length === 0 ? (
-          <div className="text-center text-gray-400 py-8">
+          <div className="text-center text-muted py-8">
             No session history yet
           </div>
         ) : (
@@ -165,45 +165,45 @@ export const PomodoroStats: React.FC<PomodoroStatsProps> = ({
             {dailyStats.map((dayStat) => (
               <div
                 key={dayStat.day}
-                className="border-b border-gray-700/50 pb-4 last:border-b-0 last:pb-0"
+                className="border-b border-base/50 pb-4 last:border-b-0 last:pb-0"
               >
                 <div className="flex items-center mb-3">
-                  <Calendar size={16} className="text-gray-400 mr-2" />
-                  <h4 className="text-sm font-medium text-gray-300">
+                  <Calendar size={16} className="text-muted mr-2" />
+                  <h4 className="text-sm font-medium text-secondary">
                     {dayStat.day}
                   </h4>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                   <div className="text-center">
-                    <div className="text-xl font-bold text-blue-400">
+                    <div className="text-xl font-bold text-primary">
                       {dayStat.focusCompleted}
                     </div>
-                    <div className="text-xs text-gray-400">Focus</div>
+                    <div className="text-xs text-muted">Focus</div>
                   </div>
                   <div className="text-center">
                     <div className="text-xl font-bold text-green-400">
                       {dayStat.shortBreakCompleted}
                     </div>
-                    <div className="text-xs text-gray-400">Short Breaks</div>
+                    <div className="text-xs text-muted">Short Breaks</div>
                   </div>
                   <div className="text-center">
                     <div className="text-xl font-bold text-purple-400">
                       {dayStat.longBreakCompleted}
                     </div>
-                    <div className="text-xs text-gray-400">Long Breaks</div>
+                    <div className="text-xs text-muted">Long Breaks</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-xl font-bold text-gray-200">
+                    <div className="text-xl font-bold text-main">
                       {Math.floor(dayStat.totalFocusTime / 60)} min
                     </div>
-                    <div className="text-xs text-gray-400">Total Focus</div>
+                    <div className="text-xs text-muted">Total Focus</div>
                   </div>
                 </div>
 
-                <div className="bg-gray-800/50 rounded-lg p-3 max-h-40 overflow-y-auto custom-scrollbar">
+                <div className="bg-surface-raised/50 rounded-lg p-3 max-h-40 overflow-y-auto custom-scrollbar">
                   <table className="w-full text-sm">
-                    <thead className="text-xs text-gray-400 uppercase">
+                    <thead className="text-xs text-muted uppercase">
                       <tr>
                         <th className="text-left py-2 px-3">Type</th>
                         <th className="text-left py-2 px-3">Time</th>
@@ -213,16 +213,15 @@ export const PomodoroStats: React.FC<PomodoroStatsProps> = ({
                     </thead>
                     <tbody className="divide-y divide-gray-700/30">
                       {sessionsByDay[dayStat.day].map((session, index) => (
-                        <tr key={index} className="hover:bg-gray-700/20">
+                        <tr key={index} className="hover:bg-surface-secondary/20">
                           <td className="py-2 px-3">
                             <span
-                              className={`inline-block w-2 h-2 rounded-full mr-2 ${
-                                session.type === "focus"
-                                  ? "bg-blue-400"
+                              className={`inline-block w-2 h-2 rounded-full mr-2 ${session.type === "focus"
+                                  ? "bg-primary"
                                   : session.type === "shortBreak"
                                     ? "bg-green-400"
                                     : "bg-purple-400"
-                              }`}
+                                }`}
                             ></span>
                             {session.type === "focus"
                               ? "Focus"
@@ -230,10 +229,10 @@ export const PomodoroStats: React.FC<PomodoroStatsProps> = ({
                                 ? "Short Break"
                                 : "Long Break"}
                           </td>
-                          <td className="py-2 px-3 text-gray-400">
+                          <td className="py-2 px-3 text-muted">
                             {formatTimeFromTimestamp(session.startTime)}
                           </td>
-                          <td className="py-2 px-3 text-gray-400">
+                          <td className="py-2 px-3 text-muted">
                             {formatTime(session.duration)}
                           </td>
                           <td className="py-2 px-3">

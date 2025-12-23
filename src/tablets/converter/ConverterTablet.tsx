@@ -117,7 +117,7 @@ const ConverterUI: React.FC<{
       },
     });
     return (
-      <div className="flex items-center justify-center h-full text-gray-400">
+      <div className="flex items-center justify-center h-full text-secondary">
         Initializing converter...
       </div>
     );
@@ -125,17 +125,17 @@ const ConverterUI: React.FC<{
 
   const sectionData =
     state.data.sectionData[
-      state.data.activeSection as keyof typeof state.data.sectionData
+    state.data.activeSection as keyof typeof state.data.sectionData
     ];
 
   return (
-    <div className="h-full bg-gray-900 flex">
+    <div className="h-full bg-surface flex">
       {/* Left Sidebar - Section Navigation */}
-      <div className="w-64 border-r border-gray-700/50 flex flex-col">
-        <div className="p-4 border-b border-gray-700/50">
+      <div className="w-64 border-r border-base flex flex-col">
+        <div className="p-4 border-b border-base">
           <div className="flex items-center space-x-3 mb-4">
-            <ArrowUpDown className="text-gray-400" size={24} />
-            <h2 className="text-xl font-semibold text-gray-100">Converter</h2>
+            <ArrowUpDown className="text-secondary" size={24} />
+            <h2 className="text-xl font-semibold text-main">Converter</h2>
           </div>
 
           {/* Search */}
@@ -144,7 +144,7 @@ const ConverterUI: React.FC<{
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value.toLowerCase())}
             placeholder="Search converters..."
-            className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 placeholder-gray-500"
+            className="input-themed w-full px-3 py-1.5 text-sm"
           />
         </div>
 
@@ -157,10 +157,9 @@ const ConverterUI: React.FC<{
                 onClick={() => handleSectionChange(section.id)}
                 className={`
                   w-full text-left px-3 py-2 rounded-md text-sm transition-colors
-                  ${
-                    state.data.activeSection === section.id
-                      ? "bg-blue-500/20 text-blue-400"
-                      : "text-gray-300 hover:bg-gray-800/50"
+                  ${state.data.activeSection === section.id
+                    ? "bg-element-active text-primary"
+                    : "text-secondary hover:bg-element-hover"
                   }
                 `}
               >

@@ -6,7 +6,6 @@ import {
   ArrowRight,
   ArrowLeft,
   Loader2,
-  HelpCircle,
 } from "lucide-react";
 import {
   MappingConfig,
@@ -61,7 +60,7 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
   // Suppress global drag & drop while this modal is open
   useEffect(() => {
     bridge.modals.suppressGlobalDragDrop(true);
-    
+
     return () => {
       bridge.modals.suppressGlobalDragDrop(false);
     };
@@ -122,14 +121,14 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
           filenameRule:
             filenameTransformType === "replace"
               ? {
-                  type: filenameTransformType,
-                  search: filenameTransformSearch,
-                  value: filenameTransformValue,
-                }
+                type: filenameTransformType,
+                search: filenameTransformSearch,
+                value: filenameTransformValue,
+              }
               : {
-                  type: filenameTransformType,
-                  value: filenameTransformValue,
-                },
+                type: filenameTransformType,
+                value: filenameTransformValue,
+              },
         };
 
         // Process ZIP file
@@ -183,16 +182,16 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-overlay flex items-center justify-center z-50 p-4">
+      <div className="bg-surface rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700/50">
-          <h2 className="text-xl font-semibold text-gray-100">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-base">
+          <h2 className="text-xl font-semibold text-main">
             Batch Transform: {mapping.name}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-200 transition-colors"
+            className="text-secondary hover:text-main transition-colors"
           >
             <X size={24} />
           </button>
@@ -203,7 +202,7 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
           <div className="space-y-6">
             {/* Direction Selector */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-secondary mb-2">
                 Transformation Direction
               </label>
               <div className="flex flex-wrap gap-2">
@@ -211,13 +210,11 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
                   onClick={() => handleDirectionChange("sourceToTarget")}
                   className={`
                     flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm
-                    ${
-                      direction === "sourceToTarget"
-                        ? "bg-blue-500/20 text-blue-400"
-                        : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
+                    ${direction === "sourceToTarget"
+                      ? "bg-info-subtle text-info"
+                      : "bg-surface-secondary text-secondary hover:bg-element-hover"
                     }
-                    transition-colors
-                  `}
+                    `}
                 >
                   <span>Source to Target</span>
                   <ArrowRight size={16} />
@@ -226,13 +223,11 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
                   onClick={() => handleDirectionChange("targetToSource")}
                   className={`
                     flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm
-                    ${
-                      direction === "targetToSource"
-                        ? "bg-blue-500/20 text-blue-400"
-                        : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
+                ${direction === "targetToSource"
+                      ? "bg-info-subtle text-info"
+                      : "bg-surface-secondary text-secondary hover:bg-element-hover"
                     }
-                    transition-colors
-                  `}
+                    `}
                 >
                   <ArrowLeft size={16} />
                   <span>Target to Source</span>
@@ -242,14 +237,14 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
 
             {/* Batch Processing Options - Only show for ZIP files */}
             {file?.name.toLowerCase().endsWith(".zip") && !result && (
-              <div className="space-y-4 p-4 bg-gray-900/50 rounded-lg border border-gray-700/50">
-                <h3 className="text-sm font-medium text-gray-300 flex items-center space-x-2">
+              <div className="space-y-4 p-4 bg-surface-raised rounded-lg border border-base">
+                <h3 className="text-sm font-medium text-main flex items-center space-x-2">
                   <span>ZIP Processing Options</span>
                 </h3>
 
                 {/* File Pattern */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">
+                  <label className="block text-xs font-medium text-secondary mb-1">
                     File Pattern
                   </label>
                   <input
@@ -257,9 +252,9 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
                     value={filePattern}
                     onChange={(e) => setFilePattern(e.target.value)}
                     placeholder="e.g., data*.json"
-                    className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50"
+                    className="w-full input-themed"
                   />
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-muted">
                     Use * as wildcard. Examples: data*.json, *.json,
                     data_*.json
                   </p>
@@ -267,7 +262,7 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
 
                 {/* Filename Transformation */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">
+                  <label className="block text-xs font-medium text-secondary mb-1">
                     Output Filename
                   </label>
                   <div className="space-y-2">
@@ -279,7 +274,7 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
                             e.target.value as FilenameTransformType,
                           )
                         }
-                        className="bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50"
+                        className="bg-surface-secondary border border-base rounded-md px-3 py-1.5 text-sm text-main focus:outline-none focus:border-primary/50"
                       >
                         <option value="prefix">Add Prefix</option>
                         <option value="suffix">Add Suffix</option>
@@ -294,7 +289,7 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
                             setFilenameTransformSearch(e.target.value)
                           }
                           placeholder="Find (e.g., data)"
-                          className="flex-1 bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50"
+                          className="flex-1 input-themed"
                         />
                       )}
 
@@ -311,7 +306,7 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
                               ? "Suffix"
                               : "Replace with (e.g., products)"
                         }
-                        className="flex-1 bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50"
+                        className="flex-1 input-themed"
                       />
                     </div>
                     <p className="text-xs text-gray-500">
@@ -329,16 +324,16 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
 
                 {/* Checkboxes */}
                 <div className="space-y-2">
-                  <label className="flex items-center space-x-2 text-sm text-gray-300 cursor-pointer">
+                  <label className="flex items-center space-x-2 text-sm text-secondary cursor-pointer">
                     <input
                       type="checkbox"
                       checked={preserveOriginals}
                       onChange={(e) => setPreserveOriginals(e.target.checked)}
-                      className="rounded bg-gray-800 border-gray-700 text-blue-500 focus:ring-blue-500"
+                      className="rounded bg-surface-secondary border-base text-primary focus:ring-primary"
                     />
                     <span>Keep original files in output ZIP</span>
                   </label>
-                  <label className="flex items-center space-x-2 text-sm text-gray-300 cursor-pointer">
+                  <label className="flex items-center space-x-2 text-sm text-secondary cursor-pointer">
                     <input
                       type="checkbox"
                       checked={preserveEmptyFolders}
@@ -358,7 +353,7 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
               <div
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
-                className="border-2 border-dashed border-gray-700/50 rounded-lg p-8 text-center hover:border-gray-600/50 transition-colors"
+                className="border-2 border-dashed border-base rounded-lg p-8 text-center hover:border-primary/50 transition-colors"
               >
                 <input
                   ref={fileInputRef}
@@ -371,14 +366,14 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
                 {file ? (
                   <div className="space-y-4">
                     <div className="flex items-center justify-center">
-                      <div className="bg-gray-900/50 border border-gray-700/50 rounded-md px-4 py-2 text-sm text-gray-200">
+                      <div className="bg-surface-secondary border border-base rounded-md px-4 py-2 text-sm text-main">
                         {file.name} ({(file.size / 1024).toFixed(1)} KB)
                       </div>
                     </div>
                     <div className="flex justify-center space-x-4">
                       <button
                         onClick={handleReset}
-                        className="px-3 py-1.5 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-sm text-gray-300 transition-colors"
+                        className="px-3 py-1.5 bg-surface-secondary hover:bg-element-hover rounded-md text-sm text-secondary transition-colors"
                       >
                         Change File
                       </button>
@@ -387,10 +382,9 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
                         disabled={isProcessing}
                         className={`
                           flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm
-                          ${
-                            isProcessing
-                              ? "bg-gray-700/50 text-gray-500 cursor-not-allowed"
-                              : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
+                          ${isProcessing
+                            ? "bg-action-disabled text-disabled cursor-not-allowed"
+                            : "bg-primary text-white hover:bg-primary/90"
                           }
                           transition-colors
                         `}
@@ -411,9 +405,9 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
 
                     {isProcessing &&
                       file.name.toLowerCase().endsWith(".zip") && (
-                        <div className="w-full bg-gray-700 rounded-full h-2.5 mt-2">
+                        <div className="w-full bg-surface-secondary rounded-full h-2.5 mt-2">
                           <div
-                            className="bg-blue-500 h-2.5 rounded-full"
+                            className="bg-primary h-2.5 rounded-full"
                             style={{ width: `${progress * 100}%` }}
                           ></div>
                         </div>
@@ -421,13 +415,13 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <Upload size={48} className="mx-auto text-gray-500" />
-                    <p className="text-gray-400">
+                    <Upload size={48} className="mx-auto text-muted" />
+                    <p className="text-secondary">
                       Drag and drop a file here, or click to select
                     </p>
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-sm text-gray-300 transition-colors"
+                      className="px-4 py-2 bg-surface-secondary hover:bg-element-hover rounded-md text-sm text-secondary transition-colors"
                     >
                       Select File
                     </button>
@@ -443,12 +437,12 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
             {result && (
               <div className="space-y-4">
                 {result.error ? (
-                  <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 text-red-400">
+                  <div className="bg-danger-subtle border border-danger-subtle/50 rounded-lg p-4 text-danger">
                     <h3 className="font-medium mb-2">Error</h3>
                     <p>{result.error}</p>
                   </div>
                 ) : (
-                  <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-4 text-green-400">
+                  <div className="bg-success-subtle border border-success-subtle/50 rounded-lg p-4 text-success">
                     <h3 className="font-medium mb-2">Success</h3>
                     {result.content ? (
                       <p>JSON file transformed successfully.</p>
@@ -504,7 +498,7 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
                   <div className="flex justify-center">
                     <button
                       onClick={handleDownload}
-                      className="flex items-center space-x-2 px-4 py-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-md transition-colors"
+                      className="flex items-center space-x-2 px-4 py-2 bg-info-subtle text-info hover:bg-info-subtle/80 rounded-md transition-colors"
                     >
                       <Download size={16} />
                       <span>Download Result</span>
@@ -515,7 +509,7 @@ export const BatchTransformModal: React.FC<BatchTransformModalProps> = ({
                 <div className="flex justify-center">
                   <button
                     onClick={handleReset}
-                    className="px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-sm text-gray-300 transition-colors"
+                    className="px-4 py-2 bg-surface-secondary hover:bg-element-hover rounded-md text-sm text-secondary transition-colors"
                   >
                     Process Another File
                   </button>

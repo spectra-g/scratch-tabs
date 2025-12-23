@@ -7,7 +7,7 @@ import { DiagramTabletState } from '../types';
 // Mock Monaco editor
 jest.mock('@monaco-editor/react', () => ({
   __esModule: true,
-  default: ({ value, onChange, onMount, onEditorReady }: any) => {
+  default: ({ value, onChange, onMount }: any) => {
     // Simulate Monaco editor behavior
     React.useEffect(() => {
       if (onMount) {
@@ -25,7 +25,7 @@ jest.mock('@monaco-editor/react', () => ({
           updateOptions: jest.fn(),
           getModel: jest.fn(() => mockModel),
           pushUndoStop: jest.fn(),
-          executeEdits: jest.fn((source, edits) => {
+          executeEdits: jest.fn((_source, edits) => {
             // Simulate the executeEdits by calling onChange with the new text
             if (edits && edits[0] && edits[0].text) {
               onChange(edits[0].text);
@@ -47,7 +47,7 @@ jest.mock('@monaco-editor/react', () => ({
         onMount(mockEditor, mockMonaco);
       }
     }, [onMount]);
-    
+
     return React.createElement('div', {
       'data-testid': 'monaco-editor',
       children: React.createElement('textarea', {
@@ -86,7 +86,7 @@ Object.assign(navigator, {
 
 describe('DiagramTablet', () => {
   const mockOnChange = jest.fn();
-  
+
   const createMockState = (overrides: Partial<DiagramTabletState> = {}): DiagramTabletState => ({
     type: 'diagram',
     mermaidCode: 'flowchart TD\n    A --> B',
@@ -223,7 +223,7 @@ describe('DiagramTablet', () => {
     it('should handle copy errors gracefully', async () => {
       const state = createMockState();
       (navigator.clipboard.writeText as jest.Mock).mockRejectedValue(new Error('Clipboard error'));
-      
+
       render(<DiagramTablet state={state} onChange={mockOnChange} />);
 
       const copyButton = screen.getByText('Copy Code');
@@ -251,7 +251,7 @@ describe('DiagramTablet', () => {
 
       // Should show theme dropdown menu
       expect(screen.getByText('Dark')).toBeInTheDocument();
-      
+
       // Select dark theme
       const darkTheme = screen.getByText('Dark');
       fireEvent.click(darkTheme);
@@ -307,11 +307,11 @@ describe('DiagramTablet', () => {
           suggestion: 'Check your arrow syntax'
         }
       });
-      
+
       expect(() => {
         render(<DiagramTablet state={state} onChange={mockOnChange} />);
       }).not.toThrow();
-      
+
       // Should still render the main interface
       expect(screen.getByTestId('mermaid-code-editor')).toBeInTheDocument();
     });
@@ -326,10 +326,10 @@ describe('DiagramTablet', () => {
       });
       render(<DiagramTablet state={state} onChange={mockOnChange} />);
 
-      const closeButton = screen.getAllByRole('button').find(btn => 
-        btn.querySelector('svg') && btn.getAttribute('class')?.includes('hover:bg-gray-700')
+      const closeButton = screen.getAllByRole('button').find(btn =>
+        btn.querySelector('svg') && btn.getAttribute('class')?.includes('hover:bg-element-hover')
       );
-      
+
       if (closeButton) {
         fireEvent.click(closeButton);
       }
@@ -346,7 +346,7 @@ describe('DiagramTablet', () => {
 
       const editor = screen.getByTestId('mermaid-code-editor');
       expect(editor).toBeInTheDocument();
-      
+
       // Check that buttons have proper titles
       const templatesButton = screen.getByText('Templates');
       expect(templatesButton.closest('button')).toHaveAttribute('title');
@@ -357,11 +357,11 @@ describe('DiagramTablet', () => {
       render(<DiagramTablet state={state} onChange={mockOnChange} />);
 
       const editor = screen.getByTestId('mermaid-code-editor');
-      
+
       // Test that editor accepts keyboard input
       fireEvent.keyDown(editor, { key: 'Enter' });
       fireEvent.keyDown(editor, { key: 'Tab' });
-      
+
       // Should not throw errors
       expect(editor).toBeInTheDocument();
     });
@@ -386,7 +386,7 @@ describe('DiagramTablet', () => {
         renderedSvg: null,
         errorState: null
       });
-      
+
       expect(() => {
         render(<DiagramTablet state={state} onChange={mockOnChange} />);
       }).not.toThrow();

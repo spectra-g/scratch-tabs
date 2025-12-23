@@ -6,6 +6,20 @@ releases:
   - version: "1.13.0"
     type: "latest"
     draft: false
+    date: "2025-12-23"
+    headline: "⌚ Date/Time \"Command Center\" & Smart Inputs"
+    description: "Major transformation of the Date/Time tablet into a high-performance productivity tool with command-line inputs, natural language arithmetic, and multi-zone comparison."
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**Smart Command Inputs:** Control the tablet via the input field using `> [City]` to add timezones (e.g., `> Tokyo`), `> diff [date]` for duration analysis, or `> next friday` to jump dates."
+          - "**\"Command Center\" Layout:** Complete redesign into a multi-column interface optimized for developer workflows, featuring persistent history, grouped conversions, and real-time dashboarding."
+          - "**Natural Language Date Arithmetic:** Intelligent parsing engine supporting human-friendly math (e.g., `now + 5d`, `yesterday - 2w`)."
+          - "**Timezone Explorer:** Compare your entered date/time across multiple configurable timezones with live DST indicators and smart city matching (e.g. \"NYC\", \"London\")."
+
+  - version: "1.12.0"
+    type: "release"
+    draft: false
     date: "2025-12-05"
     headline: "🗂️ Command Vault Complete Rework"
     description: "Complete redesign of Command Vault focused on command management with categories, search, scratchpad for temporary edits, and improved workflow"

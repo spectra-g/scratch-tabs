@@ -158,26 +158,26 @@ export const EncodeDecode: React.FC<Props> = ({
             placeholder="Enter text to convert..."
           />
           {converter.id === "jwt" ? (
-            <div className="font-mono text-sm bg-gray-900/50 text-gray-200 p-3 rounded-md whitespace-pre-wrap">
+            <div className="font-mono text-sm bg-surface-secondary/50 text-main p-3 rounded-md whitespace-pre-wrap border border-base">
               {results[`${converter.id}-encode`] ||
                 "Decoded JWT will appear here"}
             </div>
           ) : (
             <>
               <div>
-                <div className="text-sm font-medium text-gray-400 mb-2">
+                <div className="text-sm font-medium text-secondary mb-2">
                   Encoded:
                 </div>
-                <div className="font-mono text-sm bg-gray-900/50 text-gray-200 p-3 rounded-md break-all">
+                <div className="font-mono text-sm bg-surface-secondary/50 text-main p-3 rounded-md break-all border border-base">
                   {results[`${converter.id}-encode`] ||
                     "Encoded text will appear here"}
                 </div>
               </div>
               <div>
-                <div className="text-sm font-medium text-gray-400 mb-2">
+                <div className="text-sm font-medium text-secondary mb-2">
                   Decoded:
                 </div>
-                <div className="font-mono text-sm bg-gray-900/50 text-gray-200 p-3 rounded-md break-all">
+                <div className="font-mono text-sm bg-surface-secondary/50 text-main p-3 rounded-md break-all border border-base">
                   {results[`${converter.id}-decode`] ||
                     "Decoded text will appear here"}
                 </div>

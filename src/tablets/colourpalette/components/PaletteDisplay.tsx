@@ -63,10 +63,10 @@ export const PaletteDisplay: React.FC<PaletteDisplayProps> = ({
 
   const handleDeleteColor = (index: number) => {
     if (colors.length <= 1) return;
-    
+
     const newColors = colors.filter((_, i) => i !== index);
     onColorsChange(newColors);
-    
+
     // Adjust active index if necessary
     if (activeColorIndex >= newColors.length) {
       onActiveColorChange(newColors.length - 1);
@@ -92,10 +92,10 @@ export const PaletteDisplay: React.FC<PaletteDisplayProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-300">Colour Palette</h3>
+        <h3 className="text-sm font-medium text-main">Colour Palette</h3>
         <button
           onClick={handleAddColor}
-          className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
+          className="p-1 text-secondary hover:text-main transition-colors"
           title="Add color"
         >
           <Plus size={16} />
@@ -106,11 +106,10 @@ export const PaletteDisplay: React.FC<PaletteDisplayProps> = ({
         {colors.map((color, index) => (
           <div
             key={index}
-            className={`group relative border-2 rounded-lg overflow-hidden transition-all cursor-pointer ${
-              activeColorIndex === index
-                ? 'border-blue-400 shadow-lg shadow-blue-500/20'
-                : 'border-gray-600 hover:border-gray-500'
-            }`}
+            className={`group relative border-2 rounded-lg overflow-hidden transition-all cursor-pointer ${activeColorIndex === index
+              ? 'border-primary shadow-lg shadow-primary/20'
+              : 'border-base hover:border-secondary'
+              }`}
             onClick={() => onActiveColorChange(index)}
           >
             {/* Color Swatch with Edit overlay */}
@@ -133,7 +132,7 @@ export const PaletteDisplay: React.FC<PaletteDisplayProps> = ({
             </div>
 
             {/* Color Info */}
-            <div className="p-3 bg-gray-800">
+            <div className="p-3 bg-surface-secondary">
               {editingIndex === index ? (
                 <div className="space-y-2">
                   {/* Color Picker */}
@@ -141,7 +140,7 @@ export const PaletteDisplay: React.FC<PaletteDisplayProps> = ({
                     type="color"
                     value={editValue}
                     onChange={(e) => setEditValue(e.target.value)}
-                    className="w-full h-8 rounded border border-gray-600 bg-gray-700 cursor-pointer"
+                    className="w-full h-8 rounded border border-base bg-surface cursor-pointer"
                     title="Pick a color"
                   />
 
@@ -151,11 +150,10 @@ export const PaletteDisplay: React.FC<PaletteDisplayProps> = ({
                     value={editValue}
                     onChange={(e) => setEditValue(e.target.value.toUpperCase())}
                     onKeyDown={handleKeyDown}
-                    className={`w-full px-2 py-1 bg-gray-700 rounded text-xs font-mono text-gray-200 border transition-colors ${
-                      editValue && !validateHexColor(editValue)
-                        ? 'border-red-500'
-                        : 'border-gray-600'
-                    }`}
+                    className={`w-full px-2 py-1 bg-surface-secondary rounded text-xs font-mono text-main border transition-colors ${editValue && !validateHexColor(editValue)
+                      ? 'border-danger'
+                      : 'border-base'
+                      }`}
                     placeholder="#FFFFFF"
                     maxLength={7}
                     autoFocus
@@ -165,18 +163,17 @@ export const PaletteDisplay: React.FC<PaletteDisplayProps> = ({
                   <div className="flex justify-end space-x-2">
                     <button
                       onClick={handleCancelEdit}
-                      className="px-2 py-1 text-xs text-gray-400 hover:text-gray-200 transition-colors"
+                      className="px-2 py-1 text-xs text-secondary hover:text-main transition-colors"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleSaveEdit}
-                      disabled={editValue && !validateHexColor(editValue)}
-                      className={`px-2 py-1 text-xs rounded transition-colors ${
-                        editValue && !validateHexColor(editValue)
-                          ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                          : 'bg-blue-600 hover:bg-blue-700 text-white'
-                      }`}
+                      disabled={!!(editValue && !validateHexColor(editValue))}
+                      className={`px-2 py-1 text-xs rounded transition-colors ${!!(editValue && !validateHexColor(editValue))
+                          ? 'bg-element text-muted cursor-not-allowed'
+                          : 'bg-primary hover:bg-primary/90 text-white'
+                        }`}
                     >
                       Save
                     </button>
@@ -185,18 +182,18 @@ export const PaletteDisplay: React.FC<PaletteDisplayProps> = ({
               ) : (
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-mono text-gray-200">{color.hex}</span>
+                    <span className="text-xs font-mono text-main">{color.hex}</span>
                     <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleCopyColor(color, index);
                         }}
-                        className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
+                        className="p-1 text-secondary hover:text-main transition-colors"
                         title="Copy hex"
                       >
                         {copiedIndex === index ? (
-                          <Check size={12} className="text-green-400" />
+                          <Check size={12} className="text-success" />
                         ) : (
                           <Copy size={12} />
                         )}
@@ -207,7 +204,7 @@ export const PaletteDisplay: React.FC<PaletteDisplayProps> = ({
                             e.stopPropagation();
                             handleDeleteColor(index);
                           }}
-                          className="p-1 text-gray-400 hover:text-red-400 transition-colors"
+                          className="p-1 text-secondary hover:text-danger transition-colors"
                           title="Delete color"
                         >
                           <Trash2 size={12} />
@@ -215,14 +212,14 @@ export const PaletteDisplay: React.FC<PaletteDisplayProps> = ({
                       )}
                     </div>
                   </div>
-                  <div className="text-xs text-gray-400">
+                  <div className="text-xs text-secondary">
                     RGB({color.rgb.r}, {color.rgb.g}, {color.rgb.b})
                   </div>
-                  <div className="text-xs text-gray-400">
+                  <div className="text-xs text-secondary">
                     HSL({color.hsl.h}°, {color.hsl.s}%, {color.hsl.l}%)
                   </div>
                   {color.name && (
-                    <div className="text-xs text-gray-500 capitalize">{color.name}</div>
+                    <div className="text-xs text-muted capitalize">{color.name}</div>
                   )}
                 </div>
               )}

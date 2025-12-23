@@ -30,11 +30,11 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
   const [copyCodeSuccess, setCopyCodeSuccess] = useState(false);
   const [optimizeSuccess, setOptimizeSuccess] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
-  
+
   // Ref to access current state without causing re-renders
   const stateRef = useRef(state);
   stateRef.current = state;
-  
+
   // Ref to access Monaco editor instance
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
 
@@ -59,7 +59,7 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
     code: state.mermaidCode,
     theme: state.activeTheme,
     onError: setCurrentError,
-    onRenderComplete: useCallback((result) => {
+    onRenderComplete: useCallback((result: { svg: string }) => {
       // Only update if the SVG actually changed to prevent infinite re-renders
       if (stateRef.current.renderedSvg !== result.svg) {
         onChange({
@@ -177,7 +177,7 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
         .map(line => line.trim())
         .filter(line => line && !line.startsWith('%%'))
         .join('\n');
-      
+
       await navigator.clipboard.writeText(optimized);
       showCopyFeedback('Optimized code copied!');
     } catch (error) {
@@ -225,14 +225,14 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
         const resolution = exportSettings.resolution;
         canvas.width = img.width * resolution;
         canvas.height = img.height * resolution;
-        
+
         // Set background color
         ctx.fillStyle = exportSettings.backgroundColor;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
+
         // Draw the SVG
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        
+
         // Export as PNG
         canvas.toBlob((blob) => {
           if (blob) {
@@ -302,12 +302,12 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
 
     const parser = new DOMParser();
     const svgDoc = parser.parseFromString(renderedSvg, 'image/svg+xml');
-    
+
     const elements = svgDoc.querySelectorAll('*');
     const paths = svgDoc.querySelectorAll('path');
     const texts = svgDoc.querySelectorAll('text');
     const groups = svgDoc.querySelectorAll('g');
-    
+
     return {
       totalElements: elements.length,
       paths: paths.length,
@@ -319,7 +319,7 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
   }, [renderedSvg, state.mermaidCode]);
 
   return (
-    <div className="h-full flex flex-col bg-gray-900">
+    <div className="h-full flex flex-col bg-canvas">
       {/* Toolbar */}
       <Toolbar
         onExportSvg={handleExportSvg}
@@ -345,7 +345,7 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
         <ErrorPanel
           error={currentError || error}
           onClose={handleErrorClose}
-          onGoToLine={(lineNumber) => {
+          onGoToLine={() => {
             // Navigation to specific line in Monaco editor
             // TODO: Implement Monaco editor line navigation
           }}
@@ -355,18 +355,18 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
       {/* Main content area */}
       <div className="flex-1 flex min-h-0">
         {/* Code Editor Panel */}
-        <div className="w-1/2 h-full border-r border-gray-700 min-h-0">
-          <div className="h-full bg-gray-850 p-4">
+        <div className="w-1/2 h-full border-r border-base min-h-0">
+          <div className="h-full bg-surface-secondary p-4">
             <div className="mb-3">
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-secondary mb-2">
                 Mermaid Code
               </label>
-              <div className="text-xs text-gray-500 mb-2">
+              <div className="text-xs text-muted mb-2">
                 Type your Mermaid diagram code below. Changes will be reflected in real-time.
               </div>
             </div>
-            
-            <div className="h-[calc(100%-80px)] bg-gray-800 border border-gray-600 rounded-md overflow-hidden">
+
+            <div className="h-[calc(100%-80px)] bg-surface border border-base rounded-md overflow-hidden">
               <MermaidEditor
                 value={state.mermaidCode}
                 onChange={updateCode}
@@ -383,7 +383,7 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
             svgContent={renderedSvg}
             isRendering={isRendering}
             onElementClick={handlePreviewElementClick}
-            onHighlightLine={(lineNumber) => {
+            onHighlightLine={() => {
               // Line highlighting in Monaco editor
               // TODO: Implement Monaco editor line highlighting
             }}
@@ -438,11 +438,11 @@ const createDiagramInitialState = (payload?: { mermaidCode?: string }): DiagramT
 export default {
   id: 'diagram',
   label: 'Diagram Editor',
-  
+
   createInitialState: createDiagramInitialState,
-  
+
   serializeState: (state: DiagramTabletState) => JSON.stringify(state),
-  
+
   deserializeState: (serialized: string): DiagramTabletState => {
     try {
       return JSON.parse(serialized);
@@ -450,7 +450,7 @@ export default {
       return createDiagramInitialState();
     }
   },
-  
-  render: (state: DiagramTabletState, onChange: (newState: DiagramTabletState) => void) => 
+
+  render: (state: DiagramTabletState, onChange: (newState: DiagramTabletState) => void) =>
     React.createElement(DiagramTablet, { state, onChange }),
 };

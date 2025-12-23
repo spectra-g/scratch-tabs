@@ -54,7 +54,7 @@ export const ToolbarButtons: React.FC<ToolbarButtonsProps> = ({
         className={`p-2 rounded-md ${
           showCurlPopup
             ? "bg-blue-500/20 text-blue-400"
-            : "text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+            : "text-secondary hover:bg-element-hover"
         }`}
         title="Generate curl command"
         disabled={!url}
@@ -67,7 +67,7 @@ export const ToolbarButtons: React.FC<ToolbarButtonsProps> = ({
         className={`p-2 rounded-md ${
           isEncoded
             ? "bg-purple-500/20 text-purple-400"
-            : "text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+            : "text-secondary hover:bg-element-hover"
         }`}
         title={isEncoded ? "Show decoded values" : "Show encoded values"}
       >
@@ -79,7 +79,7 @@ export const ToolbarButtons: React.FC<ToolbarButtonsProps> = ({
         className={`p-2 rounded-md ${
           showComparison
             ? "bg-green-500/20 text-green-400"
-            : "text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+            : "text-secondary hover:bg-element-hover"
         }`}
         title={
           showComparison
@@ -92,7 +92,7 @@ export const ToolbarButtons: React.FC<ToolbarButtonsProps> = ({
 
       <button
         onClick={onShowHistory}
-        className="p-2 rounded-md text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+        className="p-2 rounded-md text-secondary hover:bg-element-hover"
         title="Show URL history"
       >
         <History size={16} />
@@ -102,8 +102,8 @@ export const ToolbarButtons: React.FC<ToolbarButtonsProps> = ({
         onClick={onLoadSuspiciousExample}
         className={`p-2 rounded-md ${
           hasWarnings
-            ? "text-yellow-400"
-            : "text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+            ? "text-warning"
+            : "text-secondary hover:bg-element-hover"
         }`}
         title="Load suspicious URL example"
       >
@@ -112,7 +112,7 @@ export const ToolbarButtons: React.FC<ToolbarButtonsProps> = ({
 
       <button
         onClick={onClearUrl}
-        className="p-2 rounded-md text-gray-400 hover:text-red-400 hover:bg-gray-700"
+        className="p-2 rounded-md text-secondary hover:text-danger hover:bg-element-hover"
         title="Clear URL"
         disabled={!url}
       >
@@ -121,13 +121,13 @@ export const ToolbarButtons: React.FC<ToolbarButtonsProps> = ({
 
       {/* Curl popup */}
       {showCurlPopup && url && (
-        <div className="absolute top-12 right-0 bg-gray-800 border border-gray-700 rounded-md shadow-lg p-3 z-10 w-96">
+        <div className="absolute top-12 right-0 bg-surface border border-base rounded-md shadow-lg p-3 z-10 w-96">
           <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-medium text-gray-200">curl Command</h4>
+            <h4 className="text-sm font-medium text-main">curl Command</h4>
             <div className="flex items-center space-x-2">
               <button
                 onClick={handleCopyCurl}
-                className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded"
+                className="p-1 text-secondary hover:bg-element-hover rounded"
                 title="Copy curl command"
               >
                 {curlCopied ? (
@@ -138,14 +138,14 @@ export const ToolbarButtons: React.FC<ToolbarButtonsProps> = ({
               </button>
               <button
                 onClick={() => setShowCurlPopup(false)}
-                className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded"
+                className="p-1 text-secondary hover:bg-element-hover rounded"
                 title="Close"
               >
                 <X size={14} />
               </button>
             </div>
           </div>
-          <pre className="bg-gray-900 p-2 rounded text-xs text-gray-300 overflow-x-auto whitespace-pre-wrap custom-scrollbar">
+          <pre className="bg-canvas p-2 rounded text-xs text-main overflow-x-auto whitespace-pre-wrap custom-scrollbar">
             {toCurl(url)}
           </pre>
         </div>

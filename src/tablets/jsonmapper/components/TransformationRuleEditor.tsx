@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Editor } from "@monaco-editor/react";
 import { X, Save } from "lucide-react";
+import { useThemeStore } from "../../../stores/themeStore";
 import { MappingRule, TransformationType, JoinCondition, JoinMatchType } from "../types";
 import {
   jsonPathToReadablePath,
@@ -19,6 +20,7 @@ interface TransformationRuleEditorProps {
 export const TransformationRuleEditor: React.FC<
   TransformationRuleEditorProps
 > = ({ rule, onSave, onCancel, sourceJson, targetJson }) => {
+  const { isDarkMode } = useThemeStore();
   const [sourcePath, setSourcePath] = useState(
     jsonPathToReadablePath(rule.sourcePath),
   );
@@ -355,9 +357,9 @@ export const TransformationRuleEditor: React.FC<
           case "isEmpty":
             setPreviewValue(
               sourceValue === null ||
-                sourceValue === undefined ||
-                sourceValue === "" ||
-                (Array.isArray(sourceValue) && sourceValue.length === 0),
+              sourceValue === undefined ||
+              sourceValue === "" ||
+              (Array.isArray(sourceValue) && sourceValue.length === 0),
             );
             setError(null);
             break;
@@ -641,7 +643,7 @@ export const TransformationRuleEditor: React.FC<
         return (
           <div className="grid grid-cols-2 gap-2 mb-2">
             <div>
-              <label className="block text-xs text-gray-400 mb-1">
+              <label className="block text-xs text-secondary mb-1">
                 Start Index
               </label>
               <input
@@ -650,12 +652,12 @@ export const TransformationRuleEditor: React.FC<
                 onChange={(e) =>
                   handleBuiltinParamChange("start", e.target.value)
                 }
-                className="w-full bg-gray-900/50 border border-gray-700/50 rounded px-2 py-1 text-sm text-gray-200"
+                className="w-full input-themed"
                 placeholder="0"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">
+              <label className="block text-xs text-secondary mb-1">
                 End Index (optional)
               </label>
               <input
@@ -664,7 +666,7 @@ export const TransformationRuleEditor: React.FC<
                 onChange={(e) =>
                   handleBuiltinParamChange("end", e.target.value)
                 }
-                className="w-full bg-gray-900/50 border border-gray-700/50 rounded px-2 py-1 text-sm text-gray-200"
+                className="w-full input-themed"
                 placeholder="end"
               />
             </div>
@@ -674,14 +676,14 @@ export const TransformationRuleEditor: React.FC<
       case "prepend":
         return (
           <div className="mb-2">
-            <label className="block text-xs text-gray-400 mb-1">
+            <label className="block text-xs text-secondary mb-1">
               Text to {selectedBuiltin}
             </label>
             <input
               type="text"
               value={builtinParams.text || ""}
               onChange={(e) => handleBuiltinParamChange("text", e.target.value)}
-              className="w-full bg-gray-900/50 border border-gray-700/50 rounded px-2 py-1 text-sm text-gray-200"
+              className="w-full input-themed"
               placeholder="Enter text..."
             />
           </div>
@@ -689,7 +691,7 @@ export const TransformationRuleEditor: React.FC<
       case "join":
         return (
           <div className="mb-2">
-            <label className="block text-xs text-gray-400 mb-1">
+            <label className="block text-xs text-secondary mb-1">
               Separator
             </label>
             <input
@@ -698,7 +700,7 @@ export const TransformationRuleEditor: React.FC<
               onChange={(e) =>
                 handleBuiltinParamChange("separator", e.target.value)
               }
-              className="w-full bg-gray-900/50 border border-gray-700/50 rounded px-2 py-1 text-sm text-gray-200"
+              className="w-full input-themed"
               placeholder=","
             />
           </div>
@@ -706,7 +708,7 @@ export const TransformationRuleEditor: React.FC<
       case "toFixed":
         return (
           <div className="mb-2">
-            <label className="block text-xs text-gray-400 mb-1">
+            <label className="block text-xs text-secondary mb-1">
               Decimal Places
             </label>
             <input
@@ -717,7 +719,7 @@ export const TransformationRuleEditor: React.FC<
               onChange={(e) =>
                 handleBuiltinParamChange("decimals", e.target.value)
               }
-              className="w-full bg-gray-900/50 border border-gray-700/50 rounded px-2 py-1 text-sm text-gray-200"
+              className="w-full input-themed"
               placeholder="0"
             />
           </div>
@@ -728,7 +730,7 @@ export const TransformationRuleEditor: React.FC<
       case "divide":
         return (
           <div className="mb-2">
-            <label className="block text-xs text-gray-400 mb-1">
+            <label className="block text-xs text-secondary mb-1">
               Value to {selectedBuiltin}
             </label>
             <input
@@ -743,7 +745,7 @@ export const TransformationRuleEditor: React.FC<
               onChange={(e) =>
                 handleBuiltinParamChange("value", e.target.value)
               }
-              className="w-full bg-gray-900/50 border border-gray-700/50 rounded px-2 py-1 text-sm text-gray-200"
+              className="w-full input-themed"
               placeholder={
                 selectedBuiltin === "divide" || selectedBuiltin === "multiply"
                   ? "1"
@@ -755,7 +757,7 @@ export const TransformationRuleEditor: React.FC<
       case "default":
         return (
           <div className="mb-2">
-            <label className="block text-xs text-gray-400 mb-1">
+            <label className="block text-xs text-secondary mb-1">
               Default Value
             </label>
             <input
@@ -764,7 +766,7 @@ export const TransformationRuleEditor: React.FC<
               onChange={(e) =>
                 handleBuiltinParamChange("defaultValue", e.target.value)
               }
-              className="w-full bg-gray-900/50 border border-gray-700/50 rounded px-2 py-1 text-sm text-gray-200"
+              className="w-full input-themed"
               placeholder="Enter default value..."
             />
           </div>
@@ -775,16 +777,16 @@ export const TransformationRuleEditor: React.FC<
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-overlay flex items-center justify-center z-50 p-4">
+      <div className="bg-surface rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700/50">
-          <h2 className="text-xl font-semibold text-gray-100">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-base">
+          <h2 className="text-xl font-semibold text-main">
             Edit Mapping Rule
           </h2>
           <button
             onClick={onCancel}
-            className="text-gray-400 hover:text-gray-200 transition-colors"
+            className="text-secondary hover:text-main transition-colors"
           >
             <X size={24} />
           </button>
@@ -796,22 +798,22 @@ export const TransformationRuleEditor: React.FC<
             {/* Paths */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-secondary mb-1">
                   Source Path
                 </label>
                 <input
                   type="text"
                   value={sourcePath}
                   onChange={(e) => setSourcePath(e.target.value)}
-                  className="w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors font-mono"
+                  className="w-full input-themed font-mono"
                   placeholder="e.g., user.firstName"
                 />
                 {sourceValue !== null && (
                   <div className="mt-2">
-                    <div className="text-xs text-gray-400 mb-1">
+                    <div className="text-xs text-muted mb-1">
                       Source Value:
                     </div>
-                    <div className="bg-gray-900/50 border border-gray-700/50 rounded-md p-2 text-sm text-gray-200 font-mono overflow-auto custom-scrollbar max-h-20">
+                    <div className="bg-surface-secondary border border-base rounded-md p-2 text-sm text-main font-mono overflow-auto custom-scrollbar max-h-20">
                       {typeof sourceValue === "object"
                         ? JSON.stringify(sourceValue, null, 2)
                         : String(sourceValue)}
@@ -820,22 +822,22 @@ export const TransformationRuleEditor: React.FC<
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-secondary mb-1">
                   Target Path
                 </label>
                 <input
                   type="text"
                   value={targetPath}
                   onChange={(e) => setTargetPath(e.target.value)}
-                  className="w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors font-mono"
+                  className="w-full input-themed font-mono"
                   placeholder="e.g., person.name"
                 />
                 {targetValue !== null && (
                   <div className="mt-2">
-                    <div className="text-xs text-gray-400 mb-1">
+                    <div className="text-xs text-muted mb-1">
                       Target Value:
                     </div>
-                    <div className="bg-gray-900/50 border border-gray-700/50 rounded-md p-2 text-sm text-gray-200 font-mono overflow-auto custom-scrollbar max-h-20">
+                    <div className="bg-surface-secondary border border-base rounded-md p-2 text-sm text-main font-mono overflow-auto custom-scrollbar max-h-20">
                       {typeof targetValue === "object"
                         ? JSON.stringify(targetValue, null, 2)
                         : String(targetValue)}
@@ -846,7 +848,7 @@ export const TransformationRuleEditor: React.FC<
             </div>
 
             {/* Join Condition */}
-            <div className="bg-gray-900/30 border border-gray-700/50 rounded-lg p-4">
+            <div className="bg-surface-raised border border-base rounded-lg p-4">
               <div className="flex items-center space-x-2 mb-3">
                 <input
                   type="checkbox"
@@ -857,11 +859,11 @@ export const TransformationRuleEditor: React.FC<
                 />
                 <label
                   htmlFor="useJoinCondition"
-                  className="text-sm font-medium text-gray-300 cursor-pointer"
+                  className="text-sm font-medium text-secondary cursor-pointer"
                 >
                   Use Join Condition
                 </label>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-muted">
                   (For array-to-nested-array mappings)
                 </span>
               </div>
@@ -870,13 +872,13 @@ export const TransformationRuleEditor: React.FC<
                 <div className="space-y-3 ml-6 mt-3">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-gray-400 mb-1">
+                      <label className="block text-xs font-medium text-secondary mb-1">
                         Source Join Key
                       </label>
                       <select
                         value={joinSourceKey}
                         onChange={(e) => setJoinSourceKey(e.target.value)}
-                        className="w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors"
+                        className="w-full input-themed"
                         disabled={availableSourceKeys.length === 0}
                       >
                         <option value="">
@@ -890,19 +892,19 @@ export const TransformationRuleEditor: React.FC<
                           </option>
                         ))}
                       </select>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-muted mt-1">
                         Field in source array item
                       </p>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-gray-400 mb-1">
+                      <label className="block text-xs font-medium text-secondary mb-1">
                         Target Join Key
                       </label>
                       <select
                         value={joinTargetKey}
                         onChange={(e) => setJoinTargetKey(e.target.value)}
-                        className="w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors"
+                        className="w-full input-themed"
                         disabled={availableTargetKeys.length === 0}
                       >
                         <option value="">
@@ -916,38 +918,38 @@ export const TransformationRuleEditor: React.FC<
                           </option>
                         ))}
                       </select>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-muted mt-1">
                         Field in target parent array item
                       </p>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-gray-400 mb-1">
+                      <label className="block text-xs font-medium text-secondary mb-1">
                         Match Type
                       </label>
                       <select
                         value={joinMatchType}
                         onChange={(e) => setJoinMatchType(e.target.value as JoinMatchType)}
-                        className="w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors"
+                        className="w-full input-themed"
                       >
                         <option value="equals">Equals</option>
                         <option value="contains">Contains</option>
                         <option value="startsWith">Starts With</option>
                       </select>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-muted mt-1">
                         How to match keys
                       </p>
                     </div>
                   </div>
 
                   {joinSourceKey && joinTargetKey && (
-                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-md p-2 text-xs text-blue-300">
+                    <div className="bg-info-subtle border border-info-subtle/30 rounded-md p-2 text-xs text-info">
                       <strong>Join condition:</strong> Match source items where{" "}
-                      <code className="bg-blue-500/20 px-1 rounded">{joinSourceKey}</code>{" "}
+                      <code className="bg-surface-secondary px-1 rounded">{joinSourceKey}</code>{" "}
                       {joinMatchType === "equals" && "equals"}
                       {joinMatchType === "contains" && "contains"}
                       {joinMatchType === "startsWith" && "starts with"}{" "}
-                      <code className="bg-blue-500/20 px-1 rounded">{joinTargetKey}</code>
+                      <code className="bg-surface-secondary px-1 rounded">{joinTargetKey}</code>
                     </div>
                   )}
                 </div>
@@ -956,7 +958,7 @@ export const TransformationRuleEditor: React.FC<
 
             {/* Transformation */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-secondary mb-1">
                 Transformation
               </label>
               <div className="flex space-x-4 mb-4">
@@ -967,7 +969,7 @@ export const TransformationRuleEditor: React.FC<
                     onChange={() => handleTransformationTypeChange("none")}
                     className="mr-2"
                   />
-                  <span className="text-sm text-gray-300">None</span>
+                  <span className="text-sm text-secondary">None</span>
                 </label>
                 <label className="flex items-center">
                   <input
@@ -976,7 +978,7 @@ export const TransformationRuleEditor: React.FC<
                     onChange={() => handleTransformationTypeChange("builtin")}
                     className="mr-2"
                   />
-                  <span className="text-sm text-gray-300">Built-in</span>
+                  <span className="text-sm text-secondary">Built-in</span>
                 </label>
                 <label className="flex items-center">
                   <input
@@ -985,7 +987,7 @@ export const TransformationRuleEditor: React.FC<
                     onChange={() => handleTransformationTypeChange("custom")}
                     className="mr-2"
                   />
-                  <span className="text-sm text-gray-300">Custom</span>
+                  <span className="text-sm text-secondary">Custom</span>
                 </label>
               </div>
 
@@ -994,7 +996,7 @@ export const TransformationRuleEditor: React.FC<
                   <select
                     value={selectedBuiltin}
                     onChange={(e) => handleBuiltinSelect(e.target.value)}
-                    className="w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors mb-2"
+                    className="w-full input-themed bg-surface-secondary mb-2"
                   >
                     <option value="">Select a transformation...</option>
                     <optgroup label="String">
@@ -1047,34 +1049,35 @@ export const TransformationRuleEditor: React.FC<
 
               {transformationType === "custom" && (
                 <div className="mb-4">
-                  <div className="text-xs text-gray-400 mb-1">
+                  <div className="text-xs text-secondary mb-1">
                     Enter a JavaScript expression. You have access to:
                     <ul className="list-disc list-inside mt-1 ml-2">
                       <li>
-                        <code className="bg-gray-700/50 px-1 rounded">
+                        <code className="bg-surface-secondary px-1 rounded">
                           sourceValue
                         </code>{" "}
                         - The value at the source path
                       </li>
                       <li>
-                        <code className="bg-gray-700/50 px-1 rounded">
+                        <code className="bg-surface-secondary px-1 rounded">
                           sourceObject
                         </code>{" "}
                         - The entire source object
                       </li>
                     </ul>
                   </div>
-                  <div className="border border-gray-700/50 rounded-md overflow-hidden">
+                  <div className="border border-base rounded-md overflow-hidden mb-2">
                     <Editor
-                      height="150px"
-                      language="javascript"
+                      height="200px"
+                      defaultLanguage="javascript"
                       value={transformation}
                       onChange={(value) => setTransformation(value || "")}
-                      theme="vs-dark"
+                      theme={isDarkMode ? "vs-dark" : "vs"}
                       options={{
                         minimap: { enabled: false },
                         fontSize: 14,
-                        wordWrap: "on",
+                        lineNumbers: "off",
+                        scrollBeyondLastLine: false,
                         padding: { top: 8, bottom: 8 },
                       }}
                     />
@@ -1084,12 +1087,12 @@ export const TransformationRuleEditor: React.FC<
 
               {/* Preview - Always visible */}
               <div>
-                <div className="text-xs text-gray-400 mb-1">
+                <div className="text-xs text-muted mb-1">
                   Transformation Preview:
                 </div>
-                <div className="bg-gray-900/50 border border-gray-700/50 rounded-md p-2 text-sm text-gray-200 font-mono overflow-auto custom-scrollbar max-h-20">
+                <div className="bg-surface-secondary border border-base rounded-md p-2 text-sm text-main font-mono overflow-auto custom-scrollbar max-h-20">
                   {error ? (
-                    <span className="text-red-400">{error}</span>
+                    <span className="text-danger">{error}</span>
                   ) : previewValue !== null ? (
                     typeof previewValue === "object" ? (
                       JSON.stringify(previewValue, null, 2)
@@ -1097,7 +1100,7 @@ export const TransformationRuleEditor: React.FC<
                       String(previewValue)
                     )
                   ) : (
-                    <span className="text-gray-500">No preview available</span>
+                    <span className="text-muted">No preview available</span>
                   )}
                 </div>
               </div>
@@ -1106,18 +1109,18 @@ export const TransformationRuleEditor: React.FC<
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end px-6 py-4 border-t border-gray-700/50">
+        <div className="flex justify-end px-6 py-4 border-t border-base">
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 text-gray-300 hover:text-gray-100 transition-colors text-sm"
+            className="px-4 py-2 text-secondary hover:text-main transition-colors text-sm"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className="ml-3 px-4 py-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-md transition-colors flex items-center text-sm"
+            className="ml-3 px-4 py-2 bg-primary text-white hover:bg-primary/90 rounded-md transition-colors flex items-center text-sm"
           >
             <Save size={14} className="mr-2" />
             Save

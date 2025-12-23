@@ -125,14 +125,14 @@ const WordCountTabletComponent: React.FC<{
   }, []);
 
   return (
-    <div className="h-full bg-gray-900 text-gray-200 flex flex-col overflow-hidden custom-scrollbar">
+    <div className="h-full bg-canvas text-main flex flex-col overflow-hidden custom-scrollbar">
       {/* Header */}
-      <div className="flex-none border-b border-gray-700/50 p-4">
+      <div className="flex-none border-b border-base p-4">
         <div className="flex items-center space-x-3">
           <FileText className="text-blue-400" size={24} />
           <div>
-            <h2 className="text-xl font-semibold text-gray-100">Word Count</h2>
-            <p className="text-sm text-gray-400">
+            <h2 className="text-xl font-semibold text-main">Word Count</h2>
+            <p className="text-sm text-secondary">
               Comprehensive text analysis and statistics
             </p>
           </div>
@@ -156,10 +156,10 @@ const WordCountTabletComponent: React.FC<{
         </div>
 
         {/* Right Column - Stats (40% width) */}
-        <div className="w-2/5 flex flex-col p-4 pl-2 border-l border-gray-700/30">
+        <div className="w-2/5 flex flex-col p-4 pl-2 border-l border-base">
           <div className="flex-1 overflow-auto custom-scrollbar">
             {text.trim() ? (
-              <WordCountDisplay 
+              <WordCountDisplay
                 stats={stats}
                 deviceType={deviceType}
                 writingGoal={writingGoal}
@@ -172,12 +172,12 @@ const WordCountTabletComponent: React.FC<{
                 onTargetKeywordChange={handleTargetKeywordChange}
               />
             ) : (
-              <div className="bg-gray-800/30 border border-gray-700/30 rounded-lg p-6 text-center">
-                <FileText size={32} className="mx-auto mb-3 text-gray-600" />
-                <h3 className="text-base font-medium text-gray-400 mb-2">
+              <div className="bg-surface-secondary border border-base rounded-lg p-6 text-center">
+                <FileText size={32} className="mx-auto mb-3 text-muted" />
+                <h3 className="text-base font-medium text-secondary mb-2">
                   No Text to Analyze
                 </h3>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted">
                   Enter text to see statistics.
                 </p>
               </div>

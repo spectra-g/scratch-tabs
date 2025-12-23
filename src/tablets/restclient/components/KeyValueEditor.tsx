@@ -122,7 +122,7 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
   return (
     <div className="space-y-4">
       {pairs.length === 0 ? (
-        <div className="text-center text-gray-400 py-4">
+        <div className="text-center text-muted py-4">
           No items yet. Click "Add" to create one.
         </div>
       ) : (
@@ -133,10 +133,9 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
                 onClick={() => handleTogglePair(index)}
                 className={`
                   p-1.5 rounded-md transition-colors
-                  ${
-                    pair.enabled
-                      ? "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
-                      : "bg-gray-700/50 text-gray-400 hover:bg-gray-600/50"
+                  ${pair.enabled
+                    ? "bg-primary/20 text-primary hover:bg-primary/30"
+                    : "bg-surface-secondary/50 text-muted hover:bg-element-hover"
                   }
                 `}
                 title={pair.enabled ? "Disable" : "Enable"}
@@ -151,9 +150,9 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
                 onBlur={onBlur}
                 placeholder={placeholder}
                 className={`
-                  flex-1 bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm
-                  focus:outline-none focus:border-blue-500/50 transition-colors
-                  ${pair.enabled ? "text-gray-200" : "text-gray-500"}
+                  flex-1 bg-surface-raised/50 border border-base/50 rounded-md px-3 py-2 text-sm
+                  focus:outline-none focus:border-primary/50 transition-colors
+                  ${pair.enabled ? "text-main" : "text-muted"}
                 `}
                 list="key-suggestions"
                 disabled={!pair.enabled}
@@ -168,16 +167,16 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
                 onBlur={onBlur}
                 placeholder={valuePlaceholder}
                 className={`
-                  flex-1 bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-sm
-                  focus:outline-none focus:border-blue-500/50 transition-colors
-                  ${pair.enabled ? "text-gray-200" : "text-gray-500"}
+                  flex-1 bg-surface-raised/50 border border-base/50 rounded-md px-3 py-2 text-sm
+                  focus:outline-none focus:border-primary/50 transition-colors
+                  ${pair.enabled ? "text-main" : "text-muted"}
                 `}
                 disabled={!pair.enabled}
               />
 
               <button
                 onClick={() => handleRemovePair(index)}
-                className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-700/50 rounded-md transition-colors"
+                className="p-1.5 text-muted hover:text-red-400 hover:bg-surface-secondary/50 rounded-md transition-colors"
                 title="Remove"
               >
                 <Trash2 size={16} />
@@ -189,7 +188,7 @@ export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
 
       <button
         onClick={handleAddPair}
-        className="flex items-center space-x-2 px-3 py-1.5 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-sm text-gray-300 transition-colors"
+        className="flex items-center space-x-2 px-3 py-1.5 bg-surface-raised/50 hover:bg-surface-secondary/50 rounded-md text-sm text-secondary transition-colors"
       >
         <Plus size={16} />
         <span>Add</span>

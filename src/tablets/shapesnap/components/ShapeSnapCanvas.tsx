@@ -741,10 +741,7 @@ export const ShapeSnapCanvas: React.FC<ShapeSnapCanvasProps> = ({
       {/* Information Icon */}
       <button
         onClick={() => onShowInfoModal(true)}
-        className={`absolute top-4 right-4 z-10 p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110 ${canvasSettings.mode === "dark"
-            ? "bg-gray-700 hover:bg-gray-600 text-gray-200"
-            : "bg-white hover:bg-gray-100 text-gray-700"
-          }`}
+        className="absolute top-4 right-4 z-10 p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110 bg-surface hover:bg-element-hover text-main"
         title="Shape Snap Help"
       >
         <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">

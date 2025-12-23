@@ -19,9 +19,8 @@ export const DropZone: React.FC<DropZoneProps> = ({
   onDrop,
 }) => (
   <div
-    className={`transition-all ${className} ${
-      isDragActive ? 'ring-2 ring-blue-400/50 ring-offset-2 ring-offset-gray-800' : ''
-    }`}
+    className={`transition-all ${className} ${isDragActive ? 'ring-2 ring-primary/50 ring-offset-2 ring-offset-surface' : ''
+      }`}
     style={style}
     onDragOver={(e) => e.preventDefault()}
     onDrop={(e) => {

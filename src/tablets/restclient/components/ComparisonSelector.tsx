@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { X, ArrowRightLeft, Check, Clock, Plus } from '../../../components/Icons';
 import { ComparisonItem, ResponseHistoryItem, HttpResponse } from '../types';
-import { 
-  createComparisonItem, 
-  createCurrentComparisonItem, 
-  canCompareItems 
+import {
+  createComparisonItem,
+  createCurrentComparisonItem,
+  canCompareItems
 } from '../utils/comparisonUtils';
 import { formatTime, getStatusCodeColor } from '../utils/responseUtils';
 
@@ -31,9 +31,9 @@ const SelectableItem: React.FC<SelectableItemProps> = ({ item, isSelected, onTog
     <div
       className={`
         border rounded-lg p-3 cursor-pointer transition-all
-        ${isSelected 
-          ? 'border-blue-500/50 bg-blue-500/10' 
-          : 'border-gray-700/50 hover:border-gray-600/50 hover:bg-gray-800/30'
+        ${isSelected
+          ? 'border-primary/50 bg-primary/10'
+          : 'border-base/50 hover:border-base/50 hover:bg-surface-raised/30'
         }
         ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
       `}
@@ -43,34 +43,34 @@ const SelectableItem: React.FC<SelectableItemProps> = ({ item, isSelected, onTog
         <div className="flex items-center space-x-3">
           <div className={`
             w-5 h-5 rounded border-2 flex items-center justify-center
-            ${isSelected ? 'border-blue-500 bg-blue-500' : 'border-gray-500'}
+            ${isSelected ? 'border-primary bg-primary' : 'border-base'}
           `}>
             {isSelected && <Check size={12} className="text-white" />}
           </div>
-          
+
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-2">
-              <span className="font-medium text-gray-200">{item.method}</span>
-              <span className="text-gray-400 truncate">{item.url}</span>
+              <span className="font-medium text-main">{item.method}</span>
+              <span className="text-muted truncate">{item.url}</span>
             </div>
-            
+
             <div className="flex items-center space-x-3 mt-1 text-sm">
               <span className={`font-medium ${getStatusCodeColor(item.response.status)}`}>
                 {item.response.status}
               </span>
-              
-              <span className="text-gray-400 flex items-center">
+
+              <span className="text-muted flex items-center">
                 <Clock size={12} className="mr-1" />
                 {formatTime(item.response.timing.total)}
               </span>
-              
-              <span className="text-gray-400">
+
+              <span className="text-muted">
                 {item.id === 'current' ? 'Current' : new Date(item.timestamp).toLocaleTimeString()}
               </span>
             </div>
           </div>
         </div>
-        
+
         {item.id === 'current' && (
           <div className="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs font-medium">
             Current
@@ -92,30 +92,30 @@ export const ComparisonSelector: React.FC<ComparisonSelectorProps> = ({
   onClose,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // Create available items for comparison
   const availableItems: ComparisonItem[] = [];
-  
+
   // Add current response if available
   if (currentResponse) {
     availableItems.push(createCurrentComparisonItem(currentResponse, currentMethod, currentUrl));
   }
-  
+
   // Add history items
   responseHistory.forEach(historyItem => {
     availableItems.push(createComparisonItem(historyItem));
   });
-  
+
   // Filter items based on search term
-  const filteredItems = availableItems.filter(item => 
+  const filteredItems = availableItems.filter(item =>
     item.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.method.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.url.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  
+
   const handleItemToggle = (item: ComparisonItem) => {
     const isSelected = selectedItems.some(selected => selected.id === item.id);
-    
+
     if (isSelected) {
       onSelectionChange(selectedItems.filter(selected => selected.id !== item.id));
     } else {
@@ -127,29 +127,29 @@ export const ComparisonSelector: React.FC<ComparisonSelectorProps> = ({
       }
     }
   };
-  
+
   const handleStartComparison = () => {
     if (canCompareItems(selectedItems)) {
       onStartComparison(selectedItems);
     }
   };
-  
+
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-none p-4 border-b border-gray-700/50">
+      <div className="flex-none p-4 border-b border-base/50">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
-            <ArrowRightLeft size={20} className="text-blue-400" />
-            <h3 className="text-lg font-medium text-gray-200">Compare Responses</h3>
+            <ArrowRightLeft size={20} className="text-primary" />
+            <h3 className="text-lg font-medium text-main">Compare Responses</h3>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-200 transition-colors"
+            className="text-muted hover:text-main transition-colors"
           >
             <X size={20} />
           </button>
         </div>
-        
+
         <div className="space-y-3">
           <div className="relative">
             <input
@@ -157,23 +157,22 @@ export const ComparisonSelector: React.FC<ComparisonSelectorProps> = ({
               placeholder="Search responses..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-2 text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-500/50 transition-colors"
+              className="w-full bg-surface-raised/50 border border-base/50 rounded-md px-3 py-2 text-main placeholder-gray-400 focus:outline-none focus:border-primary/50 transition-colors"
             />
           </div>
-          
+
           <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-400">
+            <div className="text-sm text-muted">
               Select 2 responses to compare ({selectedItems.length}/2)
             </div>
-            
+
             <button
               onClick={handleStartComparison}
               disabled={!canCompareItems(selectedItems)}
-              className={`p-2 rounded-md transition-colors ${
-                canCompareItems(selectedItems)
+              className={`p-2 rounded-md transition-colors ${canCompareItems(selectedItems)
                   ? "text-green-400 hover:text-green-300 hover:bg-green-500/20"
-                  : "text-gray-400 opacity-50 cursor-not-allowed"
-              }`}
+                  : "text-muted opacity-50 cursor-not-allowed"
+                }`}
               title="Compare selected responses"
             >
               <ArrowRightLeft size={14} />
@@ -181,11 +180,11 @@ export const ComparisonSelector: React.FC<ComparisonSelectorProps> = ({
           </div>
         </div>
       </div>
-      
+
       <div className="flex-1 overflow-auto custom-scrollbar">
         {filteredItems.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-center text-gray-400">
+            <div className="text-center text-muted">
               <p>No responses available for comparison</p>
               <p className="text-sm mt-1">Execute some requests to see them here</p>
             </div>

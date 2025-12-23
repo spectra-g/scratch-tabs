@@ -1,10 +1,10 @@
-import { 
-  parse, 
-  parseISO, 
-  format, 
-  formatDistanceToNow, 
-  add, 
-  sub, 
+import {
+  parse,
+  parseISO,
+  format,
+  formatDistanceToNow,
+  add,
+  sub,
   differenceInDays,
   differenceInHours,
   differenceInMinutes,
@@ -17,32 +17,49 @@ import {
   getYear,
   getHours,
   getMinutes,
-  getSeconds
+  getSeconds,
+  getWeek,
+  getDayOfYear,
+  formatRFC7231
 } from 'date-fns';
-import { 
-  toZonedTime, 
+import {
+  toZonedTime,
   format as formatTz,
   getTimezoneOffset
 } from 'date-fns-tz';
 import { ConversionFormats, DurationResult, TimezoneInfo, ParseResult } from '../types';
+
+export type DetectedFormat = 'Unix Seconds' | 'Unix Milliseconds' | 'ISO 8601' | 'SQL Datetime' | 'Natural Language' | 'Custom Format' | 'Arithmetic' | 'Command';
+
+export interface IntelligentParseResult {
+  date: Date | null;
+  format: DetectedFormat | null;
+  arithmetic?: string;
+  warning?: string;
+  commandResult?: {
+    type: 'ADD_TIMEZONE' | 'SHOW_DIFF' | 'JUMP_DATE';
+    payload: any;
+    message?: string;
+  };
+}
 
 /**
  * Check if a value is a valid date (either Date object or valid date string)
  */
 export function isValidDateValue(value: any): boolean {
   if (!value) return false;
-  
+
   // If it's already a Date object, check if it's valid
   if (value instanceof Date) {
     return !isNaN(value.getTime());
   }
-  
+
   // If it's a string, try to parse it as a date
   if (typeof value === 'string') {
     const parsed = new Date(value);
     return !isNaN(parsed.getTime());
   }
-  
+
   return false;
 }
 
@@ -51,107 +68,215 @@ export function isValidDateValue(value: any): boolean {
  */
 export function ensureDate(value: any): Date | null {
   if (!value) return null;
-  
+
   // If it's already a valid Date object, return it
   if (value instanceof Date && !isNaN(value.getTime())) {
     return value;
   }
-  
+
   // If it's a string, try to parse it
   if (typeof value === 'string') {
     const parsed = new Date(value);
     return isNaN(parsed.getTime()) ? null : parsed;
   }
-  
+
   return null;
 }
 
 /**
- * Intelligent date parsing that handles multiple input formats
+ * Intelligent date parsing that handles multiple input formats and arithmetic
  */
-export function intelligentParse(input: string): Date | null {
+export function intelligentParse(input: string): IntelligentParseResult {
   if (!input || typeof input !== 'string') {
-    return null;
+    return { date: null, format: null };
   }
 
   const trimmed = input.trim();
   if (!trimmed) {
-    return null;
+    return { date: null, format: null };
+  }
+
+
+
+  // Strategy -1: Command Handling
+  if (trimmed.startsWith('>')) {
+    const commandContent = trimmed.substring(1).trim();
+
+    // Command: > diff [value]
+    if (commandContent.toLowerCase().startsWith('diff ')) {
+      const diffValue = commandContent.substring(5).trim();
+      const diffTargetResult = intelligentParse(diffValue);
+
+      if (diffTargetResult.date) {
+        return {
+          date: null,
+          format: 'Command',
+          commandResult: {
+            type: 'SHOW_DIFF',
+            payload: diffTargetResult.date,
+            message: `Showing difference against ${diffTargetResult.format}`
+          }
+        };
+      }
+    }
+
+    // Command: > [timezone]
+    // Check if the content is a valid timezone or city
+    const resolvedTz = resolveTimezone(commandContent);
+    if (resolvedTz) {
+      return {
+        date: null,
+        format: 'Command',
+        commandResult: {
+          type: 'ADD_TIMEZONE',
+          payload: resolvedTz,
+          message: `Added timezone: ${resolvedTz}`
+        }
+      };
+    }
+
+    // Command: > [natural language/date] (Jump to date)
+    // Try to parse the content as a date
+    const jumpResult = intelligentParse(commandContent);
+    if (jumpResult.date) {
+      return {
+        date: jumpResult.date,
+        format: 'Command', // It's a command that resulted in a date
+        commandResult: {
+          type: 'JUMP_DATE',
+          payload: jumpResult.date
+        }
+      };
+    }
+
+    // Fallback for unknown commands
+    return { date: null, format: 'Command', warning: 'Unknown command' };
   }
 
   try {
+    // Strategy 0: Handle arithmetic (e.g., now + 5d)
+    const arithmeticMatch = trimmed.match(/^(.+?)\s*([+-])\s*(.+)$/);
+    if (arithmeticMatch) {
+      const basePart = arithmeticMatch[1].trim();
+      const operator = arithmeticMatch[2] as '+' | '-';
+      const durationPart = arithmeticMatch[3].trim();
+
+      const baseResult = intelligentParse(basePart);
+      if (baseResult.date) {
+        const duration = parseDurationString(durationPart);
+        if (duration) {
+          const date = performDateArithmetic(baseResult.date, operator === '+' ? 'add' : 'subtract', duration);
+          return {
+            date,
+            format: 'Arithmetic',
+            arithmetic: `${baseResult.format} ${operator} ${durationPart}`
+          };
+        }
+      }
+    }
+
     // Strategy 1: Handle "now" and relative terms
     if (trimmed.toLowerCase() === 'now') {
-      return new Date();
+      return { date: new Date(), format: 'Natural Language' };
     }
 
     // Strategy 2: Unix timestamp detection (seconds or milliseconds)
     const numericInput = trimmed.replace(/[^\d]/g, '');
     if (numericInput === trimmed && numericInput.length >= 8) {
       const timestamp = parseInt(numericInput, 10);
-      
+
       // Heuristic: if > 1e12, it's likely milliseconds; otherwise seconds
-      const date = timestamp > 1e12 ? new Date(timestamp) : new Date(timestamp * 1000);
-      
-      if (isValid(date) && date.getFullYear() > 1970 && date.getFullYear() < 2100) {
-        return date;
+      const isMs = timestamp > 1e12;
+      const date = isMs ? new Date(timestamp) : new Date(timestamp * 1000);
+      // Alt interpretation: Treat 13 digits as Seconds. new Date(timestamp * 1000).
+
+      // isMs = false (10 digits). const date = new Date(timestamp * 1000).
+      // Alt interpretation: Treat 10 digits as Milliseconds. new Date(timestamp).
+
+      if (isValid(date) && date.getFullYear() > 1900 && date.getFullYear() < 3000) {
+        return {
+          date,
+          format: isMs ? 'Unix Milliseconds' : 'Unix Seconds'
+        };
       }
     }
 
     // Strategy 3: ISO 8601 parsing
     try {
       const isoDate = parseISO(trimmed);
-      if (isValid(isoDate)) {
-        return isoDate;
+      if (isValid(isoDate) && trimmed.includes('-') && (trimmed.includes('T') || trimmed.includes('Z'))) {
+        return { date: isoDate, format: 'ISO 8601' };
       }
     } catch {
       // Continue to next strategy
     }
 
-    // Strategy 4: JavaScript Date constructor (handles many formats)
-    const jsDate = new Date(trimmed);
-    if (isValid(jsDate) && !isNaN(jsDate.getTime())) {
-      return jsDate;
-    }
-
-    // Strategy 5: Common database/log formats
-    const commonFormats = [
-      'yyyy-MM-dd HH:mm:ss',
-      'yyyy-MM-dd HH:mm:ss.SSS',
-      'yyyy/MM/dd HH:mm:ss',
-      'MM/dd/yyyy HH:mm:ss',
-      'dd/MM/yyyy HH:mm:ss',
-      'yyyy-MM-dd',
-      'MM/dd/yyyy',
-      'dd/MM/yyyy',
-      'MMM dd, yyyy',
-      'dd MMM yyyy',
-      'yyyy-MM-dd\'T\'HH:mm:ss',
-      'yyyy-MM-dd\'T\'HH:mm:ss.SSS'
+    // Strategy 4: Common database/log formats
+    const commonFormats: { fmt: string, label: DetectedFormat }[] = [
+      { fmt: 'yyyy-MM-dd HH:mm:ss', label: 'SQL Datetime' },
+      { fmt: 'yyyy-MM-dd HH:mm:ss.SSS', label: 'SQL Datetime' },
+      { fmt: 'yyyy/MM/dd HH:mm:ss', label: 'Custom Format' },
+      { fmt: 'MM/dd/yyyy HH:mm:ss', label: 'Custom Format' },
+      { fmt: 'dd/MM/yyyy HH:mm:ss', label: 'Custom Format' },
+      { fmt: 'yyyy-MM-dd', label: 'ISO 8601' },
+      { fmt: 'MM/dd/yyyy', label: 'Custom Format' },
+      { fmt: 'dd/MM/yyyy', label: 'Custom Format' },
+      { fmt: 'MMM dd, yyyy', label: 'Custom Format' },
+      { fmt: 'dd MMM yyyy', label: 'Custom Format' },
+      { fmt: 'yyyy-MM-dd\'T\'HH:mm:ss', label: 'ISO 8601' },
+      { fmt: 'yyyy-MM-dd\'T\'HH:mm:ss.SSS', label: 'ISO 8601' }
     ];
 
-    for (const formatString of commonFormats) {
+    for (const { fmt, label } of commonFormats) {
       try {
-        const parsed = parse(trimmed, formatString, new Date());
+        const parsed = parse(trimmed, fmt, new Date());
         if (isValid(parsed)) {
-          return parsed;
+          return { date: parsed, format: label };
         }
       } catch {
         continue;
       }
     }
 
+    // Strategy 5: JavaScript Date constructor (handles many formats)
+    const jsDate = new Date(trimmed);
+    if (isValid(jsDate) && !isNaN(jsDate.getTime())) {
+      return { date: jsDate, format: 'Custom Format' };
+    }
+
     // Strategy 6: Natural language parsing (basic implementation)
     const naturalLanguageResult = parseNaturalLanguage(trimmed);
     if (naturalLanguageResult) {
-      return naturalLanguageResult;
+      return { date: naturalLanguageResult, format: 'Natural Language' };
     }
 
   } catch {
     // Silently handle parsing errors
   }
 
-  return null;
+  return { date: null, format: null };
+}
+
+/**
+ * Parses duration shorthand (e.g., "5d", "12h", "2w")
+ */
+function parseDurationString(durationStr: string): any {
+  const match = durationStr.trim().match(/^(\d+)\s*([a-z]+)$/i);
+  if (!match) return null;
+
+  const amount = parseInt(match[1], 10);
+  const unit = match[2].toLowerCase();
+
+  switch (unit) {
+    case 's': case 'sec': case 'second': case 'seconds': return { seconds: amount };
+    case 'm': case 'min': case 'minute': case 'minutes': return { minutes: amount };
+    case 'h': case 'hr': case 'hour': case 'hours': return { hours: amount };
+    case 'd': case 'day': case 'days': return { days: amount };
+    case 'w': case 'wk': case 'week': case 'weeks': return { weeks: amount };
+    case 'mo': case 'mon': case 'month': case 'months': return { months: amount };
+    case 'y': case 'yr': case 'year': case 'years': return { years: amount };
+    default: return null;
+  }
 }
 
 /**
@@ -174,7 +299,7 @@ function parseNaturalLanguage(input: string): Date | null {
   if (agoMatch) {
     const amount = parseInt(agoMatch[1], 10);
     const unit = agoMatch[2];
-    
+
     const unitMap: Record<string, any> = {
       second: { seconds: amount },
       minute: { minutes: amount },
@@ -195,7 +320,7 @@ function parseNaturalLanguage(input: string): Date | null {
   if (inMatch) {
     const amount = parseInt(inMatch[1], 10);
     const unit = inMatch[2];
-    
+
     const unitMap: Record<string, any> = {
       second: { seconds: amount },
       minute: { minutes: amount },
@@ -234,10 +359,25 @@ export function formatForAllOutputs(date: Date): ConversionFormats {
     iso8601: date.toISOString(),
     unixSeconds: Math.floor(date.getTime() / 1000),
     unixMilliseconds: date.getTime(),
+    programming: {
+      javascript: `new Date("${date.toISOString()}")`,
+      python: `datetime.fromisoformat("${date.toISOString()}")`,
+      go: `time.Parse(time.RFC3339, "${date.toISOString()}")`
+    },
+    database: {
+      sql: format(date, 'yyyy-MM-dd HH:mm:ss'),
+      mongo: `ISODate("${date.toISOString()}")`
+    },
+    web: {
+      cookie: formatRFC7231(date),
+      rss: format(date, 'EEE, dd MMM yyyy HH:mm:ss xx') // Simple RSS format
+    },
     components: {
       year: getYear(date),
-      month: getMonth(date) + 1, // date-fns uses 0-based months
+      month: getMonth(date) + 1,
       day: date.getDate(),
+      dayOfYear: getDayOfYear(date),
+      weekNumber: getWeek(date),
       hour: getHours(date),
       minute: getMinutes(date),
       second: getSeconds(date),
@@ -259,7 +399,7 @@ export function getTimezoneInfo(date: Date, timezones: string[]): TimezoneInfo[]
     try {
       const zonedDate = toZonedTime(date, timezone);
       const currentTime = toZonedTime(new Date(), timezone);
-      
+
       // Get timezone offset
       const offset = getTimezoneOffset(timezone, date);
       const offsetHours = Math.floor(Math.abs(offset) / (1000 * 60 * 60));
@@ -293,11 +433,11 @@ function isDaylightSavingTime(date: Date, timezone: string): boolean {
   try {
     const january = new Date(date.getFullYear(), 0, 1);
     const july = new Date(date.getFullYear(), 6, 1);
-    
+
     const janOffset = getTimezoneOffset(timezone, january);
     const julOffset = getTimezoneOffset(timezone, july);
     const currentOffset = getTimezoneOffset(timezone, date);
-    
+
     const stdOffset = Math.max(janOffset, julOffset);
     return currentOffset < stdOffset;
   } catch {
@@ -405,7 +545,7 @@ export function simulateCrossPlatformParsing(dateString: string): ParseResult[] 
 function simulatePythonParsing(dateString: string): ParseResult {
   // Python's fromisoformat is strict about ISO 8601 format
   const iso8601Pattern = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?)?$/;
-  
+
   if (iso8601Pattern.test(dateString)) {
     try {
       const date = parseISO(dateString);
@@ -433,7 +573,7 @@ function simulatePythonParsing(dateString: string): ParseResult {
 function simulateJavaParsing(dateString: string): ParseResult {
   // Java Instant.parse expects strict ISO 8601 with timezone
   const strictIsoPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
-  
+
   if (strictIsoPattern.test(dateString)) {
     try {
       const date = parseISO(dateString);
@@ -461,7 +601,7 @@ function simulateJavaParsing(dateString: string): ParseResult {
 function simulateGoParsing(dateString: string): ParseResult {
   // Go's time.Parse with RFC3339 layout
   const rfc3339Pattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$/;
-  
+
   if (rfc3339Pattern.test(dateString)) {
     try {
       const date = parseISO(dateString);
@@ -532,6 +672,75 @@ export function getPopularTimezones(): string[] {
 }
 
 /**
+ * Resolve a timezone string from a city name or partial match
+ */
+export function resolveTimezone(input: string): string | null {
+  const normalized = input.trim();
+
+  // Direct match
+  if (isValidTimezone(normalized)) {
+    return normalized;
+  }
+
+  // Common city mappings
+  const cityMap: Record<string, string> = {
+    'tokyo': 'Asia/Tokyo',
+    'new york': 'America/New_York',
+    'nyc': 'America/New_York',
+    'london': 'Europe/London',
+    'paris': 'Europe/Paris',
+    'berlin': 'Europe/Berlin',
+    'los angeles': 'America/Los_Angeles',
+    'la': 'America/Los_Angeles',
+    'san francisco': 'America/Los_Angeles',
+    'chicago': 'America/Chicago',
+    'denver': 'America/Denver',
+    'shanghai': 'Asia/Shanghai',
+    'beijing': 'Asia/Shanghai',
+    'kolkata': 'Asia/Kolkata',
+    'delhi': 'Asia/Kolkata',
+    'mumbai': 'Asia/Kolkata',
+    'sydney': 'Australia/Sydney',
+    'melbourne': 'Australia/Melbourne',
+    'auckland': 'Pacific/Auckland',
+    'utc': 'UTC',
+    'gmt': 'UTC',
+    'est': 'America/New_York',
+    'pst': 'America/Los_Angeles',
+    'cst': 'America/Chicago',
+    'mst': 'America/Denver',
+    'ist': 'Asia/Kolkata',
+    'cet': 'Europe/Berlin',
+    'jst': 'Asia/Tokyo'
+  };
+
+  const lower = normalized.toLowerCase();
+
+  if (cityMap[lower]) {
+    return cityMap[lower];
+  }
+
+  // Try to find a timezone that ends with the input (case-insensitive)
+  // We can check against a fuller list, but for now let's check against popular ones + strict validity check if we constructed one
+
+  // Attempt to construct common prefixes
+  const prefixes = ['Asia/', 'America/', 'Europe/', 'Australia/', 'Pacific/', 'Africa/'];
+  for (const prefix of prefixes) {
+    // Simple Title Case: "tokyo" -> "Tokyo"
+    const titleCased = normalized.charAt(0).toUpperCase() + normalized.slice(1).toLowerCase();
+    const probe = prefix + titleCased;
+    if (isValidTimezone(probe)) return probe;
+
+    // Handle "New_York" from "new york"
+    const snakeCased = titleCased.replace(/ /g, '_');
+    const probeSnake = prefix + snakeCased;
+    if (isValidTimezone(probeSnake)) return probeSnake;
+  }
+
+  return null;
+}
+
+/**
  * Validate timezone string
  */
 export function isValidTimezone(timezone: string): boolean {
@@ -574,7 +783,7 @@ export function getCurrentTimeInTimezone(timezone: string): string {
  * Debounced parsing function
  */
 export function createDebouncedParser(
-  callback: (result: Date | null, error: string | null) => void,
+  callback: (result: IntelligentParseResult) => void,
   delay: number = 300
 ) {
   let timeoutId: NodeJS.Timeout;
@@ -584,13 +793,9 @@ export function createDebouncedParser(
     timeoutId = setTimeout(() => {
       try {
         const result = intelligentParse(input);
-        if (result) {
-          callback(result, null);
-        } else {
-          callback(null, 'Unable to parse date/time');
-        }
+        callback(result);
       } catch (error) {
-        callback(null, error instanceof Error ? error.message : 'Parsing error');
+        callback({ date: null, format: null });
       }
     }, delay);
   };

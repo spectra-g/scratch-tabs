@@ -12,7 +12,7 @@ export const QueryResultTable: React.FC<QueryResultTableProps> = ({
   // If there are no results
   if (result.values.length === 0) {
     return (
-      <div className="p-4 bg-gray-800 rounded-lg text-center text-gray-400">
+      <div className="p-4 bg-surface-raised rounded-lg text-center text-muted">
         No results found for this query
       </div>
     );
@@ -24,11 +24,11 @@ export const QueryResultTable: React.FC<QueryResultTableProps> = ({
     Object.keys(result.values[0].labels).length === 0
   ) {
     return (
-      <div className="p-6 bg-gray-800 rounded-lg text-center">
-        <div className="text-3xl font-semibold text-blue-400">
+      <div className="p-6 bg-surface-raised rounded-lg text-center">
+        <div className="text-3xl font-semibold text-primary">
           {formatNumber(result.values[0].value)}
         </div>
-        <div className="text-sm text-gray-400 mt-2">{result.metric}</div>
+        <div className="text-sm text-muted mt-2">{result.metric}</div>
       </div>
     );
   }
@@ -38,27 +38,27 @@ export const QueryResultTable: React.FC<QueryResultTableProps> = ({
     <div className="overflow-x-auto">
       <table className="w-full border-collapse">
         <thead>
-          <tr className="bg-gray-800">
+          <tr className="bg-surface-raised">
             {result.groupedBy.length > 0 ? (
               <>
                 {result.groupedBy.map((label) => (
                   <th
                     key={label}
-                    className="px-4 py-2 text-left text-sm font-medium text-gray-300 border-b border-gray-700"
+                    className="px-4 py-2 text-left text-sm font-medium text-secondary border-b border-base"
                   >
                     {label}
                   </th>
                 ))}
-                <th className="px-4 py-2 text-right text-sm font-medium text-gray-300 border-b border-gray-700">
+                <th className="px-4 py-2 text-right text-sm font-medium text-secondary border-b border-base">
                   Value
                 </th>
               </>
             ) : (
               <>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-300 border-b border-gray-700">
+                <th className="px-4 py-2 text-left text-sm font-medium text-secondary border-b border-base">
                   Labels
                 </th>
-                <th className="px-4 py-2 text-right text-sm font-medium text-gray-300 border-b border-gray-700">
+                <th className="px-4 py-2 text-right text-sm font-medium text-secondary border-b border-base">
                   Value
                 </th>
               </>
@@ -67,32 +67,32 @@ export const QueryResultTable: React.FC<QueryResultTableProps> = ({
         </thead>
         <tbody>
           {result.values.map((value, index) => (
-            <tr key={index} className="hover:bg-gray-800">
+            <tr key={index} className="hover:bg-surface-raised">
               {result.groupedBy.length > 0 ? (
                 <>
                   {result.groupedBy.map((label) => (
                     <td
                       key={label}
-                      className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700"
+                      className="px-4 py-2 text-sm text-secondary border-b border-base"
                     >
                       {value.labels[label] || ""}
                     </td>
                   ))}
-                  <td className="px-4 py-2 text-sm text-right text-blue-400 font-mono border-b border-gray-700">
+                  <td className="px-4 py-2 text-sm text-right text-primary font-mono border-b border-base">
                     {formatNumber(value.value)}
                   </td>
                 </>
               ) : (
                 <>
-                  <td className="px-4 py-2 text-sm text-gray-300 border-b border-gray-700">
+                  <td className="px-4 py-2 text-sm text-secondary border-b border-base">
                     {Object.entries(value.labels).length > 0 ? (
                       <div className="font-mono">
                         {"{"}
                         {Object.entries(value.labels).map(
                           ([key, val], i, arr) => (
                             <span key={key}>
-                              <span className="text-gray-400">{key}</span>=
-                              <span className="text-blue-400">"{val}"</span>
+                              <span className="text-muted">{key}</span>=
+                              <span className="text-primary">"{val}"</span>
                               {i < arr.length - 1 && ", "}
                             </span>
                           ),
@@ -100,10 +100,10 @@ export const QueryResultTable: React.FC<QueryResultTableProps> = ({
                         {"}"}
                       </div>
                     ) : (
-                      <span className="text-gray-500 italic">no labels</span>
+                      <span className="text-muted italic">no labels</span>
                     )}
                   </td>
-                  <td className="px-4 py-2 text-sm text-right text-blue-400 font-mono border-b border-gray-700">
+                  <td className="px-4 py-2 text-sm text-right text-primary font-mono border-b border-base">
                     {formatNumber(value.value)}
                   </td>
                 </>

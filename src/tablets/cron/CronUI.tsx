@@ -135,7 +135,7 @@ export const CronUI: React.FC<CronUIProps> = ({ state, onChange }) => {
   );
 
   return (
-    <div className="h-full bg-gray-900 text-gray-200 flex flex-col overflow-hidden">
+    <div className="h-full bg-surface text-main flex flex-col overflow-hidden">
       <CronHeader
         dialect={state.dialect}
         onDialectChange={handleDialectChange}
@@ -179,11 +179,11 @@ export const CronUI: React.FC<CronUIProps> = ({ state, onChange }) => {
               />
             )}
 
-            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <h3 className="text-sm font-medium text-gray-300 mb-2">
+            <div className="bg-surface-secondary rounded-lg p-4 border border-base">
+              <h3 className="text-sm font-medium text-secondary mb-2">
                 Human-Readable Translation
               </h3>
-              <p className="text-gray-200">{humanReadable}</p>
+              <p className="text-main">{humanReadable}</p>
             </div>
           </div>
 

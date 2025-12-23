@@ -13,7 +13,7 @@ export const ColorSwatch: React.FC<ColorSwatchProps> = ({
   onDragEnd
 }) => (
   <div
-    className="w-8 h-8 rounded border border-gray-600 cursor-grab active:cursor-grabbing shadow-sm"
+    className="w-8 h-8 rounded border border-base cursor-grab active:cursor-grabbing shadow-sm"
     style={{ backgroundColor: color.hex }}
     draggable
     onDragStart={() => onDragStart(color.hex)}

@@ -15,19 +15,19 @@ export const LoremIpsumTablet: React.FC<LoremIpsumTabletProps> = ({
   onChange,
 }) => {
   const { createBackgroundTab } = useTabletTabCreation();
-  
+
   const updateSettings = useCallback((updates: Partial<LoremIpsumSettings>) => {
     const newSettings = { ...state.settings, ...updates };
-    
+
     // Update settings first
     onChange({
       ...state,
       settings: newSettings,
     });
-    
+
     if (state.generatedOutput && !state.isGenerating) {
       const newState = { ...state, settings: newSettings };
-      
+
       setTimeout(() => {
         try {
           const content = generateContent({
@@ -103,7 +103,7 @@ export const LoremIpsumTablet: React.FC<LoremIpsumTabletProps> = ({
   }, [state, onChange]);
 
   const handleCreateNewTab = useCallback(() => {
-    
+
     if (!state.generatedOutput) {
       return;
     }
@@ -143,18 +143,18 @@ export const LoremIpsumTablet: React.FC<LoremIpsumTabletProps> = ({
 
 
   return (
-    <div className="h-full flex flex-col bg-gray-900 text-gray-200">
+    <div className="h-full flex flex-col bg-canvas text-main">
       {/* Header */}
-      <div className="flex-shrink-0 p-6 border-b border-gray-700">
+      <div className="flex-shrink-0 p-6 border-b border-base">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-100">Lorem Ipsum & Mock Data Generator</h1>
-            <p className="text-gray-400 mt-1">
+            <h1 className="text-2xl font-bold text-main">Lorem Ipsum & Mock Data Generator</h1>
+            <p className="text-secondary mt-1">
               Generate realistic placeholder content for your projects
             </p>
           </div>
           <div className="text-right">
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-muted">
               {state.lastGeneratedAt ? `Last generated: ${new Date(state.lastGeneratedAt).toLocaleTimeString()}` : ''}
             </div>
           </div>
@@ -211,11 +211,11 @@ const createLoremIpsumInitialState = (payload?: any) => ({
 export default {
   id: 'loremipsum',
   label: 'Lorem Ipsum Generator',
-  
+
   createInitialState: createLoremIpsumInitialState,
-  
+
   serializeState: (state: any) => JSON.stringify(state),
-  
+
   deserializeState: (serialized: string) => {
     try {
       return JSON.parse(serialized);
@@ -223,7 +223,7 @@ export default {
       return createLoremIpsumInitialState();
     }
   },
-  
-  render: (state: any, onChange: (newState: any) => void) => 
+
+  render: (state: any, onChange: (newState: any) => void) =>
     React.createElement(LoremIpsumTablet, { state, onChange }),
 };

@@ -101,8 +101,8 @@ export const SegmentedBuilder: React.FC<SegmentedBuilderProps> = ({
   };
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-      <h3 className="text-sm font-medium text-gray-300 mb-4">
+    <div className="bg-surface-secondary rounded-lg p-4 border border-base">
+      <h3 className="text-sm font-medium text-main mb-4">
         Segmented Builder
       </h3>
 
@@ -114,7 +114,7 @@ export const SegmentedBuilder: React.FC<SegmentedBuilderProps> = ({
 
           return (
             <div key={index} className="space-y-1">
-              <label className="block text-sm text-gray-300">{fieldName}</label>
+              <label className="block text-sm text-main">{fieldName}</label>
               <div className="flex space-x-2">
                 <select
                   value={
@@ -122,9 +122,8 @@ export const SegmentedBuilder: React.FC<SegmentedBuilderProps> = ({
                       ?.value || "custom"
                   }
                   onChange={(e) => updateField(fieldName, e.target.value)}
-                  className={`bg-gray-700 border rounded-md px-3 py-2 text-sm text-gray-200 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    fieldError ? "border-red-500" : "border-gray-600"
-                  }`}
+                  className={`input-themed bg-surface text-main text-sm w-full ${fieldError ? "border-danger" : ""
+                    }`}
                 >
                   {fieldOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -140,15 +139,14 @@ export const SegmentedBuilder: React.FC<SegmentedBuilderProps> = ({
                   type="text"
                   value={fieldValue}
                   onChange={(e) => updateField(fieldName, e.target.value)}
-                  className={`bg-gray-700 border rounded-md px-3 py-2 text-sm text-gray-200 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    fieldError ? "border-red-500" : "border-gray-600"
-                  }`}
+                  className={`input-themed bg-surface text-main text-sm w-full font-mono ${fieldError ? "border-danger" : ""
+                    }`}
                   placeholder={`Enter ${fieldName.toLowerCase()}`}
                 />
               </div>
 
               {fieldError && (
-                <p className="text-xs text-red-400">{fieldError.message}</p>
+                <p className="text-xs text-danger">{fieldError.message}</p>
               )}
             </div>
           );

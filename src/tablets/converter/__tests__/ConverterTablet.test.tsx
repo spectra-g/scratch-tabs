@@ -169,7 +169,7 @@ describe("ConverterTablet", () => {
       render(<>{rendered}</>);
 
       const encodeDecodeButton = screen.getByText("Encode / Decode");
-      expect(encodeDecodeButton).toHaveClass("text-blue-400");
+      expect(encodeDecodeButton).toHaveClass("text-primary");
     });
   });
 
@@ -411,7 +411,7 @@ describe("ConverterTablet", () => {
       render(<>{rendered}</>);
 
       // 1. Start with encode-decode section
-      expect(screen.getByText("Encode / Decode")).toHaveClass("text-blue-400");
+      expect(screen.getByText("Encode / Decode")).toHaveClass("text-primary");
 
       // 2. Switch to number section
       const numberButton = screen.getByText("Number");

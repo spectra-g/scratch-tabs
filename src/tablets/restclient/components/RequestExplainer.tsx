@@ -132,12 +132,12 @@ export const RequestExplainer: React.FC<RequestExplainerProps> = ({
   return (
     <div className="space-y-3">
       <div className="flex justify-between items-center">
-        <h3 className="text-sm font-medium text-gray-300">
+        <h3 className="text-sm font-medium text-secondary">
           Request Explanation
         </h3>
 
         <div className="flex items-center space-x-2">
-          <span className="text-xs text-gray-400">Simple</span>
+          <span className="text-xs text-muted">Simple</span>
           <input
             type="range"
             min="1"
@@ -167,13 +167,13 @@ export const RequestExplainer: React.FC<RequestExplainerProps> = ({
                         : "most-detailed",
               );
             }}
-            className="w-32 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+            className="w-32 h-2 bg-surface-secondary rounded-lg appearance-none cursor-pointer"
           />
-          <span className="text-xs text-gray-400">Detailed</span>
+          <span className="text-xs text-muted">Detailed</span>
         </div>
       </div>
 
-      <div className="bg-gray-800/50 border border-gray-700/50 rounded-md p-3 text-sm text-gray-200">
+      <div className="bg-surface-raised/50 border border-base/50 rounded-md p-3 text-sm text-main">
         {generateExplanation()}
       </div>
     </div>

@@ -229,10 +229,10 @@ export const NumberConversion: React.FC<Props> = ({
             {Object.entries(results[converter.id] || {}).map(
               ([label, value]) => (
                 <div key={label}>
-                  <div className="text-sm font-medium text-gray-400 mb-1">
+                  <div className="text-sm font-medium text-secondary mb-1">
                     {label}:
                   </div>
-                  <div className="font-mono text-sm bg-gray-900/50 text-gray-200 px-3 py-2 rounded-md">
+                  <div className="font-mono text-sm bg-surface-secondary/50 text-main px-3 py-2 rounded-md border border-base">
                     {value}
                   </div>
                 </div>

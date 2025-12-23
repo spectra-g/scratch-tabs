@@ -1,10 +1,11 @@
 import { TabletState } from '../types';
 
 export interface DateTimeTabletData {
+  inputValue: string;
   parsedDate: Date | null;
   error: string | null;
   selectedTimezones: string[];
-  calculatorState: {
+  calculatorState?: {
     operation: 'add' | 'subtract' | 'duration';
     years: number;
     months: number;
@@ -54,10 +55,25 @@ export interface ConversionFormats {
   iso8601: string;
   unixSeconds: number;
   unixMilliseconds: number;
+  programming: {
+    javascript: string;
+    python: string;
+    go: string;
+  };
+  database: {
+    sql: string;
+    mongo: string;
+  };
+  web: {
+    cookie: string;
+    rss: string;
+  };
   components: {
     year: number;
     month: number;
     day: number;
+    dayOfYear: number;
+    weekNumber: number;
     hour: number;
     minute: number;
     second: number;

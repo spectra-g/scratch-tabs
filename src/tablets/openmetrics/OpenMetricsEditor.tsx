@@ -56,11 +56,11 @@ export const OpenMetricsEditor: React.FC<OpenMetricsEditorProps> = ({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="p-3 border-b border-gray-700 flex items-center justify-between">
+      <div className="p-3 border-b border-base flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div className="flex items-center">
             {isLoading ? (
-              <Loader size={16} className="text-blue-400 animate-spin mr-2" />
+              <Loader size={16} className="text-primary animate-spin mr-2" />
             ) : parseError ? (
               <AlertCircle size={16} className="text-red-400 mr-2" />
             ) : (
@@ -76,7 +76,7 @@ export const OpenMetricsEditor: React.FC<OpenMetricsEditorProps> = ({
           </div>
 
           {parseResult && !parseError && (
-            <div className="text-sm text-gray-400">
+            <div className="text-sm text-muted">
               {parseResult.stats.uniqueLabelNames} label names,{" "}
               {parseResult.stats.totalLabels} label values
             </div>
@@ -101,7 +101,7 @@ export const OpenMetricsEditor: React.FC<OpenMetricsEditorProps> = ({
           ref={textareaRef}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full h-full bg-gray-850 text-gray-200 font-mono p-2.5 resize-none focus:outline-none"
+          className="w-full h-full bg-canvas text-main font-mono p-2.5 resize-none focus:outline-none"
           style={{
             lineHeight: "20px",
             tabSize: 2,

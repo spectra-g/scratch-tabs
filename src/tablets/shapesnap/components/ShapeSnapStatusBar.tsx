@@ -19,7 +19,7 @@ export const ShapeSnapStatusBar: React.FC<ShapeSnapStatusBarProps> = ({
 }) => {
   const { isMobile } = useTabletDeviceInfo();
   return (
-    <div className="flex items-center justify-between p-2 border-t border-gray-700 bg-gray-800 text-xs text-gray-400">
+    <div className="flex items-center justify-between p-2 border-t border-base bg-surface-raised text-xs text-secondary">
       <div className="flex items-center space-x-4">
         <div>
           {shapeCount} {shapeCount === 1 ? "shape" : "shapes"}
@@ -34,15 +34,15 @@ export const ShapeSnapStatusBar: React.FC<ShapeSnapStatusBarProps> = ({
 
       <div className="flex items-center space-x-4">
         <div>
-          Tool: <span className="text-gray-300 capitalize">{currentTool}</span>
+          Tool: <span className="text-main capitalize">{currentTool}</span>
         </div>
 
         <div>
-          Mode: <span className="text-gray-300 capitalize">{canvasMode}</span>
+          Mode: <span className="text-main capitalize">{canvasMode}</span>
         </div>
 
         {!isMobile && (
-          <div className="text-gray-500 text-xs">
+          <div className="text-muted text-xs">
             Ctrl+C Copy | Ctrl+V Paste | Ctrl+X Cut | Del Delete
           </div>
         )}

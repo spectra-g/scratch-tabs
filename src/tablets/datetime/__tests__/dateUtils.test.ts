@@ -12,71 +12,78 @@ describe('dateUtils', () => {
   describe('intelligentParse', () => {
     it('should parse "now" as current time', () => {
       const result = intelligentParse('now');
-      expect(result).toBeInstanceOf(Date);
-      expect(Math.abs(result!.getTime() - Date.now())).toBeLessThan(1000);
+      expect(result.date).toBeInstanceOf(Date);
+      expect(Math.abs(result.date!.getTime() - Date.now())).toBeLessThan(1000);
+      expect(result.format).toBe('Natural Language');
     });
 
     it('should parse unix timestamps in seconds', () => {
       const timestamp = 1672531200; // 2023-01-01 00:00:00 UTC
       const result = intelligentParse(timestamp.toString());
-      expect(result).toBeInstanceOf(Date);
-      expect(result!.getTime()).toBe(timestamp * 1000);
+      expect(result.date).toBeInstanceOf(Date);
+      expect(result.date!.getTime()).toBe(timestamp * 1000);
+      expect(result.format).toBe('Unix Seconds');
     });
 
     it('should parse unix timestamps in milliseconds', () => {
       const timestamp = 1672531200000; // 2023-01-01 00:00:00 UTC
       const result = intelligentParse(timestamp.toString());
-      expect(result).toBeInstanceOf(Date);
-      expect(result!.getTime()).toBe(timestamp);
+      expect(result.date).toBeInstanceOf(Date);
+      expect(result.date!.getTime()).toBe(timestamp);
+      expect(result.format).toBe('Unix Milliseconds');
     });
 
     it('should parse ISO 8601 dates', () => {
       const isoString = '2023-01-01T12:00:00Z';
       const result = intelligentParse(isoString);
-      expect(result).toBeInstanceOf(Date);
-      expect(result!.toISOString()).toBe('2023-01-01T12:00:00.000Z');
+      expect(result.date).toBeInstanceOf(Date);
+      expect(result.date!.toISOString()).toBe('2023-01-01T12:00:00.000Z');
+      expect(result.format).toBe('ISO 8601');
     });
 
     it('should parse common database formats', () => {
       const dbFormat = '2023-01-01 12:00:00';
       const result = intelligentParse(dbFormat);
-      expect(result).toBeInstanceOf(Date);
-      expect(result!.getFullYear()).toBe(2023);
-      expect(result!.getMonth()).toBe(0); // January is 0
-      expect(result!.getDate()).toBe(1);
+      expect(result.date).toBeInstanceOf(Date);
+      expect(result.date!.getFullYear()).toBe(2023);
+      expect(result.date!.getMonth()).toBe(0); // January is 0
+      expect(result.date!.getDate()).toBe(1);
+      expect(result.format).toBe('SQL Datetime');
     });
 
     it('should parse natural language - yesterday', () => {
       const result = intelligentParse('yesterday');
-      expect(result).toBeInstanceOf(Date);
-      
+      expect(result.date).toBeInstanceOf(Date);
+
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
-      
+
       // Check if it's approximately yesterday (within same day)
-      expect(result!.getDate()).toBe(yesterday.getDate());
+      expect(result.date!.getDate()).toBe(yesterday.getDate());
+      expect(result.format).toBe('Natural Language');
     });
 
     it('should parse natural language - "3 days ago"', () => {
       const result = intelligentParse('3 days ago');
-      expect(result).toBeInstanceOf(Date);
-      
+      expect(result.date).toBeInstanceOf(Date);
+
       const threeDaysAgo = new Date();
       threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-      
-      expect(result!.getDate()).toBe(threeDaysAgo.getDate());
+
+      expect(result.date!.getDate()).toBe(threeDaysAgo.getDate());
+      expect(result.format).toBe('Natural Language');
     });
 
-    it('should return null for invalid input', () => {
-      expect(intelligentParse('invalid date')).toBeNull();
-      expect(intelligentParse('')).toBeNull();
-      expect(intelligentParse('abc123')).toBeNull();
+    it('should return null date for invalid input', () => {
+      expect(intelligentParse('invalid date').date).toBeNull();
+      expect(intelligentParse('').date).toBeNull();
+      expect(intelligentParse('abc123').date).toBeNull();
     });
 
     it('should handle edge cases', () => {
-      expect(intelligentParse(null as any)).toBeNull();
-      expect(intelligentParse(undefined as any)).toBeNull();
-      expect(intelligentParse('   ')).toBeNull();
+      expect(intelligentParse(null as any).date).toBeNull();
+      expect(intelligentParse(undefined as any).date).toBeNull();
+      expect(intelligentParse('   ').date).toBeNull();
     });
   });
 
@@ -85,7 +92,7 @@ describe('dateUtils', () => {
 
     it('should format date into all required formats', () => {
       const result = formatForAllOutputs(testDate);
-      
+
       expect(result).toHaveProperty('humanReadable');
       expect(result).toHaveProperty('relativeTime');
       expect(result).toHaveProperty('iso8601');
@@ -96,7 +103,7 @@ describe('dateUtils', () => {
 
     it('should provide correct unix timestamps', () => {
       const result = formatForAllOutputs(testDate);
-      
+
       expect(result.unixSeconds).toBe(1672574400);
       expect(result.unixMilliseconds).toBe(1672574400000);
     });
@@ -108,7 +115,7 @@ describe('dateUtils', () => {
 
     it('should provide correct date components', () => {
       const result = formatForAllOutputs(testDate);
-      
+
       expect(result.components.year).toBe(2023);
       expect(result.components.month).toBe(1);
       expect(result.components.day).toBe(1);
@@ -150,7 +157,7 @@ describe('dateUtils', () => {
         minutes: 30,
         seconds: 45
       });
-      
+
       expect(result.getFullYear()).toBe(2024);
       expect(result.getMonth()).toBe(2); // March (0-based)
     });
@@ -168,7 +175,7 @@ describe('dateUtils', () => {
 
     it('should calculate duration correctly', () => {
       const result = calculateDuration(startDate, endDate);
-      
+
       expect(result.totalDays).toBe(4);
       expect(result.totalHours).toBe(108); // 4 days * 24 + 12 hours
       expect(result.days).toBe(4);
@@ -193,7 +200,7 @@ describe('dateUtils', () => {
     it('should simulate JavaScript parsing', () => {
       const results = simulateCrossPlatformParsing('2023-01-01T12:00:00Z');
       const jsResult = results.find(r => r.language === 'JavaScript');
-      
+
       expect(jsResult).toBeDefined();
       expect(jsResult!.success).toBe(true);
       expect(jsResult!.code).toContain('new Date(');
@@ -202,14 +209,14 @@ describe('dateUtils', () => {
     it('should simulate Python parsing for valid ISO format', () => {
       const results = simulateCrossPlatformParsing('2023-01-01T12:00:00');
       const pythonResult = results.find(r => r.language === 'Python');
-      
+
       expect(pythonResult).toBeDefined();
       expect(pythonResult!.code).toContain('datetime.fromisoformat(');
     });
 
     it('should show errors for invalid formats', () => {
       const results = simulateCrossPlatformParsing('invalid date');
-      
+
       results.forEach(result => {
         expect(result.success).toBe(false);
         expect(result.error).toBeDefined();
@@ -219,7 +226,7 @@ describe('dateUtils', () => {
     it('should return results for all supported languages', () => {
       const results = simulateCrossPlatformParsing('2023-01-01T12:00:00Z');
       const languages = results.map(r => r.language);
-      
+
       expect(languages).toContain('JavaScript');
       expect(languages).toContain('Python');
       expect(languages).toContain('Java');

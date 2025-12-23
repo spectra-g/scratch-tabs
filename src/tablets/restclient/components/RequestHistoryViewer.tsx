@@ -20,18 +20,18 @@ export const RequestHistoryViewer: React.FC<RequestHistoryViewerProps> = ({
   if (history.length === 0) {
     return (
       <div className="h-full flex flex-col">
-        <div className="flex-none p-4 border-b border-gray-700/50 flex justify-between items-center">
-          <h3 className="text-lg font-medium text-gray-200">Request History</h3>
+        <div className="flex-none p-4 border-b border-base/50 flex justify-between items-center">
+          <h3 className="text-lg font-medium text-main">Request History</h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-200 transition-colors"
+            className="text-muted hover:text-main transition-colors"
           >
             <X size={20} />
           </button>
         </div>
 
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center text-gray-400">
+          <div className="text-center text-muted">
             <p>No request history yet.</p>
             <p className="text-sm mt-1">Executed requests will appear here.</p>
           </div>
@@ -42,11 +42,11 @@ export const RequestHistoryViewer: React.FC<RequestHistoryViewerProps> = ({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-none p-4 border-b border-gray-700/50 flex justify-between items-center">
-        <h3 className="text-lg font-medium text-gray-200">Request History</h3>
+      <div className="flex-none p-4 border-b border-base/50 flex justify-between items-center">
+        <h3 className="text-lg font-medium text-main">Request History</h3>
         <button
           onClick={onClose}
-          className="text-gray-400 hover:text-gray-200 transition-colors"
+          className="text-muted hover:text-main transition-colors"
         >
           <X size={20} />
         </button>
@@ -57,17 +57,17 @@ export const RequestHistoryViewer: React.FC<RequestHistoryViewerProps> = ({
           {history.map((item) => (
             <div
               key={item.id}
-              className="p-4 hover:bg-gray-800/50 transition-colors"
+              className="p-4 hover:bg-surface-raised/50 transition-colors"
             >
               <div className="flex justify-between items-start">
                 <div>
                   <div className="flex items-center space-x-2">
                     <span
-                      className={`font-medium text-gray-200 ${
+                      className={`font-medium text-main ${
                         item.request.method === "GET"
                           ? "text-green-400"
                           : item.request.method === "POST"
-                            ? "text-blue-400"
+                            ? "text-primary"
                             : item.request.method === "PUT"
                               ? "text-yellow-400"
                               : item.request.method === "DELETE"
@@ -78,7 +78,7 @@ export const RequestHistoryViewer: React.FC<RequestHistoryViewerProps> = ({
                       {item.request.method}
                     </span>
                     <span
-                      className="text-gray-400 truncate max-w-md"
+                      className="text-muted truncate max-w-md"
                       title={item.request.url}
                     >
                       {item.request.url}
@@ -86,7 +86,7 @@ export const RequestHistoryViewer: React.FC<RequestHistoryViewerProps> = ({
                   </div>
 
                   <div className="flex items-center space-x-3 mt-1 text-sm">
-                    <span className="text-gray-400 flex items-center">
+                    <span className="text-muted flex items-center">
                       <Send size={14} className="mr-1" />
                       Sent: {new Date(item.timestamp).toLocaleTimeString()} (
                       {new Date(item.timestamp).toLocaleDateString()})
@@ -102,7 +102,7 @@ export const RequestHistoryViewer: React.FC<RequestHistoryViewerProps> = ({
                       ${
                         item.isPinned
                           ? "text-yellow-400 hover:bg-yellow-500/20"
-                          : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
+                          : "text-muted hover:text-main hover:bg-surface-secondary/50"
                       }
                     `}
                     title={item.isPinned ? "Unpin" : "Pin"}
@@ -112,7 +112,7 @@ export const RequestHistoryViewer: React.FC<RequestHistoryViewerProps> = ({
 
                   <button
                     onClick={() => onRestoreItem(item)}
-                    className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded-md transition-colors"
+                    className="p-1.5 text-muted hover:text-primary hover:bg-surface-secondary/50 rounded-md transition-colors"
                     title="Restore this request"
                   >
                     <ArrowRight size={16} />
@@ -120,7 +120,7 @@ export const RequestHistoryViewer: React.FC<RequestHistoryViewerProps> = ({
 
                   <button
                     onClick={() => onDeleteItem(item.id)}
-                    className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-700/50 rounded-md transition-colors"
+                    className="p-1.5 text-muted hover:text-red-400 hover:bg-surface-secondary/50 rounded-md transition-colors"
                     title="Delete from history"
                   >
                     <Trash2 size={16} />

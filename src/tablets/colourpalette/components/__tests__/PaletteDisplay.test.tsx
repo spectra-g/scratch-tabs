@@ -41,8 +41,8 @@ describe('PaletteDisplay', () => {
     it('should highlight the active color', () => {
       const { container } = render(<PaletteDisplay {...defaultProps} activeColorIndex={1} />);
 
-      // The active color card should have the blue border class
-      const activeCard = container.querySelector('.border-blue-400');
+      // The active color card should have the primary border class (semantic token)
+      const activeCard = container.querySelector('.border-primary');
       expect(activeCard).toBeInTheDocument();
     });
 
@@ -142,7 +142,7 @@ describe('PaletteDisplay', () => {
       const hexInput = screen.getByDisplayValue('#FF0000');
       fireEvent.change(hexInput, { target: { value: 'invalid' } });
 
-      expect(hexInput).toHaveClass('border-red-500');
+      expect(hexInput).toHaveClass('border-danger');
     });
 
     it('should disable save button for invalid hex colors', () => {
@@ -156,7 +156,7 @@ describe('PaletteDisplay', () => {
 
       const saveButton = screen.getByText('Save');
       expect(saveButton).toBeDisabled();
-      expect(saveButton).toHaveClass('bg-gray-600', 'cursor-not-allowed');
+      expect(saveButton).toHaveClass('bg-element', 'text-muted', 'cursor-not-allowed');
     });
 
     it('should handle hex colors without # prefix', () => {

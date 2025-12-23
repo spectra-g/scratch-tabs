@@ -17,10 +17,10 @@ export const Alert: React.FC<AlertProps> = ({
   className = "",
 }) => {
   const variantStyles = {
-    info: "bg-blue-500/10 border-blue-500/30 text-blue-400",
-    success: "bg-green-500/10 border-green-500/30 text-green-400",
-    warning: "bg-yellow-500/10 border-yellow-500/30 text-yellow-400",
-    error: "bg-red-500/10 border-red-500/30 text-red-400",
+    info: "bg-info-subtle text-info border border-info-subtle/20",
+    success: "bg-success-subtle text-success border border-success-subtle/20",
+    warning: "bg-warning-subtle text-warning border border-warning-subtle/20",
+    error: "bg-danger-subtle text-danger border border-danger-subtle/20",
   };
 
   const IconComponent = {
@@ -45,7 +45,7 @@ export const Alert: React.FC<AlertProps> = ({
         {onClose && (
           <button
             type="button"
-            className="ml-auto flex-shrink-0 -mt-1 -mr-1 p-1 rounded-md hover:bg-gray-800/50 focus:outline-none"
+            className="ml-auto flex-shrink-0 -mt-1 -mr-1 p-1 rounded-md hover:bg-black/10 dark:hover:bg-white/10 focus:outline-none"
             onClick={onClose}
           >
             <span className="sr-only">Close</span>

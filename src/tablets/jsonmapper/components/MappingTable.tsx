@@ -90,43 +90,43 @@ export const MappingTable: React.FC<MappingTableProps> = ({
     }
 
     return sortDirection === "asc" ? (
-      <ArrowUp size={14} className="ml-1 inline-block text-blue-400" />
+      <ArrowUp size={14} className="ml-1 inline-block text-info" />
     ) : (
-      <ArrowDown size={14} className="ml-1 inline-block text-blue-400" />
+      <ArrowDown size={14} className="ml-1 inline-block text-info" />
     );
   };
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case "mapped":
-        return "bg-green-500/20 text-green-400";
+        return "bg-success-subtle text-success";
       case "unmapped":
-        return "bg-yellow-500/20 text-yellow-400";
+        return "bg-warning-subtle text-warning";
       case "ignored":
-        return "bg-gray-500/20 text-gray-400";
+        return "bg-surface-secondary text-muted";
       case "error":
-        return "bg-red-500/20 text-red-400";
+        return "bg-danger-subtle text-danger";
       default:
-        return "bg-gray-500/20 text-gray-400";
+        return "bg-surface-secondary text-muted";
     }
   };
 
   const getConfidenceBadge = (confidence: number) => {
     if (confidence >= 0.8) {
       return (
-        <span className="bg-green-500/20 text-green-400 px-2 py-0.5 rounded text-xs">
+        <span className="bg-success-subtle text-success px-2 py-0.5 rounded text-xs">
           High
         </span>
       );
     } else if (confidence >= 0.5) {
       return (
-        <span className="bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded text-xs">
+        <span className="bg-warning-subtle text-warning px-2 py-0.5 rounded text-xs">
           Medium
         </span>
       );
     } else if (confidence > 0) {
       return (
-        <span className="bg-red-500/20 text-red-400 px-2 py-0.5 rounded text-xs">
+        <span className="bg-danger-subtle text-danger px-2 py-0.5 rounded text-xs">
           Low
         </span>
       );
@@ -199,9 +199,9 @@ export const MappingTable: React.FC<MappingTableProps> = ({
 
   if (rules.length === 0) {
     return (
-      <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-8 text-center">
-        <p className="text-gray-400">No mapping rules defined</p>
-        <p className="text-sm text-gray-500 mt-2">
+      <div className="bg-surface-secondary border border-base rounded-lg p-8 text-center">
+        <p className="text-secondary">No mapping rules defined</p>
+        <p className="text-sm text-muted mt-2">
           Click "Analyze & Suggest Mappings" to automatically generate rules, or
           "Add Rule" to create one manually.
         </p>
@@ -210,21 +210,21 @@ export const MappingTable: React.FC<MappingTableProps> = ({
   }
 
   return (
-    <div className="bg-gray-800/50 border border-gray-700/50 rounded-lg overflow-hidden">
+    <div className="bg-surface border border-base rounded-lg overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left text-gray-300">
-          <thead className="text-xs text-gray-400 uppercase bg-gray-800">
+        <table className="w-full text-sm text-left text-secondary">
+          <thead className="text-xs text-muted uppercase bg-surface-raised">
             <tr>
               <th
                 scope="col"
-                className="px-4 py-3 cursor-pointer hover:text-blue-300"
+                className="px-4 py-3 cursor-pointer hover:text-primary"
                 onClick={() => handleSort("sourcePath")}
               >
                 Source Path {getSortIcon("sourcePath")}
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 cursor-pointer hover:text-blue-300"
+                className="px-4 py-3 cursor-pointer hover:text-primary"
                 onClick={() => handleSort("targetPath")}
               >
                 Target Path {getSortIcon("targetPath")}
@@ -266,7 +266,7 @@ export const MappingTable: React.FC<MappingTableProps> = ({
             {sortedRules.map((rule) => (
               <tr
                 key={rule.id}
-                className="border-b border-gray-700/50 hover:bg-gray-700/30"
+                className="border-b border-base hover:bg-element-hover"
               >
                 <td className="px-4 py-3 font-mono text-xs">
                   {jsonPathToReadablePath(rule.sourcePath)}
@@ -277,7 +277,7 @@ export const MappingTable: React.FC<MappingTableProps> = ({
                       {rule.targetPath ? (
                         jsonPathToReadablePath(rule.targetPath)
                       ) : (
-                        <span className="text-gray-500 italic">Not mapped</span>
+                        <span className="text-muted italic">Not mapped</span>
                       )}
                     </span>
                     {rule.joinCondition && (
@@ -292,20 +292,20 @@ export const MappingTable: React.FC<MappingTableProps> = ({
                 </td>
                 <td className="px-4 py-3">
                   {rule.transformationType === "none" ? (
-                    <span className="text-gray-500">None</span>
+                    <span className="text-muted">None</span>
                   ) : rule.transformationType === "builtin" ? (
-                    <span className="text-blue-400">{rule.transformation}</span>
+                    <span className="text-info">{rule.transformation}</span>
                   ) : (
                     <span className="text-purple-400">Custom</span>
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  <span className="px-2 py-0.5 rounded bg-gray-700/50 text-xs">
+                  <span className="px-2 py-0.5 rounded bg-surface-secondary text-xs">
                     {rule.sourceDataType}
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <span className="px-2 py-0.5 rounded bg-gray-700/50 text-xs">
+                  <span className="px-2 py-0.5 rounded bg-surface-secondary text-xs">
                     {rule.targetDataType}
                   </span>
                 </td>
@@ -323,14 +323,14 @@ export const MappingTable: React.FC<MappingTableProps> = ({
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() => handleEditRule(rule.id)}
-                      className="p-1 text-gray-400 hover:text-blue-400 hover:bg-gray-700/50 rounded transition-colors"
+                      className="p-1 text-secondary hover:text-primary hover:bg-element-hover rounded transition-colors"
                       title="Edit rule"
                     >
                       <Edit size={16} />
                     </button>
                     <button
                       onClick={() => onIgnoreRule(rule.id)}
-                      className="p-1 text-gray-400 hover:text-yellow-400 hover:bg-gray-700/50 rounded transition-colors"
+                      className="p-1 text-secondary hover:text-warning hover:bg-element-hover rounded transition-colors"
                       title={
                         rule.status === "ignored"
                           ? "Unignore rule"
@@ -345,14 +345,14 @@ export const MappingTable: React.FC<MappingTableProps> = ({
                     </button>
                     <button
                       onClick={() => onClearRule(rule.id)}
-                      className="p-1 text-gray-400 hover:text-orange-400 hover:bg-gray-700/50 rounded transition-colors"
+                      className="p-1 text-secondary hover:text-warning hover:bg-element-hover rounded transition-colors"
                       title="Clear rule fields"
                     >
                       <Eraser size={16} />
                     </button>
                     <button
                       onClick={() => onReEvaluateRule(rule.id)}
-                      className="p-1 text-gray-400 hover:text-green-400 hover:bg-gray-700/50 rounded transition-colors"
+                      className="p-1 text-secondary hover:text-success hover:bg-element-hover rounded transition-colors"
                       title="Re-evaluate rule"
                       disabled={!sourceJson || !targetJson}
                     >
@@ -360,7 +360,7 @@ export const MappingTable: React.FC<MappingTableProps> = ({
                     </button>
                     <button
                       onClick={() => onDeleteRule(rule.id)}
-                      className="p-1 text-gray-400 hover:text-red-400 hover:bg-gray-700/50 rounded transition-colors"
+                      className="p-1 text-secondary hover:text-danger hover:bg-element-hover rounded transition-colors"
                       title="Delete rule"
                     >
                       <Trash2 size={16} />
