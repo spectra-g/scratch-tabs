@@ -13,19 +13,13 @@ export const ShapeSnapInfoModal: React.FC<ShapeSnapInfoModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  const isDark = canvasMode === "dark";
-  const bgColor = isDark ? "bg-gray-800" : "bg-white";
-  const textColor = isDark ? "text-gray-100" : "text-gray-900";
-  const borderColor = isDark ? "border-gray-600" : "border-gray-300";
-  const overlayColor = isDark ? "bg-black/50" : "bg-black/30";
-
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center ${overlayColor}`}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
       onClick={onClose}
     >
       <div
-        className={`${bgColor} ${textColor} rounded-lg shadow-xl max-w-2xl mx-4 max-h-[80vh] overflow-y-auto custom-scrollbar border ${borderColor}`}
+        className="bg-surface text-main rounded-lg shadow-xl max-w-2xl mx-4 max-h-[80vh] overflow-y-auto custom-scrollbar border border-base"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6">
@@ -46,7 +40,7 @@ export const ShapeSnapInfoModal: React.FC<ShapeSnapInfoModalProps> = ({
             </h2>
             <button
               onClick={onClose}
-              className={`p-2 rounded-full hover:bg-gray-200 ${isDark ? "hover:bg-gray-700" : "hover:bg-gray-200"}`}
+              className="p-2 rounded-full hover:bg-element-hover"
             >
               <svg
                 className="w-6 h-6"

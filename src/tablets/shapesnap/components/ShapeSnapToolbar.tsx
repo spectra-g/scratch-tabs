@@ -72,7 +72,7 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
   };
 
   return (
-    <div className={`flex items-center justify-between border-b border-gray-700 bg-gray-800 ${
+    <div className={`flex items-center justify-between border-b border-base bg-surface-raised ${
       isMobile ? "p-1" : "p-2"
     }`}>
       <div className={`flex items-center ${
@@ -83,7 +83,7 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
           className={`${isMobile ? "p-1.5" : "p-2"} rounded-md transition-colors ${
             currentTool === "draw"
               ? "bg-blue-500/20 text-blue-400"
-              : "text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"
+              : "text-secondary hover:bg-element-hover"
           }`}
           onClick={handleDrawToggle}
           title={
@@ -100,7 +100,7 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
           className={`${isMobile ? "p-1.5" : "p-2"} rounded-md transition-colors ${
             currentTool === "eraser"
               ? "bg-red-500/20 text-red-400"
-              : "text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"
+              : "text-secondary hover:bg-element-hover"
           }`}
           onClick={() => onToolChange("eraser")}
           title="Eraser"
@@ -113,7 +113,7 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
             className={`p-2 rounded-md transition-colors ${
               gridSnappingEnabled
                 ? "bg-blue-500/20 text-blue-400"
-                : "text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"
+                : "text-secondary hover:bg-element-hover"
             }`}
             onClick={onToggleGridSnapping}
             title={
@@ -129,7 +129,7 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
         {/* Font Size Button */}
         {!isMobile && (
           <button
-            className="p-2 rounded-md transition-colors text-gray-400 hover:bg-gray-700/50 hover:text-gray-300 flex items-center gap-1"
+            className="p-2 rounded-md transition-colors text-secondary hover:bg-element-hover flex items-center gap-1"
             onClick={onCycleFontSize}
             title={`Font Size: ${currentFontSize}px (Click to cycle)`}
           >
@@ -142,7 +142,7 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
       {/* Instructional Text - Hidden on mobile */}
       {!isMobile && (
         <div className="flex items-center px-3">
-          <span className="text-sm text-gray-400 font-medium">
+          <span className="text-sm text-secondary font-medium">
             Draw freely and Shape Snap will auto detect and correct
           </span>
         </div>
@@ -154,8 +154,8 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
         <button
           className={`${isMobile ? "p-1.5" : "p-2"} rounded-md transition-colors ${
             canUndo
-              ? "text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"
-              : "text-gray-600 cursor-not-allowed"
+              ? "text-secondary hover:bg-element-hover"
+              : "text-muted cursor-not-allowed"
           }`}
           onClick={onUndo}
           disabled={!canUndo}
@@ -167,8 +167,8 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
         <button
           className={`${isMobile ? "p-1.5" : "p-2"} rounded-md transition-colors ${
             canRedo
-              ? "text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"
-              : "text-gray-600 cursor-not-allowed"
+              ? "text-secondary hover:bg-element-hover"
+              : "text-muted cursor-not-allowed"
           }`}
           onClick={onRedo}
           disabled={!canRedo}
@@ -177,14 +177,14 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
           <RotateCw size={isMobile ? 16 : 18} />
         </button>
 
-        <div className="w-px h-6 bg-gray-700 mx-1"></div>
+        <div className="w-px h-6 bg-base mx-1"></div>
 
         {!isMobile && (
           <button
             className={`p-2 rounded-md transition-colors ${
               sketchModeEnabled
                 ? "bg-blue-500/20 text-blue-400"
-                : "text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"
+                : "text-secondary hover:bg-element-hover"
             }`}
             onClick={onToggleSketchMode}
             title={
@@ -200,13 +200,13 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
             className={`p-2 rounded-md transition-colors ${
               backgroundMode !== "none"
                 ? "bg-green-500/20 text-green-400"
-                : "text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"
+                : "text-secondary hover:bg-element-hover"
             }`}
             onClick={onToggleBackgroundMode}
-            title={`Background: ${backgroundMode === "notepad" ? "Notepad" : 
-                                backgroundMode === "none" ? "None" : 
-                                backgroundMode === "dot-grid" ? "Dot Grid" : 
-                                backgroundMode === "graph-paper" ? "Graph Paper" : 
+            title={`Background: ${backgroundMode === "notepad" ? "Notepad" :
+                                backgroundMode === "none" ? "None" :
+                                backgroundMode === "dot-grid" ? "Dot Grid" :
+                                backgroundMode === "graph-paper" ? "Graph Paper" :
                                 "Isometric"}`}
           >
             <Grid3X3 size={18} />
@@ -214,7 +214,7 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
         )}
 
         <button
-          className={`${isMobile ? "p-1.5" : "p-2"} rounded-md transition-colors text-gray-400 hover:bg-gray-700/50 hover:text-gray-300`}
+          className={`${isMobile ? "p-1.5" : "p-2"} rounded-md transition-colors text-secondary hover:bg-element-hover`}
           onClick={onModeChange}
           title={
             canvasMode === "dark"
@@ -225,11 +225,11 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
           {canvasMode === "dark" ? <Sun size={isMobile ? 16 : 18} /> : <Moon size={isMobile ? 16 : 18} />}
         </button>
 
-        <div className="w-px h-6 bg-gray-700 mx-1"></div>
+        <div className="w-px h-6 bg-base mx-1"></div>
 
         {!isMobile && (
           <button
-            className="p-2 rounded-md transition-colors text-gray-400 hover:bg-gray-700/50 hover:text-gray-300"
+            className="p-2 rounded-md transition-colors text-secondary hover:bg-element-hover"
             onClick={onToggleTemplates}
             title="Templates"
           >
@@ -238,7 +238,7 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
         )}
 
         <button
-          className={`${isMobile ? "p-1.5" : "p-2"} rounded-md transition-colors text-gray-400 hover:bg-gray-700/50 hover:text-gray-300`}
+          className={`${isMobile ? "p-1.5" : "p-2"} rounded-md transition-colors text-secondary hover:bg-element-hover`}
           onClick={onClear}
           title="Clear Canvas"
         >
@@ -247,7 +247,7 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
 
         <div className="relative">
           <button
-            className={`${isMobile ? "p-1.5" : "p-2"} rounded-md transition-colors text-gray-400 hover:bg-gray-700/50 hover:text-gray-300`}
+            className={`${isMobile ? "p-1.5" : "p-2"} rounded-md transition-colors text-secondary hover:bg-element-hover`}
             onClick={() => setShowExportOptions(!showExportOptions)}
             title="Export"
           >
@@ -255,9 +255,9 @@ export const ShapeSnapToolbar: React.FC<ShapeSnapToolbarProps> = ({
           </button>
 
           {showExportOptions && (
-            <div className="absolute right-0 mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-50 min-w-max">
+            <div className="absolute right-0 mt-1 bg-surface border border-base rounded-md shadow-lg z-50 min-w-max">
               <button
-                className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors whitespace-nowrap"
+                className="w-full text-left px-4 py-2 text-sm text-main hover:bg-element-hover transition-colors whitespace-nowrap"
                 onClick={() => {
                   onExport();
                   setShowExportOptions(false);

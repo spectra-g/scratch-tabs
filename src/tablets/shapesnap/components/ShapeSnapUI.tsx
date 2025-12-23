@@ -334,7 +334,7 @@ export const ShapeSnapUI: React.FC<ShapeSnapUIProps> = ({
   return (
     <div
       ref={uiRef}
-      className="h-full flex flex-col bg-gray-900 outline-none"
+      className="h-full flex flex-col bg-canvas outline-none"
       tabIndex={0}
     >
       <ShapeSnapToolbar
