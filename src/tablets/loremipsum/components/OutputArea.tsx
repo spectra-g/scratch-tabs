@@ -37,7 +37,7 @@ export const OutputArea: React.FC<OutputAreaProps> = ({
       json: 'json',
       custom: 'txt'
     };
-    
+
     const extension = extensions[mode];
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -63,43 +63,42 @@ export const OutputArea: React.FC<OutputAreaProps> = ({
     <div className="space-y-4">
       {/* Action Buttons */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-200">Generated Content</h3>
+        <h3 className="text-lg font-semibold text-main">Generated Content</h3>
         <div className="flex items-center space-x-2">
           <button
             onClick={onGenerate}
             disabled={isGenerating}
-            className="flex items-center space-x-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-md transition-colors text-sm"
+            className="flex items-center space-x-2 px-3 py-2 bg-primary hover:bg-primary/90 disabled:bg-surface-secondary disabled:cursor-not-allowed text-white rounded-md transition-colors text-sm"
           >
             <RefreshCw size={14} className={isGenerating ? 'animate-spin' : ''} />
             <span>{isGenerating ? 'Generating...' : 'Generate'}</span>
           </button>
-          
+
           <button
             onClick={handleCopy}
             disabled={!content || isGenerating}
-            className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors text-sm ${
-              copySuccess 
-                ? 'bg-green-600 hover:bg-green-700 text-white' 
-                : 'bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed text-gray-200'
-            }`}
+            className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors text-sm ${copySuccess
+              ? 'bg-green-600 hover:bg-green-700 text-white'
+              : 'bg-surface-secondary hover:bg-element-hover disabled:bg-surface disabled:cursor-not-allowed text-main'
+              }`}
           >
             {copySuccess ? <Check size={14} /> : <Copy size={14} />}
             <span>{copySuccess ? 'Copied!' : 'Copy'}</span>
           </button>
-          
+
           <button
             onClick={onCreateNewTab}
             disabled={!content || isGenerating}
-            className="flex items-center space-x-2 px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-800 disabled:cursor-not-allowed text-white rounded-md transition-colors text-sm"
+            className="flex items-center space-x-2 px-3 py-2 bg-success hover:bg-success/90 disabled:bg-surface-secondary disabled:cursor-not-allowed text-white rounded-md transition-colors text-sm"
           >
             <Plus size={14} />
             <span>New Tab</span>
           </button>
-          
+
           <button
             onClick={handleDownload}
             disabled={!content || isGenerating}
-            className="flex items-center space-x-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-800 disabled:cursor-not-allowed text-white rounded-md transition-colors text-sm"
+            className="flex items-center space-x-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-surface-secondary disabled:cursor-not-allowed text-white rounded-md transition-colors text-sm"
           >
             <Download size={14} />
             <span>Download</span>
@@ -109,26 +108,26 @@ export const OutputArea: React.FC<OutputAreaProps> = ({
 
       {/* Content Display */}
       <div className="relative">
-        <div className="bg-gray-900 border border-gray-700 rounded-lg overflow-hidden">
-          <div className="bg-gray-800 px-4 py-2 border-b border-gray-700">
+        <div className="bg-canvas border border-base rounded-lg overflow-hidden">
+          <div className="bg-surface-raised px-4 py-2 border-b border-base">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+              <span className="text-xs font-medium text-muted uppercase tracking-wide">
                 {mode.toUpperCase()} Output
               </span>
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-muted">
                 {content.length.toLocaleString()} characters
               </span>
             </div>
           </div>
-          
+
           <div className="relative">
-            <pre className={`p-4 text-sm text-gray-300 overflow-auto max-h-96 custom-scrollbar ${getLanguageClass()}`}>
+            <pre className={`p-4 text-sm text-main overflow-auto max-h-96 custom-scrollbar ${getLanguageClass()}`}>
               <code>{content || 'Click "Generate" to create content...'}</code>
             </pre>
-            
+
             {isGenerating && (
-              <div className="absolute inset-0 bg-gray-900/80 flex items-center justify-center">
-                <div className="flex items-center space-x-3 text-gray-300">
+              <div className="absolute inset-0 bg-canvas/80 flex items-center justify-center">
+                <div className="flex items-center space-x-3 text-main">
                   <RefreshCw size={20} className="animate-spin" />
                   <span>Generating content...</span>
                 </div>
@@ -141,23 +140,23 @@ export const OutputArea: React.FC<OutputAreaProps> = ({
       {/* Content Stats */}
       {content && !isGenerating && (
         <div className="grid grid-cols-3 gap-4 text-center">
-          <div className="bg-gray-800 p-3 rounded-md border border-gray-700">
-            <div className="text-lg font-semibold text-gray-200">
+          <div className="bg-surface-raised p-3 rounded-md border border-base">
+            <div className="text-lg font-semibold text-main">
               {content.length.toLocaleString()}
             </div>
-            <div className="text-xs text-gray-400">Characters</div>
+            <div className="text-xs text-muted">Characters</div>
           </div>
-          <div className="bg-gray-800 p-3 rounded-md border border-gray-700">
-            <div className="text-lg font-semibold text-gray-200">
+          <div className="bg-surface-raised p-3 rounded-md border border-base">
+            <div className="text-lg font-semibold text-main">
               {content.split(/\s+/).filter(w => w.length > 0).length.toLocaleString()}
             </div>
-            <div className="text-xs text-gray-400">Words</div>
+            <div className="text-xs text-muted">Words</div>
           </div>
-          <div className="bg-gray-800 p-3 rounded-md border border-gray-700">
-            <div className="text-lg font-semibold text-gray-200">
+          <div className="bg-surface-raised p-3 rounded-md border border-base">
+            <div className="text-lg font-semibold text-main">
               {content.split('\n').length.toLocaleString()}
             </div>
-            <div className="text-xs text-gray-400">Lines</div>
+            <div className="text-xs text-muted">Lines</div>
           </div>
         </div>
       )}

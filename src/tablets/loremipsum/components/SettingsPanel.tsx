@@ -36,26 +36,25 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   ];
 
   return (
-    <div className="space-y-6 p-4 bg-gray-800 rounded-lg border border-gray-700">
-      <div className="flex items-center space-x-2 text-gray-200">
+    <div className="space-y-6 p-4 bg-surface-raised rounded-lg border border-base">
+      <div className="flex items-center space-x-2 text-main">
         <Settings size={18} />
         <h3 className="font-semibold">Generation Settings</h3>
       </div>
 
       {/* Mode Selection */}
       <div className="space-y-3">
-        <label className="block text-sm font-medium text-gray-300">Output Mode</label>
+        <label className="block text-sm font-medium text-secondary">Output Mode</label>
         <div className="grid grid-cols-2 gap-2">
           {modeOptions.map((option) => (
             <button
               key={option.value}
               onClick={() => onSettingsChange({ mode: option.value })}
               disabled={isGenerating}
-              className={`flex items-center space-x-2 p-3 rounded-md border transition-colors ${
-                settings.mode === option.value
-                  ? 'border-blue-500 bg-blue-500/10 text-blue-400'
-                  : 'border-gray-600 hover:border-gray-500 text-gray-300 hover:bg-gray-700/50'
-              } ${isGenerating ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`flex items-center space-x-2 p-3 rounded-md border transition-colors ${settings.mode === option.value
+                ? 'border-primary bg-primary/10 text-primary'
+                : 'border-base text-secondary hover:bg-element-hover'
+                } ${isGenerating ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {option.icon}
               <span className="text-sm font-medium">{option.label}</span>
@@ -67,27 +66,25 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
       {/* Theme Selection - Hidden for HTML/JSON modes */}
       {!['html', 'json'].includes(settings.mode) && (
         <div className="space-y-3">
-          <label className="block text-sm font-medium text-gray-300">Theme</label>
+          <label className="block text-sm font-medium text-secondary">Theme</label>
           <div className="space-y-2">
             {themeOptions.map((option) => (
               <button
                 key={option.value}
                 onClick={() => onSettingsChange({ theme: option.value })}
                 disabled={isGenerating}
-                className={`w-full text-left p-3 rounded-md border transition-colors ${
-                  settings.theme === option.value
-                    ? 'border-blue-500 bg-blue-500/10'
-                    : 'border-gray-600 hover:border-gray-500 hover:bg-gray-700/50'
-                } ${isGenerating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`w-full text-left p-3 rounded-md border transition-colors ${settings.theme === option.value
+                  ? 'border-primary bg-primary/10'
+                  : 'border-base hover:bg-element-hover'
+                  } ${isGenerating ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <div className={`font-medium ${
-                      settings.theme === option.value ? 'text-blue-400' : 'text-gray-200'
-                    }`}>
+                    <div className={`font-medium ${settings.theme === option.value ? 'text-primary' : 'text-main'
+                      }`}>
                       {option.label}
                     </div>
-                    <div className="text-xs text-gray-400 mt-1">{option.description}</div>
+                    <div className="text-xs text-muted mt-1">{option.description}</div>
                   </div>
                 </div>
               </button>
@@ -101,16 +98,16 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         <div className="space-y-3">
           <label className="block text-sm font-medium text-gray-300">
             Source Text
-            <span className="text-xs text-gray-400 ml-2">(min. 10 characters)</span>
+            <span className="text-xs text-muted ml-2">(min. 10 characters)</span>
           </label>
           <textarea
             value={settings.customSourceText}
             onChange={(e) => onSettingsChange({ customSourceText: e.target.value })}
             disabled={isGenerating}
             placeholder="Paste your text here to generate similar content..."
-            className="w-full h-24 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none disabled:opacity-50 custom-scrollbar"
+            className="w-full h-24 px-3 py-2 bg-surface-secondary border border-base rounded-md text-main placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none disabled:opacity-50 custom-scrollbar"
           />
-          <div className="text-xs text-gray-400">
+          <div className="text-xs text-muted">
             Characters: {settings.customSourceText.length}
           </div>
         </div>
@@ -129,11 +126,11 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 value={settings.count}
                 onChange={(e) => onSettingsChange({ count: parseInt(e.target.value) })}
                 disabled={isGenerating}
-                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                className="w-full h-2 bg-surface-secondary rounded-lg appearance-none cursor-pointer slider"
               />
-              <div className="flex justify-between text-xs text-gray-400">
+              <div className="flex justify-between text-xs text-muted">
                 <span>1</span>
-                <span className="font-medium text-gray-200">{settings.count}</span>
+                <span className="font-medium text-main">{settings.count}</span>
                 <span>{settings.outputUnit === 'words' ? '500' : settings.outputUnit === 'sentences' ? '50' : '20'}</span>
               </div>
             </div>
@@ -145,7 +142,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
               value={settings.outputUnit}
               onChange={(e) => onSettingsChange({ outputUnit: e.target.value as OutputUnit })}
               disabled={isGenerating}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+              className="w-full px-3 py-2 bg-surface-secondary border border-base rounded-md text-main focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50"
             >
               {unitOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -160,7 +157,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
       {/* Special count inputs for HTML/JSON */}
       {settings.mode === 'html' && (
         <div className="space-y-3">
-          <label className="block text-sm font-medium text-gray-300">Sections</label>
+          <label className="block text-sm font-medium text-secondary">Sections</label>
           <div className="space-y-2">
             <input
               type="range"
@@ -169,11 +166,11 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
               value={settings.count}
               onChange={(e) => onSettingsChange({ count: parseInt(e.target.value) })}
               disabled={isGenerating}
-              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+              className="w-full h-2 bg-surface-secondary rounded-lg appearance-none cursor-pointer slider"
             />
-            <div className="flex justify-between text-xs text-gray-400">
+            <div className="flex justify-between text-xs text-muted">
               <span>1</span>
-              <span className="font-medium text-gray-200">{settings.count}</span>
+              <span className="font-medium text-main">{settings.count}</span>
               <span>10</span>
             </div>
           </div>
@@ -182,7 +179,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
       {settings.mode === 'json' && (
         <div className="space-y-3">
-          <label className="block text-sm font-medium text-gray-300">Complexity</label>
+          <label className="block text-sm font-medium text-secondary">Complexity</label>
           <div className="space-y-2">
             <input
               type="range"
@@ -191,11 +188,11 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
               value={settings.count}
               onChange={(e) => onSettingsChange({ count: parseInt(e.target.value) })}
               disabled={isGenerating}
-              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+              className="w-full h-2 bg-surface-secondary rounded-lg appearance-none cursor-pointer slider"
             />
-            <div className="flex justify-between text-xs text-gray-400">
+            <div className="flex justify-between text-xs text-muted">
               <span>Simple</span>
-              <span className="font-medium text-gray-200">Level {settings.count}</span>
+              <span className="font-medium text-main">Level {settings.count}</span>
               <span>Complex</span>
             </div>
           </div>
@@ -213,9 +210,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 checked={settings.startWithLorem}
                 onChange={(e) => onSettingsChange({ startWithLorem: e.target.checked })}
                 disabled={isGenerating}
-                className="rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500 focus:ring-offset-0 disabled:opacity-50"
+                className="rounded border-base bg-surface-secondary text-primary focus:ring-primary focus:ring-offset-0 disabled:opacity-50"
               />
-              <span className="text-sm text-gray-300">Start with "Lorem"</span>
+              <span className="text-sm text-secondary">Start with "Lorem"</span>
             </label>
           </div>
         </div>
