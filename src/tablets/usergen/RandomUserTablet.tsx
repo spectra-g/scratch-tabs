@@ -258,13 +258,13 @@ export const RandomUserTablet: Tablet = {
         : null;
 
     return (
-      <div ref={containerRef} className="h-full bg-gray-900 flex">
+      <div ref={containerRef} className="h-full bg-canvas flex">
         {/* Left Panel - History */}
-        <div className="w-72 border-r border-gray-700/50 flex flex-col">
-          <div className="p-4 border-b border-gray-700/50">
+        <div className="w-72 border-r border-base flex flex-col">
+          <div className="p-4 border-b border-base">
             <div className="flex items-center space-x-3 mb-6">
-              <Users className="text-gray-400" size={24} />
-              <h2 className="text-xl font-semibold text-gray-100">
+              <Users className="text-secondary" size={24} />
+              <h2 className="text-xl font-semibold text-main">
                 Random Users
               </h2>
             </div>
@@ -272,7 +272,7 @@ export const RandomUserTablet: Tablet = {
             {/* Parameters */}
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-main mb-1">
                   Number of Results
                 </label>
                 <input
@@ -292,12 +292,12 @@ export const RandomUserTablet: Tablet = {
                       },
                     })
                   }
-                  className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200"
+                  className="w-full bg-element border border-base rounded-md px-3 py-1.5 text-sm text-main"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-main mb-1">
                   Gender
                 </label>
                 <select
@@ -314,7 +314,7 @@ export const RandomUserTablet: Tablet = {
                       },
                     })
                   }
-                  className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200"
+                  className="w-full bg-element border border-base rounded-md px-3 py-1.5 text-sm text-main"
                 >
                   <option value="">Any</option>
                   <option value="male">Male</option>
@@ -323,7 +323,7 @@ export const RandomUserTablet: Tablet = {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-main mb-1">
                   Nationality
                 </label>
                 <select
@@ -340,7 +340,7 @@ export const RandomUserTablet: Tablet = {
                       },
                     })
                   }
-                  className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200"
+                  className="w-full bg-element border border-base rounded-md px-3 py-1.5 text-sm text-main"
                 >
                   {NATIONALITIES.map((nat) => (
                     <option key={nat.value} value={nat.value}>
@@ -351,7 +351,7 @@ export const RandomUserTablet: Tablet = {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-main mb-1">
                   Format
                 </label>
                 <select
@@ -368,7 +368,7 @@ export const RandomUserTablet: Tablet = {
                       },
                     })
                   }
-                  className="w-full bg-gray-800/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-sm text-gray-200"
+                  className="w-full bg-element border border-base rounded-md px-3 py-1.5 text-sm text-main"
                 >
                   {FORMATS.map((format) => (
                     <option key={format.value} value={format.value}>
@@ -391,7 +391,7 @@ export const RandomUserTablet: Tablet = {
               </button>
 
               {error && (
-                <div className="text-sm text-red-400 mt-2">{error}</div>
+                <div className="text-sm text-danger mt-2">{error}</div>
               )}
             </div>
           </div>
@@ -399,11 +399,11 @@ export const RandomUserTablet: Tablet = {
           {/* History List */}
           <div className="flex-1 overflow-auto custom-scrollbar">
             {state.data.results.length === 0 ? (
-              <div className="p-4 text-sm text-gray-400">
+              <div className="p-4 text-sm text-secondary">
                 No generations yet
               </div>
             ) : (
-              <div className="divide-y divide-gray-700/50">
+              <div className="divide-y divide-base">
                 {state.data.results.map((result, index) => (
                   <button
                     key={result.timestamp}
@@ -416,16 +416,16 @@ export const RandomUserTablet: Tablet = {
                         },
                       })
                     }
-                    className={`w-full px-4 py-3 text-left hover:bg-gray-800/50 transition-colors ${
+                    className={`w-full px-4 py-3 text-left hover:bg-element-hover transition-colors ${
                       state.data.selectedResult === index
-                        ? "bg-gray-800/50"
+                        ? "bg-element-hover"
                         : ""
                     }`}
                   >
-                    <div className="text-sm font-medium text-gray-200">
+                    <div className="text-sm font-medium text-main">
                       {new Date(result.timestamp).toLocaleTimeString()}
                     </div>
-                    <div className="text-xs text-gray-400 mt-1">
+                    <div className="text-xs text-secondary mt-1">
                       {result.format.toUpperCase()}
                     </div>
                   </button>
@@ -437,8 +437,8 @@ export const RandomUserTablet: Tablet = {
 
         {/* Right Panel - Editor */}
         <div className="flex-1 flex flex-col">
-          <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700/50">
-            <div className="text-sm text-gray-400">
+          <div className="flex items-center justify-between px-4 py-2 border-b border-base">
+            <div className="text-sm text-secondary">
               {selectedResult
                 ? new Date(selectedResult.timestamp).toLocaleString()
                 : "No result selected"}
@@ -447,7 +447,7 @@ export const RandomUserTablet: Tablet = {
               <button
                 onClick={copyToClipboard}
                 disabled={!selectedResult}
-                className={`p-1 rounded transition-colors ${isCopied ? "text-green-400" : selectedResult ? "text-gray-400 hover:text-gray-300" : "text-gray-600 cursor-not-allowed"}`}
+                className={`p-1 rounded transition-colors ${isCopied ? "text-green-400" : selectedResult ? "text-secondary hover:bg-element-hover" : "text-muted cursor-not-allowed"}`}
                 title={isCopied ? "Copied!" : "Copy to clipboard"}
               >
                 {isCopied ? <Check size={16} /> : <Copy size={16} />}
@@ -455,7 +455,7 @@ export const RandomUserTablet: Tablet = {
               <button
                 onClick={() => handleOpenInNewTab(selectedIndex)}
                 disabled={!selectedResult}
-                className={`p-1 rounded transition-colors ${openedResultIndex === selectedIndex ? "text-green-400" : selectedResult ? "text-gray-400 hover:text-gray-300" : "text-gray-600 cursor-not-allowed"}`}
+                className={`p-1 rounded transition-colors ${openedResultIndex === selectedIndex ? "text-green-400" : selectedResult ? "text-secondary hover:bg-element-hover" : "text-muted cursor-not-allowed"}`}
                 title={
                   openedResultIndex === selectedIndex
                     ? "Opened"
