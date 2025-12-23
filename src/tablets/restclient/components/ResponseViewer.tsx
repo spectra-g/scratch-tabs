@@ -8,6 +8,7 @@ import {
   formatBytes,
   formatTime,
 } from "../utils/responseUtils";
+import { useThemeStore } from "../../../stores/themeStore";
 
 interface ResponseViewerProps {
   response: HttpResponse | null;
@@ -30,6 +31,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
   onStartComparison,
   selectedItemsCount = 0,
 }) => {
+  const { isDarkMode } = useThemeStore();
   const [activeTab, setActiveTab] = useState("body");
   const [isCopied, setIsCopied] = useState(false);
 
@@ -55,8 +57,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-400">Executing request...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted">Executing request...</p>
         </div>
       </div>
     );
@@ -88,7 +90,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
     return (
       <div className="h-full flex flex-col items-center justify-center">
         <div className="text-center max-w-md">
-          <p className="text-gray-400 mb-4">
+          <p className="text-muted mb-4">
             No response yet. Click "Send" to execute the request.
           </p>
 
@@ -96,7 +98,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
             {historyCount > 0 && (
               <button
                 onClick={onShowHistory}
-                className="flex items-center space-x-2 px-3 py-1.5 bg-gray-800/50 hover:bg-gray-700/50 rounded-md text-sm text-gray-300 transition-colors"
+                className="flex items-center space-x-2 px-3 py-1.5 bg-surface-raised/50 hover:bg-surface-secondary/50 rounded-md text-sm text-secondary transition-colors"
               >
                 <History size={16} />
                 <span>View Response History ({historyCount})</span>
@@ -105,7 +107,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
             {historyCount > 0 && onStartComparison && (
               <button
                 onClick={onStartComparison}
-                className="flex items-center space-x-2 px-3 py-1.5 bg-blue-600/50 hover:bg-blue-600/70 rounded-md text-sm text-gray-300 transition-colors"
+                className="flex items-center space-x-2 px-3 py-1.5 bg-primary/50 hover:bg-primary/70 rounded-md text-sm text-secondary transition-colors"
               >
                 <ArrowRightLeft size={16} />
                 <span>Compare Responses</span>
@@ -120,7 +122,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
   return (
     <div className="h-full flex flex-col">
       {/* Response Header */}
-      <div className="flex-none p-4 border-b border-gray-700/50">
+      <div className="flex-none p-4 border-b border-base/50">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <div>
@@ -129,14 +131,14 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
               >
                 {response.status}
               </span>
-              <span className="text-gray-400 ml-2">{response.statusText}</span>
+              <span className="text-muted ml-2">{response.statusText}</span>
             </div>
 
-            <div className="text-sm text-gray-400">
+            <div className="text-sm text-muted">
               {formatBytes(response.size)}
             </div>
 
-            <div className="flex items-center text-sm text-gray-400">
+            <div className="flex items-center text-sm text-muted">
               <Clock size={14} className="mr-1" />
               {formatTime(response.timing.total)}
             </div>
@@ -145,11 +147,10 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
           <div className="flex items-center space-x-2">
             <button
               onClick={handleCopy}
-              className={`p-2 rounded-md transition-colors ${
-                isCopied
-                  ? "text-green-400"
-                  : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
-              }`}
+              className={`p-2 rounded-md transition-colors ${isCopied
+                ? "text-green-400"
+                : "text-muted hover:text-main hover:bg-surface-secondary/50"
+                }`}
               title="Copy response body"
             >
               {isCopied ? <Check size={14} /> : <Copy size={14} />}
@@ -157,12 +158,12 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
 
             <button
               onClick={onShowHistory}
-              className="p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-md transition-colors relative"
+              className="p-2 text-muted hover:text-main hover:bg-surface-secondary/50 rounded-md transition-colors relative"
               title="View response history"
             >
               <History size={14} />
               {historyCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
                   {historyCount}
                 </span>
               )}
@@ -170,11 +171,10 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
             {onStartComparison && (
               <button
                 onClick={onStartComparison}
-                className={`p-2 rounded-md transition-colors ${
-                  selectedItemsCount >= 2
-                    ? "text-green-400 hover:text-green-300 hover:bg-green-500/20"
-                    : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
-                }`}
+                className={`p-2 rounded-md transition-colors ${selectedItemsCount >= 2
+                  ? "text-green-400 hover:text-green-300 hover:bg-green-500/20"
+                  : "text-muted hover:text-main hover:bg-surface-secondary/50"
+                  }`}
                 title="Compare responses"
               >
                 <ArrowRightLeft size={14} />
@@ -185,16 +185,15 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
       </div>
 
       {/* Response Tabs */}
-      <div className="flex-none border-b border-gray-700/50">
+      <div className="flex-none border-b border-base/50">
         <div className="flex">
           <button
             onClick={() => setActiveTab("body")}
             className={`
               px-4 py-2 text-sm font-medium border-b-2 transition-colors
-              ${
-                activeTab === "body"
-                  ? "border-blue-500 text-blue-400"
-                  : "border-transparent text-gray-400 hover:text-gray-300"
+              ${activeTab === "body"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted hover:text-secondary"
               }
             `}
           >
@@ -205,10 +204,9 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
             onClick={() => setActiveTab("headers")}
             className={`
               px-4 py-2 text-sm font-medium border-b-2 transition-colors
-              ${
-                activeTab === "headers"
-                  ? "border-blue-500 text-blue-400"
-                  : "border-transparent text-gray-400 hover:text-gray-300"
+              ${activeTab === "headers"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted hover:text-secondary"
               }
             `}
           >
@@ -219,10 +217,9 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
             onClick={() => setActiveTab("timing")}
             className={`
               px-4 py-2 text-sm font-medium border-b-2 transition-colors
-              ${
-                activeTab === "timing"
-                  ? "border-blue-500 text-blue-400"
-                  : "border-transparent text-gray-400 hover:text-gray-300"
+              ${activeTab === "timing"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted hover:text-secondary"
               }
             `}
           >
@@ -238,7 +235,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
             height="100%"
             language={formattedBody.language}
             value={formattedBody.formatted}
-            theme="vs-dark"
+            theme={isDarkMode ? "vs-dark" : "vs"}
             options={{
               readOnly: true,
               minimap: { enabled: false },
@@ -251,8 +248,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
 
         {activeTab === "headers" && (
           <div className="p-4 overflow-auto h-full custom-scrollbar">
-            <table className="w-full text-sm text-left text-gray-300">
-              <thead className="text-xs text-gray-400 uppercase bg-gray-800/50">
+            <table className="w-full text-sm text-left text-secondary">
+              <thead className="text-xs text-muted uppercase bg-surface-raised/50">
                 <tr>
                   <th scope="col" className="px-4 py-2">
                     Name
@@ -264,7 +261,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
               </thead>
               <tbody>
                 {Object.entries(response.headers).map(([key, value]) => (
-                  <tr key={key} className="border-b border-gray-700/50">
+                  <tr key={key} className="border-b border-base/50">
                     <td className="px-4 py-2 font-medium">{key}</td>
                     <td className="px-4 py-2">{value}</td>
                   </tr>
@@ -277,21 +274,21 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
         {activeTab === "timing" && (
           <div className="p-4 overflow-auto h-full custom-scrollbar">
             <div className="space-y-4">
-              <div className="bg-gray-800/50 border border-gray-700/50 rounded-md p-4">
-                <div className="text-sm font-medium text-gray-300 mb-2">
+              <div className="bg-surface-raised/50 border border-base/50 rounded-md p-4">
+                <div className="text-sm font-medium text-secondary mb-2">
                   Total Time: {formatTime(response.timing.total)}
                 </div>
 
                 <div className="space-y-2">
                   {/* DNS Resolution */}
                   <div>
-                    <div className="flex justify-between text-xs text-gray-400 mb-1">
+                    <div className="flex justify-between text-xs text-muted mb-1">
                       <span>DNS Resolution</span>
                       <span>{formatTime(response.timing.dns)}</span>
                     </div>
-                    <div className="w-full bg-gray-700 rounded-full h-1.5">
+                    <div className="w-full bg-surface-secondary rounded-full h-1.5">
                       <div
-                        className="bg-blue-500 h-1.5 rounded-full"
+                        className="bg-primary h-1.5 rounded-full"
                         style={{
                           width: `${(response.timing.dns / response.timing.total) * 100}%`,
                         }}
@@ -301,11 +298,11 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
 
                   {/* Connection */}
                   <div>
-                    <div className="flex justify-between text-xs text-gray-400 mb-1">
+                    <div className="flex justify-between text-xs text-muted mb-1">
                       <span>Connection</span>
                       <span>{formatTime(response.timing.connection)}</span>
                     </div>
-                    <div className="w-full bg-gray-700 rounded-full h-1.5">
+                    <div className="w-full bg-surface-secondary rounded-full h-1.5">
                       <div
                         className="bg-green-500 h-1.5 rounded-full"
                         style={{
@@ -318,11 +315,11 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
                   {/* TLS Setup */}
                   {response.timing.tls > 0 && (
                     <div>
-                      <div className="flex justify-between text-xs text-gray-400 mb-1">
+                      <div className="flex justify-between text-xs text-muted mb-1">
                         <span>TLS Setup</span>
                         <span>{formatTime(response.timing.tls)}</span>
                       </div>
-                      <div className="w-full bg-gray-700 rounded-full h-1.5">
+                      <div className="w-full bg-surface-secondary rounded-full h-1.5">
                         <div
                           className="bg-yellow-500 h-1.5 rounded-full"
                           style={{
@@ -335,11 +332,11 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
 
                   {/* Time to First Byte */}
                   <div>
-                    <div className="flex justify-between text-xs text-gray-400 mb-1">
+                    <div className="flex justify-between text-xs text-muted mb-1">
                       <span>Waiting (TTFB)</span>
                       <span>{formatTime(response.timing.firstByte)}</span>
                     </div>
-                    <div className="w-full bg-gray-700 rounded-full h-1.5">
+                    <div className="w-full bg-surface-secondary rounded-full h-1.5">
                       <div
                         className="bg-orange-500 h-1.5 rounded-full"
                         style={{
@@ -351,11 +348,11 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = ({
 
                   {/* Content Download */}
                   <div>
-                    <div className="flex justify-between text-xs text-gray-400 mb-1">
+                    <div className="flex justify-between text-xs text-muted mb-1">
                       <span>Content Download</span>
                       <span>{formatTime(response.timing.download)}</span>
                     </div>
-                    <div className="w-full bg-gray-700 rounded-full h-1.5">
+                    <div className="w-full bg-surface-secondary rounded-full h-1.5">
                       <div
                         className="bg-purple-500 h-1.5 rounded-full"
                         style={{

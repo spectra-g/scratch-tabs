@@ -22,8 +22,8 @@ export const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, onTabChange }) => {
             px-4 py-2 text-sm font-medium border-b-2 transition-colors
             ${
               activeTab === tab.id
-                ? "border-blue-500 text-blue-400"
-                : "border-transparent text-gray-400 hover:text-gray-300"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted hover:text-secondary"
             }
           `}
         >

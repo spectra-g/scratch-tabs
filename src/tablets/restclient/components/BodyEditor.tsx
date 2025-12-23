@@ -2,6 +2,7 @@ import React from "react";
 import { Editor } from "@monaco-editor/react";
 import { BodyType, HttpRequestBody, RawBodyFormat } from "../types";
 import { KeyValueEditor } from "./KeyValueEditor";
+import { useThemeStore } from "../../../stores/themeStore";
 
 interface BodyEditorProps {
   body: HttpRequestBody;
@@ -9,6 +10,7 @@ interface BodyEditorProps {
 }
 
 export const BodyEditor: React.FC<BodyEditorProps> = ({ body, onChange }) => {
+  const { isDarkMode } = useThemeStore();
   const handleTypeChange = (type: BodyType) => {
     onChange({
       ...body,
@@ -37,10 +39,9 @@ export const BodyEditor: React.FC<BodyEditorProps> = ({ body, onChange }) => {
           onClick={() => handleTypeChange("none")}
           className={`
             px-3 py-1.5 rounded-md text-sm
-            ${
-              body.type === "none"
-                ? "bg-blue-500/20 text-blue-400"
-                : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
+            ${body.type === "none"
+              ? "bg-primary/20 text-primary"
+              : "bg-surface-raised/50 text-secondary hover:bg-surface-secondary/50"
             }
             transition-colors
           `}
@@ -52,10 +53,9 @@ export const BodyEditor: React.FC<BodyEditorProps> = ({ body, onChange }) => {
           onClick={() => handleTypeChange("form-data")}
           className={`
             px-3 py-1.5 rounded-md text-sm
-            ${
-              body.type === "form-data"
-                ? "bg-blue-500/20 text-blue-400"
-                : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
+            ${body.type === "form-data"
+              ? "bg-primary/20 text-primary"
+              : "bg-surface-raised/50 text-secondary hover:bg-surface-secondary/50"
             }
             transition-colors
           `}
@@ -67,10 +67,9 @@ export const BodyEditor: React.FC<BodyEditorProps> = ({ body, onChange }) => {
           onClick={() => handleTypeChange("x-www-form-urlencoded")}
           className={`
             px-3 py-1.5 rounded-md text-sm
-            ${
-              body.type === "x-www-form-urlencoded"
-                ? "bg-blue-500/20 text-blue-400"
-                : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
+            ${body.type === "x-www-form-urlencoded"
+              ? "bg-primary/20 text-primary"
+              : "bg-surface-raised/50 text-secondary hover:bg-surface-secondary/50"
             }
             transition-colors
           `}
@@ -82,10 +81,9 @@ export const BodyEditor: React.FC<BodyEditorProps> = ({ body, onChange }) => {
           onClick={() => handleTypeChange("raw")}
           className={`
             px-3 py-1.5 rounded-md text-sm
-            ${
-              body.type === "raw"
-                ? "bg-blue-500/20 text-blue-400"
-                : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
+            ${body.type === "raw"
+              ? "bg-primary/20 text-primary"
+              : "bg-surface-raised/50 text-secondary hover:bg-surface-secondary/50"
             }
             transition-colors
           `}
@@ -97,10 +95,9 @@ export const BodyEditor: React.FC<BodyEditorProps> = ({ body, onChange }) => {
           onClick={() => handleTypeChange("binary")}
           className={`
             px-3 py-1.5 rounded-md text-sm
-            ${
-              body.type === "binary"
-                ? "bg-blue-500/20 text-blue-400"
-                : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
+            ${body.type === "binary"
+              ? "bg-primary/20 text-primary"
+              : "bg-surface-raised/50 text-secondary hover:bg-surface-secondary/50"
             }
             transition-colors
           `}
@@ -116,10 +113,9 @@ export const BodyEditor: React.FC<BodyEditorProps> = ({ body, onChange }) => {
               onClick={() => handleFormatChange("json")}
               className={`
                 px-3 py-1.5 rounded-md text-sm
-                ${
-                  body.format === "json"
-                    ? "bg-blue-500/20 text-blue-400"
-                    : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
+                ${body.format === "json"
+                  ? "bg-primary/20 text-primary"
+                  : "bg-surface-raised/50 text-secondary hover:bg-surface-secondary/50"
                 }
                 transition-colors
               `}
@@ -131,10 +127,9 @@ export const BodyEditor: React.FC<BodyEditorProps> = ({ body, onChange }) => {
               onClick={() => handleFormatChange("xml")}
               className={`
                 px-3 py-1.5 rounded-md text-sm
-                ${
-                  body.format === "xml"
-                    ? "bg-blue-500/20 text-blue-400"
-                    : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
+                ${body.format === "xml"
+                  ? "bg-primary/20 text-primary"
+                  : "bg-surface-raised/50 text-secondary hover:bg-surface-secondary/50"
                 }
                 transition-colors
               `}
@@ -146,10 +141,9 @@ export const BodyEditor: React.FC<BodyEditorProps> = ({ body, onChange }) => {
               onClick={() => handleFormatChange("html")}
               className={`
                 px-3 py-1.5 rounded-md text-sm
-                ${
-                  body.format === "html"
-                    ? "bg-blue-500/20 text-blue-400"
-                    : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
+                ${body.format === "html"
+                  ? "bg-primary/20 text-primary"
+                  : "bg-surface-raised/50 text-secondary hover:bg-surface-secondary/50"
                 }
                 transition-colors
               `}
@@ -161,10 +155,9 @@ export const BodyEditor: React.FC<BodyEditorProps> = ({ body, onChange }) => {
               onClick={() => handleFormatChange("text")}
               className={`
                 px-3 py-1.5 rounded-md text-sm
-                ${
-                  body.format === "text" || !body.format
-                    ? "bg-blue-500/20 text-blue-400"
-                    : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
+                ${body.format === "text" || !body.format
+                  ? "bg-primary/20 text-primary"
+                  : "bg-surface-raised/50 text-secondary hover:bg-surface-secondary/50"
                 }
                 transition-colors
               `}
@@ -176,10 +169,9 @@ export const BodyEditor: React.FC<BodyEditorProps> = ({ body, onChange }) => {
               onClick={() => handleFormatChange("javascript")}
               className={`
                 px-3 py-1.5 rounded-md text-sm
-                ${
-                  body.format === "javascript"
-                    ? "bg-blue-500/20 text-blue-400"
-                    : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
+                ${body.format === "javascript"
+                  ? "bg-primary/20 text-primary"
+                  : "bg-surface-raised/50 text-secondary hover:bg-surface-secondary/50"
                 }
                 transition-colors
               `}
@@ -188,13 +180,13 @@ export const BodyEditor: React.FC<BodyEditorProps> = ({ body, onChange }) => {
             </button>
           </div>
 
-          <div className="border border-gray-700/50 rounded-md overflow-hidden">
+          <div className="border border-base/50 rounded-md overflow-hidden">
             <Editor
               height="200px"
               language={body.format || "text"}
               value={body.content}
               onChange={handleContentChange}
-              theme="vs-dark"
+              theme={isDarkMode ? "vs-dark" : "vs"}
               options={{
                 minimap: { enabled: false },
                 fontSize: 14,
@@ -218,7 +210,7 @@ export const BodyEditor: React.FC<BodyEditorProps> = ({ body, onChange }) => {
       )}
 
       {body.type === "binary" && (
-        <div className="text-center text-gray-400 py-4">
+        <div className="text-center text-muted py-4">
           Binary file upload is not supported in this version.
         </div>
       )}

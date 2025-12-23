@@ -105,7 +105,7 @@ export const RequestBuilder: React.FC<RequestBuilderProps> = ({
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* URL Bar */}
-      <div className="flex-none p-4 border-b border-gray-700/50">
+      <div className="flex-none p-4 border-b border-base/50">
         <UrlBar
           method={request.method}
           url={getFullUrl()}
@@ -122,8 +122,8 @@ export const RequestBuilder: React.FC<RequestBuilderProps> = ({
               flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium
               ${
                 isExecuting
-                  ? "bg-gray-700/50 text-gray-400 cursor-not-allowed"
-                  : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
+                  ? "bg-surface-secondary/50 text-muted cursor-not-allowed"
+                  : "bg-primary/20 text-primary hover:bg-primary/30"
               }
               transition-colors
             `}
@@ -135,7 +135,7 @@ export const RequestBuilder: React.FC<RequestBuilderProps> = ({
       </div>
 
       {/* Tabs */}
-      <div className="flex-none border-b border-gray-700/50">
+      <div className="flex-none border-b border-base/50">
         <Tabs
           tabs={[
             { id: "headers", label: "Headers" },
