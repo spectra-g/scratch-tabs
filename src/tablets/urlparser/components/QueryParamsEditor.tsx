@@ -64,19 +64,19 @@ export const QueryParamsEditor: React.FC<QueryParamsEditorProps> = ({
   return (
     <div className="mt-4">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-medium text-gray-200">Query Parameters</h3>
-        <div className="text-xs text-gray-400">
+        <h3 className="text-sm font-medium text-main">Query Parameters</h3>
+        <div className="text-xs text-secondary">
           {Object.keys(params).length} parameters
         </div>
       </div>
 
       {queryWarnings.length > 0 && (
-        <div className="mb-3 p-2 bg-yellow-900/20 border border-yellow-900/30 rounded-md">
+        <div className="mb-3 p-2 bg-warning-subtle border border-warning rounded-md">
           {queryWarnings.map((warning, index) => (
             <div
               key={index}
               className={`flex items-start mt-1 text-xs ${
-                warning.type === "error" ? "text-red-400" : "text-yellow-400"
+                warning.type === "error" ? "text-danger" : "text-warning"
               }`}
             >
               <div className="flex-shrink-0 mt-0.5">
@@ -92,11 +92,11 @@ export const QueryParamsEditor: React.FC<QueryParamsEditorProps> = ({
         </div>
       )}
 
-      <div className="bg-gray-800/50 border border-gray-700 rounded-md overflow-hidden">
+      <div className="bg-surface-secondary border border-base rounded-md overflow-hidden">
         {/* Header row */}
-        <div className="grid grid-cols-[1fr,1fr,auto] gap-2 p-2 border-b border-gray-700 bg-gray-800">
-          <div className="text-xs font-medium text-gray-400">Key</div>
-          <div className="text-xs font-medium text-gray-400">Value</div>
+        <div className="grid grid-cols-[1fr,1fr,auto] gap-2 p-2 border-b border-base bg-surface-raised">
+          <div className="text-xs font-medium text-secondary">Key</div>
+          <div className="text-xs font-medium text-secondary">Value</div>
           <div></div>
         </div>
 
@@ -105,33 +105,33 @@ export const QueryParamsEditor: React.FC<QueryParamsEditorProps> = ({
           Object.entries(params).map(([key, value], index) => (
             <div
               key={key + index}
-              className="grid grid-cols-[1fr,1fr,auto] gap-2 p-2 border-b border-gray-700 last:border-b-0"
+              className="grid grid-cols-[1fr,1fr,auto] gap-2 p-2 border-b border-base last:border-b-0"
             >
               <input
                 type="text"
                 value={isEncoded ? key : decodeURIComponent(key)}
                 onChange={(e) => handleKeyChange(key, e.target.value)}
-                className="bg-gray-700/50 border border-gray-600 rounded px-2 py-1 text-sm text-gray-200"
+                className="bg-element border border-base rounded px-2 py-1 text-sm text-main"
               />
               <input
                 type="text"
                 value={isEncoded ? value : decodeURIComponent(value)}
                 onChange={(e) => handleValueChange(key, e.target.value)}
-                className="bg-gray-700/50 border border-gray-600 rounded px-2 py-1 text-sm text-gray-200"
+                className="bg-element border border-base rounded px-2 py-1 text-sm text-main"
               />
               <div className="flex items-center">
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(`${key}=${value}`);
                   }}
-                  className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded"
+                  className="p-1 text-secondary hover:bg-element-hover rounded"
                   title="Copy parameter"
                 >
                   <Copy size={14} />
                 </button>
                 <button
                   onClick={() => handleRemoveParam(key)}
-                  className="p-1 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded"
+                  className="p-1 text-secondary hover:text-danger hover:bg-element-hover rounded"
                   title="Remove parameter"
                 >
                   <Minus size={14} />
@@ -140,34 +140,34 @@ export const QueryParamsEditor: React.FC<QueryParamsEditorProps> = ({
             </div>
           ))
         ) : (
-          <div className="p-4 text-center text-gray-500 text-sm">
+          <div className="p-4 text-center text-muted text-sm">
             No query parameters
           </div>
         )}
 
         {/* Add new parameter row */}
-        <div className="grid grid-cols-[1fr,1fr,auto] gap-2 p-2 bg-gray-800/50 border-t border-gray-700">
+        <div className="grid grid-cols-[1fr,1fr,auto] gap-2 p-2 bg-surface-secondary border-t border-base">
           <input
             type="text"
             value={newKey}
             onChange={(e) => setNewKey(e.target.value)}
             placeholder="New key"
-            className="bg-gray-700/50 border border-gray-600 rounded px-2 py-1 text-sm text-gray-200 placeholder-gray-500"
+            className="bg-element border border-base rounded px-2 py-1 text-sm text-main placeholder-muted"
           />
           <input
             type="text"
             value={newValue}
             onChange={(e) => setNewValue(e.target.value)}
             placeholder="Value"
-            className="bg-gray-700/50 border border-gray-600 rounded px-2 py-1 text-sm text-gray-200 placeholder-gray-500"
+            className="bg-element border border-base rounded px-2 py-1 text-sm text-main placeholder-muted"
           />
           <button
             onClick={handleAddParam}
             disabled={!newKey.trim()}
             className={`p-1 ${
               newKey.trim()
-                ? "text-green-400 hover:bg-gray-700"
-                : "text-gray-600 cursor-not-allowed"
+                ? "text-green-400 hover:bg-element-hover"
+                : "text-muted cursor-not-allowed"
             } rounded`}
             title="Add parameter"
           >

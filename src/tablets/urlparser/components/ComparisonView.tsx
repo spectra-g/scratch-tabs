@@ -16,7 +16,7 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({
     Object.keys(comparisonResults).length === 0
   ) {
     return (
-      <div className="mt-4 p-4 bg-gray-800/50 border border-gray-700 rounded-md text-center text-gray-400">
+      <div className="mt-4 p-4 bg-surface-secondary border border-base rounded-md text-center text-secondary">
         Enter a URL to see how it's parsed across different platforms
       </div>
     );
@@ -34,12 +34,12 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({
   const filteredKeys = componentKeys.filter((key) => key !== "queryParams");
 
   return (
-    <div className="mt-4 bg-gray-800/50 border border-gray-700 rounded-md overflow-hidden">
-      <div className="bg-gray-800 p-3 border-b border-gray-700">
-        <h3 className="text-sm font-medium text-gray-200">
+    <div className="mt-4 bg-surface-secondary border border-base rounded-md overflow-hidden">
+      <div className="bg-surface-raised p-3 border-b border-base">
+        <h3 className="text-sm font-medium text-main">
           Cross-Platform URL Parsing Comparison
         </h3>
-        <p className="text-xs text-gray-400 mt-1">
+        <p className="text-xs text-secondary mt-1">
           See how different platforms interpret the same URL
         </p>
       </div>
@@ -47,24 +47,24 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({
       <div className="overflow-x-auto custom-scrollbar">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-gray-800">
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-400 uppercase tracking-wider border-b border-gray-700">
+            <tr className="bg-surface-raised">
+              <th className="px-4 py-2 text-left text-xs font-medium text-secondary uppercase tracking-wider border-b border-base">
                 Component
               </th>
               {platforms.map((platform) => (
                 <th
                   key={platform}
-                  className="px-4 py-2 text-left text-xs font-medium text-gray-400 uppercase tracking-wider border-b border-gray-700"
+                  className="px-4 py-2 text-left text-xs font-medium text-secondary uppercase tracking-wider border-b border-base"
                 >
                   {platform}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-700">
+          <tbody className="divide-y divide-base">
             {filteredKeys.map((key) => (
-              <tr key={key} className="hover:bg-gray-800/50">
-                <td className="px-4 py-2 text-sm font-medium text-gray-300 whitespace-nowrap">
+              <tr key={key} className="hover:bg-element-hover">
+                <td className="px-4 py-2 text-sm font-medium text-main whitespace-nowrap">
                   {key}
                 </td>
                 {platforms.map((platform) => {
@@ -79,12 +79,12 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({
                       key={platform}
                       className={`px-4 py-2 text-sm font-mono ${
                         isDifferent
-                          ? "text-yellow-400 bg-yellow-900/20"
-                          : "text-gray-300"
+                          ? "text-warning bg-warning-subtle"
+                          : "text-main"
                       }`}
                     >
                       {value || (
-                        <span className="text-gray-500 italic">empty</span>
+                        <span className="text-muted italic">empty</span>
                       )}
                     </td>
                   );
