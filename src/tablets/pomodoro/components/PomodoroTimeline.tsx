@@ -18,7 +18,7 @@ export const PomodoroTimeline: React.FC<PomodoroTimelineProps> = ({
 
   if (todaySessions.length === 0) {
     return (
-      <div className="text-center text-gray-400 py-4">
+      <div className="text-center text-muted py-4">
         No sessions completed today
       </div>
     );
@@ -33,7 +33,7 @@ export const PomodoroTimeline: React.FC<PomodoroTimelineProps> = ({
     <div className="w-full">
       <div className="relative">
         {/* Timeline line */}
-        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-700/50"></div>
+        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-surface-secondary/50"></div>
 
         {/* Timeline items */}
         <div className="space-y-3">
@@ -41,35 +41,32 @@ export const PomodoroTimeline: React.FC<PomodoroTimelineProps> = ({
             <div key={index} className="flex items-start ml-4 pl-6 relative">
               {/* Timeline dot */}
               <div
-                className={`absolute left-0 top-1.5 w-3 h-3 rounded-full ${
-                  session.type === "focus"
-                    ? "bg-blue-400"
+                className={`absolute left-0 top-1.5 w-3 h-3 rounded-full ${session.type === "focus"
+                    ? "bg-primary"
                     : session.type === "shortBreak"
                       ? "bg-green-400"
                       : "bg-purple-400"
-                } ${!session.completed ? "opacity-50" : ""}`}
+                  } ${!session.completed ? "opacity-50" : ""}`}
               ></div>
 
               {/* Session content */}
               <div
-                className={`flex-1 p-3 rounded-md ${
-                  session.type === "focus"
-                    ? "bg-blue-500/10 border border-blue-500/20"
+                className={`flex-1 p-3 rounded-md ${session.type === "focus"
+                    ? "bg-primary/10 border border-primary/20"
                     : session.type === "shortBreak"
                       ? "bg-green-500/10 border border-green-500/20"
                       : "bg-purple-500/10 border border-purple-500/20"
-                }`}
+                  }`}
               >
                 <div className="flex justify-between items-start">
                   <div>
                     <div
-                      className={`text-sm font-medium ${
-                        session.type === "focus"
-                          ? "text-blue-400"
+                      className={`text-sm font-medium ${session.type === "focus"
+                          ? "text-primary"
                           : session.type === "shortBreak"
                             ? "text-green-400"
                             : "text-purple-400"
-                      }`}
+                        }`}
                     >
                       {session.type === "focus"
                         ? "Focus Session"
@@ -77,11 +74,11 @@ export const PomodoroTimeline: React.FC<PomodoroTimelineProps> = ({
                           ? "Short Break"
                           : "Long Break"}
                     </div>
-                    <div className="text-xs text-gray-400 mt-1">
+                    <div className="text-xs text-muted mt-1">
                       Duration: {Math.floor(session.duration / 60)} minutes
                     </div>
                   </div>
-                  <div className="text-xs text-gray-400">
+                  <div className="text-xs text-muted">
                     {formatTimeFromTimestamp(session.startTime)}
                   </div>
                 </div>

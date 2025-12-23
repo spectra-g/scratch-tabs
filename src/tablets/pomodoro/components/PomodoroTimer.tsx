@@ -105,7 +105,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
   const getSessionTypeColor = () => {
     switch (currentSession.type) {
       case "focus":
-        return "text-blue-400";
+        return "text-primary";
       case "shortBreak":
         return "text-green-400";
       case "longBreak":
@@ -127,7 +127,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
           <div className={`text-6xl font-bold ${getSessionTypeColor()}`}>
             {formatTime(currentSession.timeRemaining)}
           </div>
-          <div className="text-sm text-gray-400 mt-2">
+          <div className="text-sm text-muted mt-2">
             {currentSession.type === "focus"
               ? "Focus Session"
               : currentSession.type === "shortBreak"
@@ -140,7 +140,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
       <div className="flex items-center space-x-4 mt-6">
         <button
           onClick={onReset}
-          className="p-3 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-full transition-colors"
+          className="p-3 text-muted hover:text-main hover:bg-surface-secondary/50 rounded-full transition-colors"
           title="Reset Timer (R)"
         >
           <RotateCcw size={20} />
@@ -160,24 +160,24 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
 
         <button
           onClick={onSkip}
-          className="p-3 text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded-full transition-colors"
+          className="p-3 text-muted hover:text-main hover:bg-surface-secondary/50 rounded-full transition-colors"
           title="Skip to Next Session (S)"
         >
           <SkipForward size={20} />
         </button>
       </div>
 
-      <div className="text-xs text-gray-500 mt-4">
+      <div className="text-xs text-muted mt-4">
         Press{" "}
-        <kbd className="px-1.5 py-0.5 bg-gray-800 rounded text-gray-300">
+        <kbd className="px-1.5 py-0.5 bg-surface-raised rounded text-secondary">
           Space
         </kbd>{" "}
         to start/pause,
-        <kbd className="px-1.5 py-0.5 bg-gray-800 rounded text-gray-300 ml-1">
+        <kbd className="px-1.5 py-0.5 bg-surface-raised rounded text-secondary ml-1">
           R
         </kbd>{" "}
         to reset,
-        <kbd className="px-1.5 py-0.5 bg-gray-800 rounded text-gray-300 ml-1">
+        <kbd className="px-1.5 py-0.5 bg-surface-raised rounded text-secondary ml-1">
           S
         </kbd>{" "}
         to skip
