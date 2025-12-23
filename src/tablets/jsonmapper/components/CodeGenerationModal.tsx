@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Editor } from "@monaco-editor/react";
 import { X, Copy, Check, Download } from "lucide-react";
+import { useThemeStore } from "../../../stores/themeStore";
 import { MappingConfig, MappingDirection, TargetLanguage } from "../types";
 import { generateCode } from "../utils/mappingUtils";
 import { downloadStringAsFile } from "../utils/fileUtils";
@@ -18,6 +19,7 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
   initialLanguage = "javascript",
   initialDirection = "sourceToTarget",
 }) => {
+  const { isDarkMode } = useThemeStore();
   const [language, setLanguage] = useState<TargetLanguage>(initialLanguage);
   const [direction, setDirection] =
     useState<MappingDirection>(initialDirection);
@@ -199,7 +201,7 @@ export const CodeGenerationModal: React.FC<CodeGenerationModalProps> = ({
                   height="500px"
                   language={language === "java" ? "java" : language}
                   value={code}
-                  theme="vs-dark"
+                  theme={isDarkMode ? "vs-dark" : "vs"}
                   options={{
                     minimap: { enabled: false },
                     fontSize: 14,

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Editor } from "@monaco-editor/react";
 import { X, Save } from "lucide-react";
+import { useThemeStore } from "../../../stores/themeStore";
 import { MappingRule, TransformationType, JoinCondition, JoinMatchType } from "../types";
 import {
   jsonPathToReadablePath,
@@ -19,6 +20,7 @@ interface TransformationRuleEditorProps {
 export const TransformationRuleEditor: React.FC<
   TransformationRuleEditorProps
 > = ({ rule, onSave, onCancel, sourceJson, targetJson }) => {
+  const { isDarkMode } = useThemeStore();
   const [sourcePath, setSourcePath] = useState(
     jsonPathToReadablePath(rule.sourcePath),
   );
@@ -1064,17 +1066,18 @@ export const TransformationRuleEditor: React.FC<
                       </li>
                     </ul>
                   </div>
-                  <div className="border border-base rounded-md overflow-hidden">
+                  <div className="border border-base rounded-md overflow-hidden mb-2">
                     <Editor
-                      height="150px"
-                      language="javascript"
+                      height="200px"
+                      defaultLanguage="javascript"
                       value={transformation}
                       onChange={(value) => setTransformation(value || "")}
-                      theme="vs-dark"
+                      theme={isDarkMode ? "vs-dark" : "vs"}
                       options={{
                         minimap: { enabled: false },
                         fontSize: 14,
-                        wordWrap: "on",
+                        lineNumbers: "off",
+                        scrollBeyondLastLine: false,
                         padding: { top: 8, bottom: 8 },
                       }}
                     />

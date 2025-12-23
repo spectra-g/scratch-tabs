@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Editor } from "@monaco-editor/react";
 import { X, Play, Upload, Download, Copy, Check } from "lucide-react";
+import { useThemeStore } from "../../../stores/themeStore";
 import { MappingConfig, MappingDirection } from "../types";
 import { transformJson } from "../utils/mappingUtils";
 import { isValidJson, formatJson } from "../utils/jsonUtils";
@@ -17,6 +18,7 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
   initialInput,
   onClose,
 }) => {
+  const { isDarkMode } = useThemeStore();
   const [input, setInput] = useState(initialInput || mapping.sourceJson);
   const [output, setOutput] = useState("");
   const [direction] = useState<MappingDirection>("sourceToTarget"); // Fixed direction
@@ -174,7 +176,7 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
                     language="json"
                     value={input}
                     onChange={handleInputChange}
-                    theme="vs-dark"
+                    theme={isDarkMode ? "vs-dark" : "vs"}
                     options={{
                       minimap: { enabled: false },
                       fontSize: 14,
@@ -222,7 +224,7 @@ export const TestMappingModal: React.FC<TestMappingModalProps> = ({
                     height="400px"
                     language="json"
                     value={output}
-                    theme="vs-dark"
+                    theme={isDarkMode ? "vs-dark" : "vs"}
                     options={{
                       minimap: { enabled: false },
                       fontSize: 14,

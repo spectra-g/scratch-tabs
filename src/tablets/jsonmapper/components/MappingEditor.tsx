@@ -15,6 +15,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { useTabletTabCreation } from "../../bridge";
+import { useThemeStore } from "../../../stores/themeStore";
 import { MappingConfig, MappingRule, PathInfo } from "../types";
 import { MappingTable } from "./MappingTable";
 import {
@@ -75,6 +76,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
   const [showExportDropdown, setShowExportDropdown] = useState(false);
   const exportDropdownRef = useRef<HTMLDivElement>(null);
   const { createBackgroundTab } = useTabletTabCreation();
+  const { isDarkMode } = useThemeStore();
 
   // Sync local state changes back to parent (prevents data loss on tab switch)
   useEffect(() => {
@@ -844,19 +846,18 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
                   </button>
                 </div>
               </div>
-              <div
-                className={`border rounded-md overflow-hidden ${sourceJsonError ? "border-danger" : "border-base"}`}
-              >
+              <div className="border border-base rounded-md overflow-hidden">
                 <Editor
                   height="300px"
-                  language="json"
+                  defaultLanguage="json"
                   value={sourceJson}
                   onChange={handleSourceJsonChange}
-                  theme="vs-dark"
+                  theme={isDarkMode ? "vs-dark" : "vs"}
                   options={{
                     minimap: { enabled: false },
                     fontSize: 14,
                     wordWrap: "on",
+                    scrollBeyondLastLine: false,
                     padding: { top: 8, bottom: 8 },
                   }}
                 />
@@ -870,7 +871,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="block text-sm font-medium text-secondary">
-                  What should the target JSON look like?
+                  Target JSON (Optional - for structure)
                 </label>
                 <div className="flex space-x-2">
                   <label className="flex items-center space-x-2 px-2 py-1 bg-surface-secondary hover:bg-element-hover rounded-md text-xs text-secondary transition-colors cursor-pointer">
@@ -886,26 +887,25 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
                   <button
                     onClick={handleCopyTarget}
                     disabled={!targetJson}
-                    className="flex items-center space-x-2 px-2 py-1 bg-gray-800/50 hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-xs text-gray-300 transition-colors"
+                    className="flex items-center space-x-2 px-2 py-1 bg-surface-secondary hover:bg-element-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-xs text-secondary transition-colors"
                   >
                     {targetCopied ? <Check size={14} /> : <Copy size={14} />}
                     <span>{targetCopied ? "Copied!" : "Copy"}</span>
                   </button>
                 </div>
               </div>
-              <div
-                className={`border rounded-md overflow-hidden ${targetJsonError ? "border-danger" : "border-base"}`}
-              >
+              <div className="border border-base rounded-md overflow-hidden">
                 <Editor
                   height="300px"
-                  language="json"
+                  defaultLanguage="json"
                   value={targetJson}
                   onChange={handleTargetJsonChange}
-                  theme="vs-dark"
+                  theme={isDarkMode ? "vs-dark" : "vs"}
                   options={{
                     minimap: { enabled: false },
                     fontSize: 14,
                     wordWrap: "on",
+                    scrollBeyondLastLine: false,
                     padding: { top: 8, bottom: 8 },
                   }}
                 />
