@@ -102,6 +102,35 @@ describe("formatters", () => {
         expect(result).toContain("2.71");
       });
     });
+
+    describe("large number precision handling", () => {
+      it("should not humanize numbers with more than 15 digits to avoid precision loss", () => {
+        const largeNumber = "9699999999999999666666";
+        const result = humanizeExpressionSimple(largeNumber);
+        // Should return the raw number, not "9 million 21" or similar incorrect humanization
+        expect(result).toBe(largeNumber);
+        expect(result).not.toContain("million 21");
+      });
+
+      it("should still humanize numbers with exactly 15 digits", () => {
+        const fifteenDigits = "123456789012345"; // 123 trillion
+        const result = humanizeExpressionSimple(fifteenDigits);
+        // Should humanize correctly as it's within safe range
+        expect(result).toContain("trillion");
+      });
+
+      it("should not humanize numbers exceeding safe integer range", () => {
+        const result = humanizeExpressionSimple("12345678901234567890");
+        // Should return raw string to preserve accuracy
+        expect(result).toBe("12345678901234567890");
+      });
+
+      it("should handle expressions with very large numbers", () => {
+        const result = humanizeExpressionSimple("9699999999999999666666+100");
+        expect(result).toContain("9699999999999999666666");
+        expect(result).toContain("100");
+      });
+    });
   });
 
   describe("humanizeExpressionHybrid", () => {
@@ -147,11 +176,10 @@ describe("formatters", () => {
       });
 
       it("should handle quadrillion-level numbers", () => {
+        // Note: 1234567890123456 has 16 digits, exceeds safe integer range (15 digits)
+        // So it should NOT be humanized to prevent precision loss
         const result = humanizeExpressionHybrid("1234567890123456");
-        expect(result).toContain("quadrillion");
-        expect(result).toContain("trillion");
-        expect(result).toContain("billion");
-        expect(result).toContain("million");
+        expect(result).toBe("1234567890123456");
         expect(result).not.toContain("undefined");
       });
 
@@ -223,6 +251,41 @@ describe("formatters", () => {
         expect(result).toContain("thousand");
         expect(result).toContain("plus");
         expect(result).toContain("0");
+      });
+    });
+
+    describe("large number precision handling", () => {
+      it("should not humanize numbers with more than 15 digits to avoid precision loss", () => {
+        const largeNumber = "9699999999999999666666";
+        const result = humanizeExpressionHybrid(largeNumber);
+        // Should return the raw number, not broken/incorrect humanization
+        expect(result).toBe(largeNumber);
+        expect(result).not.toContain("million 21");
+      });
+
+      it("should still humanize numbers with exactly 15 digits", () => {
+        const fifteenDigits = "123456789012345"; // 123 trillion
+        const result = humanizeExpressionHybrid(fifteenDigits);
+        // Should humanize correctly as it's within safe range
+        expect(result).toContain("trillion");
+      });
+
+      it("should not humanize numbers exceeding safe integer range", () => {
+        const result = humanizeExpressionHybrid("12345678901234567890");
+        // Should return raw string to preserve accuracy
+        expect(result).toBe("12345678901234567890");
+      });
+
+      it("should handle expressions with very large numbers", () => {
+        const result = humanizeExpressionHybrid("9699999999999999666666+100");
+        expect(result).toContain("9699999999999999666666");
+        expect(result).toContain("100");
+      });
+
+      it("should handle negative large numbers", () => {
+        const result = humanizeExpressionHybrid("-9699999999999999666666");
+        // Should preserve the entire number
+        expect(result).toBe("-9699999999999999666666");
       });
     });
 
