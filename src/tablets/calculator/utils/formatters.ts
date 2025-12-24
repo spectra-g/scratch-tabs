@@ -29,6 +29,11 @@ function humanizeNumberSimple(numStr: string): string {
   if (isNaN(num)) return numStr;
   if (numStr.includes('.')) return numStr;
 
+  // Skip humanization for numbers that exceed safe integer range
+  // to avoid precision loss and incorrect formatting
+  const digitCount = numStr.replace(/^-/, '').length;
+  if (digitCount > 15) return numStr;
+
   const magnitudes = [
     { value: 1e12, name: "trillion" },
     { value: 1e9, name: "billion" },
@@ -62,6 +67,11 @@ function humanizeNumberHybrid(numStr: string): string {
     const [integer, decimal] = numStr.split('.');
     return `${humanizeNumberHybrid(integer)} point ${decimal}`;
   }
+
+  // Skip humanization for numbers that exceed safe integer range
+  // to avoid precision loss and incorrect formatting
+  const digitCount = numStr.replace(/^-/, '').length;
+  if (digitCount > 15) return numStr;
 
   const num = parseInt(numStr, 10);
   if (isNaN(num)) return numStr;

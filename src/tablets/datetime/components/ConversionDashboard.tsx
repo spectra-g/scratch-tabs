@@ -82,14 +82,57 @@ export const ConversionDashboard: React.FC<ConversionDashboardProps> = ({ format
             <div className="px-2 py-1 bg-element rounded text-[10px] font-medium text-secondary">{formats.relativeTime}</div>
           </div>
         </div>
-        <div className="bg-surface-raised/40 p-4 rounded-xl border border-base">
-          <div className="text-[10px] font-bold text-secondary uppercase tracking-widest mb-2 flex justify-between">
-            ISO 8601 (UTC)
-            <button onClick={() => copy(formats.iso8601, 'iso')} className="hover:text-primary transition-colors">
-              {copiedField === 'iso' ? <Check size={12} className="text-success" /> : <Copy size={12} />}
-            </button>
+        <div className="space-y-4">
+          <div className="bg-surface-raised/40 p-3 rounded-xl border border-base">
+            <div className="text-[10px] font-bold text-secondary uppercase tracking-widest mb-2 flex justify-between">
+              ISO 8601 (UTC)
+              <button onClick={() => copy(formats.iso8601, 'iso')} className="hover:text-primary transition-colors">
+                {copiedField === 'iso' ? <Check size={12} className="text-success" /> : <Copy size={12} />}
+              </button>
+            </div>
+            <div className="text-sm font-mono text-main break-all leading-relaxed select-all">{formats.iso8601}</div>
           </div>
-          <div className="text-sm font-mono text-main break-all leading-relaxed select-all">{formats.iso8601}</div>
+          <div className="bg-surface-raised/40 p-3 rounded-xl border border-base">
+            <div className="text-[10px] font-bold text-secondary uppercase tracking-widest mb-2">
+              Unix Timestamps
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="text-[9px] text-muted font-bold uppercase tracking-tight mb-0.5">Epoch (seconds)</div>
+                  <div className="text-sm font-mono text-main select-all">{formats.unixSeconds}</div>
+                </div>
+                <button
+                  onClick={() => copy(formats.unixSeconds.toString(), 'epoch-sec')}
+                  className="flex-shrink-0 p-1.5 hover:bg-element-hover rounded-md transition-all active:scale-90 ml-2"
+                  title="Copy"
+                >
+                  {copiedField === 'epoch-sec' ? (
+                    <Check size={12} className="text-success" />
+                  ) : (
+                    <Copy size={12} className="text-muted hover:text-primary transition-colors" />
+                  )}
+                </button>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="text-[9px] text-muted font-bold uppercase tracking-tight mb-0.5">Epoch (milliseconds)</div>
+                  <div className="text-sm font-mono text-main select-all">{formats.unixMilliseconds}</div>
+                </div>
+                <button
+                  onClick={() => copy(formats.unixMilliseconds.toString(), 'epoch-milli')}
+                  className="flex-shrink-0 p-1.5 hover:bg-element-hover rounded-md transition-all active:scale-90 ml-2"
+                  title="Copy"
+                >
+                  {copiedField === 'epoch-milli' ? (
+                    <Check size={12} className="text-success" />
+                  ) : (
+                    <Copy size={12} className="text-muted hover:text-primary transition-colors" />
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
