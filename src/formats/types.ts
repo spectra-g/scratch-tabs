@@ -92,6 +92,12 @@ export interface FormatModule {
    */
   getStatusBarItems?(): StatusBarItem[];
 
+  /**
+   * Get share strategy for this format (optional)
+   * Allows formats to provide custom trimming UI and logic for sharing
+   */
+  shareStrategy?: ShareStrategy;
+
   // --- LEGACY: For backward compatibility (Phase 1) ---
   /**
    * Get status item component for this format (optional) - LEGACY
@@ -104,6 +110,62 @@ export interface FormatModule {
   getOptionsMenu?: () => React.FC<{
     editor: monaco.editor.IStandaloneCodeEditor;
   }>;
+}
+
+/**
+ * Props for trim UI components
+ */
+export interface TrimUIProps {
+  content: string;
+  onSelectionChange: (selection: any) => void;
+  maxSize: number;
+  currentSize: number;
+}
+
+/**
+ * Share strategy for format-specific content sharing
+ * Allows formats to provide custom trimming UI and logic
+ */
+export interface ShareStrategy {
+  /**
+   * Does this format support custom trimming UI?
+   */
+  supportsCustomTrim: boolean;
+
+  /**
+   * Dynamically import the trim UI component (code-splitting)
+   * Returns a promise that resolves to the component
+   */
+  getTrimUI?: () => Promise<{ default: React.ComponentType<TrimUIProps> }>;
+
+  /**
+   * Encode user's trim selection into URL metadata string
+   * @param selection The user's selection object
+   * @returns URL-safe metadata string (e.g., "r500-800" or "kmeta,users")
+   */
+  encodeMetadata: (selection: any) => string;
+
+  /**
+   * Decode URL metadata string back into selection object
+   * @param metadata The metadata string from the URL
+   * @returns The decoded selection object, or null if metadata is "full"
+   */
+  decodeMetadata: (metadata: string) => any;
+
+  /**
+   * Apply the trim to content based on decoded metadata
+   * @param content The full content to trim
+   * @param selection The decoded selection object
+   * @returns The trimmed content
+   */
+  applyTrim: (content: string, selection: any) => string;
+
+  /**
+   * Validate that trimmed content is still valid for this format
+   * @param content The trimmed content to validate
+   * @returns true if valid, false otherwise
+   */
+  validateTrimmedContent?: (content: string) => boolean;
 }
 
 /**

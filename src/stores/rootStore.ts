@@ -195,13 +195,17 @@ export const useRootStore = create<RootStore>((set, get) => {
     handleNewPopulatedTab: async (tabInput, toRightSide = false) => {
       const { canAddNewTab, addTab } = get();
       if (!canAddNewTab(toRightSide)) return;
+
       const ensuredWorkspaceId = await useWorkspaceStore
         .getState()
         .ensureWorkspace();
+
       if (!ensuredWorkspaceId) return;
+
       const newTabObject = _createFinalTabObject(tabInput, ensuredWorkspaceId, {
         defaultTitle: tabInput.title || "Populated Tab",
       });
+
       addTab(newTabObject, toRightSide);
     },
 
