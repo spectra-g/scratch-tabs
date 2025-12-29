@@ -88,11 +88,11 @@ export const tabletMetadata: TabletMetadata[] = [
     label: "Pomodoro Timer",
     keywords: ["pomodoro", "timer", "productivity", "focus", "time"],
   },
-  {
-    id: "promptmanager",
-    label: "Prompt Manager",
-    keywords: ["prompt", "manager", "ai", "templates", "snippets"],
-  },
+  // {
+  //   id: "promptmanager",
+  //   label: "Prompt Manager",
+  //   keywords: ["prompt", "manager", "ai", "templates", "snippets"],
+  // },
   {
     id: "regex",
     label: "Regex Tester",

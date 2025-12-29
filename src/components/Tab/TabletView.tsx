@@ -10,6 +10,7 @@ import { tabletRegistry } from "../../tablets";
 import { Tab } from "../../types.ts";
 import { TabletErrorBoundary } from "../Tablet/TabletErrorBoundary";
 import { useRootStore } from "../../stores";
+import { useTabletCounting } from "../../tablets/utils/useTabletCounting";
 
 interface TabletViewProps {
   tab: Tab;
@@ -46,6 +47,9 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
       return null;
     }
   }, [tab.tabletState, tab.isTablet]);
+
+  // Count tablet usage (production only, privacy-respecting)
+  useTabletCounting(tabletType || '');
 
   // Parse state only when needed for rendering
   const state = useMemo(() => {
