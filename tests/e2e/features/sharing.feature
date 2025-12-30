@@ -1,3 +1,4 @@
+@sharing
 Feature: Tab Sharing
 
   Background:
@@ -95,3 +96,25 @@ Feature: Tab Sharing
     And I select "Calculator" from the tablet selector
     And I right-click the "Calculator" tab
     Then the context menu should not show "Share" option
+
+  Scenario: Trim large JSON content before sharing
+    When I click the icon for "New tab"
+    And I type the following content into the active editor:
+      """
+      {
+        "keep_me": "small",
+        "remove_me": "this is a very long string that will take up a lot of space in the URL if we keep it. it needs to be long enough to exceed the 1800 character limit of the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. this is a very long string that will take up a lot of space in the URL. ADDDING MORE UNIQUE DATA TO BREAK COMPRESSION: ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890 !@#$%^&*() _+ [] {} | ; : , . / < > ? ~ ` RANDOM DATA 1: abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ RANDOM DATA 2: 0123456789 0123456789 0123456789 RANDOM DATA 3: !@#$%^&*() !@#$%^&*() !@#$%^&*() RANDOM DATA 4: abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ RANDOM DATA 5: 0123456789 0123456789 0123456789 RANDOM DATA 6: !@#$%^&*() !@#$%^&*() !@#$%^&*() RANDOM DATA 7: abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ RANDOM DATA 8: 0123456789 0123456789 0123456789 RANDOM DATA 9: !@#$%^&*() !@#$%^&*() !@#$%^&*() RANDOM DATA 10: abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ RANDOM DATA 11: 0123456789 0123456789 0123456789 RANDOM DATA 12: !@#$%^&*() !@#$%^&*() !@#$%^&*() RANDOM DATA 13: abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ RANDOM DATA 14: 0123456789 0123456789 0123456789"
+      }
+      """
+    And I right-click the "Scratch 1" tab
+    And I select "Share" from the context menu
+    Then the share modal should appear
+    And the JSON trim UI should be visible
+    And the JSON key "remove_me" should be "unselected"
+    And the JSON key "keep_me" should be "selected"
+    And the budget bar should show the max of "1740" characters
+    When I copy the share URL from the modal
+    And I open the share URL in a new browser instance
+    Then the new browser instance should have a tab with JSON content
+    And the new browser instance tab content should contain "keep_me"
+    And the new browser instance tab content should not contain "this is a very long string"

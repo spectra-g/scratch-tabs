@@ -8,11 +8,13 @@ import { MoreHorizontal } from "../../components/Icons";
 import { JsonStatusItem } from "./StatusItem";
 import { SmartViewButtons } from "../../components/StatusBar/SmartViewButtons";
 import { StatusItemProps } from "../../components/StatusBar/types";
+import { jsonShareStrategy } from "./shareStrategy";
 
 // Create the JSON format module that implements the new interface
 // while preserving the legacy methods for backward compatibility
 export class JsonFormatModule implements FormatModule {
   private detector: JsonFormatDetector;
+  shareStrategy = jsonShareStrategy;
 
   constructor() {
     this.detector = new JsonFormatDetector();
@@ -75,7 +77,7 @@ export class JsonFormatModule implements FormatModule {
       },
       {
         id: 'json-smart-view-button',
-        component: (props: StatusItemProps) => 
+        component: (props: StatusItemProps) =>
           React.createElement(SmartViewButtons, {
             language: this.id,
             tabId: props.activeTab?.id || ''

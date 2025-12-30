@@ -252,6 +252,38 @@ export class ShareActions {
     expect(content).toContain(expectedContent);
   }
 
+  async expectJsonTrimUIShown() {
+    // The JSON trim UI should be visible
+    await expect(this.page.getByText('Select JSON Keys')).toBeVisible();
+    await expect(this.page.locator('.h-2.bg-surface-raised.rounded-full')).toBeVisible(); // Budget bar
+  }
+
+  async toggleJsonKey(keyName: string) {
+    // Click the button for a specific JSON key
+    const keyButton = this.page.getByRole('button').filter({ hasText: keyName });
+    await expect(keyButton).toBeVisible();
+    await keyButton.click();
+  }
+
+  async expectJsonKeySelected(keyName: string, selected: boolean) {
+    // Verify the selection state of a JSON key
+    const keyButton = this.page.getByRole('button').filter({ hasText: keyName });
+    const checkbox = keyButton.locator('div').first();
+    if (selected) {
+      await expect(checkbox).toHaveClass(/bg-primary/);
+    } else {
+      await expect(checkbox).toHaveClass(/bg-transparent/);
+    }
+  }
+
+  async expectBudgetBarStatus(current: string, max: string) {
+    // The budget bar text should show the correct values
+    const budgetText = this.page.getByTestId('budget-text');
+    await expect(budgetText).toBeVisible();
+    // We check for the max value which should be constant, and current which might vary slightly
+    await expect(budgetText).toContainText(` / ${max}`);
+  }
+
   async cleanup() {
     // Clean up new contexts/pages
     if (this.newPage) {

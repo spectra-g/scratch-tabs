@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useCallback, useMemo } from "react";
 import { X, Copy, Check, AlertCircle } from "lucide-react";
 import { Tab } from "../../types";
 import { shareService } from "../../services/shareService";
@@ -84,14 +84,17 @@ export const ShareModal: React.FC<ShareModalProps> = ({ tab, onClose }) => {
     }
   };
 
-  const handleSelectionChange = (newSelection: any) => {
+  const handleSelectionChange = useCallback((newSelection: any) => {
     setSelection(newSelection);
-  };
+  }, []);
 
-  // Determine which trim UI to use
-  const TrimUI = shareStrategy?.supportsCustomTrim && shareStrategy.getTrimUI
-    ? React.lazy(shareStrategy.getTrimUI)
-    : DefaultTextRangeTrimUI;
+  // Determine which trim UI to use - memoized to prevent re-creation on every render
+  const TrimUI = useMemo(() => {
+    if (shareStrategy?.supportsCustomTrim && shareStrategy.getTrimUI) {
+      return React.lazy(shareStrategy.getTrimUI);
+    }
+    return DefaultTextRangeTrimUI;
+  }, [shareStrategy]);
 
   const canCopy = currentSize <= maxSize;
 
