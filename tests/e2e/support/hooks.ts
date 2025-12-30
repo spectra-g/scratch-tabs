@@ -33,6 +33,12 @@ After(async function (params: any) {
     });
     this.attach(screenshot, 'image/png');
   }
+
+  // Clean up any share-related contexts/pages
+  if (this.share) {
+    await this.share.cleanup();
+  }
+
   await this.page.close();
   await this.context.close();
 }); 

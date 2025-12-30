@@ -57,6 +57,11 @@ export class ContextMenuActions {
     await expect(menuItem).not.toBeVisible();
   }
 
+  async expectMenuOptionNotVisible(optionText: string) {
+    // Alias for expectContextMenuDoesNotHaveOption
+    await this.expectContextMenuDoesNotHaveOption(optionText);
+  }
+
   async expectSubmenuToAppear(submenuName: string) {
     // Wait for submenu items to appear by looking for a known submenu item
     // This is more robust than relying on CSS classes
