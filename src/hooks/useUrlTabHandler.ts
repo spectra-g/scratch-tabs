@@ -59,11 +59,13 @@ export const useUrlTabHandler = () => {
     setActiveRightTab,
     setActiveSide,
     initialUrlProcessed,
+    suppressUrlSync,
   } = useRootStore((state) => ({
     setActiveLeftTab: state.setActiveLeftTab,
     setActiveRightTab: state.setActiveRightTab,
     setActiveSide: state.setActiveSide,
     initialUrlProcessed: state.initialUrlProcessed,
+    suppressUrlSync: state.suppressUrlSync,
   }));
 
   // Extract values from splitView
@@ -164,8 +166,8 @@ export const useUrlTabHandler = () => {
 
   // Effect 1: Handles STATE changes, updates URL
   useEffect(() => {
-    // Completely disable URL handler when workspace is loading
-    if (isLoading || !initialUrlProcessed) {
+    // Completely disable URL handler when workspace is loading OR when URL sync is suppressed
+    if (isLoading || !initialUrlProcessed || suppressUrlSync) {
       return;
     }
 
@@ -194,7 +196,8 @@ export const useUrlTabHandler = () => {
     tabs,
     isLoading,
     initialUrlProcessed,
-  ]); // Add the new flag to the dependency array.
+    suppressUrlSync,
+  ]); // Add suppressUrlSync to prevent URL updates during share processing
 
   // Effect 2: Handles URL changes, updates STATE
   useEffect(() => {

@@ -123,7 +123,11 @@ const MainLayout: React.FC = () => {
 
   // Handle pending shared content from ShareURLHandler
   useEffect(() => {
-    if (!isAppInitialized || hasHandledPendingShare.current) {
+    if (!isAppInitialized) {
+      return;
+    }
+
+    if (hasHandledPendingShare.current) {
       return;
     }
 
@@ -131,20 +135,41 @@ const MainLayout: React.FC = () => {
     if (state?.pendingShare) {
       hasHandledPendingShare.current = true;
 
-      // Execute tab creation - isAppInitialized ensures workspace is ready
       const createSharedTab = async () => {
         try {
-          await handleNewPopulatedTab(state.pendingShare, false);
-          // Clear the location state after successful tab creation
-          navigate(location.pathname, { replace: true, state: {} });
+          const { setSuppressUrlSync, setActiveTab } = useRootStore.getState();
+          setSuppressUrlSync(true);
+
+          // Prevent FULL_SYNC_RESPONSE from overwriting our new tab
+          const { broadcastManager } = await import('../../stores/broadcastStore');
+          broadcastManager.setSkipFullSyncResponse(true);
+
+          const tabId = await handleNewPopulatedTab(state.pendingShare, false);
+
+          if (tabId) {
+            setActiveTab(tabId);
+
+            // Force immediate save to IndexedDB to prevent tab loss on workspace reload
+            await saveState();
+          }
+
+          // Re-enable URL sync and FULL_SYNC_RESPONSE after a short delay
+          setTimeout(async () => {
+            setSuppressUrlSync(false);
+            const { broadcastManager } = await import('../../stores/broadcastStore');
+            broadcastManager.setSkipFullSyncResponse(false);
+          }, 300);
         } catch (error) {
           console.error("Error creating shared tab:", error);
+          useRootStore.getState().setSuppressUrlSync(false);
+          const { broadcastManager } = await import('../../stores/broadcastStore');
+          broadcastManager.setSkipFullSyncResponse(false);
         }
       };
 
       createSharedTab();
     }
-  }, [isAppInitialized, location.state, handleNewPopulatedTab, navigate, location.pathname]);
+  }, [isAppInitialized, location.state, handleNewPopulatedTab, saveState]);
 
   // Set up AI summary modal callback
   useEffect(() => {

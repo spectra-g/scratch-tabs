@@ -67,6 +67,7 @@ class BroadcastManager {
   private channel: BroadcastChannel;
   private isInitialized = false;
   private tabInstanceId: string; // Unique ID for this browser tab instance
+  private skipFullSyncResponse = false; // Flag to skip FULL_SYNC_RESPONSE when processing share URLs
 
   private constructor() {
     this.channel = new BroadcastChannel("scratch-tabs-sync-v2"); // New channel name for clarity
@@ -188,6 +189,12 @@ class BroadcastManager {
         case "FULL_SYNC_RESPONSE":
           // This tab (which sent REQUEST_FULL_SYNC) received a response.
           if (payload.recipientId === this.tabInstanceId) {
+            // CRITICAL: Don't process FULL_SYNC_RESPONSE if we're handling a share URL
+            // The share URL processing creates a tab that would be overwritten by this sync
+            if (this.skipFullSyncResponse) {
+              break;
+            }
+
             // Apply the full state. This is typically for initial load.
             useWorkspaceStore.setState({
               workspaces: payload.workspaces,
@@ -275,6 +282,11 @@ class BroadcastManager {
       type: "WORKSPACE_DELETED",
       payload: { deletedWorkspaceId },
     });
+  }
+
+  // Set flag to skip FULL_SYNC_RESPONSE processing (used when processing share URLs)
+  setSkipFullSyncResponse(skip: boolean) {
+    this.skipFullSyncResponse = skip;
   }
 
   cleanup() {
