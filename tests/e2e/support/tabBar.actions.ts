@@ -52,8 +52,9 @@ export class TabBarActions {
   }
 
   async selectTablet(tabletName: string) {
-    // Wait for the tablet selector modal to appear - use the actual CSS classes from the component
-    const tabletSelector = this.page.locator('.bg-surface.border-base.rounded-lg');
+    // Wait for the tablet selector modal to appear
+    // Use a more specific selector that includes the unique width classes
+    const tabletSelector = this.page.locator('.bg-surface.border-base.rounded-lg.shadow-lg.w-96');
     await expect(tabletSelector).toBeVisible();
 
     // Click on the tablet with the specified name - use exact text matching to avoid conflicts
@@ -62,8 +63,10 @@ export class TabBarActions {
     await expect(tabletOption).toBeVisible();
     await tabletOption.click();
 
-    // Wait for the modal to close after selection
-    await expect(tabletSelector).toBeHidden();
+    // Wait for the tablet tab to appear instead of waiting for modal to hide
+    // This is more reliable as the modal classes might match other elements
+    const tabletTab = this.page.locator(`[data-testid="tab-${tabletName}"]`);
+    await expect(tabletTab).toBeVisible();
   }
 
   async expectTabletIsActive(tabletName: string) {

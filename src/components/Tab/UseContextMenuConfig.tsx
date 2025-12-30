@@ -21,6 +21,7 @@ import {
   History,
   ExternalLink,
   Scissors,
+  Share2,
 } from "lucide-react";
 import { FormatSelector } from "./FormatSelector";
 import { formatRegistry } from "../../formats";
@@ -55,6 +56,11 @@ export interface UseContextMenuConfigReturn {
     tabId: string;
     onClose: () => void;
   } | null;
+  shareModalProps: {
+    isOpen: boolean;
+    tabId: string;
+    onClose: () => void;
+  } | null;
 }
 
 // Hook implementation
@@ -81,6 +87,7 @@ export const useContextMenuConfig = (
 
   const [dynamicMenuItems, setDynamicMenuItems] = useState<MenuItem[]>([]);
   const [splitModalState, setSplitModalState] = useState<{ tabId: string } | null>(null);
+  const [shareModalState, setShareModalState] = useState<{ tabId: string } | null>(null);
 
   const tab = tabsStore.tabs.find((t: any) => t.id === tabId);
 
@@ -383,7 +390,24 @@ Add any other context about the problem here.
     closeContextMenu(); // Close context menu when modal closes
   };
 
+  const handleOpenShareModal = () => {
+    setShareModalState({ tabId });
+    // Don't close the context menu here - it will be hidden while modal is open
+  };
+
+  const handleCloseShareModal = () => {
+    setShareModalState(null);
+    closeContextMenu(); // Close context menu when modal closes
+  };
+
   const menuItems: MenuItem[] = [
+    {
+      id: "share",
+      label: "Share",
+      icon: Share2,
+      action: handleOpenShareModal,
+      condition: !!tab && !tab.isTablet,
+    },
     {
       id: "transformations",
       label: "Transformations",
@@ -631,6 +655,13 @@ Add any other context about the problem here.
           isOpen: true,
           tabId: splitModalState.tabId,
           onClose: handleCloseSplitModal,
+        }
+      : null,
+    shareModalProps: shareModalState
+      ? {
+          isOpen: true,
+          tabId: shareModalState.tabId,
+          onClose: handleCloseShareModal,
         }
       : null,
   };

@@ -1,6 +1,8 @@
 const { Then: CsvThen, When: CsvWhen } = require('@cucumber/cucumber');
 const { expect } = require('@playwright/test');
 
+export {}; // Make this file a module to avoid global scope conflicts
+
 // CSV-specific step definitions with very specific patterns to avoid conflicts
 
 // Status bar language detection steps

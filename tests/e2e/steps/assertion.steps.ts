@@ -1,5 +1,7 @@
 const { Then } = require('@cucumber/cucumber');
 
+export {}; // Make this file a module to avoid global scope conflicts
+
 // Updated to use action classes directly instead of delegate methods
 // Aliases for quoted and unquoted variants
 Then('the {string} tab should exist and not be active', async function(tabTitle) {

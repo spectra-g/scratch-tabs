@@ -3,8 +3,29 @@ config:
   max_versions: 10  # Maximum number of versions to display
 
 releases:
-  - version: "1.13.0"
+  - version: "1.14.0"
     type: "latest"
+    draft: false
+    date: "2025-12-29"
+    headline: "🔗 Share Tabs with Privacy-First URLs"
+    description: "Share tab content via shareable URLs with intelligent compression, smart trimming for large content, and hash-based routing that guarantees zero-knowledge privacy - your content never reaches server logs."
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**Share Tab URLs:** Generate shareable URLs from any tab via context menu - compressed content embedded directly in the URL for instant sharing"
+          - "**Structure-Aware JSON Trimming:** Interactive key-selection UI for large JSON objects and arrays - selectively share specific data fields while maintaining valid structure"
+          - "**Auto-Balancing Greedy Selection:** Intelligent algorithm that automatically unselects heavy fields to fit within URL limits while maximizing smaller, informative keys"
+          - "**Smart Content Trimming:** Fallback line-range selector for text-based or malformed content ensuring you can always share high-density snippets"
+          - "**Hash-Based Privacy Routing:** URLs use hash fragments (#/s/...) ensuring content never appears in server logs or network requests - true zero-knowledge sharing"
+          - "**Visual Size Feedback:** Real-time color-coded budget bar with individual key weight estimation and \"heavy offender\" warnings"
+      - name: "🔒 Privacy & Security"
+        changes:
+          - "**Zero-Knowledge Architecture:** Hash routing ensures shared content exists only in browser memory - never transmitted to servers, proxies, or logging systems"
+          - "**No External Dependencies:** Pure client-side implementation with no third-party services, APIs, or tracking"
+          - "**URL-Safe Encoding:** Automatic handling of special characters preventing routing conflicts and injection attacks"
+
+  - version: "1.13.0"
+    type: "release"
     draft: false
     date: "2025-12-23"
     headline: "⌚ Date/Time \"Command Center\" & Smart Inputs"

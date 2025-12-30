@@ -14,6 +14,7 @@ import { DownloadActions } from './download.actions';
 import { ConfirmationDialogActions } from './confirmationDialog.actions';
 import { WorkspaceActions } from './workspace.actions';
 import { SmartViewCalloutActions } from './smartViewCallout.actions';
+import { ShareActions } from './share.actions';
 
 /**
  * E2E World Class - Lightweight Orchestrator & Dependency Injection Container
@@ -43,6 +44,7 @@ export class E2EWorld extends World {
   confirmationDialog!: ConfirmationDialogActions;
   workspace!: WorkspaceActions;
   smartViewCallout!: SmartViewCalloutActions;
+  share!: ShareActions;
 
   constructor(options: IWorldOptions) {
     super(options);
@@ -69,6 +71,7 @@ export class E2EWorld extends World {
     this.confirmationDialog = new ConfirmationDialogActions(this.page);
     this.workspace = new WorkspaceActions(this.page);
     this.smartViewCallout = new SmartViewCalloutActions(this.page);
+    this.share = new ShareActions(this.page, this.context);
   }
 }
 

@@ -18,9 +18,13 @@ import { contentProcessingService } from "../services/contentProcessing";
 // The RootStore now primarily holds ACTIONS that coordinate other stores.
 // It does NOT hold mirrored state like `tabs` or `splitView`.
 interface RootStore {
+  // STATE for URL sync suppression (used during share tab creation)
+  suppressUrlSync: boolean;
+  setSuppressUrlSync: (suppress: boolean) => void;
+
   // ACTIONS ONLY
   addTab: (tab: Tab, toRightSide?: boolean) => void;
-  handleNewPopulatedTab: (tab: Partial<Tab>, toRightSide?: boolean) => void;
+  handleNewPopulatedTab: (tab: Partial<Tab>, toRightSide?: boolean) => Promise<string | undefined>;
   addBackgroundTab: (tab: Tab, toRightSide?: boolean) => void;
   handleNewTab: (isRightSide: boolean, content?: string) => void;
   handleNewTabFromPaste: (isRightSide: boolean) => void;
@@ -166,10 +170,15 @@ export const useRootStore = create<RootStore>((set, get) => {
     initialUrlProcessed: false,
     setInitialUrlProcessed: (status) => set({ initialUrlProcessed: status }),
 
+    // URL sync suppression (for share tab creation)
+    suppressUrlSync: false,
+    setSuppressUrlSync: (suppress) => set({ suppressUrlSync: suppress }),
+
     // ACTIONS
     addTab: (tab, toRightSide = false) => {
       useTabsStore.getState().addTab(tab);
       useSplitViewStore.getState().addTabToSide(tab.id, toRightSide, tab.id);
+
       broadcastManager.broadcastWorkspaceState(
         useSplitViewStore.getState().splitView.workspaceId,
         {
@@ -177,6 +186,7 @@ export const useRootStore = create<RootStore>((set, get) => {
           splitView: useSplitViewStore.getState().splitView,
         },
       );
+
       incrementSetting("tabs.created.total").catch((err) =>
         console.error("Failed to increment tab counter:", err),
       );
@@ -194,15 +204,25 @@ export const useRootStore = create<RootStore>((set, get) => {
 
     handleNewPopulatedTab: async (tabInput, toRightSide = false) => {
       const { canAddNewTab, addTab } = get();
-      if (!canAddNewTab(toRightSide)) return;
+      if (!canAddNewTab(toRightSide)) {
+        return undefined;
+      }
+
       const ensuredWorkspaceId = await useWorkspaceStore
         .getState()
         .ensureWorkspace();
-      if (!ensuredWorkspaceId) return;
+
+      if (!ensuredWorkspaceId) {
+        return undefined;
+      }
+
       const newTabObject = _createFinalTabObject(tabInput, ensuredWorkspaceId, {
         defaultTitle: tabInput.title || "Populated Tab",
       });
+
       addTab(newTabObject, toRightSide);
+
+      return newTabObject.id;
     },
 
     handleNewTab: async (isRightSide, content) => {

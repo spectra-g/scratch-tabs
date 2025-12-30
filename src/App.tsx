@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { initializeFormatProviders } from "./formats";
 import { broadcastManager } from "./stores/broadcastStore";
 import { useThemeStore } from "./stores/themeStore";
+import { ShareURLHandler } from "./components/Share/ShareURLHandler";
 import DragDropOverlay from "./components/DragDropOverlay";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 
@@ -25,12 +26,6 @@ function App() {
   useEffect(() => {
     broadcastManager.initialize();
     useThemeStore.getState().initializeTheme();
-
-    return () => {
-      // Optional: broadcastManager.cleanup(); if you want to close the channel
-      // when the main app component unmounts, though usually not necessary
-      // as channel closes when the browser tab closes.
-    };
   }, []);
 
   useEffect(() => {
@@ -40,6 +35,8 @@ function App() {
   return (
     <BrowserRouter>
       <DragDropOverlay />
+      {/* Hash-based share URL handler - runs on app load, never sends content to server */}
+      <ShareURLHandler />
       <Routes>
         {/* <Route
           path="/og-image"
@@ -49,6 +46,8 @@ function App() {
             </Suspense>
           }
         /> */}
+
+        {/* Main layout - catch-all route */}
         <Route
           path="/:identifier?"
           element={
