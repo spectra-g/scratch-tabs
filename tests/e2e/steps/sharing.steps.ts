@@ -143,6 +143,14 @@ Then('the JSON trim UI should be visible', async function () {
   await this.share.expectJsonTrimUIShown();
 });
 
+Then('the JSON trim UI should not be visible', async function () {
+  await this.share.expectJsonTrimUINotShown();
+});
+
+Then('the default trim UI should be visible', async function () {
+  await this.share.expectDefaultTrimUIShown();
+});
+
 When('I toggle the JSON key {string}', async function (keyName) {
   await this.share.toggleJsonKey(keyName);
 });

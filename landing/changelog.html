@@ -232,16 +232,48 @@
         <div class="max-w-4xl mx-auto">
           
           
-          <!-- Version 1.13.0 -->
+          <!-- Version 1.14.0 -->
           <div class="changelog-entry latest">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
               <div class="flex items-center gap-3 mb-2 sm:mb-0">
-                <h2 class="text-2xl font-bold text-white">v1.13.0</h2>
+                <h2 class="text-2xl font-bold text-white">v1.14.0</h2>
                 <span class="badge latest">Latest</span>
+              </div>
+              <span class="text-gray-400 text-sm">December 29, 2025</span>
+            </div>
+            <h3 class="text-lg font-semibold text-blue-400 mb-4">🔗 Share Tabs with Privacy-First URLs</h3>
+            <div class="changelog-content text-gray-300">
+              <p class="mb-4">Share tab content via shareable URLs with intelligent compression, smart trimming for large content, and hash-based routing that guarantees zero-knowledge privacy - your content never reaches server logs.</p>
+              
+              <h4 class="text-white">✨ New Features</h4>
+              <ul class="list-disc">
+                <li><strong>Share Tab URLs:</strong> Generate shareable URLs from any tab via context menu - compressed content embedded directly in the URL for instant sharing</li>
+                <li><strong>Structure-Aware JSON Trimming:</strong> Interactive key-selection UI for large JSON objects and arrays - selectively share specific data fields while maintaining valid structure</li>
+                <li><strong>Auto-Balancing Greedy Selection:</strong> Intelligent algorithm that automatically unselects heavy fields to fit within URL limits while maximizing smaller, informative keys</li>
+                <li><strong>Smart Content Trimming:</strong> Fallback line-range selector for text-based or malformed content ensuring you can always share high-density snippets</li>
+                <li><strong>Hash-Based Privacy Routing:</strong> URLs use hash fragments (#/s/...) ensuring content never appears in server logs or network requests - true zero-knowledge sharing</li>
+                <li><strong>Visual Size Feedback:</strong> Real-time color-coded budget bar with individual key weight estimation and "heavy offender" warnings</li>
+              </ul>
+              
+              <h4 class="text-white">🔒 Privacy & Security</h4>
+              <ul class="list-disc">
+                <li><strong>Zero-Knowledge Architecture:</strong> Hash routing ensures shared content exists only in browser memory - never transmitted to servers, proxies, or logging systems</li>
+                <li><strong>No External Dependencies:</strong> Pure client-side implementation with no third-party services, APIs, or tracking</li>
+                <li><strong>URL-Safe Encoding:</strong> Automatic handling of special characters preventing routing conflicts and injection attacks</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Version 1.13.0 -->
+          <div class="changelog-entry release">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+              <div class="flex items-center gap-3 mb-2 sm:mb-0">
+                <h2 class="text-xl font-bold text-white">v1.13.0</h2>
+                <span class="badge release">Release</span>
               </div>
               <span class="text-gray-400 text-sm">December 23, 2025</span>
             </div>
-            <h3 class="text-lg font-semibold text-blue-400 mb-4">⌚ Date/Time "Command Center" & Smart Inputs</h3>
+            <h3 class="text-lg font-semibold text-gray-300 mb-4">⌚ Date/Time "Command Center" & Smart Inputs</h3>
             <div class="changelog-content text-gray-300">
               <p class="mb-4">Major transformation of the Date/Time tablet into a high-performance productivity tool with command-line inputs, natural language arithmetic, and multi-zone comparison.</p>
               
@@ -484,31 +516,6 @@
               <ul class="list-disc">
                 <li>Compare with JSON smart view bug fix</li>
                 <li>Pomodoro timer now appears correctly in browser title when running</li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Version 1.6.0 -->
-          <div class="changelog-entry release">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-              <div class="flex items-center gap-3 mb-2 sm:mb-0">
-                <h2 class="text-xl font-bold text-white">v1.6.0</h2>
-                <span class="badge release">Release</span>
-              </div>
-              <span class="text-gray-400 text-sm">October 15, 2025</span>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-300 mb-4">🚀 GraphQL tablet and Pomodoro fixes</h3>
-            <div class="changelog-content text-gray-300">
-              <p class="mb-4">New GraphQL query builder and critical Pomodoro timer bug fix</p>
-              
-              <h4 class="text-white">✨ New Features</h4>
-              <ul class="list-disc">
-                <li><strong>GraphQL Tablet:</strong> Interactive GraphQL query builder with schema introspection, query validation, and variables support</li>
-              </ul>
-              
-              <h4 class="text-white">🐛 Fixed</h4>
-              <ul class="list-disc">
-                <li>Pomodoro timer getting stuck at 00:01 when auto-start next session is enabled</li>
               </ul>
             </div>
           </div>

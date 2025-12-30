@@ -90,11 +90,15 @@ export const ShareModal: React.FC<ShareModalProps> = ({ tab, onClose }) => {
 
   // Determine which trim UI to use - memoized to prevent re-creation on every render
   const TrimUI = useMemo(() => {
-    if (shareStrategy?.supportsCustomTrim && shareStrategy.getTrimUI) {
+    const canUseCustom = shareStrategy?.supportsCustomTrim &&
+      shareStrategy.getTrimUI &&
+      (!shareStrategy.canTrim || shareStrategy.canTrim(tab.content || ""));
+
+    if (canUseCustom && shareStrategy.getTrimUI) {
       return React.lazy(shareStrategy.getTrimUI);
     }
     return DefaultTextRangeTrimUI;
-  }, [shareStrategy]);
+  }, [shareStrategy, tab.content]);
 
   const canCopy = currentSize <= maxSize;
 

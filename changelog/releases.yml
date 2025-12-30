@@ -5,7 +5,7 @@ config:
 releases:
   - version: "1.14.0"
     type: "latest"
-    draft: true
+    draft: false
     date: "2025-12-29"
     headline: "🔗 Share Tabs with Privacy-First URLs"
     description: "Share tab content via shareable URLs with intelligent compression, smart trimming for large content, and hash-based routing that guarantees zero-knowledge privacy - your content never reaches server logs."
@@ -13,10 +13,11 @@ releases:
       - name: "✨ New Features"
         changes:
           - "**Share Tab URLs:** Generate shareable URLs from any tab via context menu - compressed content embedded directly in the URL for instant sharing"
-          - "**Hash-Based Privacy Routing:** URLs use hash fragments (#/s/...) ensuring content never appears in server logs, network requests, or CDN analytics - true zero-knowledge sharing"
-          - "**Smart Content Trimming:** Automatic size detection with interactive line-range selector when content exceeds URL limits - real-time preview shows exactly what will be shared"
-          - "**Intelligent Compression:** LZ-String compression achieving 60-70% size reduction with URL-safe encoding (base64 variant)"
-          - "**Visual Size Feedback:** Real-time size indicator with color-coded progress bar showing URL usage vs. browser limits"
+          - "**Structure-Aware JSON Trimming:** Interactive key-selection UI for large JSON objects and arrays - selectively share specific data fields while maintaining valid structure"
+          - "**Auto-Balancing Greedy Selection:** Intelligent algorithm that automatically unselects heavy fields to fit within URL limits while maximizing smaller, informative keys"
+          - "**Smart Content Trimming:** Fallback line-range selector for text-based or malformed content ensuring you can always share high-density snippets"
+          - "**Hash-Based Privacy Routing:** URLs use hash fragments (#/s/...) ensuring content never appears in server logs or network requests - true zero-knowledge sharing"
+          - "**Visual Size Feedback:** Real-time color-coded budget bar with individual key weight estimation and \"heavy offender\" warnings"
       - name: "🔒 Privacy & Security"
         changes:
           - "**Zero-Knowledge Architecture:** Hash routing ensures shared content exists only in browser memory - never transmitted to servers, proxies, or logging systems"

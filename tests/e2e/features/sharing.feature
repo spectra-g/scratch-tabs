@@ -118,3 +118,26 @@ Feature: Tab Sharing
     Then the new browser instance should have a tab with JSON content
     And the new browser instance tab content should contain "keep_me"
     And the new browser instance tab content should not contain "this is a very long string"
+
+  Scenario: Fall back to default trimming for invalid JSON
+    When I click the icon for "New tab"
+    And I type the following content into the active editor:
+      """
+      {
+        "invalid": "json",
+        "oops": [1, 2, 3,
+        "padding": "this is a very long string that will be repeated many times to ensure we exceed the 1800 character limit of the URL. this is a very long string that will be repeated many times to ensure we exceed the 1800 character limit of the URL. this is a very long string that will be repeated many times to ensure we exceed the 1800 character limit of the URL. this is a very long string that will be repeated many times to ensure we exceed the 1800 character limit of the URL. this is a very long string that will be repeated many times to ensure we exceed the 1800 character limit of the URL. this is a very long string that will be repeated many times to ensure we exceed the 1800 character limit of the URL. this is a very long string that will be repeated many times to ensure we exceed the 1800 character limit of the URL. this is a very long string that will be repeated many times to ensure we exceed the 1800 character limit of the URL. this is a very long string that will be repeated many times to ensure we exceed the 1800 character limit of the URL. this is a very long string that will be repeated many times to ensure we exceed the 1800 character limit of the URL. this is a very long string that will be repeated many times to ensure we exceed the 1800 character limit of the URL. this is a very long string that will be repeated many times to ensure we exceed the 1800 character limit of the URL. this is a very long string that will be repeated many times to ensure we exceed the 1800 character limit of the URL. this is a very long string that will be repeated many times to ensure we exceed the 1800 character limit of the URL. this is a very long string that will be repeated many times to ensure we exceed the 1800 character limit of the URL. this is a very long string that will be repeated many times to ensure we exceed the 1800 character limit of the URL. this is a very long string that will be repeated many times to ensure we exceed the 1800 character limit of the URL. this is a very long string that will be repeated many times to ensure we exceed the 1800 character limit of the URL.",
+        "random_1": "a1b2c3d4e5f6g7h8i9j0 k1l2m3n4o5p6q7r8s9t0 u1v2w3x4y5z6 a!b@c#d$e%f^g&h*i(j) k-l=m+n[o]p{q}r|s;t:u,v.w/x<y>z?",
+        "random_2": "q1w2e3r4t5y6u7i8o9p0 a1s2d3f4g5h6j7k8l9 z1x2c3v4b5n6m7 q!w@e#r$t%y^u&i*o(p) a-s=d+f[g]h{j}k|l; z:x,c.v/b<n>m?",
+        "random_3": "1q2w3e4r5t6y7u8i9o0p q1a2z3w4s5x6e7d8c9 r1f2v3t4g5b6y7 h1n2u3j4m5i6k7o8 l1p2q3w4e5r6t7y8",
+        "random_4": "abc123DEF456ghi789JKL012 mno345PQR678stu901VWX234 yza567BCD890efg123HIJ456",
+        "random_5": "!@#123$%^456&*()789 []{}012 \\|; :345 '\",678 <.>901 ?/!234 @#$567 %^&890",
+        "random_6": "this is more padding to be absolutely sure. 1234567890 ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz !@#$%^&*()",
+        "random_7": "final push for the limit: a b c d e f g h i j k l m n o p q r s t u v w x y z 0 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * ( )"
+      }
+      """
+    And I right-click the "Scratch 1" tab
+    And I select "Share" from the context menu
+    Then the share modal should appear
+    And the JSON trim UI should not be visible
+    And the default trim UI should be visible

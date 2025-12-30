@@ -258,6 +258,16 @@ export class ShareActions {
     await expect(this.page.locator('.h-2.bg-surface-raised.rounded-full')).toBeVisible(); // Budget bar
   }
 
+  async expectJsonTrimUINotShown() {
+    // The JSON trim UI should NOT be visible
+    await expect(this.page.getByText('Select JSON Keys')).not.toBeVisible();
+  }
+
+  async expectDefaultTrimUIShown() {
+    // The default line-range trim UI should be visible
+    await expect(this.page.getByText('Select Line Range')).toBeVisible();
+  }
+
   async toggleJsonKey(keyName: string) {
     // Click the button for a specific JSON key
     const keyButton = this.page.getByRole('button').filter({ hasText: keyName });

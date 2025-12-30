@@ -8,6 +8,18 @@ export const jsonShareStrategy: ShareStrategy = {
     supportsCustomTrim: true,
 
     /**
+     * Check if content is valid JSON
+     */
+    canTrim: (content: string) => {
+        try {
+            JSON.parse(content);
+            return true;
+        } catch {
+            return false;
+        }
+    },
+
+    /**
      * Dynamically import the trim UI component
      */
     getTrimUI: () => import("./JsonTrimUI"),

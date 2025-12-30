@@ -133,6 +133,13 @@ export interface ShareStrategy {
   supportsCustomTrim: boolean;
 
   /**
+   * Check if the specific content can be handled by this strategy
+   * @param content The content to check
+   * @returns true if the strategy can handle this content, false to fallback to default
+   */
+  canTrim?: (content: string) => boolean;
+
+  /**
    * Dynamically import the trim UI component (code-splitting)
    * Returns a promise that resolves to the component
    */

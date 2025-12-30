@@ -283,7 +283,7 @@ export const WelcomeScreen: React.FC = () => {
             />
             <h1 className="text-3xl font-light text-main">Scratch Tabs</h1>
           </div>
-          <p className="text-muted text-sm mt-2">Version 1.13.0</p>
+          <p className="text-muted text-sm mt-2">Version 1.14.0</p>
         </div>
 
         {/* Actions Grid */}
