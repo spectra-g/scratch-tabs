@@ -1,4 +1,3 @@
-@sharing
 Feature: Tab Sharing
 
   Background:
@@ -39,7 +38,6 @@ Feature: Tab Sharing
     When I close the share modal
     Then the share modal should not be visible
 
-    @sharing-bug
   Scenario: Open shared tab from link in new browser instance
     When I click the icon for "New tab"
     And I type "This is shared content from the original tab" into the editor
