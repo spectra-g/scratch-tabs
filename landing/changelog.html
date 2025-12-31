@@ -1,606 +1,537 @@
 <!doctype html>
 <html lang="en" style="scroll-behavior: smooth">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Changelog | Scratch Tabs</title>
-    <meta
-      name="description"
-      content="Stay up to date with the latest features, improvements, and fixes in Scratch Tabs. View our complete changelog."
-    />
-    <meta
-      name="keywords"
-      content="changelog, updates, release notes, new features, improvements, scratch tabs"
-    />
 
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://scratchtabs.com/changelog.html" />
-    <meta
-      property="og:title"
-      content="Changelog - Scratch Tabs"
-    />
-    <meta
-      property="og:description"
-      content="Stay up to date with the latest features, improvements, and fixes in Scratch Tabs. View our complete changelog."
-    />
-    <meta
-      property="og:image"
-      content="https://scratchtabs.b-cdn.net/og-image.png"
-    />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Changelog | Scratch Tabs</title>
+  <meta name="description"
+    content="Stay up to date with the latest features, improvements, and fixes in Scratch Tabs. View our complete changelog." />
+  <meta name="keywords" content="changelog, updates, release notes, new features, improvements, scratch tabs" />
 
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://scratchtabs.com/changelog.html" />
-    <meta
-      property="twitter:title"
-      content="Changelog - Scratch Tabs"
-    />
-    <meta
-      property="twitter:description"
-      content="Stay up to date with the latest features, improvements, and fixes in Scratch Tabs. View our complete changelog."
-    />
-    <meta
-      property="twitter:image"
-      content="https://scratchtabs.b-cdn.net/og-image.png"
-    />
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://scratchtabs.com/changelog.html" />
+  <meta property="og:title" content="Changelog - Scratch Tabs" />
+  <meta property="og:description"
+    content="Stay up to date with the latest features, improvements, and fixes in Scratch Tabs. View our complete changelog." />
+  <meta property="og:image" content="https://scratchtabs.b-cdn.net/og-image.png" />
 
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css"
-      rel="stylesheet"
-    />
-    <link rel="icon" href="https://scratchtabs.b-cdn.net/favicon.svg" type="image/svg+xml" />
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://scratchtabs.com/changelog.html" />
+  <meta property="twitter:title" content="Changelog - Scratch Tabs" />
+  <meta property="twitter:description"
+    content="Stay up to date with the latest features, improvements, and fixes in Scratch Tabs. View our complete changelog." />
+  <meta property="twitter:image" content="https://scratchtabs.b-cdn.net/og-image.png" />
 
-    <style>
-      html {
-        scroll-padding-top: 5rem;
-      }
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
+  <link rel="icon" href="https://scratchtabs.b-cdn.net/favicon.svg" type="image/svg+xml" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
 
-      body {
-        font-family:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-          Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-          "Segoe UI Symbol";
-        background-color: #111827;
-        color: #d1d5db;
-      }
+  <style>
+    html {
+      scroll-padding-top: 5rem;
+    }
 
-      .section-title {
-        color: #f3f4f6;
-      }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #050505;
+      color: #F5F5F5;
+      position: relative;
+      min-height: 100vh;
+    }
 
-      .primary-button {
-        background-color: #2563eb;
-        color: white;
-      }
+    h1,
+    h2,
+    h3,
+    h4,
+    .mono {
+      font-family: 'Fira Code', monospace;
+    }
 
-      .primary-button:hover {
-        background-color: #1d4ed8;
-      }
+    header {
+      position: sticky;
+      top: 0;
+      background: #050505;
+      border-bottom: 1px solid #1f2937;
+      z-index: 1000;
+    }
 
-      .logo-size {
-        width: 22px;
-        height: 22px;
-      }
+    .card-sharp {
+      background: #0a0a0a;
+      border: 1px solid #1f2937;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+    }
 
-      /* GitHub-style changelog */
-      .changelog-entry {
-        border-left: 4px solid transparent;
-        padding-left: 1.5rem;
-        margin-bottom: 3rem;
-      }
+    .terminal-button {
+      font-family: 'Fira Code', monospace;
+      background: #0a0a0a;
+      border: 1px solid #1f2937;
+      color: #10b981;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+    }
 
-      .changelog-entry.latest {
-        border-left-color: #3b82f6;
-      }
+    .terminal-button:hover {
+      background: #111827;
+      border-color: #10b981;
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+    }
 
-      .changelog-entry.beta {
-        border-left-color: #6b7280;
-      }
+    .logo-size {
+      width: 22px;
+      height: 22px;
+      filter: brightness(0) invert(1);
+    }
 
-      .changelog-entry.alpha {
-        border-left-color: #4b5563;
-      }
+    /* Changelog Timeline */
+    .changelog-entry {
+      position: relative;
+      padding-left: 2rem;
+      border-left: 1px solid #1f2937;
+      margin-bottom: 4rem;
+    }
 
-      .changelog-entry.release {
-        border-left-color: #6b7280;
-      }
+    .changelog-entry::before {
+      content: '';
+      position: absolute;
+      left: -5px;
+      top: 0;
+      width: 9px;
+      height: 9px;
+      background: #050505;
+      border: 1px solid #1f2937;
+      border-radius: 50%;
+    }
 
-      .changelog-content {
-        line-height: 1.7;
-      }
+    .changelog-entry.latest::before {
+      background: #10b981;
+      border-color: #10b981;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    }
 
-      .changelog-content h4 {
-        margin-top: 1.5rem;
-        margin-bottom: 0.75rem;
-        font-weight: 600;
-      }
+    .badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 2px;
+      font-size: 0.65rem;
+      font-weight: 800;
+      font-family: 'Fira Code', monospace;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+    }
 
-      .changelog-content ul {
-        margin: 0.75rem 0;
-        padding-left: 1.25rem;
-      }
+    .badge.latest {
+      background-color: #10b981;
+      color: #050505;
+    }
 
-      .changelog-content li {
-        margin-bottom: 0.5rem;
-      }
+    .badge.release {
+      background-color: #111827;
+      color: #9ca3af;
+      border-color: #1f2937;
+    }
 
-      .badge {
-        display: inline-block;
-        padding: 0.25rem 0.75rem;
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-      }
+    .changelog-content {
+      font-family: 'Inter', sans-serif;
+    }
 
-      .badge.latest {
-        background-color: #3b82f6;
-        color: white;
-      }
+    .changelog-content strong {
+      color: #F5F5F5;
+    }
+  </style>
+</head>
 
-      .badge.beta {
-        background-color: #6b7280;
-        color: white;
-      }
+<body class="antialiased">
+  <!-- SVG Sprite Sheet -->
+  <svg style="display: none;">
+    <defs>
+      <symbol id="icon-menu" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+      </symbol>
+      <symbol id="icon-github" viewBox="0 0 24 24">
+        <path
+          d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.237 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+      </symbol>
+      <symbol id="icon-discord" viewBox="0 0 24 24">
+        <path
+          d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419-.019 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1568 2.4189Z" />
+      </symbol>
+    </defs>
+  </svg>
 
-      .badge.alpha {
-        background-color: #4b5563;
-        color: white;
-      }
-
-      .badge.release {
-        background-color: #6b7280;
-        color: white;
-      }
-    </style>
-  </head>
-
-  <body class="antialiased">
-    <!-- SVG Sprite Sheet -->
-    <svg style="display: none;">
-      <defs>
-        <symbol id="icon-menu" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-        </symbol>
-        <symbol id="icon-github" viewBox="0 0 24 24">
-          <path
-            d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.237 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-        </symbol>
-        <symbol id="icon-discord" viewBox="0 0 24 24">
-          <path
-            d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419-.019 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1568 2.4189Z" />
-        </symbol>
-      </defs>
-    </svg>
-
-    <header class="py-4 px-6 sticky top-0 z-50 bg-gray-900 border-b border-gray-700/50">
-      <div class="container mx-auto flex justify-between items-center">
-        <a href="index.html" class="flex items-center space-x-2">
-          <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs Logo" class="logo-size" />
-          <span class="text-xl sm:text-2xl font-semibold text-white">Scratch Tabs</span>
+  <header class="py-4 px-6 sticky top-0 z-50">
+    <div class="container mx-auto flex justify-between items-center">
+      <a href="index.html" class="flex items-center space-x-2">
+        <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs Logo" class="logo-size" />
+        <span class="text-xl sm:text-2xl font-bold text-white font-mono">SCRATCH_TABS</span>
+      </a>
+      <nav class="hidden md:flex items-center space-x-6">
+        <a href="features.html"
+          class="text-xs font-mono text-gray-500 hover:text-emerald-500 transition-colors uppercase tracking-tighter">FEATURES</a>
+        <a href="tablets.html"
+          class="text-xs font-mono text-gray-500 hover:text-emerald-500 transition-colors uppercase tracking-tighter">TABLETS</a>
+        <a href="changelog.html"
+          class="text-xs font-mono text-emerald-500 transition-colors uppercase tracking-tighter">CHANGELOG</a>
+        <a href="index.html#tech-specs"
+          class="text-xs font-mono text-gray-500 hover:text-emerald-500 transition-colors uppercase tracking-tighter">PRIVACY</a>
+        <a href="faq.html"
+          class="text-xs font-mono text-gray-500 hover:text-emerald-500 transition-colors uppercase tracking-tighter">FAQ</a>
+      </nav>
+      <div class="flex items-center space-x-2">
+        <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button text-xs">
+          <span class="text-gray-500 mr-2">$</span> launch_app
         </a>
-        <!-- Desktop Nav -->
-        <nav class="hidden md:flex items-center space-x-6">
-          <a href="features.html" class="text-sm text-gray-300 hover:text-white transition-colors">Features</a>
-          <a href="tablets.html" class="text-sm text-gray-300 hover:text-white transition-colors">Tablets</a>
-          <a href="changelog.html" class="text-sm text-blue-400 font-medium">Changelog</a>
-          <a href="index.html#privacy" class="text-sm text-gray-300 hover:text-white transition-colors">Privacy</a>
-          <a href="faq.html" class="text-sm text-gray-300 hover:text-white transition-colors">FAQ</a>
-        </nav>
+        <button id="mobile-menu-button" class="md:hidden p-2 text-gray-500 hover:text-emerald-500 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div id="mobile-menu" class="hidden md:hidden mt-4 border-t border-gray-800 pt-4 pb-4 px-6 bg-black">
+      <a href="features.html"
+        class="block py-2 text-xs font-mono text-gray-500 hover:text-emerald-500 uppercase tracking-tighter">FEATURES</a>
+      <a href="tablets.html"
+        class="block py-2 text-xs font-mono text-gray-500 hover:text-emerald-500 uppercase tracking-tighter">TABLETS</a>
+      <a href="changelog.html"
+        class="block py-2 text-xs font-mono text-emerald-500 uppercase tracking-tighter">CHANGELOG</a>
+      <a href="index.html#tech-specs"
+        class="block py-2 text-xs font-mono text-gray-500 hover:text-emerald-500 uppercase tracking-tighter">PRIVACY</a>
+      <a href="faq.html"
+        class="block py-2 text-xs font-mono text-gray-500 hover:text-emerald-500 uppercase tracking-tighter">FAQ</a>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="py-16 md:py-24 border-b border-gray-800">
+    <div class="container mx-auto px-6 text-center">
+      <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight mb-6">
+        <span class="text-emerald-500 font-mono">SYSTEM_UPDATES</span><br />& EVOLUTION
+      </h1>
+      <p class="text-gray-400 text-lg md:text-xl max-w-3xl mx-auto leading-relaxed mb-8">
+        The complete history of Scratch Tabs. From minor utility tweaks to major architectural shifts, every change is
+        documented here.
+      </p>
+      <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button text-lg px-8 py-4">
+        launch_latest_v1.14.0
+      </a>
+    </div>
+  </section>
+
+  <!-- Changelog Content -->
+  <section class="py-16">
+    <div class="container mx-auto px-6">
+      <div class="max-w-4xl mx-auto">
+
+
+        <!-- Version 1.14.0 -->
+        <div class="changelog-entry latest">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-2xl font-bold text-white">V1.14.0</h2>
+              <span class="badge latest">LATEST</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">2025-12-29</span>
+          </div>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">🔗 SHARE_TABS_API</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p class="mb-4">Share tab content via shareable URLs with intelligent compression, smart trimming for large
+              content, and hash-based routing that guarantees zero-knowledge privacy.</p>
+
+            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
+            <ul class="space-y-2 mb-6">
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Share Tab
+                    URLs:</strong> Generate shareable URLs from any tab - compressed content embedded directly in the
+                  URL.</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span>
+                <span><strong>Structure-Aware JSON Trimming:</strong> Selective data sharing while maintaining valid
+                  JSON structure.</span>
+              </li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Hash-Based
+                    Privacy:</strong> URLs use hash fragments (#) ensuring content never appears in server logs.</span>
+              </li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Visual Size
+                    Feedback:</strong> Real-time color-coded budget bar for URL length limits.</span></li>
+            </ul>
+
+            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># privacy_security</h4>
+            <ul class="space-y-2">
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">></span>
+                <span><strong>Zero-Knowledge:</strong> Hash routing ensures shared content exists only in browser
+                  memory.</span>
+              </li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">></span> <span><strong>Pure
+                    Client-Side:</strong> No third-party services, APIs, or tracking used for sharing.</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Version 1.13.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.13.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">2025-12-23</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">⌚ DATE_TIME_COMMAND_CENTER</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <ul class="space-y-2">
+              <li class="flex items-start gap-2"><span class="text-gray-600 mt-1">></span> <span><strong>Smart
+                    Inputs:</strong> Control timezones via `> [City]` commands.</span></li>
+              <li class="flex items-start gap-2"><span class="text-gray-600 mt-1">></span> <span><strong>Natural
+                    Language:</strong> Support for `now + 5d` style arithmetic.</span></li>
+              <li class="flex items-start gap-2"><span class="text-gray-600 mt-1">></span> <span><strong>Redesigned
+                    UI:</strong> Multi-column dashboard optimized for developer workflows.</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Version 1.12.0 (B) -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.12.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">2025-12-05</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">🗂️ VAULT_REMASTERRING</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <ul class="space-y-2">
+              <li class="flex items-start gap-2"><span class="text-gray-600 mt-1">></span> <span><strong>Command
+                    Vault:</strong> New category-based organization and search.</span></li>
+              <li class="flex items-start gap-2"><span class="text-gray-600 mt-1">></span>
+                <span><strong>Scratchpad:</strong> Dedicated space for temporary command modifications.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Version 1.12.0 (A) -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.12.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">2025-12-03</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">🌓 THEME_SYSTEM_UPDATE</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <ul class="space-y-2">
+              <li class="flex items-start gap-2"><span class="text-gray-600 mt-1">></span> <span><strong>Light/Dark
+                    Mode:</strong> Switch between themes across the entire app.</span></li>
+              <li class="flex items-start gap-2"><span class="text-gray-600 mt-1">></span> <span><strong>Rich Text
+                    Fixes:</strong> Improved bullet point indentation.</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Version 1.11.1 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.11.1</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">2025-11-18</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">🐛 HOTFIX_CLIPBOARD_MERMAID</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <ul class="space-y-2">
+              <li class="flex items-start gap-2"><span class="text-gray-600 mt-1">></span>
+                <span><strong>Hotfix:</strong> Fixed PNG export for Mermaid diagrams.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Version 1.11.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.11.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">2025-11-14</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">🔍 JSON_QUERY_AST_NAV</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <ul class="space-y-2">
+              <li class="flex items-start gap-2"><span class="text-gray-600 mt-1">></span>
+                <span><strong>JMESPath:</strong> Integrated JSON query panel with live results.</span>
+              </li>
+              <li class="flex items-start gap-2"><span class="text-gray-600 mt-1">></span> <span><strong>AST
+                    Navigation:</strong> Jump to exact JSON locations using source maps.</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Version 1.10.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.10.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">2025-11-12</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">🚀 JSON_EQUALITY_CSV_LOGS</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <ul class="space-y-2">
+              <li class="flex items-start gap-2"><span class="text-gray-600 mt-1">></span> <span><strong>Deep
+                    Equality:</strong> Order-insensitive JSON comparison.</span></li>
+              <li class="flex items-start gap-2"><span class="text-gray-600 mt-1">></span> <span><strong>CSV
+                    Export:</strong> Professional strategies for JSON-to-CSV.</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Version 1.9.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.9.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">2025-11-11</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">🎯 JSON_EXTRACTION_ENGINE</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <ul class="space-y-2">
+              <li class="flex items-start gap-2"><span class="text-gray-600 mt-1">></span> <span><strong>Data
+                    Extraction:</strong> New tool for filtering and extracting JSON array values.</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Version 1.8.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.8.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">2025-11-01</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">🔧 BITS_MAPPER_JOIN</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <ul class="space-y-2">
+              <li class="flex items-start gap-2"><span class="text-gray-600 mt-1">></span> <span><strong>Bit
+                    Toggler:</strong> Programmer mode enhancements for the calculator.</span></li>
+              <li class="flex items-start gap-2"><span class="text-gray-600 mt-1">></span> <span><strong>Mapper
+                    Joins:</strong> Support for joining array items in JSON Mapper.</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Version 1.7.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.7.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">2025-10-24</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">✂️ SPLIT_TABS_SANTIZE</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <ul class="space-y-2">
+              <li class="flex items-start gap-2"><span class="text-gray-600 mt-1">></span> <span><strong>Split
+                    Tabs:</strong> Major update with multi-tab splitting logic.</span></li>
+              <li class="flex items-start gap-2"><span class="text-gray-600 mt-1">></span> <span><strong>JSON
+                    Sanitize:</strong> New cleanup utility for sensitive data.</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Footer Feedback -->
+        <div class="text-center pt-12 border-t border-gray-900 mt-12">
+          <h4 class="text-white text-lg font-mono mb-4 uppercase tracking-tighter"># feedback_loop</h4>
+          <p class="text-gray-500 text-sm mb-8">
+            Want to suggest a feature or report a bug? Join the conversation on GitHub or Discord.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="https://github.com/spectra-g/scratch-tabs-feedback/issues" target="_blank"
+              class="terminal-button px-6 py-2">
+              open_github_issue
+            </a>
+            <a href="https://discord.gg/HwsfpTzMVS" target="_blank" class="terminal-button px-6 py-2">
+              join_the_discord
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA Section -->
+  <section class="py-20 border-b border-gray-800">
+    <div class="container mx-auto px-6 text-center">
+      <h2 class="text-3xl md:text-4xl font-bold text-white mb-6 uppercase tracking-tighter font-mono">
+        Ready to Upgrade?
+      </h2>
+      <p class="text-gray-400 text-lg mb-8 max-w-xl mx-auto">
+        All updates are instantly available. No download required.
+      </p>
+      <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button text-xl px-12 py-4">
+        launch_scratch_tabs
+      </a>
+      <p class="text-xs font-mono text-gray-600 mt-6 uppercase tracking-widest">
+        ✓ CLIENT_SIDE_ONLY ✓ PRIVACY_FIRST ✓ OFFLINE_CAPABLE
+      </p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 bg-black">
+    <div class="container mx-auto px-6">
+      <div
+        class="flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0 text-center md:text-left">
         <div class="flex items-center space-x-2">
-          <a href="https://app.scratchtabs.com" target="_blank"
-            class="primary-button text-sm font-medium py-2 px-4 rounded-md transition duration-150 ease-in-out">
-            Launch App
-          </a>
-          <button id="mobile-menu-button" class="md:hidden p-2 text-gray-300 hover:text-white">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <use href="#icon-menu"></use>
-            </svg>
-          </button>
+          <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs Logo"
+            class="logo-size opacity-50" />
+          <span class="text-xl font-bold text-gray-500 font-mono">SCRATCH_TABS</span>
+        </div>
+        <div class="flex space-x-8">
+          <a href="https://github.com/spectra-g/scratch-tabs-feedback/issues" target="_blank"
+            class="text-xs font-mono text-gray-500 hover:text-emerald-500 transition-colors uppercase tracking-widest">GITHUB</a>
+          <a href="https://discord.gg/HwsfpTzMVS" target="_blank"
+            class="text-xs font-mono text-gray-500 hover:text-emerald-500 transition-colors uppercase tracking-widest">DISCORD</a>
+          <a href="https://ko-fi.com/scratchtabs" target="_blank"
+            class="text-xs font-mono text-gray-500 hover:text-emerald-500 transition-colors uppercase tracking-widest">KO-FI</a>
         </div>
       </div>
-      <div id="mobile-menu" class="hidden md:hidden mt-4">
-        <a href="features.html" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">Features</a>
-        <a href="tablets.html" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">Tablets</a>
-        <a href="changelog.html" class="block py-2 px-4 text-sm text-blue-400 font-medium bg-gray-700 rounded">Changelog</a>
-        <a href="index.html#privacy" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">Privacy</a>
-        <a href="faq.html" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">FAQ</a>
-      </div>
-    </header>
-
-    <!-- Hero Section -->
-    <section class="py-16 md:py-24 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      <div class="container mx-auto px-6 text-center">
-        <h1 class="section-title text-4xl md:text-6xl font-bold mb-6">
-          Changelog
-        </h1>
-        <p class="text-gray-300 text-lg md:text-xl mb-8 max-w-2xl mx-auto">
-          All notable changes to Scratch Tabs are documented here. We follow semantic versioning and keep this changelog updated with every release.
+      <div
+        class="mt-8 pt-8 border-t border-gray-900 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+        <p class="text-xs font-mono text-gray-600 uppercase tracking-tighter">
+          &copy; <span id="currentYear"></span> Built for developers, by developers.
         </p>
-        <a href="https://app.scratchtabs.com" target="_blank"
-          class="primary-button text-lg font-bold py-3 px-8 rounded-lg transition duration-150 ease-in-out inline-block shadow-lg hover:shadow-xl transform hover:scale-105">
-          Try the Latest Version
-        </a>
-      </div>
-    </section>
-
-    <!-- Changelog Content -->
-    <section class="py-16">
-      <div class="container mx-auto px-6">
-        <div class="max-w-4xl mx-auto">
-          
-          
-          <!-- Version 1.14.0 -->
-          <div class="changelog-entry latest">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-              <div class="flex items-center gap-3 mb-2 sm:mb-0">
-                <h2 class="text-2xl font-bold text-white">v1.14.0</h2>
-                <span class="badge latest">Latest</span>
-              </div>
-              <span class="text-gray-400 text-sm">December 29, 2025</span>
-            </div>
-            <h3 class="text-lg font-semibold text-blue-400 mb-4">🔗 Share Tabs with Privacy-First URLs</h3>
-            <div class="changelog-content text-gray-300">
-              <p class="mb-4">Share tab content via shareable URLs with intelligent compression, smart trimming for large content, and hash-based routing that guarantees zero-knowledge privacy - your content never reaches server logs.</p>
-              
-              <h4 class="text-white">✨ New Features</h4>
-              <ul class="list-disc">
-                <li><strong>Share Tab URLs:</strong> Generate shareable URLs from any tab via context menu - compressed content embedded directly in the URL for instant sharing</li>
-                <li><strong>Structure-Aware JSON Trimming:</strong> Interactive key-selection UI for large JSON objects and arrays - selectively share specific data fields while maintaining valid structure</li>
-                <li><strong>Auto-Balancing Greedy Selection:</strong> Intelligent algorithm that automatically unselects heavy fields to fit within URL limits while maximizing smaller, informative keys</li>
-                <li><strong>Smart Content Trimming:</strong> Fallback line-range selector for text-based or malformed content ensuring you can always share high-density snippets</li>
-                <li><strong>Hash-Based Privacy Routing:</strong> URLs use hash fragments (#/s/...) ensuring content never appears in server logs or network requests - true zero-knowledge sharing</li>
-                <li><strong>Visual Size Feedback:</strong> Real-time color-coded budget bar with individual key weight estimation and "heavy offender" warnings</li>
-              </ul>
-              
-              <h4 class="text-white">🔒 Privacy & Security</h4>
-              <ul class="list-disc">
-                <li><strong>Zero-Knowledge Architecture:</strong> Hash routing ensures shared content exists only in browser memory - never transmitted to servers, proxies, or logging systems</li>
-                <li><strong>No External Dependencies:</strong> Pure client-side implementation with no third-party services, APIs, or tracking</li>
-                <li><strong>URL-Safe Encoding:</strong> Automatic handling of special characters preventing routing conflicts and injection attacks</li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Version 1.13.0 -->
-          <div class="changelog-entry release">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-              <div class="flex items-center gap-3 mb-2 sm:mb-0">
-                <h2 class="text-xl font-bold text-white">v1.13.0</h2>
-                <span class="badge release">Release</span>
-              </div>
-              <span class="text-gray-400 text-sm">December 23, 2025</span>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-300 mb-4">⌚ Date/Time "Command Center" & Smart Inputs</h3>
-            <div class="changelog-content text-gray-300">
-              <p class="mb-4">Major transformation of the Date/Time tablet into a high-performance productivity tool with command-line inputs, natural language arithmetic, and multi-zone comparison.</p>
-              
-              <h4 class="text-white">✨ New Features</h4>
-              <ul class="list-disc">
-                <li><strong>Smart Command Inputs:</strong> Control the tablet via the input field using `> [City]` to add timezones (e.g., `> Tokyo`), `> diff [date]` for duration analysis, or `> next friday` to jump dates.</li>
-                <li><strong>"Command Center" Layout:</strong> Complete redesign into a multi-column interface optimized for developer workflows, featuring persistent history, grouped conversions, and real-time dashboarding.</li>
-                <li><strong>Natural Language Date Arithmetic:</strong> Intelligent parsing engine supporting human-friendly math (e.g., `now + 5d`, `yesterday - 2w`).</li>
-                <li><strong>Timezone Explorer:</strong> Compare your entered date/time across multiple configurable timezones with live DST indicators and smart city matching (e.g. "NYC", "London").</li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Version 1.12.0 -->
-          <div class="changelog-entry release">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-              <div class="flex items-center gap-3 mb-2 sm:mb-0">
-                <h2 class="text-xl font-bold text-white">v1.12.0</h2>
-                <span class="badge release">Release</span>
-              </div>
-              <span class="text-gray-400 text-sm">December 5, 2025</span>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-300 mb-4">🗂️ Command Vault Complete Rework</h3>
-            <div class="changelog-content text-gray-300">
-              <p class="mb-4">Complete redesign of Command Vault focused on command management with categories, search, scratchpad for temporary edits, and improved workflow</p>
-              
-              <h4 class="text-white">✨ New Features</h4>
-              <ul class="list-disc">
-                <li><strong>Command Vault Redesign:</strong> Complete rework with category-based organization, making it easier to manage and find your command snippets</li>
-                <li><strong>Command Search (Ctrl+R):</strong> Quick search across all commands with instant filtering and copy-on-select</li>
-                <li><strong>Scratchpad:</strong> Temporary editing space for modifying commands before copying or saving as new entries</li>
-                <li><strong>Category Management:</strong> Create, organize, and delete categories to keep your commands structured</li>
-                <li><strong>Inline Command Editing:</strong> Click any command to edit in place with auto-save on blur</li>
-                <li><strong>Drag-and-Drop Reordering:</strong> Rearrange commands within categories to prioritize frequently used items</li>
-                <li><strong>Import/Export:</strong> Bulk import commands from you terminal history with automatic category assignment</li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Version 1.12.0 -->
-          <div class="changelog-entry release">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-              <div class="flex items-center gap-3 mb-2 sm:mb-0">
-                <h2 class="text-xl font-bold text-white">v1.12.0</h2>
-                <span class="badge release">Release</span>
-              </div>
-              <span class="text-gray-400 text-sm">December 3, 2025</span>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-300 mb-4">🌓 Light/Dark Mode & Editor Enhancements</h3>
-            <div class="changelog-content text-gray-300">
-              <p class="mb-4">Major theme system update with Light/Dark mode toggle for editor and smart views, plus critical bug fixes and rich text improvements</p>
-              
-              <h4 class="text-white">✨ New Features</h4>
-              <ul class="list-disc">
-                <li><strong>Light/Dark Mode Toggle:</strong> Comprehensive theme system with light and dark modes for editor, smart views, and UI components - seamlessly switch between themes with persistent preference</li>
-              </ul>
-              
-              <h4 class="text-white">🔧 Improvements</h4>
-              <ul class="list-disc">
-                <li><strong>Rich Text Bullet Point Indentation:</strong> Enhanced list editing with proper indentation support for nested bullet points</li>
-              </ul>
-              
-              <h4 class="text-white">🐛 Fixed</h4>
-              <ul class="list-disc">
-                <li><strong>Clipboard Content Comparison:</strong> Fixed auto-formatting issue when comparing with content from clipboard</li>
-                <li><strong>Mermaid Diagram Export:</strong> Fixed PNG export functionality for Mermaid diagrams</li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Version 1.11.1 -->
-          <div class="changelog-entry release">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-              <div class="flex items-center gap-3 mb-2 sm:mb-0">
-                <h2 class="text-xl font-bold text-white">v1.11.1</h2>
-                <span class="badge release">Release</span>
-              </div>
-              <span class="text-gray-400 text-sm">November 18, 2025</span>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-300 mb-4">🐛 Bug Fixes</h3>
-            <div class="changelog-content text-gray-300">
-              <p class="mb-4">Fixed clipboard content processing in JSON comparison workflows and Mermaid diagram PNG export</p>
-              
-              <h4 class="text-white">🐛 Fixed</h4>
-              <ul class="list-disc">
-                <li><strong>JSON Compare with Clipboard:</strong> Clipboard content now properly processed through content pipeline when comparing - stringified JSON is automatically unstringified and formatted in diff modal for accurate side-by-side comparison</li>
-                <li><strong>Mermaid Diagram PNG Export:</strong> Fixed SecurityError canvas tainting issue preventing PNG export by converting SVG to base64 data URL instead of blob URL</li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Version 1.11.0 -->
-          <div class="changelog-entry release">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-              <div class="flex items-center gap-3 mb-2 sm:mb-0">
-                <h2 class="text-xl font-bold text-white">v1.11.0</h2>
-                <span class="badge release">Release</span>
-              </div>
-              <span class="text-gray-400 text-sm">November 14, 2025</span>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-300 mb-4">🔍 JSON Query Panel & Navigation</h3>
-            <div class="changelog-content text-gray-300">
-              <p class="mb-4">Powerful JMESPath query panel for JSON filtering and transformation, structure-aware navigation, and enhanced CSV editing capabilities</p>
-              
-              <h4 class="text-white">✨ New Features</h4>
-              <ul class="list-disc">
-                <li><strong>JSON Query Panel:</strong> Interactive JMESPath query tool with live results preview, contextual sample queries generated from actual JSON structure, and built-in JMESPath guide with syntax examples</li>
-                <li><strong>Structure-Aware JSON Navigation:</strong> Navigator tree clicks now reliably jump to exact locations in JSON using AST parsing (json-source-map), handling nested keys, missing properties, and edge cases correctly</li>
-                <li><strong>CSV Cell Actions:</strong> Clear cell contents, copy cell values, and view full cell values in a modal for large data</li>
-              </ul>
-              
-              <h4 class="text-white">🔧 Improvements</h4>
-              <ul class="list-disc">
-                <li><strong>JSON Navigator:</strong> Full horizontal scrolling for long values instead of ellipsis truncation</li>
-                <li><strong>JSON Navigator:</strong> Dynamic height adjustment using ResizeObserver for optimal space utilization</li>
-                <li><strong>JSON Equality Checker:</strong> Enhanced array mismatch reporting with detailed diff information</li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Version 1.10.0 -->
-          <div class="changelog-entry release">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-              <div class="flex items-center gap-3 mb-2 sm:mb-0">
-                <h2 class="text-xl font-bold text-white">v1.10.0</h2>
-                <span class="badge release">Release</span>
-              </div>
-              <span class="text-gray-400 text-sm">November 12, 2025</span>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-300 mb-4">🚀 JSON & CSV Features</h3>
-            <div class="changelog-content text-gray-300">
-              <p class="mb-4">Major enhancements with intelligent JSON equality checking, professional CSV export with configurable strategies, and smart TSV/CSV detection and processing</p>
-              
-              <h4 class="text-white">✨ New Features</h4>
-              <ul class="list-disc">
-                <li><strong>JSON Deep Equality Checker:</strong> Order-insensitive JSON comparison using canonical hashing, with intelligent array analysis reporting matched, missing, and extra items</li>
-                <li><strong>JSON to CSV Export:</strong> Intelligent JSON-to-CSV conversion with three strategies: expandFirst (recommended), expandAll (Cartesian product), and stringify (legacy)</li>
-                <li><strong>CSV Paste Cleaner:</strong> Automatically detects and converts literal \t escape sequences to actual tab characters on paste</li>
-                <li><strong>CSV Auto-Delimiter Detection:</strong> Smart View automatically detects tab, comma, semicolon, or pipe delimiters for proper table rendering</li>
-              </ul>
-              
-              <h4 class="text-white">🔧 Improvements</h4>
-              <ul class="list-disc">
-                <li><strong>CSV Export:</strong> Nested objects automatically flattened with dot notation (e.g., user.name → user.name column)</li>
-                <li><strong>CSV Export:</strong> Proper CSV escaping for quotes, delimiters, and newlines</li>
-                <li><strong>JWT Tablet:</strong> Improved security messaging - clearer explanation of local storage and best practices</li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Version 1.9.0 -->
-          <div class="changelog-entry release">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-              <div class="flex items-center gap-3 mb-2 sm:mb-0">
-                <h2 class="text-xl font-bold text-white">v1.9.0</h2>
-                <span class="badge release">Release</span>
-              </div>
-              <span class="text-gray-400 text-sm">November 11, 2025</span>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-300 mb-4">🎯 JSON Data Extraction and Calculator improvements</h3>
-            <div class="changelog-content text-gray-300">
-              <p class="mb-4">New powerful JSON data extraction tool with filtering, enhanced calculator readability, and critical bug fixes</p>
-              
-              <h4 class="text-white">✨ New Features</h4>
-              <ul class="list-disc">
-                <li><strong>JSON Data Extraction:</strong> Extract and filter values from JSON arrays with live preview, supporting nested paths, comparison operators (==, !=, >, <, >=, <=), and export to new tabs</li>
-                <li><strong>Calculator Human Readable Output:</strong> Display calculation results in plain language for better comprehension</li>
-              </ul>
-              
-              <h4 class="text-white">🐛 Fixed</h4>
-              <ul class="list-disc">
-                <li>Rich text editor: Date created header now properly isolated from document content</li>
-                <li>Calculator: Various calculation and operator handling bug fixes</li>
-                <li>Editor: Blank editor issue after applying transformations</li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Version 1.8.0 -->
-          <div class="changelog-entry release">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-              <div class="flex items-center gap-3 mb-2 sm:mb-0">
-                <h2 class="text-xl font-bold text-white">v1.8.0</h2>
-                <span class="badge release">Release</span>
-              </div>
-              <span class="text-gray-400 text-sm">November 1, 2025</span>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-300 mb-4">🔧 Calculator enhancements, JSON Mapper joins, and smart fixes</h3>
-            <div class="changelog-content text-gray-300">
-              <p class="mb-4">Major calculator upgrade with bit manipulation tools, powerful JSON Mapper joins, and intelligent JSON auto-fix capabilities</p>
-              
-              <h4 class="text-white">✨ New Features</h4>
-              <ul class="list-disc">
-                <li><strong>Calculator Bit Toggler:</strong> Interactive bit manipulation tool in programmer mode for binary operations</li>
-                <li><strong>Calculator Live Base Converter:</strong> Real-time conversion between decimal, binary, octal, and hexadecimal</li>
-                <li><strong>JSON Auto-Fix:</strong> Intelligent JSON repair tool that automatically fixes common syntax errors</li>
-                <li><strong>JSON Mapper Joins:</strong> Join on matching identifiers when mapping array items</li>
-              </ul>
-              
-              <h4 class="text-white">🔧 Improvements</h4>
-              <ul class="list-disc">
-                <li><strong>JSON Mapper:</strong> Specify naming patterns on mapped files</li>
-                <li><strong>Calculator:</strong> Less opportunity to enter incorrect calculator syntax</li>
-              </ul>
-              
-              <h4 class="text-white">🐛 Fixed</h4>
-              <ul class="list-disc">
-                <li>General bug fixes to JSON Mapper</li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Version 1.7.0 -->
-          <div class="changelog-entry release">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-              <div class="flex items-center gap-3 mb-2 sm:mb-0">
-                <h2 class="text-xl font-bold text-white">v1.7.0</h2>
-                <span class="badge release">Release</span>
-              </div>
-              <span class="text-gray-400 text-sm">October 24, 2025</span>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-300 mb-4">✂️ Split tabs, JSON improvements, and bug fixes</h3>
-            <div class="changelog-content text-gray-300">
-              <p class="mb-4">Major update with split tab functionality, enhanced JSON features, and critical bug fixes</p>
-              
-              <h4 class="text-white">✨ New Features</h4>
-              <ul class="list-disc">
-                <li><strong>Split Tab:</strong> Split tab content into multiple tabs with extensive split configuration controls</li>
-                <li><strong>Smart View Callout Widget:</strong> Visual indicator when smart view is available after auto-format detection</li>
-                <li><strong>JSON Sanitize:</strong> Added sanitize feature for JSON smart view</li>
-              </ul>
-              
-              <h4 class="text-white">🔧 Improvements</h4>
-              <ul class="list-disc">
-                <li><strong>JSON Mapper:</strong> Enhanced filename controls for mapped files in folders with pattern matching and transformation rules</li>
-                <li><strong>Diff Viewer:</strong> Now shows files in tab view order for better context</li>
-              </ul>
-              
-              <h4 class="text-white">🐛 Fixed</h4>
-              <ul class="list-disc">
-                <li>Compare with JSON smart view bug fix</li>
-                <li>Pomodoro timer now appears correctly in browser title when running</li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Footer -->
-          <div class="text-center pt-8 border-t border-gray-700">
-            <p class="text-gray-400 text-sm mb-4">
-              Want to suggest a feature or report a bug?
-            </p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="https://github.com/spectra-g/scratch-tabs-feedback/issues" target="_blank"
-                class="inline-flex items-center justify-center px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors">
-                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                  <use href="#icon-github"></use>
-                </svg>
-                Open GitHub Issue
-              </a>
-              <a href="https://discord.gg/HwsfpTzMVS" target="_blank"
-                class="inline-flex items-center justify-center px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors">
-                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                  <use href="#icon-discord"></use>
-                </svg>
-                Join Discord
-              </a>
-            </div>
-          </div>
-          </div>
-      </div>
-    </section>
-
-    <!-- CTA Section -->
-    <section class="py-20">
-      <div class="container mx-auto px-6 text-center">
-        <h2 class="section-title text-3xl md:text-4xl font-bold mb-6">
-          Experience the Latest Features
-        </h2>
-        <p class="text-gray-300 text-lg mb-8 max-w-xl mx-auto">
-          Try all the new features and improvements in the latest version of Scratch Tabs.
-        </p>
-        <a href="https://app.scratchtabs.com" target="_blank"
-          class="primary-button text-xl font-bold py-4 px-10 rounded-lg transition duration-150 ease-in-out inline-block shadow-lg hover:shadow-xl transform hover:scale-105">
-          Launch App
-        </a>
-        <p class="text-sm text-gray-500 mt-4">
-          ✓ Always free ✓ No registration required ✓ Works offline
+        <p class="text-xs font-mono text-gray-600 uppercase tracking-tighter">
+          100% Client-Side. 100% Private.
         </p>
       </div>
-    </section>
+    </div>
+  </footer>
 
-    <footer class="py-8 text-center border-t border-gray-700/50">
-      <div class="container mx-auto px-6">
-        <p class="text-sm text-gray-500 mb-4">
-          © <span id="currentYear"></span> Scratch Tabs. Your Local Data Companion.
-        </p>
-        <div class="flex justify-center items-center space-x-6 mb-4">
-          <a href="https://github.com/spectra-g/scratch-tabs-feedback/issues" target="_blank" rel="noopener noreferrer"
-            class="text-gray-500 hover:text-white transition-colors duration-150 flex items-center space-x-2"
-            title="GitHub Issues">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <use href="#icon-github"></use>
-            </svg>
-            <span class="text-sm">GitHub Issues</span>
-          </a>
-          <a href="https://discord.gg/HwsfpTzMVS" target="_blank" rel="noopener noreferrer"
-            class="text-gray-500 hover:text-white transition-colors duration-150 flex items-center space-x-2"
-            title="Join Discord">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <use href="#icon-discord"></use>
-            </svg>
-            <span class="text-sm">Join Discord</span>
-          </a>
-        </div>
-        <p class="text-xs text-gray-600">
-          Connect with us for feedback, support, and community discussions.
-        </p>
-      </div>
-    </footer>
+  <script>
+    document.getElementById("currentYear").textContent = new Date().getFullYear();
+    const mobileMenuButton = document.getElementById("mobile-menu-button");
+    const mobileMenu = document.getElementById("mobile-menu");
+    mobileMenuButton.addEventListener("click", () => {
+      mobileMenu.classList.toggle("hidden");
+    });
+  </script>
+</body>
 
-    <script>
-      document.getElementById("currentYear").textContent = new Date().getFullYear();
-      const mobileMenuButton = document.getElementById("mobile-menu-button");
-      const mobileMenu = document.getElementById("mobile-menu");
-      const mobileMenuLinks = mobileMenu.querySelectorAll("a");
-      mobileMenuButton.addEventListener("click", () => { mobileMenu.classList.toggle("hidden"); });
-      mobileMenuLinks.forEach((link) => { link.addEventListener("click", () => { mobileMenu.classList.add("hidden"); }); });
-    </script>
-  </body>
 </html>

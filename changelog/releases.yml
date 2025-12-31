@@ -17,7 +17,7 @@ releases:
           - "**Auto-Balancing Greedy Selection:** Intelligent algorithm that automatically unselects heavy fields to fit within URL limits while maximizing smaller, informative keys"
           - "**Smart Content Trimming:** Fallback line-range selector for text-based or malformed content ensuring you can always share high-density snippets"
           - "**Hash-Based Privacy Routing:** URLs use hash fragments (#/s/...) ensuring content never appears in server logs or network requests - true zero-knowledge sharing"
-          - "**Visual Size Feedback:** Real-time color-coded budget bar with individual key weight estimation and \"heavy offender\" warnings"
+          - "**Visual Size Feedback:** Real-time colour-coded budget bar with individual key weight estimation and \"heavy offender\" warnings"
       - name: "🔒 Privacy & Security"
         changes:
           - "**Zero-Knowledge Architecture:** Hash routing ensures shared content exists only in browser memory - never transmitted to servers, proxies, or logging systems"

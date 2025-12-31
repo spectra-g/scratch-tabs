@@ -6,16 +6,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Developer Tool Features for JSON, Data & APIs | Scratch Tabs</title>
   <meta name="description"
-        content="Explore the powerful features of Scratch Tabs - A developer's sidekick for data manipulation with smart format recognition, specialized tablets, and workflow automation." />
+    content="Explore the powerful features of Scratch Tabs - A developer's sidekick for data manipulation with smart format recognition, specialized tablets, and workflow automation." />
   <meta name="keywords"
-        content="features, json editor, data transformation, smart format recognition, developer tools, jwt toolkit, regex tester, json mapper, scratch tabs" />
+    content="features, json editor, data transformation, smart format recognition, developer tools, jwt toolkit, regex tester, json mapper, scratch tabs" />
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://scratchtabs.com/features.html" />
   <meta property="og:title" content="Features - The Ultimate Developer's Sidekick | Scratch Tabs" />
   <meta property="og:description"
-        content="Explore the powerful features of Scratch Tabs - A developer's sidekick for data manipulation with smart format recognition, specialized tablets, and workflow automation." />
+    content="Explore the powerful features of Scratch Tabs - A developer's sidekick for data manipulation with smart format recognition, specialized tablets, and workflow automation." />
   <meta property="og:image" content="https://scratchtabs.b-cdn.net/og-image.png" />
 
   <!-- Twitter -->
@@ -23,186 +23,89 @@
   <meta property="twitter:url" content="https://scratchtabs.com/features.html" />
   <meta property="twitter:title" content="Features - The Ultimate Developer's Sidekick | Scratch Tabs" />
   <meta property="twitter:description"
-        content="Explore the powerful features of Scratch Tabs - A developer's sidekick for data manipulation with smart format recognition, specialized tablets, and workflow automation." />
+    content="Explore the powerful features of Scratch Tabs - A developer's sidekick for data manipulation with smart format recognition, specialized tablets, and workflow automation." />
   <meta property="twitter:image" content="https://scratchtabs.b-cdn.net/og-image.png" />
 
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
   <link rel="icon" href="https://scratchtabs.b-cdn.net/favicon.svg" type="image/svg+xml" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-
-  <!-- Structured Data for SEO -->
-  <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "HowTo",
-      "name": "How to Use Scratch Tabs for Developer Data Tasks",
-      "description": "Learn how to analyze messy API responses, troubleshoot logs, understand regex patterns, and handle configuration files with Scratch Tabs",
-      "image": "https://scratchtabs.b-cdn.net/app-screenshot.png",
-      "step": [
-        {
-          "@type": "HowToStep",
-          "name": "Analyzing Messy API Responses",
-          "text": "When analyzing a messy API response, just paste the minified JSON. Scratch Tabs instantly formats it and presents an interactive tree view, letting you collapse nodes and search for keys without manual cleanup.",
-          "image": "https://scratchtabs.b-cdn.net/scenario-json-tree.png"
-        },
-        {
-          "@type": "HowToStep",
-          "name": "Troubleshooting Production Logs",
-          "text": "When troubleshooting production errors with scattered log entries, just paste the multiple log lines. Scratch Tabs instantly parses and filters them, making error patterns immediately visible. For JSON logs with metadata prefixes, it automatically cleans them leaving pure JSONs.",
-          "image": "https://scratchtabs.b-cdn.net/scenario-ndjson.png"
-        },
-        {
-          "@type": "HowToStep",
-          "name": "Understanding Complex Regex Patterns",
-          "text": "When struggling to understand a complicated regex pattern, paste it into the regex tablet. Scratch Tabs provides a human-readable interpretation of what the pattern actually matches.",
-          "image": "https://scratchtabs.b-cdn.net/scenario-regex.png"
-        },
-        {
-          "@type": "HowToStep",
-          "name": "Parsing Cron Expressions",
-          "text": "When unsure if cron expressions will parse equivalently across systems, paste the cron syntax. Scratch Tabs gives you a full breakdown of the schedule timing and execution pattern.",
-          "image": "https://scratchtabs.b-cdn.net/scenario-cron.png"
-        },
-        {
-          "@type": "HowToStep",
-          "name": "Organizing Configuration Files",
-          "text": "When dealing with a messy application.properties file from a legacy system, paste the content. Scratch Tabs intelligently cleans and groups properties with one-click functions for instant organization.",
-          "image": "https://scratchtabs.b-cdn.net/scenario-properties.png"
-        }
-      ]
-    }
-  </script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
 
   <style>
     html {
       scroll-padding-top: 5rem;
     }
 
-    /* Glassmorphism Redesign Styles */
     body {
-      font-family: 'Inter', 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #0D0C1D;
+      font-family: 'Inter', sans-serif;
+      background-color: #050505;
       color: #F5F5F5;
-      text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.25);
       position: relative;
       min-height: 100vh;
     }
 
-    /* Animated gradient background */
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background:
-        radial-gradient(ellipse 120% 100% at 100% 100%, rgba(0, 160, 180, 0.6) 0%, transparent 50%),
-        radial-gradient(ellipse 100% 80% at 100% 50%, rgba(0, 140, 160, 0.4) 0%, transparent 45%),
-        radial-gradient(ellipse 150% 40% at 50% 100%, rgba(0, 120, 140, 0.3) 0%, transparent 40%),
-        linear-gradient(90deg, rgba(0, 10, 20, 1) 0%, rgba(0, 20, 30, 0.8) 60%, transparent 100%);
-      filter: blur(60px);
-      z-index: -1;
-      animation: diagonalShift 20s ease-in-out infinite;
+    h1,
+    h2,
+    h3,
+    .mono {
+      font-family: 'Fira Code', monospace;
     }
 
-    @keyframes diagonalShift {
-      0%, 100% {
-        opacity: 1;
-        transform: translate(0, 0) scale(1) rotate(0deg);
-      }
-      20% {
-        transform: translate(8%, -6%) scale(1.08) rotate(2.5deg);
-      }
-      35% {
-        transform: translate(-5%, 9%) scale(0.92) rotate(-2deg);
-      }
-      55% {
-        transform: translate(12%, -3%) scale(1.12) rotate(-3.5deg);
-      }
-      70% {
-        transform: translate(-6%, 7%) scale(1.18) rotate(1deg);
-      }
-      85% {
-        transform: translate(4%, -4%) scale(0.95) rotate(2.8deg);
-      }
-    }
-
-    /* Header glassmorphism */
     header {
       position: sticky;
       top: 0;
-      background: rgba(15, 15, 30, 0.6);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      background: #050505;
+      border-bottom: 1px solid #1f2937;
       z-index: 1000;
     }
 
-    header nav a {
-      transition: all 0.3s ease;
+    .card-sharp {
+      background: #0a0a0a;
+      border: 1px solid #1f2937;
+      border-radius: 4px;
+      transition: all 0.2s ease;
     }
 
-    header nav a:hover {
-      opacity: 1;
-      color: #FFFFFF;
+    .card-sharp:hover {
+      border-color: #10b981;
     }
 
-    /* Buttons */
-    .primary-button {
-      background: transparent;
-      backdrop-filter: blur(5px);
-      -webkit-backdrop-filter: blur(5px);
-      border: 2px solid rgba(30, 150, 220, 0.8);
-      color: rgba(60, 170, 240, 1);
-      font-weight: 600;
-      transition: all 0.3s ease;
+    .terminal-button {
+      font-family: 'Fira Code', monospace;
+      background: #0a0a0a;
+      border: 1px solid #1f2937;
+      color: #10b981;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
     }
 
-    .primary-button:hover {
-      background-color: rgba(20, 80, 140, 0.9);
-      color: #FFFFFF;
-      border-color: rgba(60, 170, 240, 1);
-      box-shadow: 0 0 25px rgba(30, 150, 220, 0.6);
-      transform: scale(1.05);
+    .terminal-button:hover {
+      background: #111827;
+      border-color: #10b981;
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
     }
 
-    .section-title {
-      color: #FFFFFF;
-      text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.3);
-    }
-
-    .feature-card,
-    .tablet-category-card {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(15px);
-      -webkit-backdrop-filter: blur(15px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 16px;
-      padding: 32px;
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-      transition: all 0.3s ease;
-    }
-
-    .feature-card:hover,
-    .tablet-category-card:hover {
-      transform: translateY(-10px);
-      border-color: rgba(0, 160, 180, 0.8);
-      box-shadow: 0 0 25px rgba(0, 140, 160, 0.4);
+    .logo-size {
+      width: 22px;
+      height: 22px;
+      filter: brightness(0) invert(1);
     }
 
     .icon-placeholder {
-      background: rgba(0, 100, 115, 0.2);
-      color: rgba(100, 220, 230, 1);
+      background: #0a0a0a;
+      color: #10b981;
       width: 3rem;
       height: 3rem;
-      border-radius: 0.5rem;
+      border: 1px solid #1f2937;
+      border-radius: 4px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       margin-bottom: 1rem;
-      flex-shrink: 0;
-      border: 1px solid rgba(0, 140, 160, 0.4);
     }
 
     .icon-tool {
@@ -211,408 +114,452 @@
       stroke: currentColor;
       fill: none;
       stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    .logo-size {
-      width: 22px;
-      height: 22px;
-      filter: brightness(0) invert(1);
     }
   </style>
 </head>
 
 <body class="antialiased">
-<header class="py-4 px-6">
-  <div class="container mx-auto flex justify-between items-center">
-    <a href="index.html" class="flex items-center space-x-2">
-      <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs Logo" class="logo-size" />
-      <span class="text-xl sm:text-2xl font-semibold text-white">Scratch Tabs</span>
-    </a>
-    <nav class="hidden md:flex items-center space-x-6">
-      <a href="features.html" class="text-sm text-blue-400 font-medium">Features</a>
-      <a href="tablets.html" class="text-sm text-gray-300 hover:text-white transition-colors">Tablets</a>
-      <a href="changelog.html" class="text-sm text-gray-300 hover:text-white transition-colors">Changelog</a>
-      <a href="index.html#privacy" class="text-sm text-gray-300 hover:text-white transition-colors">Privacy</a>
-      <a href="faq.html" class="text-sm text-gray-300 hover:text-white transition-colors">FAQ</a>
-    </nav>
-    <div class="flex items-center space-x-2">
-      <a href="https://app.scratchtabs.com" target="_blank"
-         class="primary-button text-sm font-medium py-2 px-4 rounded-md">
-        Launch App
+  <header class="py-4 px-6 sticky top-0 z-50">
+    <div class="container mx-auto flex justify-between items-center">
+      <a href="index.html" class="flex items-center space-x-2">
+        <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs Logo" class="logo-size" />
+        <span class="text-xl sm:text-2xl font-bold text-white font-mono">SCRATCH_TABS</span>
       </a>
-      <button id="mobile-menu-button" class="md:hidden p-2 text-gray-300 hover:text-white">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4 6h16M4 12h16M4 18h16"></path>
-        </svg>
-      </button>
-    </div>
-  </div>
-  <div id="mobile-menu" class="hidden md:hidden mt-4">
-    <a href="features.html" class="block py-2 px-4 text-sm text-blue-400 font-medium bg-gray-700 rounded">Features</a>
-    <a href="tablets.html" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">Tablets</a>
-    <a href="changelog.html" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">Changelog</a>
-    <a href="index.html#privacy" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">Privacy</a>
-    <a href="faq.html" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">FAQ</a>
-  </div>
-</header>
-
-<!-- Section 1: Hero Section -->
-<section class="py-16 md:py-24 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-  <div class="container mx-auto px-6 text-center">
-    <h1 class="section-title text-4xl md:text-6xl font-bold mb-6">
-      The Ultimate Developer's Sidekick, Feature by Feature.
-    </h1>
-    <p class="text-gray-300 text-lg md:text-xl mb-8 max-w-3xl mx-auto">
-      Scratch Tabs is more than a scratchpad. It's a powerful suite of integrated tools designed to handle every intermediate data task in your workflow. Explore the features that make it indispensable.
-    </p>
-  </div>
-</section>
-
-<!-- Section 2: Smart Format Recognition -->
-<section class="py-16 bg-gray-800/30">
-  <div class="container mx-auto px-6">
-    <div class="text-center max-w-4xl mx-auto">
-      <h2 class="section-title text-3xl md:text-4xl font-bold mb-4">Instant Intelligence for Over 40 Data Formats</h2>
-      <p class="text-gray-400 text-lg mb-12">
-        Scratch Tabs is a polyglot data environment. When you paste data, it's not just formatted—it's loaded into a specialized, interactive "workbench" or "smart view" that understands its structure.
-      </p>
-      <!-- Developer Scenarios as Individual Cards -->
-      <div class="space-y-8 mb-12">
-        <!-- JSON API Response Scenario -->
-        <div class="grid md:grid-cols-2 gap-8 items-stretch">
-          <div class="bg-gray-900 border border-gray-700 p-6 rounded-lg flex items-center">
-            <div class="flex items-start space-x-4">
-              <div class="icon-placeholder flex-shrink-0">
-                <svg class="icon-tool" viewBox="0 0 24 24"><path d="M9 5c-1.5 0-2.5 1-2.5 2.5v2c0 1.5-.5 2.5-2.5 2.5 2 0 2.5 1 2.5 2.5v2c0 1.5 1 2.5 2.5 2.5"/><path d="M15 5c1.5 0 2.5 1 2.5 2.5v2c0 1.5.5 2.5 2.5 2.5-2 0-2.5 1-2.5 2.5v2c0 1.5-1 2.5-2.5 2.5"/></svg>
-              </div>
-              <div>
-                <p class="text-gray-300"><strong>When analyzing a messy API response,</strong> just paste the minified JSON. Scratch Tabs instantly formats it and presents an interactive tree view, letting you collapse nodes and search for keys without manual cleanup.</p>
-              </div>
-            </div>
-          </div>
-          <div class="order-first md:order-last flex items-center">
-            <img src="https://scratchtabs.b-cdn.net/scenario-json-tree.png" alt="JSON tree view" class="rounded-lg border border-gray-600 w-full">
-          </div>
-        </div>
-
-        <!-- Log Troubleshooting Scenario -->
-        <div class="grid md:grid-cols-2 gap-8 items-stretch">
-          <div class="order-last md:order-first flex items-center">
-            <img src="https://scratchtabs.b-cdn.net/scenario-ndjson.png" alt="Log parsing" class="rounded-lg border border-gray-600 w-full">
-          </div>
-          <div class="bg-gray-900 border border-gray-700 p-6 rounded-lg flex items-center">
-            <div class="flex items-start space-x-4">
-              <div class="icon-placeholder flex-shrink-0">
-                <svg class="icon-tool" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h7"></path></svg>
-              </div>
-              <div>
-                <p class="text-gray-300"><strong>When troubleshooting production errors with scattered log entries,</strong> just paste the multiple log lines. Scratch Tabs instantly parses and filters them, making error patterns immediately visible. For JSON logs with metadata prefixes, it automatically cleans them leaving pure JSONs.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Regex Understanding Scenario -->
-        <div class="grid md:grid-cols-2 gap-8 items-stretch">
-          <div class="bg-gray-900 border border-gray-700 p-6 rounded-lg flex items-center">
-            <div class="flex items-start space-x-4">
-              <div class="icon-placeholder flex-shrink-0">
-                <svg class="icon-tool" viewBox="0 0 24 24"><path d="m18 16 4-4-4-4M6 8l-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
-              </div>
-              <div>
-                <p class="text-gray-300"><strong>When struggling to understand a complicated regex pattern,</strong> paste it into the regex tablet. Scratch Tabs provides a human-readable interpretation of what the pattern actually matches.</p>
-              </div>
-            </div>
-          </div>
-          <div class="order-first md:order-last flex items-center">
-            <img src="https://scratchtabs.b-cdn.net/scenario-regex.png" alt="Regex explanation" class="rounded-lg border border-gray-600 w-full">
-          </div>
-        </div>
-
-        <!-- Cron Expression Scenario -->
-        <div class="grid md:grid-cols-2 gap-8 items-stretch">
-          <div class="order-last md:order-first flex items-center">
-            <img src="https://scratchtabs.b-cdn.net/scenario-cron.png" alt="Cron breakdown" class="rounded-lg border border-gray-600 w-full">
-          </div>
-          <div class="bg-gray-900 border border-gray-700 p-6 rounded-lg flex items-center">
-            <div class="flex items-start space-x-4">
-              <div class="icon-placeholder flex-shrink-0">
-                <svg class="icon-tool" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
-              </div>
-              <div>
-                <p class="text-gray-300"><strong>When unsure if cron expressions will parse equivalently across systems,</strong> paste the cron syntax. Scratch Tabs gives you a full breakdown of the schedule timing and execution pattern.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Properties File Scenario -->
-        <div class="grid md:grid-cols-2 gap-8 items-stretch">
-          <div class="bg-gray-900 border border-gray-700 p-6 rounded-lg flex items-center">
-            <div class="flex items-start space-x-4">
-              <div class="icon-placeholder flex-shrink-0">
-                <svg class="icon-tool" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-              </div>
-              <div>
-                <p class="text-gray-300"><strong>When dealing with a messy application.properties file from a legacy system,</strong> paste the content. Scratch Tabs intelligently cleans and groups properties with one-click functions for instant organization.</p>
-              </div>
-            </div>
-          </div>
-          <div class="order-first md:order-last flex items-center">
-            <img src="https://scratchtabs.b-cdn.net/scenario-properties.png" alt="Properties organization" class="rounded-lg border border-gray-600 w-full">
-          </div>
-        </div>
+      <nav class="hidden md:flex items-center space-x-6">
+        <a href="features.html"
+          class="text-xs font-mono text-emerald-500 transition-colors uppercase tracking-tighter">FEATURES</a>
+        <a href="tablets.html"
+          class="text-xs font-mono text-gray-500 hover:text-emerald-500 transition-colors uppercase tracking-tighter">TABLETS</a>
+        <a href="changelog.html"
+          class="text-xs font-mono text-gray-500 hover:text-emerald-500 transition-colors uppercase tracking-tighter">CHANGELOG</a>
+        <a href="index.html#tech-specs"
+          class="text-xs font-mono text-gray-500 hover:text-emerald-500 transition-colors uppercase tracking-tighter">PRIVACY</a>
+        <a href="faq.html"
+          class="text-xs font-mono text-gray-500 hover:text-emerald-500 transition-colors uppercase tracking-tighter">FAQ</a>
+      </nav>
+      <div class="flex items-center space-x-2">
+        <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button text-xs">
+          <span class="text-gray-500 mr-2">$</span> launch_app
+        </a>
+        <button id="mobile-menu-button" class="md:hidden p-2 text-gray-500 hover:text-emerald-500 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
       </div>
     </div>
-    <div class="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-      <div class="feature-card p-6 rounded-lg flex items-start space-x-4">
-        <div class="icon-placeholder"><svg class="icon-tool" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M4 12h16"/><path d="M12 4v16"/></svg></div>
-        <div>
-          <h3 class="text-xl font-semibold text-white mb-2">Data Formats</h3>
-          <p class="text-gray-400 text-sm">Instantly parse, explore, and manipulate complex data. Our interactive viewers for JSON, YAML, XML, and CSV turn raw text into navigable structures.</p>
-        </div>
-      </div>
-      <div class="feature-card p-6 rounded-lg flex items-start space-x-4">
-        <div class="icon-placeholder"><svg class="icon-tool" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
-        <div>
-          <h3 class="text-xl font-semibold text-white mb-2">Configs & Markup</h3>
-          <p class="text-gray-400 text-sm">Manage your infrastructure and project files with ease. Get instant syntax highlighting and smart views for HCL (Terraform), Dockerfiles, INI, .properties, and more.</p>
-        </div>
-      </div>
-      <div class="feature-card p-6 rounded-lg flex items-start space-x-4">
-        <div class="icon-placeholder"><svg class="icon-tool" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h7"></path></svg></div>
-        <div>
-          <h3 class="text-xl font-semibold text-white mb-2">Logs & Metrics</h3>
-          <p class="text-gray-400 text-sm">Debug with clarity. Paste raw logs and get instant parsing for common formats like Access Logs, NDJSON (JSON Logs), and Java/JS Stack Traces.</p>
-        </div>
-      </div>
-      <div class="feature-card p-6 rounded-lg flex items-start space-x-4">
-        <div class="icon-placeholder"><svg class="icon-tool" viewBox="0 0 24 24"><path d="m18 16 4-4-4-4M6 8l-4 4 4 4"/><path d="m14.5 4-5 16"/></svg></div>
-        <div>
-          <h3 class="text-xl font-semibold text-white mb-2">Developer Utilities</h3>
-          <p class="text-gray-400 text-sm">Handle common developer artifacts with dedicated tools for Curl commands, SQL queries, Diff/Patch files, and SVG with live preview.</p>
-        </div>
-      </div>
+    <div id="mobile-menu" class="hidden md:hidden mt-4 border-t border-gray-800 pt-4 pb-4 px-6 bg-black">
+      <a href="features.html"
+        class="block py-2 text-xs font-mono text-emerald-500 uppercase tracking-tighter">FEATURES</a>
+      <a href="tablets.html"
+        class="block py-2 text-xs font-mono text-gray-500 hover:text-emerald-500 uppercase tracking-tighter">TABLETS</a>
+      <a href="changelog.html"
+        class="block py-2 text-xs font-mono text-gray-500 hover:text-emerald-500 uppercase tracking-tighter">CHANGELOG</a>
+      <a href="index.html#tech-specs"
+        class="block py-2 text-xs font-mono text-gray-500 hover:text-emerald-500 uppercase tracking-tighter">PRIVACY</a>
+      <a href="faq.html"
+        class="block py-2 text-xs font-mono text-gray-500 hover:text-emerald-500 uppercase tracking-tighter">FAQ</a>
     </div>
-    <div class="max-w-4xl mx-auto mt-12">
-      <img src="https://scratchtabs.b-cdn.net/app-screenshot.png" alt="Scratch Tabs smart view workbench" class="rounded-lg shadow-2xl border border-gray-700/50">
-    </div>
-  </div>
-</section>
+  </header>
 
-<!-- Section 3: Tablet Ecosystem -->
-<section class="py-16">
-  <div class="container mx-auto px-6">
-    <div class="text-center max-w-4xl mx-auto">
-      <h2 class="section-title text-3xl md:text-4xl font-bold mb-4">A Complete Toolkit for Every Task. Zero Installations.</h2>
-      <p class="text-gray-400 text-lg mb-12">
-        Beyond format recognition, Scratch Tabs includes a growing ecosystem of over 25 specialized 'Tablets'—powerful mini-apps that solve specific developer problems, all running 100% in your browser.
+  <!-- Section 1: Hero Section -->
+  <section class="py-16 md:py-24 border-b border-gray-800">
+    <div class="container mx-auto px-6 text-center">
+      <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight mb-6">
+        The Ultimate Developer's Sidekick,<br /><span class="text-emerald-500">Feature by Feature.</span>
+      </h1>
+      <p class="text-lg md:text-xl text-gray-400 mb-8 max-w-3xl mx-auto leading-relaxed">
+        Scratch Tabs is more than a scratchpad. It's a powerful suite of integrated tools designed to handle every
+        intermediate data task in your workflow.
       </p>
     </div>
-    <div class="space-y-12">
-      <!-- Category: API & Web Development -->
-      <div class="tablet-category-card p-8 rounded-lg">
-        <h3 class="text-2xl font-bold text-blue-400 mb-6">API & Web Development</h3>
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div class="bg-gray-800/50 p-6 rounded-lg">
-            <h4 class="font-semibold text-white mb-2">JWT Toolkit</h4>
-            <p class="text-gray-400 text-sm">Decode, verify, and sign JWTs securely on the client-side. Manage your keys and inspect token payloads without ever sending secrets over the network.</p>
+  </section>
+
+  <!-- Section 2: Smart Format Recognition -->
+  <section class="py-16 border-b border-gray-800 bg-black">
+    <div class="container mx-auto px-6">
+      <div class="text-center max-w-4xl mx-auto">
+        <h2 class="text-3xl md:text-4xl font-mono text-white mb-4">Instant Intelligence for Over 40 Data Formats</h2>
+        <p class="text-gray-400 text-lg mb-12">
+          Scratch Tabs is a polyglot data environment. When you paste data, it's not just formatted—it's loaded into a
+          specialized, interactive "workbench" or "smart view" that understands its structure.
+        </p>
+        <!-- Developer Scenarios as Individual Cards -->
+        <div class="space-y-8 mb-12">
+          <!-- JSON API Response Scenario -->
+          <div class="grid md:grid-cols-2 gap-8 items-stretch">
+            <div class="card-sharp p-6 flex items-center">
+              <div class="flex items-start space-x-4">
+                <div class="icon-placeholder flex-shrink-0">
+                  <svg class="icon-tool" viewBox="0 0 24 24">
+                    <path
+                      d="M9 5c-1.5 0-2.5 1-2.5 2.5v2c0 1.5-.5 2.5-2.5 2.5 2 0 2.5 1 2.5 2.5v2c0 1.5 1 2.5 2.5 2.5" />
+                    <path d="M15 5c1.5 0 2.5 1 2.5 2.5v2c0 1.5.5 2.5 2.5 2.5-2 0-2.5 1-2.5 2.5v2c0 1.5-1 2.5-2.5 2.5" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-gray-400"><strong>When analyzing a messy API response,</strong> just paste the minified
+                    JSON. Scratch Tabs instantly formats it and presents an interactive tree view, letting you collapse
+                    nodes and search for keys without manual cleanup.</p>
+                </div>
+              </div>
+            </div>
+            <div class="order-first md:order-last flex items-center">
+              <img src="https://scratchtabs.b-cdn.net/scenario-json-tree.png" alt="JSON tree view"
+                class="rounded-lg border border-gray-600 w-full">
+            </div>
           </div>
-          <div class="bg-gray-800/50 p-6 rounded-lg">
-            <h4 class="font-semibold text-white mb-2">URL Parser</h4>
-            <p class="text-gray-400 text-sm">Deconstruct complex URLs, analyze query parameters, and identify potential security issues with a detailed component breakdown.</p>
+
+          <!-- Log Troubleshooting Scenario -->
+          <div class="grid md:grid-cols-2 gap-8 items-stretch">
+            <div class="order-last md:order-first flex items-center">
+              <img src="https://scratchtabs.b-cdn.net/scenario-ndjson.png" alt="Log parsing"
+                class="rounded-lg border border-gray-600 w-full">
+            </div>
+            <div class="card-sharp p-6 flex items-center">
+              <div class="flex items-start space-x-4">
+                <div class="icon-placeholder flex-shrink-0">
+                  <svg class="icon-tool" viewBox="0 0 24 24">
+                    <path d="M4 6h16M4 12h16M4 18h7"></path>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-gray-400"><strong>When troubleshooting production errors with scattered log
+                      entries,</strong> just paste the multiple log lines. Scratch Tabs instantly parses and filters
+                    them, making error patterns immediately visible. For JSON logs with metadata prefixes, it
+                    automatically cleans them leaving pure JSONs.</p>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="bg-gray-800/50 p-6 rounded-lg">
-            <h4 class="font-semibold text-white mb-2">REST Client</h4>
-            <p class="text-gray-400 text-sm">A convenient client for quick API checks and testing CORS-enabled or local development endpoints.</p>
+
+          <!-- Regex Understanding Scenario -->
+          <div class="grid md:grid-cols-2 gap-8 items-stretch">
+            <div class="card-sharp p-6 flex items-center">
+              <div class="flex items-start space-x-4">
+                <div class="icon-placeholder flex-shrink-0">
+                  <svg class="icon-tool" viewBox="0 0 24 24">
+                    <path d="m18 16 4-4-4-4M6 8l-4 4 4 4" />
+                    <path d="m14.5 4-5 16" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-gray-400"><strong>When struggling to understand a complicated regex pattern,</strong>
+                    paste it into the regex tablet. Scratch Tabs provides a human-readable interpretation of what the
+                    pattern actually matches.</p>
+                </div>
+              </div>
+            </div>
+            <div class="order-first md:order-last flex items-center">
+              <img src="https://scratchtabs.b-cdn.net/scenario-regex.png" alt="Regex explanation"
+                class="rounded-lg border border-gray-600 w-full">
+            </div>
+          </div>
+
+          <!-- Cron Expression Scenario -->
+          <div class="grid md:grid-cols-2 gap-8 items-stretch">
+            <div class="order-last md:order-first flex items-center">
+              <img src="https://scratchtabs.b-cdn.net/scenario-cron.png" alt="Cron breakdown"
+                class="rounded-lg border border-gray-600 w-full">
+            </div>
+            <div class="card-sharp p-6 flex items-center">
+              <div class="flex items-start space-x-4">
+                <div class="icon-placeholder flex-shrink-0">
+                  <svg class="icon-tool" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12,6 12,12 16,14" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-gray-400"><strong>When unsure if cron expressions will parse equivalently across
+                      systems,</strong> paste the cron syntax. Scratch Tabs gives you a full breakdown of the schedule
+                    timing and execution pattern.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Properties File Scenario -->
+          <div class="grid md:grid-cols-2 gap-8 items-stretch">
+            <div class="card-sharp p-6 flex items-center">
+              <div class="flex items-start space-x-4">
+                <div class="icon-placeholder flex-shrink-0">
+                  <svg class="icon-tool" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <path d="M3 9h18M9 21V9" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-gray-400"><strong>When dealing with a messy application.properties file from a legacy
+                      system,</strong> paste the content. Scratch Tabs intelligently cleans and groups properties with
+                    one-click functions for instant organization.</p>
+                </div>
+              </div>
+            </div>
+            <div class="order-first md:order-last flex items-center">
+              <img src="https://scratchtabs.b-cdn.net/scenario-properties.png" alt="Properties organization"
+                class="rounded-lg border border-gray-600 w-full">
+            </div>
           </div>
         </div>
       </div>
-      <!-- Category: Data Transformation & Analysis -->
-      <div class="tablet-category-card p-8 rounded-lg">
-        <h3 class="text-2xl font-bold text-blue-400 mb-6">Data Transformation & Analysis</h3>
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div class="bg-gray-800/50 p-6 rounded-lg">
-            <h4 class="font-semibold text-white mb-2">JSON Mapper</h4>
-            <p class="text-gray-400 text-sm">Visually map and transform complex JSON structures. Define rules with an intuitive UI and generate transformation code, saving hours of manual scripting.</p>
+      <div class="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+        <div class="card-sharp p-6 flex items-start space-x-4">
+          <div class="icon-placeholder"><svg class="icon-tool" viewBox="0 0 24 24">
+              <path d="M4 4h16v16H4z" />
+              <path d="M4 12h16" />
+              <path d="M12 4v16" />
+            </svg></div>
+          <div>
+            <h3 class="text-xl font-bold text-white mb-2">Data Formats</h3>
+            <p class="text-gray-400 text-sm">Instantly parse, explore, and manipulate complex data. Our interactive
+              viewers for JSON, YAML, XML, and CSV turn raw text into navigable structures.</p>
           </div>
-          <div class="bg-gray-800/50 p-6 rounded-lg">
-            <h4 class="font-semibold text-white mb-2">Converters</h4>
-            <p class="text-gray-400 text-sm">A full suite of essential converters at your fingertips, including Base64, URL encoding, and a powerful Checksum calculator (MD5, SHA-1/256/512).</p>
+        </div>
+        <div class="card-sharp p-6 flex items-start space-x-4">
+          <div class="icon-placeholder"><svg class="icon-tool" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="M3 9h18M9 21V9" />
+            </svg></div>
+          <div>
+            <h3 class="text-xl font-bold text-white mb-2">Configs & Markup</h3>
+            <p class="text-gray-400 text-sm">Manage your infrastructure and project files with ease. Get instant syntax
+              highlighting and smart views for HCL (Terraform), Dockerfiles, INI, .properties, and more.</p>
           </div>
-          <div class="bg-gray-800/50 p-6 rounded-lg">
-            <h4 class="font-semibold text-white mb-2">Diagram Editor</h4>
-            <p class="text-gray-400 text-sm">Create and visualize diagrams on the fly. Write Mermaid code for flowcharts, sequence diagrams, and more with a live-updating preview.</p>
+        </div>
+        <div class="card-sharp p-6 flex items-start space-x-4">
+          <div class="icon-placeholder"><svg class="icon-tool" viewBox="0 0 24 24">
+              <path d="M4 6h16M4 12h16M4 18h7"></path>
+            </svg></div>
+          <div>
+            <h3 class="text-xl font-bold text-white mb-2">Logs & Metrics</h3>
+            <p class="text-gray-400 text-sm">Debug with clarity. Paste raw logs and get instant parsing for common
+              formats like Access Logs, NDJSON (JSON Logs), and Java/JS Stack Traces.</p>
+          </div>
+        </div>
+        <div class="card-sharp p-6 flex items-start space-x-4">
+          <div class="icon-placeholder"><svg class="icon-tool" viewBox="0 0 24 24">
+              <path d="m18 16 4-4-4-4M6 8l-4 4 4 4" />
+              <path d="m14.5 4-5 16" />
+            </svg></div>
+          <div>
+            <h3 class="text-xl font-bold text-white mb-2">Developer Utilities</h3>
+            <p class="text-gray-400 text-sm">Handle common developer artifacts with dedicated tools for Curl commands,
+              SQL queries, Diff/Patch files, and SVG with live preview.</p>
           </div>
         </div>
       </div>
-      <!-- Category: Productivity & Workflow -->
-      <div class="tablet-category-card p-8 rounded-lg">
-        <h3 class="text-2xl font-bold text-blue-400 mb-6">Productivity & Workflow</h3>
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div class="bg-gray-800/50 p-6 rounded-lg">
-            <h4 class="font-semibold text-white mb-2">Command Vault</h4>
-            <p class="text-gray-400 text-sm">Build your personal, searchable command and snippet library. Organize your notes, code, and frequently used commands in one place.</p>
+      <div class="max-w-4xl mx-auto mt-12">
+        <img src="https://scratchtabs.b-cdn.net/app-screenshot.png" alt="Scratch Tabs smart view workbench"
+          class="rounded-lg shadow-2xl border border-gray-700/50">
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: Tablet Ecosystem -->
+  <section class="py-16 border-b border-gray-800">
+    <div class="container mx-auto px-6">
+      <div class="text-center max-w-4xl mx-auto">
+        <h2 class="text-3xl md:text-4xl font-mono text-white mb-4">A Complete Toolkit for Every Task. Zero
+          Installations.</h2>
+        <p class="text-gray-400 text-lg mb-12">
+          Beyond format recognition, Scratch Tabs includes a growing ecosystem of over 25 specialized 'Tablets'—powerful
+          mini-apps that solve specific developer problems, all running 100% in your browser.
+        </p>
+      </div>
+      <div class="space-y-12">
+        <!-- Category: API & Web Development -->
+        <div class="card-sharp p-8">
+          <h3 class="text-2xl font-bold text-emerald-500 mb-6 font-mono">API & Web Development</h3>
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="border border-gray-800 p-6 rounded-sm bg-black">
+              <h4 class="font-bold text-white mb-2">JWT Toolkit</h4>
+              <p class="text-gray-400 text-sm">Decode, verify, and sign JWTs securely on the client-side. Manage your
+                keys and inspect token payloads without ever sending secrets over the network.</p>
+            </div>
+            <div class="border border-gray-800 p-6 rounded-sm bg-black">
+              <h4 class="font-bold text-white mb-2">URL Parser</h4>
+              <p class="text-gray-400 text-sm">Deconstruct complex URLs, analyze query parameters, and identify
+                potential security issues with a detailed component breakdown.</p>
+            </div>
+            <div class="border border-gray-800 p-6 rounded-sm bg-black">
+              <h4 class="font-bold text-white mb-2">REST Client</h4>
+              <p class="text-gray-400 text-sm">A convenient client for quick API checks and testing CORS-enabled or
+                local development endpoints.</p>
+            </div>
           </div>
-          <div class="bg-gray-800/50 p-6 rounded-lg">
-            <h4 class="font-semibold text-white mb-2">Pomodoro Timer</h4>
-            <p class="text-gray-400 text-sm">Stay focused and manage your work sessions effectively with an integrated Pomodoro timer.</p>
+        </div>
+        <!-- Category: Data Transformation & Analysis -->
+        <div class="card-sharp p-8">
+          <h3 class="text-2xl font-bold text-emerald-500 mb-6 font-mono">Data Transformation & Analysis</h3>
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="border border-gray-800 p-6 rounded-sm bg-black">
+              <h4 class="font-bold text-white mb-2">JSON Mapper</h4>
+              <p class="text-gray-400 text-sm">Visually map and transform complex JSON structures. Define rules with an
+                intuitive UI and generate transformation code, saving hours of manual scripting.</p>
+            </div>
+            <div class="border border-gray-800 p-6 rounded-sm bg-black">
+              <h4 class="font-bold text-white mb-2">Converters</h4>
+              <p class="text-gray-400 text-sm">A full suite of essential converters at your fingertips, including
+                Base64, URL encoding, and a powerful Checksum calculator (MD5, SHA-1/256/512).</p>
+            </div>
+            <div class="border border-gray-800 p-6 rounded-sm bg-black">
+              <h4 class="font-bold text-white mb-2">Diagram Editor</h4>
+              <p class="text-gray-400 text-sm">Create and visualize diagrams on the fly. Write Mermaid code for
+                flowcharts, sequence diagrams, and more with a live-updating preview.</p>
+            </div>
           </div>
-          <div class="bg-gray-800/50 p-6 rounded-lg">
-            <h4 class="font-semibold text-white mb-2">Prompt Manager</h4>
-            <p class="text-gray-400 text-sm">Organize and refine your AI prompts for consistent, high-quality results.</p>
+        </div>
+        <!-- Category: Productivity & Workflow -->
+        <div class="card-sharp p-8">
+          <h3 class="text-2xl font-bold text-emerald-500 mb-6 font-mono">Productivity & Workflow</h3>
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="border border-gray-800 p-6 rounded-sm bg-black">
+              <h4 class="font-bold text-white mb-2">Command Vault</h4>
+              <p class="text-gray-400 text-sm">Build your personal, searchable command and snippet library. Organize
+                your notes, code, and frequently used commands in one place.</p>
+            </div>
+            <div class="border border-gray-800 p-6 rounded-sm bg-black">
+              <h4 class="font-bold text-white mb-2">Pomodoro Timer</h4>
+              <p class="text-gray-400 text-sm">Stay focused and manage your work sessions effectively with an integrated
+                Pomodoro timer.</p>
+            </div>
+            <div class="border border-gray-800 p-6 rounded-sm bg-black">
+              <h4 class="font-bold text-white mb-2">Prompt Manager</h4>
+              <p class="text-gray-400 text-sm">Organize and refine your AI prompts for consistent, high-quality results.
+              </p>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- Section 4: Streamline Your Workflow -->
-<section class="py-16 bg-gray-800/30">
-  <div class="container mx-auto px-6">
-    <div class="text-center max-w-4xl mx-auto">
-      <h2 class="section-title text-3xl md:text-4xl font-bold mb-4">Work Faster, Not Harder.</h2>
-      <p class="text-gray-400 text-lg mb-12">
-        Scratch Tabs is built to eliminate context switching and accelerate your workflow with powerful organizational and automation features.
+  <!-- Section 4: Streamline Your Workflow -->
+  <section class="py-16 bg-black border-b border-gray-800">
+    <div class="container mx-auto px-6">
+      <div class="text-center max-w-4xl mx-auto">
+        <h2 class="text-3xl md:text-4xl font-mono text-white mb-4">Work Faster, Not Harder.</h2>
+        <p class="text-gray-400 text-lg mb-12">
+          Scratch Tabs is built to eliminate context switching and accelerate your workflow with powerful organizational
+          and automation features.
+        </p>
+      </div>
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="card-sharp p-6">
+          <h3 class="text-xl font-bold text-white mb-2">Multi-Tab Workspaces</h3>
+          <p class="text-gray-400 text-sm">Organize your work with persistent tabs and workspaces. Your session is
+            always saved locally, ready for you to pick up right where you left off.</p>
+        </div>
+        <div class="card-sharp p-6">
+          <h3 class="text-xl font-bold text-white mb-2">Advanced Global Search</h3>
+          <p class="text-gray-400 text-sm">Instantly find anything across all your open tabs. Search by content, filter
+            by file type, or scope your search to the current workspace.</p>
+        </div>
+        <div class="card-sharp p-6">
+          <h3 class="text-xl font-bold text-white mb-2">Powerful Batch Tools</h3>
+          <p class="text-gray-400 text-sm">Automate repetitive text transformations. Choose from powerful operations
+            like trimming, sorting, find/replace, and more with live preview before applying them to your content.</p>
+          <img src="https://scratchtabs.b-cdn.net/transformations.png" alt="Batch Tools"
+            class="mt-4 border border-gray-800 grayscale hover:grayscale-0 transition-all duration-300">
+        </div>
+        <div class="card-sharp p-6">
+          <h3 class="text-xl font-bold text-white mb-2">Smart Diff Tool</h3>
+          <p class="text-gray-400 text-sm">Compare any two tabs with an intelligent, side-by-side diff viewer that
+            highlights changes with syntax awareness.</p>
+          <img src="https://scratchtabs.b-cdn.net/diff.png" alt="Smart Diff Tool"
+            class="mt-4 border border-gray-800 grayscale hover:grayscale-0 transition-all duration-300">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 5: Privacy -->
+  <section class="py-16 bg-black border-b border-gray-800">
+    <div class="container mx-auto px-6 text-center">
+      <h2 class="text-3xl md:text-4xl font-mono text-white mb-6">Your Data is Yours. Period.</h2>
+      <p class="text-gray-400 text-lg mb-8 max-w-2xl mx-auto">
+        We fundamentally believe your data is yours alone. Scratch Tabs operates entirely within your browser with
+        uncompromising privacy.
       </p>
-    </div>
-    <div class="grid md:grid-cols-2 gap-8">
-      <div class="feature-card p-6 rounded-lg">
-        <h3 class="text-xl font-semibold text-white mb-2">Multi-Tab Workspaces</h3>
-        <p class="text-gray-400 text-sm">Organize your work with persistent tabs and workspaces. Your session is always saved locally, ready for you to pick up right where you left off.</p>
-      </div>
-      <div class="feature-card p-6 rounded-lg">
-        <h3 class="text-xl font-semibold text-white mb-2">Advanced Global Search</h3>
-        <p class="text-gray-400 text-sm">Instantly find anything across all your open tabs. Search by content, filter by file type, or scope your search to the current workspace.</p>
-      </div>
-      <div class="feature-card p-6 rounded-lg">
-        <h3 class="text-xl font-semibold text-white mb-2">Powerful Batch Tools</h3>
-        <p class="text-gray-400 text-sm">Automate repetitive text transformations. Choose from powerful operations like trimming, sorting, find/replace, and more with live preview before applying them to your content.</p>
-        <img src="https://scratchtabs.b-cdn.net/transformations.png" alt="Batch Tools" class="mt-4 rounded-md border border-gray-600">
-      </div>
-      <div class="feature-card p-6 rounded-lg">
-        <h3 class="text-xl font-semibold text-white mb-2">Smart Diff Tool</h3>
-        <p class="text-gray-400 text-sm">Compare any two tabs with an intelligent, side-by-side diff viewer that highlights changes with syntax awareness.</p>
-        <img src="https://scratchtabs.b-cdn.net/diff.png" alt="Smart Diff Tool" class="mt-4 rounded-md border border-gray-600">
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Section 5: Privacy -->
-<section class="py-16 bg-gray-900">
-  <div class="container mx-auto px-6 text-center">
-    <h2 class="section-title text-3xl md:text-4xl font-bold mb-6">Your Data is Yours. Period.</h2>
-    <p class="text-gray-300 text-lg mb-8 max-w-2xl mx-auto">
-      We fundamentally believe your data is yours alone. Scratch Tabs operates entirely within your browser with uncompromising privacy.
-    </p>
-    <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto text-center">
-      <div class="bg-gray-800/30 p-6 rounded-lg">
-        <div class="text-green-400 text-2xl mb-3">✓</div>
-        <h3 class="font-semibold text-white mb-2">100% Client-Side Processing</h3>
-        <p class="text-gray-400 text-sm">Everything happens locally on your machine. No data is ever sent to a server.</p>
-      </div>
-      <div class="bg-gray-800/30 p-6 rounded-lg">
-        <div class="text-green-400 text-2xl mb-3">✓</div>
-        <h3 class="font-semibold text-white mb-2">No Accounts, No Tracking</h3>
-        <p class="text-gray-400 text-sm">We don't need to know who you are. There are no user accounts, analytics, or cookies.</p>
-      </div>
-      <div class="bg-gray-800/30 p-6 rounded-lg">
-        <div class="text-green-400 text-2xl mb-3">✓</div>
-        <h3 class="font-semibold text-white mb-2">Works Completely Offline</h3>
-        <p class="text-gray-400 text-sm">Once loaded, all core features work without an internet connection, ensuring your work is never interrupted.</p>
+      <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto text-center">
+        <div class="card-sharp p-6 bg-black">
+          <div class="text-emerald-500 text-2xl mb-3">✓</div>
+          <h3 class="font-bold text-white mb-2">100% Client-Side Processing</h3>
+          <p class="text-gray-400 text-sm">Everything happens locally on your machine. No data is ever sent to a server.
+          </p>
+        </div>
+        <div class="card-sharp p-6 bg-black">
+          <div class="text-emerald-500 text-2xl mb-3">✓</div>
+          <h3 class="font-bold text-white mb-2">No Accounts, No Tracking</h3>
+          <p class="text-gray-400 text-sm">We don't need to know who you are. There are no user accounts, analytics, or
+            cookies.</p>
+        </div>
+        <div class="card-sharp p-6 bg-black">
+          <div class="text-emerald-500 text-2xl mb-3">✓</div>
+          <h3 class="font-bold text-white mb-2">Works Completely Offline</h3>
+          <p class="text-gray-400 text-sm">Once loaded, all core features work without an internet connection, ensuring
+            your work is never interrupted.</p>
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- Call to Action -->
-<section class="py-20">
-  <div class="container mx-auto px-6 text-center">
-    <h2 class="section-title text-3xl md:text-4xl font-bold mb-6">
-      Ready to Upgrade Your Workflow?
-    </h2>
-    <p class="text-gray-300 text-lg mb-8 max-w-xl mx-auto">
-      Experience the power of a dedicated developer sidekick. <strong>No installation. No setup. Just instant productivity.</strong>
-    </p>
-    <a href="https://app.scratchtabs.com" target="_blank"
-       class="bg-blue-600 hover:bg-blue-700 text-xl font-bold py-4 px-10 rounded-lg transition duration-150 ease-in-out inline-block shadow-lg hover:shadow-xl transform hover:scale-105 text-white">Launch App</a>
-  </div>
-</section>
-
-<!-- Footer -->
-<footer class="py-8 text-center border-t border-gray-700/50">
-  <div class="container mx-auto px-6">
-    <p class="text-sm text-gray-500 mb-4">
-      © <span id="currentYear"></span> Scratch Tabs. Your Local Data Companion.
-    </p>
-    <div class="flex justify-center items-center space-x-6 mb-4">
-      <a
-              href="https://github.com/spectra-g/scratch-tabs-feedback/issues"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="text-gray-500 hover:text-white transition-colors duration-150 flex items-center space-x-2"
-              title="GitHub Issues"
-      ><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-        <path
-                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.237 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
-        /></svg
-      ><span class="text-sm">GitHub Issues</span></a
-      >
-      <a
-              href="https://discord.gg/HwsfpTzMVS"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="text-gray-500 hover:text-white transition-colors duration-150 flex items-center space-x-2"
-              title="Join Discord"
-      ><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-        <path
-                d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419-.019 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1568 2.4189Z"
-        /></svg
-      ><span class="text-sm">Join Discord</span></a
-      >
-      <a
-              href="https://ko-fi.com/scratchtabs"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="text-gray-500 hover:text-white transition-colors duration-150 flex items-center space-x-2"
-              title="Support the Project on Ko-fi"
-      ><svg
-              class="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-      >
-        <path d="M17 8h1a4 4 0 1 1 0 8h-1"></path>
-        <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"></path>
-        <line x1="6" x2="6" y1="2" y2="4"></line>
-        <line x1="10" x2="10" y1="2" y2="4"></line>
-        <line x1="14" x2="14" y1="2" y2="4"></line></svg
-      ><span class="text-sm">Support the Project</span></a
-      >
+  <!-- Call to Action -->
+  <section class="py-20 border-b border-gray-800">
+    <div class="container mx-auto px-6 text-center">
+      <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">
+        Ready to Upgrade Your Workflow?
+      </h2>
+      <p class="text-gray-400 text-lg mb-8 max-w-xl mx-auto">
+        Experience the power of a dedicated developer sidekick. <span class="text-white">No installation. No setup. Just
+          instant productivity.</span>
+      </p>
+      <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button text-lg px-12 py-4">
+        launch_app_now
+      </a>
     </div>
-    <p class="text-xs text-gray-600">
-      Connect with us for feedback, support, and community discussions.
-    </p>
-  </div>
-</footer>
+  </section>
 
-<script>
-  document.getElementById("currentYear").textContent = new Date().getFullYear();
-  const mobileMenuButton = document.getElementById("mobile-menu-button");
-  const mobileMenu = document.getElementById("mobile-menu");
-  const mobileMenuLinks = mobileMenu.querySelectorAll("a");
-  mobileMenuButton.addEventListener("click", () => { mobileMenu.classList.toggle("hidden"); });
-  mobileMenuLinks.forEach((link) => { link.addEventListener("click", () => { mobileMenu.classList.add("hidden"); }); });
-</script>
+  <!-- Footer -->
+  <footer class="py-12 bg-black">
+    <div class="container mx-auto px-6">
+      <div
+        class="flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0 text-center md:text-left">
+        <div class="flex items-center space-x-2">
+          <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs Logo"
+            class="logo-size opacity-50" />
+          <span class="text-xl font-bold text-gray-500 font-mono">SCRATCH_TABS</span>
+        </div>
+        <div class="flex space-x-8">
+          <a href="https://github.com/spectra-g/scratch-tabs-feedback/issues" target="_blank"
+            class="text-xs font-mono text-gray-500 hover:text-emerald-500 transition-colors uppercase tracking-widest">GITHUB</a>
+          <a href="https://discord.gg/HwsfpTzMVS" target="_blank"
+            class="text-xs font-mono text-gray-500 hover:text-emerald-500 transition-colors uppercase tracking-widest">DISCORD</a>
+          <a href="https://ko-fi.com/scratchtabs" target="_blank"
+            class="text-xs font-mono text-gray-500 hover:text-emerald-500 transition-colors uppercase tracking-widest">KO-FI</a>
+        </div>
+      </div>
+      <div
+        class="mt-8 pt-8 border-t border-gray-900 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+        <p class="text-xs font-mono text-gray-600 uppercase tracking-tighter">
+          &copy; <span id="currentYear"></span> Built for developers, by developers.
+        </p>
+        <p class="text-xs font-mono text-gray-600 uppercase tracking-tighter">
+          100% Client-Side. 100% Private.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("currentYear").textContent = new Date().getFullYear();
+    const mobileMenuButton = document.getElementById("mobile-menu-button");
+    const mobileMenu = document.getElementById("mobile-menu");
+    mobileMenuButton.addEventListener("click", () => {
+      mobileMenu.classList.toggle("hidden");
+    });
+  </script>
 </body>
 
 </html>
