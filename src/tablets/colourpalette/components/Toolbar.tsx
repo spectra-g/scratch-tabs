@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, Eye, BarChart3, Download } from '../../../components/Icons';
+import { Image, Eye, BarChart3, Download, History as HistoryIcon } from '../../../components/Icons';
 
 interface ToolbarProps {
     onGenerate: () => void;
@@ -7,7 +7,7 @@ interface ToolbarProps {
     onRedo: () => void;
     canUndo: boolean;
     canRedo: boolean;
-    onTogglePanel: (panel: 'image' | 'preview' | 'accessibility' | 'export') => void;
+    onTogglePanel: (panel: 'image' | 'preview' | 'accessibility' | 'export' | 'history') => void;
     activePanel: string | null;
 }
 
@@ -76,6 +76,13 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                     title="Accessibility Report"
                 >
                     <BarChart3 size={20} />
+                </button>
+                <button
+                    onClick={() => onTogglePanel('history')}
+                    className={getButtonClass(activePanel === 'history')}
+                    title="Timeline / History"
+                >
+                    <HistoryIcon size={20} />
                 </button>
                 <button
                     onClick={() => onTogglePanel('export')}

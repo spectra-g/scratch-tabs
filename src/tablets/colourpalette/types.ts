@@ -46,6 +46,7 @@ export interface ColourPaletteState {
   selectedExportFormat: string;
   harmonyType: 'complementary' | 'triadic' | 'analogous' | 'monochromatic' | 'tetradic';
   baseColor: string;
+  history?: ColorInfo[][];
 }
 
 export interface ImageExtractionOptions {

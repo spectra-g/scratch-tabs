@@ -11,6 +11,7 @@ import { ImageColourExtractor } from './components/ImageColourExtractor';
 import { LiveUIPreview } from './components/LiveUIPreview';
 import { AccessibilityMatrix } from './components/AccessibilityMatrix';
 import { ExportPanel } from './components/ExportPanel';
+import { HistoryPanel } from './components/HistoryPanel';
 import { useTabletTabCreation } from '../bridge';
 
 interface ColourPaletteTabletProps {
@@ -42,7 +43,7 @@ export const ColourPaletteTablet: React.FC<ColourPaletteTabletProps> = ({
   const { createBackgroundTab } = useTabletTabCreation();
 
   // -- Local UI State --
-  const [activePanel, setActivePanel] = useState<'image' | 'preview' | 'accessibility' | 'export' | null>(null);
+  const [activePanel, setActivePanel] = useState<'image' | 'preview' | 'accessibility' | 'export' | 'history' | null>(null);
   const [uiMapping, setUiMapping] = useState<UIPreviewMapping>(state.uiMapping || DEFAULT_UI_MAPPING);
 
   // -- Engine Hook --
@@ -53,6 +54,7 @@ export const ColourPaletteTablet: React.FC<ColourPaletteTabletProps> = ({
 
   const {
     colors,
+    history,
     canUndo,
     canRedo,
     generate,
@@ -62,7 +64,7 @@ export const ColourPaletteTablet: React.FC<ColourPaletteTabletProps> = ({
     undo,
     redo,
     setPalette,
-  } = usePaletteEngine(stableInitialColors);
+  } = usePaletteEngine(stableInitialColors, state.history);
 
   // -- State Synchronization --
   const stateRef = useRef(state);
@@ -70,16 +72,21 @@ export const ColourPaletteTablet: React.FC<ColourPaletteTabletProps> = ({
 
   useEffect(() => {
     const externalColors = stateRef.current.colors;
-    const isDifferent = colors.length !== externalColors.length ||
+    const externalHistory = stateRef.current.history || [];
+
+    const isColorsDifferent = colors.length !== externalColors.length ||
       colors.some((c, i) => c.hex !== externalColors[i]?.hex || c.isLocked !== externalColors[i]?.isLocked);
 
-    if (isDifferent) {
+    const isHistoryDifferent = history.length !== externalHistory.length;
+
+    if (isColorsDifferent || isHistoryDifferent) {
       onChange({
         ...stateRef.current,
         colors: [...colors],
+        history: [...history],
       });
     }
-  }, [colors, onChange]);
+  }, [colors, history, onChange]);
 
   useEffect(() => {
     const isDifferent = state.colors.length !== colors.length ||
@@ -120,7 +127,7 @@ export const ColourPaletteTablet: React.FC<ColourPaletteTabletProps> = ({
       <div
         className={`
           relative h-full transition-all duration-300 ease-in-out flex flex-col
-          ${activePanel ? 'hidden md:block md:w-[calc(100%-400px)]' : 'w-full'}
+          ${activePanel ? 'hidden md:flex md:w-[calc(100%-400px)]' : 'w-full'}
         `}
       >
         <div className="flex-1 relative overflow-hidden">
@@ -164,7 +171,8 @@ export const ColourPaletteTablet: React.FC<ColourPaletteTabletProps> = ({
               activePanel === 'image' ? "Extract from Image" :
                 activePanel === 'preview' ? "UI Preview" :
                   activePanel === 'accessibility' ? "Accessibility Report" :
-                    "Export Palette"
+                    activePanel === 'history' ? "Timeline" :
+                      "Export Palette"
             }
             isOpen={true} // Always "open" when visible in flex
             onClose={() => setActivePanel(null)}
@@ -198,6 +206,14 @@ export const ColourPaletteTablet: React.FC<ColourPaletteTabletProps> = ({
                 onCreateNewTab={handleCreateNewTab}
               />
             )}
+            {activePanel === 'history' && (
+              <HistoryPanel
+                history={history}
+                onRestore={(palette) => {
+                  setPalette(palette);
+                }}
+              />
+            )}
           </SidePanel>
         )}
       </div>
@@ -214,6 +230,7 @@ const createColourPaletteInitialState = (): ColourPaletteState => ({
   uiMapping: DEFAULT_UI_MAPPING,
   selectedExportFormat: 'hex',
   harmonyType: 'complementary',
+  history: [],
   baseColor: DEFAULT_COLORS[0]
 });
 

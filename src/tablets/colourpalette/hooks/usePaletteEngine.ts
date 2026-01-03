@@ -151,10 +151,10 @@ function paletteReducer(state: PaletteState, action: PaletteAction): PaletteStat
     }
 }
 
-export function usePaletteEngine(initialColors: ColorInfo[]) {
+export function usePaletteEngine(initialColors: ColorInfo[], initialHistory: ColorInfo[][] = []) {
     const [state, dispatch] = useReducer(paletteReducer, {
         colors: initialColors,
-        past: [],
+        past: initialHistory,
         future: [],
     });
 
@@ -187,6 +187,7 @@ export function usePaletteEngine(initialColors: ColorInfo[]) {
 
     return {
         colors: state.colors,
+        history: state.past,
         canUndo: state.past.length > 0,
         canRedo: state.future.length > 0,
         generate,

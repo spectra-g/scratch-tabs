@@ -75,10 +75,12 @@ export const ColorColumn: React.FC<ColorColumnProps> = ({
             {/* Action Bar (Top) */}
             <div className="flex flex-col items-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
                 {/* Shades Picker Trigger */}
-                <div className="relative">
+                <div
+                    className="relative"
+                    onMouseEnter={() => setShowShades(true)}
+                    onMouseLeave={() => setShowShades(false)}
+                >
                     <button
-                        onMouseEnter={() => setShowShades(true)}
-                        onMouseLeave={() => setShowShades(false)}
                         className="p-2 rounded-full hover:bg-white/10 transition-colors"
                         style={{ color: iconColor }}
                     >
@@ -86,23 +88,21 @@ export const ColorColumn: React.FC<ColorColumnProps> = ({
                     </button>
 
                     {showShades && (
-                        <div
-                            onMouseEnter={() => setShowShades(true)}
-                            onMouseLeave={() => setShowShades(false)}
-                            className="absolute left-1/2 -translate-x-1/2 top-full mt-2 bg-surface-raised border border-base rounded-lg shadow-2xl overflow-hidden z-50 flex flex-col w-12"
-                        >
-                            {shades.map((shade, i) => (
-                                <button
-                                    key={i}
-                                    onClick={() => onColorChange(color.id, shade)}
-                                    className="w-12 h-8 hover:scale-110 transition-transform relative group/shade"
-                                    style={{ backgroundColor: shade }}
-                                    title={shade}
-                                >
-                                    <span className="sr-only">{shade}</span>
-                                    <div className="absolute inset-0 border border-white/0 hover:border-white/40 transition-colors pointer-events-none" />
-                                </button>
-                            ))}
+                        <div className="absolute left-1/2 -translate-x-1/2 top-full pt-2 z-50">
+                            <div className="bg-surface-raised border border-base rounded-lg shadow-2xl overflow-hidden flex flex-col w-12">
+                                {shades.map((shade, i) => (
+                                    <button
+                                        key={i}
+                                        onClick={() => onColorChange(color.id, shade)}
+                                        className="w-12 h-8 hover:scale-110 transition-transform relative group/shade"
+                                        style={{ backgroundColor: shade }}
+                                        title={shade}
+                                    >
+                                        <span className="sr-only">{shade}</span>
+                                        <div className="absolute inset-0 border border-white/0 hover:border-white/40 transition-colors pointer-events-none" />
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     )}
                 </div>
