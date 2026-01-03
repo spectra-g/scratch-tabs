@@ -60,15 +60,15 @@ export function rgbToHsl(r: number, g: number, b: number): { h: number; s: numbe
   const min = Math.min(r, g, b);
   const diff = max - min;
   const sum = max + min;
-  
+
   const l = sum / 2;
-  
+
   if (diff === 0) {
     return { h: 0, s: 0, l: Math.round(l * 100) };
   }
-  
+
   const s = l > 0.5 ? diff / (2 - sum) : diff / sum;
-  
+
   let h: number;
   switch (max) {
     case r:
@@ -107,9 +107,9 @@ export function hslToRgb(h: number, s: number, l: number): { r: number; g: numbe
   const hue2rgb = (p: number, q: number, t: number) => {
     if (t < 0) t += 1;
     if (t > 1) t -= 1;
-    if (t < 1/6) return p + (q - p) * 6 * t;
-    if (t < 1/2) return q;
-    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
     return p;
   };
 
@@ -117,9 +117,9 @@ export function hslToRgb(h: number, s: number, l: number): { r: number; g: numbe
   const p = 2 * l - q;
 
   return {
-    r: Math.round(hue2rgb(p, q, h + 1/3) * RGB_MAX_VALUE),
+    r: Math.round(hue2rgb(p, q, h + 1 / 3) * RGB_MAX_VALUE),
     g: Math.round(hue2rgb(p, q, h) * RGB_MAX_VALUE),
-    b: Math.round(hue2rgb(p, q, h - 1/3) * RGB_MAX_VALUE),
+    b: Math.round(hue2rgb(p, q, h - 1 / 3) * RGB_MAX_VALUE),
   };
 }
 
@@ -207,30 +207,30 @@ export function generateContrastSuggestion(
  */
 function adjustLuminance(color: ColorInfo, targetLuminance: number): ColorInfo {
   const { h, s } = color.hsl;
-  
+
   // Binary search for the correct lightness value
   let low = 0;
   let high = 100;
   let bestL = color.hsl.l;
   let bestLum = color.luminance;
-  
+
   for (let i = 0; i < 20; i++) {
     const testL = (low + high) / 2;
     const testRgb = hslToRgb(h, s, testL);
     const testLum = getLuminance(testRgb.r, testRgb.g, testRgb.b);
-    
+
     if (Math.abs(testLum - targetLuminance) < Math.abs(bestLum - targetLuminance)) {
       bestL = testL;
       bestLum = testLum;
     }
-    
+
     if (testLum < targetLuminance) {
       low = testL;
     } else {
       high = testL;
     }
   }
-  
+
   const newRgb = hslToRgb(h, s, bestL);
   return createColorInfo(rgbToHex(newRgb.r, newRgb.g, newRgb.b));
 }
@@ -239,15 +239,18 @@ function adjustLuminance(color: ColorInfo, targetLuminance: number): ColorInfo {
  * Creates a ColorInfo object from a hex string
  */
 export function createColorInfo(hex: string): ColorInfo {
-  const rgb = hexToRgb(hex);
+  const normalizedHex = hex.startsWith('#') ? hex : `#${hex}`;
+  const rgb = hexToRgb(normalizedHex);
   const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
   const luminance = getLuminance(rgb.r, rgb.g, rgb.b);
-  
+
   return {
-    hex: hex.toUpperCase(),
+    id: Math.random().toString(36).substr(2, 9),
+    hex: normalizedHex.toUpperCase(),
     rgb,
     hsl,
     luminance,
+    isLocked: false,
     name: getColorName(hex),
   };
 }
@@ -258,14 +261,14 @@ export function createColorInfo(hex: string): ColorInfo {
 function getColorName(hex: string): string {
   const rgb = hexToRgb(hex);
   const { h, s, l } = rgbToHsl(rgb.r, rgb.g, rgb.b);
-  
+
   // Basic color name logic
   if (s < 10) {
     if (l < 20) return 'Black';
     if (l > 80) return 'White';
     return 'Gray';
   }
-  
+
   if (h < 15 || h >= 345) return 'Red';
   if (h < 45) return 'Orange';
   if (h < 75) return 'Yellow';
@@ -273,7 +276,7 @@ function getColorName(hex: string): string {
   if (h < 210) return 'Blue';
   if (h < 270) return 'Purple';
   if (h < 330) return 'Pink';
-  
+
   return 'Color';
 }
 
@@ -297,32 +300,32 @@ function medianCut(
   if (maxColors === 1 || pixels.length === 0) {
     return [getAverageColor(pixels)];
   }
-  
+
   if (pixels.length === 1) {
     return [pixels[0]];
   }
-  
+
   // Find the channel with the greatest range
   const ranges = getColorRanges(pixels);
   const maxRange = Math.max(ranges.r, ranges.g, ranges.b);
   let sortChannel: 0 | 1 | 2;
-  
+
   if (maxRange === ranges.r) sortChannel = 0;
   else if (maxRange === ranges.g) sortChannel = 1;
   else sortChannel = 2;
-  
+
   // Sort pixels by the channel with greatest range
   pixels.sort((a, b) => a[sortChannel] - b[sortChannel]);
-  
+
   // Split at median
   const median = Math.floor(pixels.length / 2);
   const left = pixels.slice(0, median);
   const right = pixels.slice(median);
-  
+
   // Recursively apply median cut
   const leftColors = medianCut(left, Math.floor(maxColors / 2));
   const rightColors = medianCut(right, Math.ceil(maxColors / 2));
-  
+
   return [...leftColors, ...rightColors];
 }
 
@@ -333,7 +336,7 @@ function getColorRanges(pixels: Array<[number, number, number]>) {
   let minR = 255, maxR = 0;
   let minG = 255, maxG = 0;
   let minB = 255, maxB = 0;
-  
+
   for (const [r, g, b] of pixels) {
     minR = Math.min(minR, r);
     maxR = Math.max(maxR, r);
@@ -342,7 +345,7 @@ function getColorRanges(pixels: Array<[number, number, number]>) {
     minB = Math.min(minB, b);
     maxB = Math.max(maxB, b);
   }
-  
+
   return {
     r: maxR - minR,
     g: maxG - minG,
@@ -355,12 +358,12 @@ function getColorRanges(pixels: Array<[number, number, number]>) {
  */
 function getAverageColor(pixels: Array<[number, number, number]>): [number, number, number] {
   if (pixels.length === 0) return [0, 0, 0];
-  
+
   const sum = pixels.reduce(
     (acc, [r, g, b]) => [acc[0] + r, acc[1] + g, acc[2] + b],
     [0, 0, 0]
   );
-  
+
   return [
     Math.round(sum[0] / pixels.length),
     Math.round(sum[1] / pixels.length),
@@ -375,16 +378,16 @@ export function generateColorHarmony(options: ColorHarmonyOptions): ColorInfo[] 
   const { type, baseColor, variations } = options;
   const baseColorInfo = createColorInfo(baseColor);
   const { h: baseHue, s: baseSat, l: baseLum } = baseColorInfo.hsl;
-  
+
   const colors: ColorInfo[] = [baseColorInfo];
-  
+
   switch (type) {
     case 'complementary': {
       const rgb = hslToRgb((baseHue + 180) % 360, baseSat, baseLum);
       colors.push(createColorInfo(rgbToHex(rgb.r, rgb.g, rgb.b)));
     }
       break;
-      
+
     case 'triadic': {
       const rgb1 = hslToRgb((baseHue + 120) % 360, baseSat, baseLum);
       colors.push(createColorInfo(rgbToHex(rgb1.r, rgb1.g, rgb1.b)));
@@ -392,7 +395,7 @@ export function generateColorHarmony(options: ColorHarmonyOptions): ColorInfo[] 
       colors.push(createColorInfo(rgbToHex(rgb2.r, rgb2.g, rgb2.b)));
     }
       break;
-      
+
     case 'analogous':
       for (let i = 1; i <= variations; i++) {
         const offset = (i * 30) % 360;
@@ -402,7 +405,7 @@ export function generateColorHarmony(options: ColorHarmonyOptions): ColorInfo[] 
         colors.push(createColorInfo(rgbToHex(rgb2.r, rgb2.g, rgb2.b)));
       }
       break;
-      
+
     case 'monochromatic':
       for (let i = 1; i <= variations; i++) {
         const lightness = Math.max(10, Math.min(90, baseLum + (i * 15) - (variations * 7.5)));
@@ -410,7 +413,7 @@ export function generateColorHarmony(options: ColorHarmonyOptions): ColorInfo[] 
         colors.push(createColorInfo(rgbToHex(rgb.r, rgb.g, rgb.b)));
       }
       break;
-      
+
     case 'tetradic': {
       const rgb1 = hslToRgb((baseHue + 90) % 360, baseSat, baseLum);
       colors.push(createColorInfo(rgbToHex(rgb1.r, rgb1.g, rgb1.b)));
@@ -421,7 +424,7 @@ export function generateColorHarmony(options: ColorHarmonyOptions): ColorInfo[] 
     }
       break;
   }
-  
+
   return colors.slice(0, Math.min(colors.length, 8)); // Limit to 8 colors
 }
 
@@ -440,7 +443,7 @@ export function generateCssVariables(colors: ColorInfo[]): string {
     const name = `color-${index + 1}`;
     return `  --${name}: ${color.hex};`;
   }).join('\n');
-  
+
   return `:root {\n${variables}\n}`;
 }
 
@@ -462,7 +465,7 @@ export function generateTailwindConfig(colors: ColorInfo[]): string {
     acc[`custom-${index + 1}`] = color.hex;
     return acc;
   }, {} as Record<string, string>);
-  
+
   return `module.exports = {
   theme: {
     extend: {
@@ -482,7 +485,7 @@ export function generateJsonArray(colors: ColorInfo[]): string {
     hsl: color.hsl,
     name: color.name,
   }));
-  
+
   return JSON.stringify(colorData, null, 2);
 }
 
@@ -494,17 +497,17 @@ export function loadImageFromFile(file: File): Promise<ImageData> {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     const img = new Image();
-    
+
     if (!ctx) {
       reject(new Error('Could not get canvas context'));
       return;
     }
-    
+
     img.onload = () => {
       canvas.width = img.width;
       canvas.height = img.height;
       ctx.drawImage(img, 0, 0);
-      
+
       try {
         const imageData = ctx.getImageData(0, 0, img.width, img.height);
         resolve(imageData);
@@ -512,11 +515,11 @@ export function loadImageFromFile(file: File): Promise<ImageData> {
         reject(new Error('Failed to extract image data'));
       }
     };
-    
+
     img.onerror = () => {
       reject(new Error('Failed to load image'));
     };
-    
+
     img.src = URL.createObjectURL(file);
   });
 }
@@ -773,17 +776,17 @@ export function extractColorsFromRegion(
  */
 export function generateRandomPalette(count: number = 5): ColorInfo[] {
   const colors: ColorInfo[] = [];
-  
+
   for (let i = 0; i < count; i++) {
     const hue = Math.floor(Math.random() * 360);
     const saturation = 40 + Math.floor(Math.random() * 60); // 40-100%
     const lightness = 30 + Math.floor(Math.random() * 40); // 30-70%
-    
+
     const rgb = hslToRgb(hue, saturation, lightness);
     const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
     colors.push(createColorInfo(hex));
   }
-  
+
   return colors;
 }
 
