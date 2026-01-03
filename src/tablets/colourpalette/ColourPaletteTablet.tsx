@@ -120,7 +120,7 @@ export const ColourPaletteTablet: React.FC<ColourPaletteTabletProps> = ({
       <div
         className={`
           relative h-full transition-all duration-300 ease-in-out flex flex-col
-          ${activePanel ? 'w-[calc(100%-400px)]' : 'w-full'}
+          ${activePanel ? 'hidden md:block md:w-[calc(100%-400px)]' : 'w-full'}
         `}
       >
         <div className="flex-1 relative overflow-hidden">
@@ -155,7 +155,7 @@ export const ColourPaletteTablet: React.FC<ColourPaletteTabletProps> = ({
       <div
         className={`
           h-full bg-surface border-l border-base transition-all duration-300 ease-in-out overflow-hidden flex flex-col
-          ${activePanel ? 'w-[400px] opacity-100' : 'w-0 opacity-0'}
+          ${activePanel ? 'w-full md:w-[400px] opacity-100' : 'w-0 opacity-0'}
         `}
       >
         {activePanel && (
