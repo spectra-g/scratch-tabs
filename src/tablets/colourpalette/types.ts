@@ -1,9 +1,11 @@
 export interface ColorInfo {
+  id: string;
   hex: string;
   rgb: { r: number; g: number; b: number };
   hsl: { h: number; s: number; l: number };
   name?: string;
   luminance: number;
+  isLocked: boolean;
 }
 
 export interface ContrastResult {
@@ -38,17 +40,13 @@ export interface ExportFormat {
 export interface ColourPaletteState {
   type: 'colourpalette';
   colors: ColorInfo[];
-  activeColorIndex: number;
-  generationMethod: 'manual' | 'image' | 'harmony';
   sourceImageUrl: string | null;
-  sourceImageData: ImageData | null;
   extractionRegion: { x: number; y: number; width: number; height: number } | null;
   uiMapping: UIPreviewMapping;
   selectedExportFormat: string;
-  isExtracting: boolean;
-  error: string | null;
   harmonyType: 'complementary' | 'triadic' | 'analogous' | 'monochromatic' | 'tetradic';
   baseColor: string;
+  history?: ColorInfo[][];
 }
 
 export interface ImageExtractionOptions {

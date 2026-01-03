@@ -3,6 +3,29 @@ config:
   max_versions: 10  # Maximum number of versions to display
 
 releases:
+  - version: "1.15.0"
+    type: "release"
+    draft: true
+    date: "2026-01-03"
+    headline: "🎨 Colour Palette: Canvas-First UX & Smart Tools"
+    description: "A complete rewrite of the Colour Palette tool, introducing a world-class canvas-first interface, intelligent generation, and peripheral features integrated via slide-over panels."
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**Canvas-First Interface:** Complete redesign into a 100% responsive canvas featuring vertical interactive color stripes with direct manipulation."
+          - "**Slide-Over Feature Panels:** Peripheral tools (Image Extraction, UI Preview, Accessibility, Export) are now housed in elegant slide-over containers, keeping the main interaction clean."
+          - "**Intelligent Palette Generation:** New generation engine using a `useReducer` pattern with space bar shortcuts and full Undo/Redo support."
+          - "**Enhanced Image Colour Extraction:** Modern sidebar interface for uploading images and sampling colors via direct click or region-dragging."
+          - "**UI Preview & Remix Engine:** Live preview of palettes on real UI components with an intelligent remixing engine and atomic locking."
+      - name: "🔧 Improvements"
+        changes:
+          - "**Accessibility Matrix with 💡 Suggestions:** WCAG 2.1 compliance matrix with one-click suggestions to fix contrast failures."
+          - "**Multi-Format Export:** Directly export palettes to CSS, SCSS, Tailwind, or JSON, with the ability to create new workspace tabs instantly."
+      - name: "🐛 Fixed"
+        changes:
+          - "**Generation Stability:** Implemented value-based state synchronization and memoization to prevent infinite render loops."
+          - "**Color Rendering Consistency:** Guaranteed `#` prefix normalization across all colors to prevent rendering failures."
+
   - version: "1.14.0"
     type: "latest"
     draft: false
