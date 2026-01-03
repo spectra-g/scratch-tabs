@@ -247,6 +247,7 @@ export const tabletMetadata: TabletMetadata[] = [
   {
     id: "loremipsum",
     label: "Lorem Ipsum Generator",
+    description: "Generate high-quality placeholder text (paragraphs, sentences, words) for your designs and mockups.",
     keywords: ["lorem", "ipsum", "placeholder", "text", "mock", "data", "generator"],
     getActionsForContext: (context) => {
       // Always available from any context
@@ -273,6 +274,7 @@ export const tabletMetadata: TabletMetadata[] = [
   {
     id: "checksum",
     label: "Checksum",
+    description: "Calculate and verify file/text integrity using MD5, SHA-1, SHA-256, and CRC32 hashes.",
     keywords: ["checksum", "hash", "md5", "sha", "crc32", "verify", "integrity"],
     getActionsForContext: (context) => {
       const actions = [];

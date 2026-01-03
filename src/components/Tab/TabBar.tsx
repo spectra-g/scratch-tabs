@@ -9,7 +9,7 @@ import { useRootStore } from "../../stores";
 import { useTabsStore } from "../../stores/tabsStore";
 import { useSplitViewStore } from "../../stores/splitViewStore";
 import { ToolSelectorModal } from "../ToolSelector";
-import { ToolItem } from "../../services/toolSelectorService";
+import { toolService, ToolItem } from "../../services/toolService";
 import { TabContextMenu } from "./TabContextMenu";
 import { TabActions } from "./TabActions";
 import { TabTooltip } from "./TabTooltip";
@@ -552,68 +552,11 @@ export const TabBar: React.FC<TabBarProps> = ({
   };
 
   const handleToolSelect = async (item: ToolItem) => {
-    if (item.type === 'tablet') {
-      const { dynamicTabletRegistry: tabletRegistry } = await import("../../tablets/dynamicRegistry");
-      const tablet = await tabletRegistry.getById(item.id);
-      if (tablet) {
-        const state = tablet.createInitialState();
-        const serializedState = tablet.serializeState(state);
-
-        addTab(
-          {
-            id: crypto.randomUUID(),
-            title: tablet.label,
-            content: "",
-            language: "plaintext",
-            languageLocked: true,
-            isTablet: true,
-            tabletState: serializedState,
-            cursorPosition: { lineNumber: 1, column: 1 },
-            workspaceId: activeWorkspaceId || "default",
-            dateCreated: Date.now(),
-            lastModified: Date.now(),
-          },
-          side === "right",
-        );
-      }
-    } else if (item.type === 'smartview') {
-      const format = formatRegistry.getById(item.languageId!);
-      if (format) {
-        addTab(
-          {
-            id: crypto.randomUUID(),
-            title: item.label,
-            content: format.sampleContent(),
-            language: item.languageId!,
-            languageLocked: false,
-            activeViewId: item.id,
-            cursorPosition: { lineNumber: 1, column: 1 },
-            workspaceId: activeWorkspaceId || "default",
-            dateCreated: Date.now(),
-            lastModified: Date.now(),
-          },
-          side === "right",
-        );
-      }
-    } else if (item.type === 'format') {
-      const format = formatRegistry.getById(item.id);
-      if (format) {
-        addTab(
-          {
-            id: crypto.randomUUID(),
-            title: format.name,
-            content: format.sampleContent(),
-            language: format.id,
-            languageLocked: false,
-            cursorPosition: { lineNumber: 1, column: 1 },
-            workspaceId: activeWorkspaceId || "default",
-            dateCreated: Date.now(),
-            lastModified: Date.now(),
-          },
-          side === "right",
-        );
-      }
-    }
+    await toolService.executeTool(item, {
+      side,
+      activeWorkspaceId: activeWorkspaceId || "default",
+      addTab: (tabData, isRight) => addTab(tabData, isRight),
+    });
     setShowToolSelector(false);
   };
 

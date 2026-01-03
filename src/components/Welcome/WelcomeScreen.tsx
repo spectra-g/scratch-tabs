@@ -2,8 +2,7 @@ import React, { useRef, useEffect, useCallback, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useRootStore } from "../../stores";
 import { ToolSelectorModal } from "../ToolSelector";
-import { ToolItem } from "../../services/toolSelectorService";
-import { formatRegistry } from "../../formats/registry";
+import { toolService, ToolItem } from "../../services/toolService";
 import { TabActions } from "../Tab/TabActions";
 import { FileText, Layers, Upload, FolderOpen, File, Package } from "../Icons";
 import { ImportExportService } from "../../features/import-export/ImportExportService";
@@ -33,61 +32,11 @@ export const WelcomeScreen: React.FC = () => {
 
   const handleToolSelect = useCallback(
     async (item: ToolItem) => {
-      if (item.type === 'tablet') {
-        const { dynamicTabletRegistry: tabletRegistry } = await import("../../tablets/dynamicRegistry");
-        const tablet = await tabletRegistry.getById(item.id);
-        if (tablet) {
-          const state = tablet.createInitialState();
-          const serializedState = tablet.serializeState(state);
-          const now = Date.now();
-
-          handleNewPopulatedTab({
-            id: crypto.randomUUID(),
-            title: tablet.label,
-            content: "",
-            language: "plaintext",
-            languageLocked: true,
-            isTablet: true,
-            tabletState: serializedState,
-            cursorPosition: { lineNumber: 1, column: 1 },
-            dateCreated: now,
-            lastModified: now,
-            workspaceId: "", // Will be set by the store
-          });
-        }
-      } else if (item.type === 'smartview') {
-        const format = formatRegistry.getById(item.languageId!);
-        if (format) {
-          handleNewPopulatedTab({
-            id: crypto.randomUUID(),
-            title: item.label,
-            content: format.sampleContent(),
-            language: item.languageId!,
-            languageLocked: false,
-            activeViewId: item.id,
-            cursorPosition: { lineNumber: 1, column: 1 },
-            dateCreated: Date.now(),
-            lastModified: Date.now(),
-            workspaceId: "",
-          });
-        }
-      } else if (item.type === 'format') {
-        const format = formatRegistry.getById(item.id);
-        if (format) {
-          handleNewPopulatedTab({
-            id: crypto.randomUUID(),
-            title: format.name,
-            content: format.sampleContent(),
-            language: format.id,
-            languageLocked: false,
-            cursorPosition: { lineNumber: 1, column: 1 },
-            dateCreated: Date.now(),
-            lastModified: Date.now(),
-            workspaceId: "",
-          });
-        }
-      }
-
+      await toolService.executeTool(item, {
+        side: 'left',
+        activeWorkspaceId: '', // Default for welcome
+        addTab: (tabData) => handleNewPopulatedTab(tabData),
+      });
       setShowToolSelector(false);
     },
     [handleNewPopulatedTab],

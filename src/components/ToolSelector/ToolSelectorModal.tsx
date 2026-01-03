@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { X, Search } from '../Icons';
-import { toolSelectorService, ToolItem } from '../../services/toolSelectorService';
+import { toolService, ToolItem } from '../../services/toolService';
 import { ToolCard } from './ToolCard';
 
 interface ToolSelectorModalProps {
@@ -27,11 +27,14 @@ export const ToolSelectorModal: React.FC<ToolSelectorModalProps> = ({
     // Load data
     useEffect(() => {
         const loadData = async () => {
-            const recent = await toolSelectorService.getRecentItems();
+            const recent = await toolService.getRecentItems();
             setRecentItems(recent);
 
-            const searchResults = await toolSelectorService.search(searchQuery);
+            const searchResults = await toolService.search(searchQuery);
             setResults(searchResults);
+
+            // Auto-select first item when searching or on mount
+            setSelectedIndex(0);
         };
         loadData();
     }, [searchQuery]);
@@ -41,13 +44,22 @@ export const ToolSelectorModal: React.FC<ToolSelectorModalProps> = ({
         searchInputRef.current?.focus();
     }, []);
 
-    // Keyboard navigation
-    const allFlattenedItems = [
-        ...(searchQuery ? [] : recentItems),
-        ...results.tablets,
-        ...results.smartViews,
-        ...results.formats,
-    ];
+    // Flatten all items for keyboard navigation
+    const allFlattenedItems = useMemo(() => {
+        if (searchQuery === '') {
+            return [
+                ...recentItems,
+                ...results.tablets,
+                ...results.smartViews,
+                ...results.formats,
+            ];
+        }
+        return [
+            ...results.tablets,
+            ...results.smartViews,
+            ...results.formats,
+        ];
+    }, [searchQuery, recentItems, results]);
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'ArrowDown') {
@@ -59,34 +71,30 @@ export const ToolSelectorModal: React.FC<ToolSelectorModalProps> = ({
         } else if (e.key === 'Enter') {
             e.preventDefault();
             const selected = allFlattenedItems[selectedIndex];
-            if (selected) handleSelect(selected);
+            if (selected) onSelect(selected);
         } else if (e.key === 'Escape') {
             onClose();
         }
     };
 
-    const handleSelect = (item: ToolItem) => {
-        toolSelectorService.recordUsage(item);
-        onSelect(item);
-    };
-
-    const renderSection = (title: string, items: ToolItem[]) => {
+    const renderSection = (title: string, items: ToolItem[], layout: 'grid' | 'list' = 'list') => {
         if (items.length === 0) return null;
 
         return (
-            <div className="mb-8">
-                <h2 className="text-secondary text-xs font-bold uppercase tracking-widest mb-4 px-1">
+            <div className="mb-6">
+                <h2 className="text-secondary text-[10px] font-bold uppercase tracking-[0.2em] mb-3 px-1">
                     {title}
                 </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className={layout === 'grid' ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3" : "flex flex-col border border-base rounded-xl overflow-hidden"}>
                     {items.map(item => {
                         const itemIndex = allFlattenedItems.indexOf(item);
                         return (
                             <ToolCard
                                 key={`${item.type}:${item.id}`}
                                 item={item}
-                                onClick={() => handleSelect(item)}
+                                onClick={() => onSelect(item)}
                                 isFocused={itemIndex === selectedIndex}
+                                variant={layout}
                             />
                         );
                     })}
@@ -107,69 +115,75 @@ export const ToolSelectorModal: React.FC<ToolSelectorModalProps> = ({
             />
 
             {/* Modal Container */}
-            <div className="relative w-full max-w-4xl mx-4 bg-surface border border-base rounded-2xl shadow-2xl flex flex-col max-h-[80vh] overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="relative w-full max-w-4xl mx-4 bg-surface border border-base rounded-3xl shadow-2xl flex flex-col max-h-[80vh] overflow-hidden animate-in zoom-in-95 duration-200">
 
                 {/* Header/Search Area */}
-                <div className="p-6 border-b border-base bg-surface-raised/50">
+                <div className="p-6 pb-4">
                     <div className="relative flex items-center">
-                        <Search className="absolute left-4 text-muted" size={20} />
+                        <Search className="absolute left-5 text-muted" size={24} />
                         <input
                             ref={searchInputRef}
                             type="text"
                             value={searchQuery}
-                            onChange={(e) => {
-                                setSearchQuery(e.target.value);
-                                setSelectedIndex(0);
-                            }}
-                            placeholder="Search tools, tablets, and formats..."
-                            className="w-full bg-surface border border-base rounded-xl py-4 pl-12 pr-12 text-main text-lg focus:ring-2 focus:ring-focus focus:border-focus transition-all outline-none shadow-sm placeholder:text-muted"
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="What do you want to do?"
+                            className="w-full bg-surface-raised/50 border-0 border-b-2 border-transparent focus:border-focus rounded-2xl py-5 pl-14 pr-14 text-main text-2xl font-light transition-all outline-none placeholder:text-muted/50"
                         />
                         <button
                             onClick={onClose}
-                            className="absolute right-4 p-2 text-secondary hover:text-main hover:bg-element-hover rounded-lg transition-colors"
+                            className="absolute right-4 p-2 text-muted hover:text-main hover:bg-element-hover rounded-xl transition-colors"
                         >
-                            <X size={20} />
+                            <X size={24} />
                         </button>
                     </div>
                 </div>
 
                 {/* Content Area */}
-                <div className="flex-1 overflow-y-auto p-6 scrollbar-themed">
-                    {searchQuery === '' && renderSection('Recently Used', recentItems)}
-                    {renderSection('Tablets', results.tablets)}
-                    {renderSection('Smart Views', results.smartViews)}
-                    {renderSection('Formats', results.formats)}
+                <div className="flex-1 overflow-y-auto p-6 pt-2 custom-scrollbar">
+                    {searchQuery === '' ? (
+                        <>
+                            {renderSection('Recently Used', recentItems, 'grid')}
+                            {renderSection('Tablets', results.tablets)}
+                            {renderSection('Smart Views', results.smartViews)}
+                            {renderSection('Formats', results.formats)}
+                        </>
+                    ) : (
+                        <>
+                            {renderSection('Tablets', results.tablets)}
+                            {renderSection('Smart Views', results.smartViews)}
+                            {renderSection('Formats', results.formats)}
 
-                    {allFlattenedItems.length === 0 && (
-                        <div className="flex flex-col items-center justify-center py-20 text-center">
-                            <div className="w-16 h-16 bg-surface-secondary rounded-full flex items-center justify-center mb-4">
-                                <Search size={32} className="text-muted" />
-                            </div>
-                            <h3 className="text-main font-semibold text-lg">No tools found</h3>
-                            <p className="text-secondary mt-1">Try searching for something else, or browse available tools above.</p>
-                        </div>
+                            {allFlattenedItems.length === 0 && (
+                                <div className="flex flex-col items-center justify-center py-20 text-center">
+                                    <div className="w-20 h-20 bg-surface-secondary rounded-full flex items-center justify-center mb-6">
+                                        <Search size={40} className="text-muted" />
+                                    </div>
+                                    <h3 className="text-main font-semibold text-xl">No tools match your search</h3>
+                                    <p className="text-secondary mt-2">Try searching for keywords like "json", "jwt", or "uuid".</p>
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
 
-                {/* Footer/Help */}
-                <div className="px-6 py-3 border-t border-base bg-surface-secondary/30 flex items-center justify-between text-xs text-muted">
-                    <div className="flex items-center gap-4">
-                        <span className="flex items-center gap-1">
-                            <kbd className="px-1.5 py-0.5 bg-element border border-base rounded flex items-center shadow-sm">↓</kbd>
-                            <kbd className="px-1.5 py-0.5 bg-element border border-base rounded flex items-center shadow-sm">↑</kbd>
-                            <span>to navigate</span>
+                {/* Footer */}
+                <div className="px-6 py-4 border-t border-base bg-surface-secondary/20 flex items-center justify-between text-[11px] text-muted font-medium">
+                    <div className="flex items-center gap-6">
+                        <span className="flex items-center gap-1.5">
+                            <kbd className="px-1.5 py-0.5 bg-surface border border-base rounded shadow-sm text-[10px]">↑↓</kbd>
+                            <span>Navigate</span>
                         </span>
-                        <span className="flex items-center gap-1">
-                            <kbd className="px-1.5 py-0.5 bg-element border border-base rounded flex items-center shadow-sm">↵</kbd>
-                            <span>to select</span>
+                        <span className="flex items-center gap-1.5">
+                            <kbd className="px-1.5 py-0.5 bg-surface border border-base rounded shadow-sm text-[10px]">↵</kbd>
+                            <span>Select</span>
                         </span>
-                        <span className="flex items-center gap-1">
-                            <kbd className="px-1.5 py-0.5 bg-element border border-base rounded flex items-center shadow-sm">esc</kbd>
-                            <span>to close</span>
+                        <span className="flex items-center gap-1.5">
+                            <kbd className="px-1.5 py-0.5 bg-surface border border-base rounded shadow-sm text-[10px]">esc</kbd>
+                            <span>Close</span>
                         </span>
                     </div>
-                    <div>
-                        Powered by Scratch Tabs Tools
+                    <div className="opacity-50">
+                        Quick Actions Area
                     </div>
                 </div>
             </div>

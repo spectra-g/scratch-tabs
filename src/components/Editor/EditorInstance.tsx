@@ -10,8 +10,7 @@ import { useToolSelector } from "../../hooks/useToolSelector";
 import { useEditorActions } from "../../hooks/useEditorActions";
 import { useEditorAI } from "../../hooks/useEditorAI";
 import { ToolSelectorModal } from "../ToolSelector";
-import { ToolItem } from "../../services/toolSelectorService";
-import { formatRegistry } from "../../formats/registry";
+import { toolService, ToolItem } from "../../services/toolService";
 import { useAIStore } from "../../stores/aiStore";
 import { modelManager } from "../../services/modelManager";
 import { useStoreWithEqualityFn } from "zustand/traditional";
@@ -593,44 +592,13 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
 
   const handleToolSelect = async (item: ToolItem) => {
     try {
-      if (item.type === 'tablet') {
-        const { dynamicTabletRegistry: tabletRegistry } = await import("../../tablets/dynamicRegistry");
-        const tablet = await tabletRegistry.getById(item.id);
-        if (tablet) {
-          const state = tablet.createInitialState();
-          const serializedState = tablet.serializeState
-            ? tablet.serializeState(state)
-            : JSON.stringify(state);
-          updateTabState(activeTabId, {
-            isTablet: true,
-            tabletState: serializedState,
-            content: "",
-            language: "plaintext",
-            languageLocked: true,
-            title: tablet.label,
-          });
-        }
-      } else if (item.type === 'smartview') {
-        updateTabState(activeTabId, { activeViewId: item.id });
-      } else if (item.type === 'format') {
-        const format = formatRegistry.getById(item.id);
-        if (format) {
-          useRootStore.getState().addTab(
-            {
-              id: crypto.randomUUID(),
-              title: format.name,
-              content: format.sampleContent(),
-              language: format.id,
-              languageLocked: false,
-              cursorPosition: { lineNumber: 1, column: 1 },
-              workspaceId: activeTab?.workspaceId || "default",
-              dateCreated: Date.now(),
-              lastModified: Date.now(),
-            },
-            side === "right",
-          );
-        }
-      }
+      await toolService.executeTool(item, {
+        side,
+        activeWorkspaceId: activeTab?.workspaceId || "default",
+        addTab: (tabData, isRight) => useRootStore.getState().addTab(tabData, isRight),
+        updateTab: updateTabState,
+        activeTabId: activeTabId
+      });
       closeToolSelector(true);
     } catch (error) {
       console.warn("[EditorInstance] Failed to handle tool select:", error);
