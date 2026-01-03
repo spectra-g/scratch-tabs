@@ -64,10 +64,10 @@ export const ToolSelectorModal: React.FC<ToolSelectorModalProps> = ({
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'ArrowDown') {
             e.preventDefault();
-            setSelectedIndex(prev => (prev + 1) % allFlattenedItems.length);
+            setSelectedIndex(prev => (prev + 1) % (allFlattenedItems.length || 1));
         } else if (e.key === 'ArrowUp') {
             e.preventDefault();
-            setSelectedIndex(prev => (prev - 1 + allFlattenedItems.length) % allFlattenedItems.length);
+            setSelectedIndex(prev => (prev - 1 + (allFlattenedItems.length || 1)) % (allFlattenedItems.length || 1));
         } else if (e.key === 'Enter') {
             e.preventDefault();
             const selected = allFlattenedItems[selectedIndex];
@@ -77,45 +77,49 @@ export const ToolSelectorModal: React.FC<ToolSelectorModalProps> = ({
         }
     };
 
-    const renderSection = (title: string, items: ToolItem[], layout: 'grid' | 'list' = 'list') => {
+    const renderSection = (title: string, items: ToolItem[], layout: 'grid' | 'list') => {
         if (items.length === 0) return null;
 
+        // Calculate global starting index for this section to handle selection across groups
+        let sectionStartIndex = 0;
+        if (title === 'Tablets') sectionStartIndex = recentItems.length;
+        else if (title === 'Smart Views') sectionStartIndex = recentItems.length + results.tablets.length;
+        else if (title === 'Formats') sectionStartIndex = recentItems.length + results.tablets.length + results.smartViews.length;
+
         return (
-            <div className="mb-6">
-                <h2 className="text-secondary text-[10px] font-bold uppercase tracking-[0.2em] mb-3 px-1">
+            <div className="mb-8">
+                <h2 className="text-[10px] uppercase tracking-[0.2em] text-muted font-bold mb-3 px-1">
                     {title}
                 </h2>
-                <div className={layout === 'grid' ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3" : "flex flex-col border border-base rounded-xl overflow-hidden"}>
-                    {items.map(item => {
-                        const itemIndex = allFlattenedItems.indexOf(item);
-                        return (
-                            <ToolCard
-                                key={`${item.type}:${item.id}`}
-                                item={item}
-                                onClick={() => onSelect(item)}
-                                isFocused={itemIndex === selectedIndex}
-                                variant={layout}
-                            />
-                        );
-                    })}
+                <div className={layout === 'grid' ? "grid grid-cols-5 gap-3" : "flex flex-col gap-1"}>
+                    {items.map((item, index) => (
+                        <ToolCard
+                            key={item.id}
+                            item={item}
+                            variant={layout}
+                            isFocused={selectedIndex === sectionStartIndex + index}
+                            onClick={() => onSelect(item)}
+                        />
+                    ))}
                 </div>
             </div>
         );
     };
 
     return (
-        <div
-            className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] pb-10"
-            onKeyDown={handleKeyDown}
-        >
+        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] pb-10">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-canvas/60 backdrop-blur-md animate-in fade-in duration-300"
+                className="absolute inset-0 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300"
                 onClick={onClose}
             />
 
             {/* Modal Container */}
-            <div className="relative w-full max-w-4xl mx-4 bg-surface border border-base rounded-3xl shadow-2xl flex flex-col max-h-[80vh] overflow-hidden animate-in zoom-in-95 duration-200">
+            <div
+                className="relative w-full max-w-4xl mx-4 bg-surface border border-base rounded-3xl shadow-2xl flex flex-col max-h-[80vh] overflow-hidden animate-in zoom-in-95 duration-200"
+                role="dialog"
+                aria-label="Tool Selector"
+            >
 
                 {/* Header/Search Area */}
                 <div className="p-6 pb-4">
@@ -126,6 +130,7 @@ export const ToolSelectorModal: React.FC<ToolSelectorModalProps> = ({
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
+                            onKeyDown={handleKeyDown}
                             placeholder="What do you want to do?"
                             className="w-full bg-surface-raised/50 border-0 border-b-2 border-transparent focus:border-focus rounded-2xl py-5 pl-14 pr-14 text-main text-2xl font-light transition-all outline-none placeholder:text-muted/50"
                         />
@@ -143,17 +148,17 @@ export const ToolSelectorModal: React.FC<ToolSelectorModalProps> = ({
                     {searchQuery === '' ? (
                         <>
                             {renderSection('Recently Used', recentItems, 'grid')}
-                            {renderSection('Tablets', results.tablets)}
-                            {renderSection('Smart Views', results.smartViews)}
-                            {renderSection('Formats', results.formats)}
+                            {renderSection('Tablets', results.tablets, 'list')}
+                            {renderSection('Smart Views', results.smartViews, 'list')}
+                            {renderSection('Formats', results.formats, 'list')}
                         </>
                     ) : (
                         <>
-                            {renderSection('Tablets', results.tablets)}
-                            {renderSection('Smart Views', results.smartViews)}
-                            {renderSection('Formats', results.formats)}
+                            {renderSection('Tablets', results.tablets, 'list')}
+                            {renderSection('Smart Views', results.smartViews, 'list')}
+                            {renderSection('Formats', results.formats, 'list')}
 
-                            {allFlattenedItems.length === 0 && (
+                            {results.tablets.length === 0 && results.smartViews.length === 0 && results.formats.length === 0 && (
                                 <div className="flex flex-col items-center justify-center py-20 text-center">
                                     <div className="w-20 h-20 bg-surface-secondary rounded-full flex items-center justify-center mb-6">
                                         <Search size={40} className="text-muted" />
