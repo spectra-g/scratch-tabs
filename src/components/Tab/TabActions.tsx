@@ -1,5 +1,4 @@
-import React from "react";
-import { Plus, ClipboardPlus, Tablet } from "../Icons";
+import { Plus, ClipboardPlus, Puzzle } from "../Icons";
 import { useRootStore } from "../../stores";
 
 interface TabActionsProps {
@@ -42,11 +41,11 @@ export const TabActions: React.FC<TabActionsProps> = ({
         ref={tabletButtonRef}
         onClick={onShowTabletSelector}
         className="px-2 py-1 text-main flex items-center h-8"
-        title="New tablet"
-        data-testid="icon-new-tablet"
+        title="Open tool selector (/)"
+        data-testid="icon-new-tools"
         data-side={side}
       >
-        <Tablet size={16} />
+        <Puzzle size={16} />
       </button>
     </div>
   );

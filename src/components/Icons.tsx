@@ -95,6 +95,7 @@ export {
   Tag,
   Tag as TagIcon,
   PlusCircle,
+  Puzzle,
   Square,
   Disc,
   PlayCircle,

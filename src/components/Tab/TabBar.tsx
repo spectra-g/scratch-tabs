@@ -8,7 +8,8 @@ import React, {
 import { useRootStore } from "../../stores";
 import { useTabsStore } from "../../stores/tabsStore";
 import { useSplitViewStore } from "../../stores/splitViewStore";
-import { TabletSelector } from "../../tablets";
+import { ToolSelectorModal } from "../ToolSelector";
+import { ToolItem } from "../../services/toolSelectorService";
 import { TabContextMenu } from "./TabContextMenu";
 import { TabActions } from "./TabActions";
 import { TabTooltip } from "./TabTooltip";
@@ -74,11 +75,6 @@ export const TabBar: React.FC<TabBarProps> = ({
     x: number;
     y: number;
   } | null>(null);
-  const [showTabletSelector, setShowTabletSelector] = useState(false);
-  const [tabletSelectorPosition, setTabletSelectorPosition] = useState({
-    x: 0,
-    y: 0,
-  });
   const hasInitializedWidths = useRef(false);
   const initialWidths = useRef<{ [key: string]: number }>({});
   const containerWidthRef = useRef<number>(0);
@@ -105,7 +101,6 @@ export const TabBar: React.FC<TabBarProps> = ({
   const newTabButtonRef = useRef<HTMLButtonElement>(null);
   const tabsWrapperRef = useRef<HTMLDivElement>(null);
   const tabsContainerRef = useRef<HTMLDivElement>(null);
-  const tabletSelectorTabBarRef = useRef<HTMLDivElement>(null);
 
   // Setup DnD sensors
   const sensors = useSensors(
@@ -146,30 +141,6 @@ export const TabBar: React.FC<TabBarProps> = ({
     .map((tab) => getTabLineCount(tab.content));
   const maxLineCount = Math.max(...tabLineCounts, 1);
 
-  useEffect(() => {
-    if (!showTabletSelector) {
-      return;
-    }
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        tabletSelectorTabBarRef.current &&
-        !tabletSelectorTabBarRef.current.contains(event.target as Node)
-      ) {
-        if (
-          tabletButtonRef.current &&
-          !tabletButtonRef.current.contains(event.target as Node)
-        ) {
-          setShowTabletSelector(false);
-        }
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showTabletSelector]);
 
   // Handle initial tab rendering and width calculations
   useLayoutEffect(() => {
@@ -292,6 +263,9 @@ export const TabBar: React.FC<TabBarProps> = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const [showToolSelector, setShowToolSelector] = useState(false);
+
+
   useEffect(() => {
     if (editingTabId && inputRef.current) {
       inputRef.current.focus();
@@ -384,7 +358,7 @@ export const TabBar: React.FC<TabBarProps> = ({
   );
 
   const handleTabMouseLeave = useCallback(
-    (tabId: string) => {
+    (_tabId: string) => {
       if (initialDelayTimerRef.current) {
         clearTimeout(initialDelayTimerRef.current);
         initialDelayTimerRef.current = null;
@@ -577,27 +551,70 @@ export const TabBar: React.FC<TabBarProps> = ({
     }
   };
 
-  const handleTabletSelect = (tablet: any) => {
-    const state = tablet.createInitialState();
-    const serializedState = tablet.serializeState(state);
+  const handleToolSelect = async (item: ToolItem) => {
+    if (item.type === 'tablet') {
+      const { dynamicTabletRegistry: tabletRegistry } = await import("../../tablets/dynamicRegistry");
+      const tablet = await tabletRegistry.getById(item.id);
+      if (tablet) {
+        const state = tablet.createInitialState();
+        const serializedState = tablet.serializeState(state);
 
-    addTab(
-      {
-        id: crypto.randomUUID(),
-        title: tablet.label,
-        content: "",
-        language: "plaintext",
-        languageLocked: false,
-        isTablet: true,
-        tabletState: serializedState,
-        cursorPosition: { lineNumber: 1, column: 1 },
-        workspaceId: activeWorkspaceId || "default",
-        dateCreated: Date.now(),
-        lastModified: Date.now(),
-      },
-      side === "right",
-    );
-    setShowTabletSelector(false);
+        addTab(
+          {
+            id: crypto.randomUUID(),
+            title: tablet.label,
+            content: "",
+            language: "plaintext",
+            languageLocked: true,
+            isTablet: true,
+            tabletState: serializedState,
+            cursorPosition: { lineNumber: 1, column: 1 },
+            workspaceId: activeWorkspaceId || "default",
+            dateCreated: Date.now(),
+            lastModified: Date.now(),
+          },
+          side === "right",
+        );
+      }
+    } else if (item.type === 'smartview') {
+      const format = formatRegistry.getById(item.languageId!);
+      if (format) {
+        addTab(
+          {
+            id: crypto.randomUUID(),
+            title: item.label,
+            content: format.sampleContent(),
+            language: item.languageId!,
+            languageLocked: false,
+            activeViewId: item.id,
+            cursorPosition: { lineNumber: 1, column: 1 },
+            workspaceId: activeWorkspaceId || "default",
+            dateCreated: Date.now(),
+            lastModified: Date.now(),
+          },
+          side === "right",
+        );
+      }
+    } else if (item.type === 'format') {
+      const format = formatRegistry.getById(item.id);
+      if (format) {
+        addTab(
+          {
+            id: crypto.randomUUID(),
+            title: format.name,
+            content: format.sampleContent(),
+            language: format.id,
+            languageLocked: false,
+            cursorPosition: { lineNumber: 1, column: 1 },
+            workspaceId: activeWorkspaceId || "default",
+            dateCreated: Date.now(),
+            lastModified: Date.now(),
+          },
+          side === "right",
+        );
+      }
+    }
+    setShowToolSelector(false);
   };
 
   // Get lists of pinned and unpinned tabs
@@ -689,43 +706,7 @@ export const TabBar: React.FC<TabBarProps> = ({
         <div className="flex items-center">
           <TabActions
             side={side}
-            onShowTabletSelector={() => {
-              if (tabletButtonRef.current) {
-                if (showTabletSelector) {
-                  setShowTabletSelector(false);
-                } else {
-                  const rect = tabletButtonRef.current.getBoundingClientRect();
-                  const viewportWidth = window.innerWidth;
-                  const selectorWidth =
-                    window.innerWidth >= 1024
-                      ? 700
-                      : window.innerWidth >= 768
-                        ? 600
-                        : 384;
-
-                  // Calculate optimal x position
-                  let x = rect.left;
-
-                  // Check if positioning 255px to the left would fit
-                  if (x - 255 + selectorWidth > viewportWidth) {
-                    // Not enough space, position to fit within viewport
-                    x = viewportWidth - selectorWidth - 10; // 10px margin from edge
-                  } else {
-                    // Enough space, use the standard offset
-                    x = x - 255;
-                  }
-
-                  // Ensure it doesn't go off the left edge
-                  x = Math.max(10, x);
-
-                  setTabletSelectorPosition({
-                    x: x,
-                    y: rect.bottom + 4,
-                  });
-                  setShowTabletSelector(true);
-                }
-              }
-            }}
+            onShowTabletSelector={() => setShowToolSelector(!showToolSelector)}
             newTabButtonRef={newTabButtonRef}
             tabletButtonRef={tabletButtonRef}
           />
@@ -736,23 +717,11 @@ export const TabBar: React.FC<TabBarProps> = ({
         </div>
       </div>
 
-      {showTabletSelector && (
-        <div
-          ref={tabletSelectorTabBarRef}
-          style={{
-            position: "fixed",
-            left: tabletSelectorPosition.x,
-            top: tabletSelectorPosition.y,
-            zIndex: 50,
-          }}
-        >
-          <TabletSelector
-            searchQuery=""
-            onSelect={handleTabletSelect}
-            onClose={() => setShowTabletSelector(false)}
-            showSearch={true}
-          />
-        </div>
+      {showToolSelector && (
+        <ToolSelectorModal
+          onSelect={handleToolSelect}
+          onClose={() => setShowToolSelector(false)}
+        />
       )}
 
       {contextMenu && (
