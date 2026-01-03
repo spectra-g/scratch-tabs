@@ -14,7 +14,7 @@ releases:
         changes:
           - "**Canvas-First Interface:** Complete redesign into a 100% responsive canvas featuring vertical interactive color stripes with direct manipulation."
           - "**Slide-Over Feature Panels:** Peripheral tools (Image Extraction, UI Preview, Accessibility, Export) are now housed in elegant slide-over containers, keeping the main interaction clean."
-          - "**Intelligent Palette Generation:** New generation engine using a `useReducer` pattern with spacebar shortcuts and full Undo/Redo support."
+          - "**Intelligent Palette Generation:** New generation engine using a `useReducer` pattern with space bar shortcuts and full Undo/Redo support."
           - "**Enhanced Image Colour Extraction:** Modern sidebar interface for uploading images and sampling colors via direct click or region-dragging."
           - "**UI Preview & Remix Engine:** Live preview of palettes on real UI components with an intelligent remixing engine and atomic locking."
       - name: "🔧 Improvements"

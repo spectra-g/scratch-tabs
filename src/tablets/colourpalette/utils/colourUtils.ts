@@ -809,3 +809,32 @@ export function sortColors(colors: ColorInfo[], criteria: 'hue' | 'saturation' |
     }
   });
 }
+
+/**
+ * Generates 11 shades of a color (5 lighter, base, 5 darker)
+ */
+export const generateShades = (hex: string): string[] => {
+  const { r, g, b } = hexToRgb(hex);
+  const { h, s, l } = rgbToHsl(r, g, b);
+
+  const shades: string[] = [];
+
+  // Lighter versions
+  for (let i = 5; i >= 1; i--) {
+    const newL = Math.min(100, l + (100 - l) * (i / 6));
+    const { r: nr, g: ng, b: nb } = hslToRgb(h, s, newL);
+    shades.push(rgbToHex(nr, ng, nb));
+  }
+
+  // Base
+  shades.push(hex.toUpperCase());
+
+  // Darker versions
+  for (let i = 1; i <= 5; i++) {
+    const newL = Math.max(0, l - l * (i / 6));
+    const { r: nr, g: ng, b: nb } = hslToRgb(h, s, newL);
+    shades.push(rgbToHex(nr, ng, nb));
+  }
+
+  return shades;
+};

@@ -1,4 +1,5 @@
-import React, { useCallback } from 'react';
+import React from 'react';
+import { Reorder } from 'framer-motion';
 import { ColorInfo } from '../types';
 import { ColorColumn } from './ColorColumn';
 
@@ -15,38 +16,40 @@ export const PaletteCanvas: React.FC<PaletteCanvasProps> = ({
     onColorChange,
     onMoveColor,
 }) => {
-    const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
-        e.dataTransfer.setData('text/plain', index.toString());
-        e.dataTransfer.effectAllowed = 'move';
-    }, []);
+    const handleReorder = (newColors: ColorInfo[]) => {
+        // Find what moved
+        const movedItem = colors.find((c, i) => c.id !== newColors[i]?.id);
+        if (!movedItem) return;
 
-    const handleDragOver = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-    }, []);
+        const fromIndex = colors.findIndex(c => c.id === movedItem.id);
+        const toIndex = newColors.findIndex(c => c.id === movedItem.id);
 
-    const handleDrop = useCallback((e: React.DragEvent, toIndex: number) => {
-        e.preventDefault();
-        const fromIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
         if (fromIndex !== toIndex) {
             onMoveColor(fromIndex, toIndex);
         }
-    }, [onMoveColor]);
+    };
 
     return (
-        <div className="flex w-full h-full overflow-hidden bg-surface">
+        <Reorder.Group
+            axis="x"
+            values={colors}
+            onReorder={handleReorder}
+            className="flex w-full h-full overflow-hidden bg-surface"
+        >
             {colors.map((color, index) => (
-                <ColorColumn
+                <Reorder.Item
                     key={color.id}
-                    color={color}
-                    index={index}
-                    onLockToggle={onLockToggle}
-                    onColorChange={onColorChange}
-                    onDragStart={handleDragStart}
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
-                />
+                    value={color}
+                    className="flex-1 h-full relative"
+                >
+                    <ColorColumn
+                        color={color}
+                        index={index}
+                        onLockToggle={onLockToggle}
+                        onColorChange={onColorChange}
+                    />
+                </Reorder.Item>
             ))}
-        </div>
+        </Reorder.Group>
     );
 };

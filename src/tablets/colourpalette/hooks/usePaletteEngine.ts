@@ -1,6 +1,6 @@
 import { useReducer, useCallback, useEffect } from 'react';
 import { ColorInfo } from '../types';
-import { createColorInfo, generateRandomPalette, generateColorHarmony } from '../utils/colourUtils';
+import { createColorInfo, generateRandomPalette, generateColorHarmony, hslToRgb, rgbToHex } from '../utils/colourUtils';
 
 interface PaletteState {
     colors: ColorInfo[];
@@ -27,9 +27,15 @@ function paletteReducer(state: PaletteState, action: PaletteAction): PaletteStat
             const lockedColors = state.colors.filter((c) => c.isLocked);
             let newColors: ColorInfo[];
 
-            const generateRandomHex = () => {
-                const hex = Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
-                return `#${hex}`;
+            const generatePleasingHex = () => {
+                // Use Golden Ratio for better distribution if possible, 
+                // or just constrained HSL for "pleasing" colors
+                const hue = Math.floor(Math.random() * 360);
+                const saturation = 50 + Math.floor(Math.random() * 45); // 50-95%
+                const lightness = 30 + Math.floor(Math.random() * 50);  // 30-80%
+
+                const { r, g, b } = hslToRgb(hue, saturation, lightness);
+                return rgbToHex(r, g, b);
             };
 
             if (lockedColors.length > 0) {
@@ -53,7 +59,7 @@ function paletteReducer(state: PaletteState, action: PaletteAction): PaletteStat
                     } else if (genIdx < generated.length) {
                         newColors.push({ ...generated[genIdx++], id: c.id });
                     } else {
-                        newColors.push(createColorInfo(generateRandomHex()));
+                        newColors.push(createColorInfo(generatePleasingHex()));
                     }
                 });
 
@@ -62,7 +68,7 @@ function paletteReducer(state: PaletteState, action: PaletteAction): PaletteStat
                     if (genIdx < generated.length) {
                         newColors.push(generated[genIdx++]);
                     } else {
-                        newColors.push(createColorInfo(generateRandomHex()));
+                        newColors.push(createColorInfo(generatePleasingHex()));
                     }
                 }
             } else {

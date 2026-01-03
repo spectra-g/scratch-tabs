@@ -115,84 +115,92 @@ export const ColourPaletteTablet: React.FC<ColourPaletteTabletProps> = ({
   }, [createBackgroundTab]);
 
   return (
-    <div className="relative h-full w-full bg-surface overflow-hidden flex flex-col">
-      {/* Main Canvas Area */}
-      <div className="flex-1 relative overflow-hidden">
-        <PaletteCanvas
-          colors={colors}
-          onLockToggle={toggleLock}
-          onColorChange={updateColor}
-          onMoveColor={moveColor}
+    <div className="relative h-full w-full bg-surface overflow-hidden flex flex-row">
+      {/* Main Canvas Area - Transitions width based on active panel */}
+      <div
+        className={`
+          relative h-full transition-all duration-300 ease-in-out flex flex-col
+          ${activePanel ? 'w-[calc(100%-400px)]' : 'w-full'}
+        `}
+      >
+        <div className="flex-1 relative overflow-hidden">
+          <PaletteCanvas
+            colors={colors}
+            onLockToggle={toggleLock}
+            onColorChange={updateColor}
+            onMoveColor={moveColor}
+          />
+        </div>
+
+        {/* Floating Toolbar inside the canvas container */}
+        <Toolbar
+          onGenerate={generate}
+          onUndo={undo}
+          onRedo={redo}
+          canUndo={canUndo}
+          canRedo={canRedo}
+          activePanel={activePanel}
+          onTogglePanel={(panel) => setActivePanel(current => current === panel ? null : panel)}
         />
+
+        {/* UI Hints inside the canvas container */}
+        {!activePanel && (
+          <div className="absolute bottom-24 left-1/2 -translate-x-1/2 opacity-40 text-[10px] font-medium tracking-widest text-secondary pointer-events-none uppercase whitespace-nowrap">
+            Space to generate • Click Hex to edit • Drag to reorder
+          </div>
+        )}
       </div>
 
-      {/* Side Panels */}
-      <SidePanel
-        title="Extract from Image"
-        isOpen={activePanel === 'image'}
-        onClose={() => setActivePanel(null)}
+      {/* Side Panels - Now part of the flex layout for "squeezing" effect */}
+      <div
+        className={`
+          h-full bg-surface border-l border-base transition-all duration-300 ease-in-out overflow-hidden flex flex-col
+          ${activePanel ? 'w-[400px] opacity-100' : 'w-0 opacity-0'}
+        `}
       >
-        <ImageColourExtractor
-          imageUrl={state.sourceImageUrl}
-          onColorsExtracted={handleImageColorsExtracted}
-          onRegionExtracted={handleRegionExtracted}
-        />
-      </SidePanel>
-
-      <SidePanel
-        title="UI Preview"
-        isOpen={activePanel === 'preview'}
-        onClose={() => setActivePanel(null)}
-      >
-        <LiveUIPreview
-          colors={colors}
-          mapping={uiMapping}
-          onMappingChange={(m) => {
-            setUiMapping(m);
-            onChange({ ...stateRef.current, uiMapping: m });
-          }}
-        />
-      </SidePanel>
-
-      <SidePanel
-        title="Accessibility Report"
-        isOpen={activePanel === 'accessibility'}
-        onClose={() => setActivePanel(null)}
-      >
-        <AccessibilityMatrix
-          colors={colors}
-          onColorSuggestionApply={handleColorSuggestionApply}
-        />
-      </SidePanel>
-
-      <SidePanel
-        title="Export Palette"
-        isOpen={activePanel === 'export'}
-        onClose={() => setActivePanel(null)}
-      >
-        <ExportPanel
-          colors={colors}
-          onCreateNewTab={handleCreateNewTab}
-        />
-      </SidePanel>
-
-      {/* Floating Toolbar */}
-      <Toolbar
-        onGenerate={generate}
-        onUndo={undo}
-        onRedo={redo}
-        canUndo={canUndo}
-        canRedo={canRedo}
-        activePanel={activePanel}
-        onTogglePanel={(panel) => setActivePanel(current => current === panel ? null : panel)}
-      />
-
-      {/* UI Hints */}
-      {!activePanel && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 opacity-40 text-[10px] font-medium tracking-widest text-secondary pointer-events-none uppercase">
-          Space to generate • Click Hex to edit • Drag to reorder
-        </div>
-      )}
+        {activePanel && (
+          <SidePanel
+            title={
+              activePanel === 'image' ? "Extract from Image" :
+                activePanel === 'preview' ? "UI Preview" :
+                  activePanel === 'accessibility' ? "Accessibility Report" :
+                    "Export Palette"
+            }
+            isOpen={true} // Always "open" when visible in flex
+            onClose={() => setActivePanel(null)}
+          >
+            {activePanel === 'image' && (
+              <ImageColourExtractor
+                imageUrl={state.sourceImageUrl}
+                onColorsExtracted={handleImageColorsExtracted}
+                onRegionExtracted={handleRegionExtracted}
+              />
+            )}
+            {activePanel === 'preview' && (
+              <LiveUIPreview
+                colors={colors}
+                mapping={uiMapping}
+                onMappingChange={(m) => {
+                  setUiMapping(m);
+                  onChange({ ...stateRef.current, uiMapping: m });
+                }}
+              />
+            )}
+            {activePanel === 'accessibility' && (
+              <AccessibilityMatrix
+                colors={colors}
+                onColorSuggestionApply={handleColorSuggestionApply}
+              />
+            )}
+            {activePanel === 'export' && (
+              <ExportPanel
+                colors={colors}
+                onCreateNewTab={handleCreateNewTab}
+              />
+            )}
+          </SidePanel>
+        )}
+      </div>
     </div>
   );
 };
