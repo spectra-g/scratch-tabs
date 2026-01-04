@@ -367,7 +367,7 @@ export const tabletMetadata: TabletMetadata[] = [
           return [
             {
               id: 'extract-colors-from-css',
-              label: 'Extract Colors to Palette',
+              label: 'Extract Colours to Palette',
               icon: Palette,
               action: () => {
                 // Extract colors from CSS/code and open colour palette

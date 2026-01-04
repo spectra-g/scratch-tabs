@@ -4,7 +4,7 @@ import { useRootStore } from "../../stores";
 import { ToolSelectorModal } from "../ToolSelector";
 import { toolService, ToolItem } from "../../services/toolService";
 import { TabActions } from "../Tab/TabActions";
-import { FileText, Layers, Upload, FolderOpen, File, Package } from "../Icons";
+import { FileText, Extension, Upload, FolderOpen, File, Package } from "../Icons";
 import { ImportExportService } from "../../features/import-export/ImportExportService";
 export const WelcomeScreen: React.FC = () => {
   const { handleNewTab, handleNewPopulatedTab } = useRootStore();
@@ -174,7 +174,7 @@ export const WelcomeScreen: React.FC = () => {
       clickable: true,
     },
     {
-      icon: Layers,
+      icon: Extension,
       title: "Open specialized tablet",
       action: "Press / key",
       onClick: handleOpenToolSelector,
