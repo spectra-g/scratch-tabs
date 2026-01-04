@@ -18,12 +18,14 @@ releases:
           - "**Enhanced Image Colour Extraction:** Modern sidebar interface for uploading images and sampling colors via direct click or region-dragging."
           - "**UI Preview & Remix Engine:** Live preview of palettes on real UI components with an intelligent remixing engine and atomic locking."
           - "**Omni-Selector Redesign:** A completely overhauled tool selector featuring weighted fuzzy search, a 'Recently Used' grid, and a high-density list layout for deep discovery."
+          - "**Markdown Preview Sync:** Bidirectional scroll synchronization and click-to-navigate between raw markdown editor and live preview - scroll either pane to keep them in sync, or click any preview element to jump to its source line."
       - name: "🔧 Improvements"
         changes:
           - "**Accessibility Matrix with 💡 Suggestions:** WCAG 2.1 compliance matrix with one-click suggestions to fix contrast failures."
           - "**Multi-Format Export:** Directly export palettes to CSS, SCSS, Tailwind, or JSON, with the ability to create new workspace tabs instantly."
           - "**Centralized Tool Execution:** Unified `ToolService` for all tool types (Tablets, Smart Views, Formats) ensure consistent tab creation and usage tracking."
           - "**Comprehensive Tool Registry Tests:** Added a robust test suite for `ToolService`, `ToolCard`, and `ToolSelectorModal` to guarantee stability and keyboard navigation compliance."
+          - "**Smart View Sync Architecture:** Introduced extensible sync configuration system allowing any format (Markdown, HTML, CSV) to provide custom scroll/click synchronization while maintaining architectural separation."
       - name: "🐛 Fixed"
         changes:
           - "**Generation Stability:** Implemented value-based state synchronization and memoization to prevent infinite render loops."
