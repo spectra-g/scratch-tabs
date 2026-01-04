@@ -8,6 +8,7 @@ import { Eye } from "../../components/Icons";
 import MarkdownPreview from "./components/MarkdownPreview";
 import { SmartViewButtons } from "../../components/StatusBar/SmartViewButtons";
 import { StatusItemProps } from "../../components/StatusBar/types";
+import { getLineFromElement, getElementSelectorFromLine } from "./syncUtils";
 
 // Create the Markdown format module that implements the new interface
 export class MarkdownFormatModule implements FormatModule {
@@ -60,6 +61,12 @@ export class MarkdownFormatModule implements FormatModule {
         component: MarkdownPreview,
         mode: "side-by-side",
         priority: 1,
+        syncConfig: {
+          enableScrollSync: true,
+          enableClickSync: true,
+          getLineFromElement,
+          getElementSelectorFromLine,
+        },
       },
     ];
   }

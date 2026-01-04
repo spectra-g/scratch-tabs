@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useMemo, useCallback } from "react";
+import React, { Suspense, lazy, useMemo, useCallback, useRef } from "react";
 import { useRootStore } from "../../stores";
 import { useTabsStore } from "../../stores/tabsStore";
 import { useSplitViewStore } from "../../stores/splitViewStore";
@@ -14,6 +14,8 @@ import { modelManager } from "../../services/modelManager";
 import { migrateTextToRich } from "../RichText/utils/contentMigration";
 import { useClipboardStore } from "../../stores/clipboardStore";
 import { BatchToolsModal } from "../BatchTools/BatchToolsModal";
+import { useSmartViewSync } from "../../hooks/useSmartViewSync";
+import type * as Monaco from "monaco-editor";
 
 // Lazy load the RichTextEditor component
 const RichTextEditor = lazy(() => import("../RichText/RichTextEditor").then(module => ({ default: module.RichTextEditor })));
@@ -155,6 +157,22 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
   const { containerRef, editorStyle, previewStyle, dividerProps, isDragging } =
     useMarkdownPreviewResizer(!!shouldShowSideBySidePreview);
 
+  // Refs for scroll and click sync
+  const editorInstanceRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
+  const previewContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const handleEditorReady = useCallback((editor: Monaco.editor.IStandaloneCodeEditor | null) => {
+    editorInstanceRef.current = editor;
+  }, []);
+
+  // Sync scroll and clicks between editor and preview
+  useSmartViewSync({
+    editor: editorInstanceRef.current,
+    previewContainer: previewContainerRef.current,
+    syncConfig: extendedView?.syncConfig,
+    content: previewContent,
+    enabled: shouldShowSideBySidePreview && !!activeTab,
+  });
 
   return (
     // Main container for this pane
@@ -203,6 +221,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
                 side={side}
                 activeTabId={activeTabId}
                 onUpgradeToRich={handleUpgradeToRich}
+                onEditorReady={handleEditorReady}
               />
             )
           ) : (
@@ -241,6 +260,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
           className="h-full flex flex-col overflow-hidden border-l border-base"
         >
           <div
+            ref={previewContainerRef}
             className="flex-1 w-full h-full overflow-auto custom-scrollbar bg-element"
             style={{ padding: "1rem" }}
           >
