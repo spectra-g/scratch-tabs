@@ -47,7 +47,12 @@ export const WelcomeScreen: React.FC = () => {
   }, [handleNewTab]);
 
   const handleOpenToolSelector = useCallback(() => {
-    setShowToolSelector(true);
+    // Delay opening the selector slightly (50ms) to allow double-clicks on the
+    // trigger button to propagate to the container first. This prevents the
+    // modal from intercepting the second click of a double-click action.
+    setTimeout(() => {
+      setShowToolSelector(true);
+    }, 50);
   }, []);
 
   const handleImportFromClipboard = useCallback(async () => {

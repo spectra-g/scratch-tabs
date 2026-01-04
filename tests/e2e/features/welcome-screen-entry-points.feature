@@ -39,7 +39,6 @@ Feature: Welcome Screen Entry Points
     Then the preview should be visible
     And the URL should contain "welcome"
 
-    @some-bug
   Scenario: Create new tab from double-click on page
     When I double-click on the page
     Then the "Welcome" tab should exist and not be active
