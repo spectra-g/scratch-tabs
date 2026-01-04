@@ -126,7 +126,7 @@ const toTabRecord = (tab: Tab): TabRecord => ({
 const toTab = (record: TabRecord): Tab => {
   const now = Date.now();
   const cursor = record.cursorPosition || { lineNumber: 1, column: 1 };
-  
+
   let richContent = null;
   if (record.richContent) {
     try {
@@ -135,7 +135,7 @@ const toTab = (record: TabRecord): Tab => {
       console.warn('Failed to parse rich content:', error);
     }
   }
-  
+
   return {
     ...record,
     richContent,
@@ -151,7 +151,7 @@ const toTab = (record: TabRecord): Tab => {
 const toTabMetadata = (record: TabRecord): Omit<Tab, "content"> => {
   const now = Date.now();
   const { content, richContent, ...metadata } = record;
-  
+
   let parsedRichContent = null;
   if (richContent) {
     try {
@@ -160,7 +160,7 @@ const toTabMetadata = (record: TabRecord): Omit<Tab, "content"> => {
       console.warn('Failed to parse rich content in metadata:', error);
     }
   }
-  
+
   return {
     ...metadata,
     richContent: parsedRichContent,
@@ -206,7 +206,7 @@ export class IndexedDBStorage implements StorageProvider {
   private readonly MAX_RETRIES = 3;
   private readonly RETRY_DELAY = 1000;
 
-  private constructor() {}
+  private constructor() { }
 
   static getInstance(): IndexedDBStorage {
     if (!IndexedDBStorage.instance) {
@@ -441,6 +441,29 @@ export async function setSetting(key: string, value: string) {
 export async function getSetting(key: string): Promise<string | undefined> {
   const record = await db.settings.get(key);
   return record?.value;
+}
+
+/**
+ * Recent Tools Management
+ */
+const RECENT_TOOLS_KEY = 'recent_tools_v2';
+const MAX_RECENT_TOOLS = 10;
+
+export async function getRecentTools(): Promise<string[]> {
+  const value = await getSetting(RECENT_TOOLS_KEY);
+  if (!value) return [];
+  try {
+    return JSON.parse(value);
+  } catch (e) {
+    return [];
+  }
+}
+
+export async function addRecentTool(toolId: string) {
+  const recent = await getRecentTools();
+  // Remove if already exists, then add to front
+  const updated = [toolId, ...recent.filter(id => id !== toolId)].slice(0, MAX_RECENT_TOOLS);
+  await setSetting(RECENT_TOOLS_KEY, JSON.stringify(updated));
 }
 
 export async function incrementSetting(

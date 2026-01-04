@@ -1,12 +1,24 @@
-import React from "react";
+import React, { useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { calculateLineNumbers } from "../syncUtils";
 
 interface MarkdownPreviewProps {
   content: string;
 }
 
 const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => {
+  // Calculate line numbers for sync
+  const lineNumbers = useMemo(() => calculateLineNumbers(content), [content]);
+
+  // Counter for elements as they're rendered
+  const elementCounterRef = React.useRef(0);
+
+  // Reset counter when content changes
+  React.useEffect(() => {
+    elementCounterRef.current = 0;
+  }, [content]);
+
   return (
     // Apply Tailwind's typography plugin classes for nice default styling.
     // 'prose-invert' is for dark mode themes.
@@ -16,13 +28,16 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => {
         remarkPlugins={[remarkGfm]}
         components={{
           // Enhanced table styling from Word Count tablet
-          table: ({ children }) => (
-            <div className="overflow-x-auto custom-scrollbar my-4">
-              <table className="w-full text-xs border-collapse border border-base">
-                {children}
-              </table>
-            </div>
-          ),
+          table: ({ children }) => {
+            const lineNum = lineNumbers.get(elementCounterRef.current++);
+            return (
+              <div className="overflow-x-auto custom-scrollbar my-4" data-source-line={lineNum}>
+                <table className="w-full text-xs border-collapse border border-base">
+                  {children}
+                </table>
+              </div>
+            );
+          },
           thead: ({ children }) => (
             <thead className="bg-surface/50">
               {children}
@@ -48,8 +63,54 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => {
               {children}
             </tr>
           ),
+          // Headers with line numbers
+          h1: ({ children }) => {
+            const lineNum = lineNumbers.get(elementCounterRef.current++);
+            return <h1 data-source-line={lineNum}>{children}</h1>;
+          },
+          h2: ({ children }) => {
+            const lineNum = lineNumbers.get(elementCounterRef.current++);
+            return <h2 data-source-line={lineNum}>{children}</h2>;
+          },
+          h3: ({ children }) => {
+            const lineNum = lineNumbers.get(elementCounterRef.current++);
+            return <h3 data-source-line={lineNum}>{children}</h3>;
+          },
+          h4: ({ children }) => {
+            const lineNum = lineNumbers.get(elementCounterRef.current++);
+            return <h4 data-source-line={lineNum}>{children}</h4>;
+          },
+          h5: ({ children }) => {
+            const lineNum = lineNumbers.get(elementCounterRef.current++);
+            return <h5 data-source-line={lineNum}>{children}</h5>;
+          },
+          h6: ({ children }) => {
+            const lineNum = lineNumbers.get(elementCounterRef.current++);
+            return <h6 data-source-line={lineNum}>{children}</h6>;
+          },
+          // Code blocks
+          pre: ({ children }) => {
+            const lineNum = lineNumbers.get(elementCounterRef.current++);
+            return <pre data-source-line={lineNum}>{children}</pre>;
+          },
+          // Blockquotes
+          blockquote: ({ children }) => {
+            const lineNum = lineNumbers.get(elementCounterRef.current++);
+            return <blockquote data-source-line={lineNum}>{children}</blockquote>;
+          },
+          // Horizontal rules
+          hr: () => {
+            const lineNum = lineNumbers.get(elementCounterRef.current++);
+            return <hr data-source-line={lineNum} />;
+          },
+          // List items
+          li: ({ children }) => {
+            const lineNum = lineNumbers.get(elementCounterRef.current++);
+            return <li data-source-line={lineNum}>{children}</li>;
+          },
           // Enhanced status icon rendering
           p: ({ children }) => {
+            const lineNum = lineNumbers.get(elementCounterRef.current++);
             if (typeof children === 'string') {
               const processedContent = children
                 .replace(/✅/g, '<span class="text-success">✅</span>')
@@ -57,10 +118,10 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => {
                 .replace(/❌/g, '<span class="text-danger">❌</span>');
 
               if (processedContent !== children) {
-                return <p dangerouslySetInnerHTML={{ __html: processedContent }} />;
+                return <p data-source-line={lineNum} dangerouslySetInnerHTML={{ __html: processedContent }} />;
               }
             }
-            return <p>{children}</p>;
+            return <p data-source-line={lineNum}>{children}</p>;
           },
         }}
       >

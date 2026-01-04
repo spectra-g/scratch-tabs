@@ -10,6 +10,3 @@ export type { TabletMetadata } from "./tabletMetadata";
 
 // Export metadata for direct access if needed
 export { tabletMetadata } from "./tabletMetadata";
-
-// Export the tablet selector component
-export { TabletSelector } from "./components";

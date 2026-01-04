@@ -26,7 +26,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({ tab, onClose }) => {
 
   const format = formatRegistry.getById(tab.language);
   const shareStrategy = format?.shareStrategy;
-  const maxSize = shareService.getMaxContentSize();
+  // Use maxSize from size check to ensure UI and status calculations are consistent
+  const [maxSize, setMaxSize] = useState<number>(shareService.getMaxContentSize());
 
   // Check initial size
   useEffect(() => {
@@ -39,6 +40,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ tab, onClose }) => {
 
     const sizeCheck = shareService.canFitInUrl(tab.content, tab.language);
     setCurrentSize(sizeCheck.size);
+    setMaxSize(sizeCheck.maxSize); // Use the same maxSize for consistency
 
     if (sizeCheck.fits) {
       const generatedUrl = shareService.generateShareUrl(
@@ -89,14 +91,26 @@ export const ShareModal: React.FC<ShareModalProps> = ({ tab, onClose }) => {
   }, []);
 
   // Determine which trim UI to use - memoized to prevent re-creation on every render
+  // IMPORTANT: Only use custom trim UI if ALL conditions are met:
+  // 1. The format has a shareStrategy defined (e.g., JSON does, curl doesn't)
+  // 2. The strategy supports custom trimming (supportsCustomTrim === true)
+  // 3. The strategy has a canTrim function AND it returns true for this content
+  // 4. The strategy has a getTrimUI function to provide the custom UI
+  // Otherwise, always use the default line range selector
   const TrimUI = useMemo(() => {
-    const canUseCustom = shareStrategy?.supportsCustomTrim &&
+    // Check if we can use custom trim UI for this format
+    const hasShareStrategy = shareStrategy?.supportsCustomTrim &&
       shareStrategy.getTrimUI &&
-      (!shareStrategy.canTrim || shareStrategy.canTrim(tab.content || ""));
+      shareStrategy.canTrim;
+
+    // Only use custom trim if the strategy exists AND can trim this specific content
+    const canUseCustom = hasShareStrategy && shareStrategy.canTrim(tab.content || "");
 
     if (canUseCustom && shareStrategy.getTrimUI) {
       return React.lazy(shareStrategy.getTrimUI);
     }
+
+    // Default to line range selector for all other cases
     return DefaultTextRangeTrimUI;
   }, [shareStrategy, tab.content]);
 

@@ -1,4 +1,3 @@
-@sharing
 Feature: Tab Sharing
 
   Background:
@@ -112,7 +111,7 @@ Feature: Tab Sharing
     And the JSON trim UI should be visible
     And the JSON key "remove_me" should be "unselected"
     And the JSON key "keep_me" should be "selected"
-    And the budget bar should show the max of "1740" characters
+    And the budget bar should show the max of "1800" characters
     When I copy the share URL from the modal
     And I open the share URL in a new browser instance
     Then the new browser instance should have a tab with JSON content

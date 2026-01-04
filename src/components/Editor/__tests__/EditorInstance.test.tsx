@@ -8,9 +8,8 @@ import { useRootStore } from '../../../stores/rootStore';
 // Mock the dynamic registry to prevent import.meta.glob issues
 jest.mock('../../../tablets/dynamicRegistry');
 
-// Mock the tablets index which includes TabletSelector
+// Mock the tablets index
 jest.mock('../../../tablets', () => ({
-  TabletSelector: jest.fn(() => <div data-testid="tablet-selector" />),
   Tablet: jest.fn(() => <div data-testid="tablet" />),
 }));
 
@@ -79,10 +78,11 @@ jest.mock('../../../hooks/useEditorScrollManager', () => ({
   }),
 }));
 
-jest.mock('../../../hooks/useTabletSelector', () => ({
-  useTabletSelector: () => ({
-    selectedTablet: null,
-    setSelectedTablet: jest.fn(),
+jest.mock('../../../hooks/useToolSelector', () => ({
+  useToolSelector: () => ({
+    showToolSelector: false,
+    toolQuery: "",
+    closeToolSelector: jest.fn(),
   }),
 }));
 
@@ -121,7 +121,7 @@ jest.mock('../../../services/modelManager', () => ({
 
 // Mock Monaco Editor
 jest.mock('@monaco-editor/react', () => ({
-  Editor: ({ onMount, options }: any) => {
+  Editor: ({ onMount }: any) => {
     // Simulate editor mount
     React.useEffect(() => {
       const mockModel = {

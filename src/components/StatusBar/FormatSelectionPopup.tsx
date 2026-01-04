@@ -21,9 +21,9 @@ export const FormatSelectionPopup: React.FC<FormatSelectionPopupProps> = ({
   // Filter formats based on search term
   const filteredFormats = useMemo(() => {
     if (!searchTerm.trim()) return formats;
-    
+
     const term = searchTerm.toLowerCase();
-    return formats.filter(item => 
+    return formats.filter(item =>
       !item.isSeparator && item.name.toLowerCase().includes(term)
     );
   }, [formats, searchTerm]);
@@ -58,6 +58,7 @@ export const FormatSelectionPopup: React.FC<FormatSelectionPopupProps> = ({
   return (
     <div
       ref={popupRef}
+      data-testid="format-selection-popup"
       className="absolute z-50 bg-surface border border-base rounded shadow-lg overflow-hidden custom-scrollbar"
       style={{
         bottom: "28px",

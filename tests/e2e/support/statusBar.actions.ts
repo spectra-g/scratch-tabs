@@ -162,7 +162,7 @@ export class StatusBarActions {
 
   // Format popup search functionality
   getFormatSelectionPopup() {
-    return this.page.locator('.absolute.z-50.bg-surface');
+    return this.page.locator('[data-testid="format-selection-popup"]');
   }
 
   getFormatSearchInput() {

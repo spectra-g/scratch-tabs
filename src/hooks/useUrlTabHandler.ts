@@ -317,13 +317,13 @@ const createNewTabFromUrl = async (
       t.id === urlIdentifier || labelToUrlIdentifier(t.label) === urlIdentifier,
   );
   if (tabletInfo) {
-    // Load the tablet implementation like TabletSelector does
+    // Load the tablet implementation like the Tool Selector does
     const { dynamicTabletRegistry } = await import(
       "../tablets/dynamicRegistry"
     );
     const tablet = await dynamicTabletRegistry.getById(tabletInfo.id);
     if (tablet) {
-      // Create proper initial state like TabletSelector
+      // Create proper initial state like the Tool Selector
       const state = tablet.createInitialState();
       const serializedState = tablet.serializeState
         ? tablet.serializeState(state)
