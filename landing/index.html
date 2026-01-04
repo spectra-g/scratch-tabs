@@ -305,23 +305,25 @@
     </div>
   </header>
 
+  <!-- LAYER 1: THE INTELLIGENT INTAKE -->
   <section id="hero" class="pt-16 pb-20 md:pt-24 md:pb-32">
     <div class="container mx-auto px-6">
       <div class="flex flex-col md:flex-row items-center gap-12">
         <!-- Left Column -->
         <div class="md:w-1/2 text-left">
           <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-sm border border-gray-800 bg-gray-900 mb-6">
-            <span class="text-emerald-500 font-mono text-xs">[v1.14.0]</span>
-            <span class="text-gray-400 text-xs">Now with Privacy-First Tab Sharing</span>
+            <span class="text-emerald-500 font-mono text-xs">[LAYER_01]</span>
+            <span class="text-gray-400 text-xs">The Intelligent Intake</span>
           </div>
           <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight mb-6">
-            Finally, a home for your <span class="text-emerald-500 underline decoration-2 underline-offset-8">temporary
-              data.</span>
+            Finally, a home for your <span class="text-emerald-500">temporary data.</span>
           </h1>
-          <p class="text-lg md:text-xl text-gray-400 mb-8 leading-relaxed">
-            Your IDE isn't a junk drawer for minified JSON, logs, commands, or text snippets. Scratch Tabs provides a private,
-            offline-first workbench for the temporary data you need to analyze, compare, and transform - without ever hitting 'Save As'.
-            No menus, no config. Just paste, <strong>it knows</strong>.
+          <p class="text-lg md:text-xl text-gray-400 mb-6 leading-relaxed">
+            Your IDE isn't a junk drawer. Scratch Tabs is a private, offline-first workbench for the minified JSON,
+            messy logs, and code snippets you aren't ready to save - but need to understand.
+          </p>
+          <p class="text-base md:text-lg text-emerald-500 font-mono mb-8">
+            Powered by Monaco. Just paste; it auto-detects everything.
           </p>
           <div class="flex flex-col sm:flex-row gap-4">
             <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button">
@@ -332,7 +334,7 @@
 
         <!-- Right Column -->
         <div class="md:w-1/2 w-full">
-          <div class="rounded-sm overflow-hidden border border-gray-800 shadow-2xl">
+          <div class="rounded overflow-hidden border border-gray-800 shadow-2xl">
             <video
               class="w-full h-auto"
               autoplay
@@ -361,122 +363,183 @@
     </div>
   </section>
 
-  <!-- Bento Grid Section -->
-  <section id="tablets-bento" class="py-16 md:py-24 border-t border-gray-800">
+  <!-- LAYER 2: THE ONE-CLICK WORKBENCH -->
+  <section id="data-promotion" class="py-16 md:py-24 border-t border-gray-800">
     <div class="container mx-auto px-6">
-
-      <!-- Bridge Commentary -->
-      <div class="max-w-4xl mb-16">
-        <h2 class="text-3xl md:text-4xl font-mono text-white mb-12 text-center">THE TABLETS</h2>
-        <p class="text-xl text-gray-400 leading-relaxed font-light">
-          Scratch Tabs isn’t just a workspace—it’s a specialized workbench.
-          When you paste data, it is <span class="text-emerald-500 font-mono">instantly identified</span>.
-          The app suggests the right workflow, allowing you to launch your data into a
-          **Tablet** with a single click: a powerful, interactive mini-app built to analyze,
-          transform, and visualize that specific format.
+      <div class="mb-12">
+        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-sm border border-gray-800 bg-gray-900 mb-4">
+          <span class="text-emerald-500 font-mono text-xs">[LAYER_02]</span>
+          <span class="text-gray-400 text-xs">The One-Click Workbench</span>
+        </div>
+        <h2 class="text-3xl md:text-4xl font-mono text-white mb-6">01 // DATA_PROMOTION</h2>
+        <p class="text-lg text-gray-400 max-w-3xl leading-relaxed">
+          Raw text is just the beginning. One click <span class="text-emerald-500 font-mono">"promotes"</span> your data into a dedicated Workbench - an interactive environment purpose-built for that specific format.
         </p>
       </div>
 
-      <div class="bento-grid">
-        <!-- Cluster 1: Data -->
-        <div class="card-sharp p-6 col-span-2 row-span-2 flex flex-col">
-          <div class="flex justify-between items-start mb-4">
-            <h3 class="text-emerald-500 font-mono text-sm">// Cluster 01: Data</h3>
-            <span class="text-gray-700 font-mono text-xs">interactive_parsing</span>
+      <!-- Promotion Examples Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- JSON/CSV Promotion -->
+        <div class="card-sharp p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-white font-mono text-sm">JSON / CSV</h3>
+            <span class="text-emerald-500 font-mono text-xs">→</span>
           </div>
-          <p class="text-white text-xl font-bold mb-4">Deep Data Exploration</p>
-          <p class="text-gray-500 text-sm mb-6">Go beyond formatting. Tree-walk through JSON, map complex schemas visually, or explore massive CSVs without opening a spreadsheet.</p>
-          <div class="flex flex-wrap gap-2 mb-6">
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">JSON Tree</span>
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">JSON Mapper</span>
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">CSV Explorer</span>
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">YAML/XML Viewers</span>
-          </div>
-          <div class="visual-placeholder flex-grow">
-            [GIF: JSON_MAPPER_DRAG_AND_DROP]
+          <p class="text-gray-400 text-sm mb-4">Text Editor → Interactive Tree & Filterable Table</p>
+          <div class="visual-placeholder h-48">
+            [GIF: Click "Launch Workbench" → JSON Tree View appears with expandable nodes]
           </div>
         </div>
 
-        <!-- Cluster 2: Security -->
-        <div class="card-sharp p-6 flex flex-col">
-          <h3 class="text-emerald-500 font-mono mb-4 text-sm">// Cluster 02: Auth & Keys</h3>
-          <div class="flex flex-wrap gap-2 mb-4">
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">JWT Toolkit</span>
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Password Gen</span>
+        <!-- Markdown Promotion -->
+        <div class="card-sharp p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-white font-mono text-sm">MARKDOWN</h3>
+            <span class="text-emerald-500 font-mono text-xs">→</span>
           </div>
-          <div class="visual-placeholder flex-grow aspect-video">
-            [GIF: JWT_DECODER_UI]
-          </div>
-        </div>
-
-        <!-- Cluster 3: Web -->
-        <div class="card-sharp p-6 flex flex-col">
-          <h3 class="text-emerald-500 font-mono mb-4 text-sm">// Cluster 03: Web</h3>
-          <div class="flex flex-wrap gap-2 mb-4">
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">REST Client</span>
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">URL Parser</span>
-          </div>
-          <div class="visual-placeholder flex-grow aspect-video">
-            [GIF: REST_CLIENT_VARIABLES]
+          <p class="text-gray-400 text-sm mb-4">Text Editor → Live HTML Preview</p>
+          <div class="visual-placeholder h-48">
+            [GIF: Toggle preview mode → Split-screen showing markdown and rendered HTML]
           </div>
         </div>
 
-        <!-- Cluster 4: Utility -->
-        <div class="card-sharp p-6 row-span-2 flex flex-col">
-          <h3 class="text-emerald-500 font-mono mb-4 text-sm">// Cluster 04: Snippets</h3>
-          <p class="text-gray-400 text-sm mb-4">Your personal command library and visualization engine.</p>
-          <div class="flex flex-col gap-2 mb-6">
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Command Vault</span>
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Diagram Editor</span>
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Pomodoro</span>
+        <!-- cURL Promotion -->
+        <div class="card-sharp p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-white font-mono text-sm">CURL</h3>
+            <span class="text-emerald-500 font-mono text-xs">→</span>
           </div>
-          <div class="visual-placeholder flex-grow">
-            [GIF: MERMAID_LIVE_EDIT]
+          <p class="text-gray-400 text-sm mb-4">Raw Command → Interactive Request Builder</p>
+          <div class="visual-placeholder h-48">
+            [GIF: Paste curl command → REST Client UI populates with headers and body]
           </div>
-        </div>
-
-        <!-- Small Extra Cards -->
-        <div class="card-sharp p-4 flex items-center justify-between border-gray-800 hover:border-emerald-500 group">
-          <span class="font-mono text-gray-500 text-xs">0x0F</span>
-          <span class="text-white text-sm font-bold">UUID Generator</span>
-          <span class="text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
-        </div>
-        <div class="card-sharp p-4 flex items-center justify-between border-gray-800 hover:border-emerald-500 group">
-          <span class="font-mono text-gray-500 text-xs">0x10</span>
-          <span class="text-white text-sm font-bold">Checksum Calc</span>
-          <span class="text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Technical Specs Section -->
+  <!-- LAYER 3: THE SPECIALIZED TABLETS -->
+  <section id="tablet-arsenal" class="py-16 md:py-24 border-t border-gray-800 bg-gray-900/30">
+    <div class="container mx-auto px-6">
+      <div class="mb-12">
+        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-sm border border-gray-800 bg-gray-900 mb-4">
+          <span class="text-emerald-500 font-mono text-xs">[LAYER_03]</span>
+          <span class="text-gray-400 text-xs">Standalone Mini-Apps</span>
+        </div>
+        <h2 class="text-3xl md:text-4xl font-mono text-white mb-6">02 // THE_TABLET_ECOSYSTEM</h2>
+        <p class="text-lg text-gray-400 max-w-3xl leading-relaxed">
+          Standalone mini-apps for the tasks that usually require a dozen browser tabs. No data intake required - just pure utility.
+        </p>
+      </div>
+
+      <!-- Tablet Clusters Bento Grid -->
+      <div class="bento-grid">
+        <!-- Security Cluster -->
+        <div class="card-sharp p-6 col-span-2 flex flex-col">
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-emerald-500 font-mono text-sm">// Security Cluster</h3>
+            <span class="text-gray-700 font-mono text-xs">auth_&_keys</span>
+          </div>
+          <div class="flex flex-wrap gap-2 mb-6">
+            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">JWT Sign/Verify</span>
+            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Password Gen</span>
+            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">UUID Gen</span>
+            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Checksum Calc</span>
+          </div>
+          <div class="visual-placeholder flex-grow">
+            [GIF: JWT decoder showing token payload and signature verification]
+          </div>
+        </div>
+
+        <!-- Logic Cluster -->
+        <div class="card-sharp p-6 col-span-2 flex flex-col">
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-emerald-500 font-mono text-sm">// Logic Cluster</h3>
+            <span class="text-gray-700 font-mono text-xs">parsing_&_testing</span>
+          </div>
+          <div class="flex flex-wrap gap-2 mb-6">
+            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Regex Tester</span>
+            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Cron Builder</span>
+            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Epoch Converter</span>
+            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">DateTime Tools</span>
+          </div>
+          <div class="visual-placeholder flex-grow">
+            [GIF: Regex tester with live match highlighting and capture groups]
+          </div>
+        </div>
+
+        <!-- Visualization Cluster -->
+        <div class="card-sharp p-6 row-span-2 flex flex-col">
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-emerald-500 font-mono text-sm">// Visualization</h3>
+            <span class="text-gray-700 font-mono text-xs">diagrams_&_sketching</span>
+          </div>
+          <div class="flex flex-col gap-2 mb-6">
+            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Mermaid Diagram Editor</span>
+            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Shape Snap (Sketching)</span>
+          </div>
+          <div class="visual-placeholder flex-grow">
+            [GIF: Quick-scroll through the 'New Tablet' menu showing variety of icons]
+          </div>
+        </div>
+
+        <!-- Quick Access Mini Cards -->
+        <div class="card-sharp p-4 flex items-center justify-between">
+          <span class="font-mono text-gray-500 text-xs">0x15</span>
+          <span class="text-white text-sm">Base64 Encoder</span>
+          <span class="text-emerald-500 text-xs">→</span>
+        </div>
+        <div class="card-sharp p-4 flex items-center justify-between">
+          <span class="font-mono text-gray-500 text-xs">0x16</span>
+          <span class="text-white text-sm">URL Parser</span>
+          <span class="text-emerald-500 text-xs">→</span>
+        </div>
+        <div class="card-sharp p-4 flex items-center justify-between">
+          <span class="font-mono text-gray-500 text-xs">0x17</span>
+          <span class="text-white text-sm">Lorem Ipsum</span>
+          <span class="text-emerald-500 text-xs">→</span>
+        </div>
+        <div class="card-sharp p-4 flex items-center justify-between">
+          <span class="font-mono text-gray-500 text-xs">0x18</span>
+          <span class="text-white text-sm">Color Picker</span>
+          <span class="text-emerald-500 text-xs">→</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LAYER 3: THE FOUNDATION -->
   <section id="tech-specs" class="py-16 md:py-24 border-t border-gray-800 bg-black">
     <div class="container mx-auto px-6">
-      <h2 class="text-3xl md:text-4xl font-mono text-white mb-12 text-center uppercase tracking-widest">Zero-Knowledge
-        Architecture</h2>
+      <div class="mb-12">
+        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-sm border border-gray-800 bg-gray-900 mb-4">
+          <span class="text-emerald-500 font-mono text-xs">[FOUNDATION]</span>
+          <span class="text-gray-400 text-xs">Technical Architecture</span>
+        </div>
+        <h2 class="text-3xl md:text-4xl font-mono text-white mb-2">03 // ZERO_KNOWLEDGE_SPECS</h2>
+      </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-1">
-        <div class="border border-gray-800 p-8 h-full bg-gray-900/20">
-          <h3 class="text-emerald-500 font-mono text-sm mb-4">STORAGE</h3>
-          <p class="text-white text-lg font-bold mb-2">IndexedDB</p>
-          <p class="text-gray-500 text-sm">Local-only persistence. Data never touches our disks.</p>
+      <!-- Dense Spec Sheet Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-gray-800">
+        <div class="border border-gray-800 p-6 h-full bg-black">
+          <h3 class="text-emerald-500 font-mono text-xs mb-3 uppercase tracking-wider">STORAGE</h3>
+          <p class="text-white text-base font-mono mb-2">IndexedDB</p>
+          <p class="text-gray-500 text-xs leading-relaxed">Local-only persistence. Data never touches our disks.</p>
         </div>
-        <div class="border border-gray-800 p-8 h-full bg-gray-900/20">
-          <h3 class="text-emerald-500 font-mono text-sm mb-4">NETWORK</h3>
-          <p class="text-white text-lg font-bold mb-2">Zero Requests</p>
-          <p class="text-gray-500 text-sm">No external API calls for data processing. Completely air-gapped potential.
-          </p>
+        <div class="border border-gray-800 p-6 h-full bg-black">
+          <h3 class="text-emerald-500 font-mono text-xs mb-3 uppercase tracking-wider">NETWORK</h3>
+          <p class="text-white text-base font-mono mb-2">Zero Requests</p>
+          <p class="text-gray-500 text-xs leading-relaxed">No external API calls for data processing. Air-gapped potential.</p>
         </div>
-        <div class="border border-gray-800 p-8 h-full bg-gray-900/20">
-          <h3 class="text-emerald-500 font-mono text-sm mb-4">PROCESSING</h3>
-          <p class="text-white text-lg font-bold mb-2">100% Client-Side</p>
-          <p class="text-gray-500 text-sm">All formatting and transformation happens in your browser's V8 engine.</p>
+        <div class="border border-gray-800 p-6 h-full bg-black">
+          <h3 class="text-emerald-500 font-mono text-xs mb-3 uppercase tracking-wider">PRIVACY</h3>
+          <p class="text-white text-base font-mono mb-2">No Tracking</p>
+          <p class="text-gray-500 text-xs leading-relaxed">No analytics, no accounts, no cookies. You're anonymous.</p>
         </div>
-        <div class="border border-gray-800 p-8 h-full bg-gray-900/20">
-          <h3 class="text-emerald-500 font-mono text-sm mb-4">SECURITY</h3>
-          <p class="text-white text-lg font-bold mb-2">Hash Routing</p>
-          <p class="text-gray-500 text-sm">Zero-log sharing via URL fragments. Even we don't know what you share.</p>
+        <div class="border border-gray-800 p-6 h-full bg-black">
+          <h3 class="text-emerald-500 font-mono text-xs mb-3 uppercase tracking-wider">SHARING</h3>
+          <p class="text-white text-base font-mono mb-2">Hash Routing</p>
+          <p class="text-gray-500 text-xs leading-relaxed">Zero-log URLs via fragments. Even we don't see what you share.</p>
         </div>
       </div>
     </div>
