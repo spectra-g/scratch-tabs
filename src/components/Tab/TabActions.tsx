@@ -1,4 +1,4 @@
-import { Plus, ClipboardPlus, Puzzle } from "../Icons";
+import { Plus, ClipboardPlus, Extension } from "../Icons";
 import { useRootStore } from "../../stores";
 
 interface TabActionsProps {
@@ -45,7 +45,7 @@ export const TabActions: React.FC<TabActionsProps> = ({
         data-testid="icon-new-tools"
         data-side={side}
       >
-        <Puzzle size={16} />
+        <Extension size={16} />
       </button>
     </div>
   );

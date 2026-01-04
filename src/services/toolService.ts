@@ -1,7 +1,7 @@
 import { tabletMetadata } from '../tablets/tabletMetadata';
 import { smartViewRegistry } from '../views/registry';
 import { formatRegistry } from '../formats/registry';
-import { Puzzle, FileCode, Eye } from '../components/Icons';
+import { FileCode, Eye, Tablet } from '../components/Icons';
 import { getRecentTools, addRecentTool } from '../db';
 
 export type ToolType = 'tablet' | 'smartview' | 'format';
@@ -35,7 +35,7 @@ class ToolService {
             label: tablet.label,
             description: tablet.description,
             keywords: tablet.keywords,
-            icon: (tablet as any).icon || Puzzle,
+            icon: (tablet as any).icon || Tablet,
         }));
 
         const smartViews: ToolItem[] = smartViewRegistry.getAllViews().map(view => ({

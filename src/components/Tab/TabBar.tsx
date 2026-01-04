@@ -588,6 +588,7 @@ export const TabBar: React.FC<TabBarProps> = ({
           ref={tabsContainerRef}
           className="flex-1 flex min-w-0 overflow-hidden"
           onDoubleClick={handleEmptyAreaDoubleClick}
+          data-testid="tab-bar-empty-area"
         >
           <div ref={tabsWrapperRef} className="flex">
             <DndContext
