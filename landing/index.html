@@ -319,8 +319,9 @@
               data.</span>
           </h1>
           <p class="text-lg md:text-xl text-gray-400 mb-8 leading-relaxed">
-            Stop cluttering your IDE with minified JSON, messy logs, and JWT snippets. Scratch Tabs is a private,
-            offline-first workspace for the data you aren't ready to save, but need to understand.
+            Your IDE isn't a junk drawer for minified JSON, logs, commands, or text snippets. Scratch Tabs provides a private,
+            offline-first workbench for the temporary data you need to analyze, compare, and transform - without ever hitting 'Save As'.
+            No menus, no config. Just paste, <strong>it knows</strong>.
           </p>
           <div class="flex flex-col sm:flex-row gap-4">
             <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button">
@@ -331,9 +332,18 @@
 
         <!-- Right Column -->
         <div class="md:w-1/2 w-full">
-          <div class="visual-placeholder h-64 md:h-96">
-            [IMAGE: A visual comparison showing a messy VS Code with 20 'Untitled' tabs on the left, and the clean,
-            organized Scratch Tabs interface on the right]
+          <div class="rounded-sm overflow-hidden border border-gray-800 shadow-2xl">
+            <video
+              class="w-full h-auto"
+              autoplay
+              loop
+              muted
+              playsinline
+              poster="https://scratchtabs.b-cdn.net/demo-json-opt.png"
+            >
+              <source src="https://scratchtabs.b-cdn.net/demo-json-opt.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
           </div>
         </div>
       </div>
@@ -343,10 +353,10 @@
   <!-- Pain Point Section -->
   <section id="pain-point" class="py-16 md:py-24 border-t border-gray-800 bg-gray-900/50">
     <div class="container mx-auto px-6 text-center">
-      <h2 class="text-2xl md:text-3xl font-mono text-white mb-6">CTRL+N / CTRL+V / CTRL+W</h2>
+      <h2 class="text-2xl md:text-3xl font-mono text-white mb-6">Untitled-1 / Untitled-2 / Untitled-52</h2>
       <p class="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
-        We all do it. You paste a blob into your IDE just to format it, then you're afraid to close the tab. Scratch
-        Tabs keeps your IDE for code and your browser for data.
+        We all do it. You open a new file just to format a JSON blob or check a log line, then you’re afraid to close it
+        because you might need it later. Your IDE is for your project's code, not for a growing graveyard of temporary tabs.
       </p>
     </div>
   </section>
@@ -354,21 +364,33 @@
   <!-- Bento Grid Section -->
   <section id="tablets-bento" class="py-16 md:py-24 border-t border-gray-800">
     <div class="container mx-auto px-6">
-      <h2 class="text-3xl md:text-4xl font-mono text-white mb-12 text-center">THE TABLETS</h2>
+
+      <!-- Bridge Commentary -->
+      <div class="max-w-4xl mb-16">
+        <h2 class="text-3xl md:text-4xl font-mono text-white mb-12 text-center">THE TABLETS</h2>
+        <p class="text-xl text-gray-400 leading-relaxed font-light">
+          Scratch Tabs isn’t just a workspace—it’s a specialized workbench.
+          When you paste data, it is <span class="text-emerald-500 font-mono">instantly identified</span>.
+          The app suggests the right workflow, allowing you to launch your data into a
+          **Tablet** with a single click: a powerful, interactive mini-app built to analyze,
+          transform, and visualize that specific format.
+        </p>
+      </div>
 
       <div class="bento-grid">
         <!-- Cluster 1: Data -->
         <div class="card-sharp p-6 col-span-2 row-span-2 flex flex-col">
-          <h3 class="text-emerald-500 font-mono mb-4 text-sm">// Cluster 01: Data</h3>
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-emerald-500 font-mono text-sm">// Cluster 01: Data</h3>
+            <span class="text-gray-700 font-mono text-xs">interactive_parsing</span>
+          </div>
           <p class="text-white text-xl font-bold mb-4">Deep Data Exploration</p>
+          <p class="text-gray-500 text-sm mb-6">Go beyond formatting. Tree-walk through JSON, map complex schemas visually, or explore massive CSVs without opening a spreadsheet.</p>
           <div class="flex flex-wrap gap-2 mb-6">
             <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">JSON Tree</span>
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">JSON
-              Mapper</span>
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">CSV
-              Explorer</span>
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">YAML/XML
-              Viewers</span>
+            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">JSON Mapper</span>
+            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">CSV Explorer</span>
+            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">YAML/XML Viewers</span>
           </div>
           <div class="visual-placeholder flex-grow">
             [GIF: JSON_MAPPER_DRAG_AND_DROP]
@@ -377,12 +399,10 @@
 
         <!-- Cluster 2: Security -->
         <div class="card-sharp p-6 flex flex-col">
-          <h3 class="text-emerald-500 font-mono mb-4 text-sm">// Cluster 02: Security</h3>
+          <h3 class="text-emerald-500 font-mono mb-4 text-sm">// Cluster 02: Auth & Keys</h3>
           <div class="flex flex-wrap gap-2 mb-4">
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">JWT
-              Toolkit</span>
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Password
-              Gen</span>
+            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">JWT Toolkit</span>
+            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Password Gen</span>
           </div>
           <div class="visual-placeholder flex-grow aspect-video">
             [GIF: JWT_DECODER_UI]
@@ -393,8 +413,7 @@
         <div class="card-sharp p-6 flex flex-col">
           <h3 class="text-emerald-500 font-mono mb-4 text-sm">// Cluster 03: Web</h3>
           <div class="flex flex-wrap gap-2 mb-4">
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">REST
-              Client</span>
+            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">REST Client</span>
             <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">URL Parser</span>
           </div>
           <div class="visual-placeholder flex-grow aspect-video">
@@ -402,23 +421,21 @@
           </div>
         </div>
 
-        <!-- Cluster 4: Utility (Double Height) -->
+        <!-- Cluster 4: Utility -->
         <div class="card-sharp p-6 row-span-2 flex flex-col">
-          <h3 class="text-emerald-500 font-mono mb-4 text-sm">// Cluster 04: Utility</h3>
-          <p class="text-gray-400 text-sm mb-4">Focus & Workflow</p>
+          <h3 class="text-emerald-500 font-mono mb-4 text-sm">// Cluster 04: Snippets</h3>
+          <p class="text-gray-400 text-sm mb-4">Your personal command library and visualization engine.</p>
           <div class="flex flex-col gap-2 mb-6">
+            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Command Vault</span>
+            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Diagram Editor</span>
             <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Pomodoro</span>
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Command
-              Vault</span>
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Diagram
-              Editor</span>
           </div>
           <div class="visual-placeholder flex-grow">
             [GIF: MERMAID_LIVE_EDIT]
           </div>
         </div>
 
-        <!-- Small Extra Cards for visibility -->
+        <!-- Small Extra Cards -->
         <div class="card-sharp p-4 flex items-center justify-between border-gray-800 hover:border-emerald-500 group">
           <span class="font-mono text-gray-500 text-xs">0x0F</span>
           <span class="text-white text-sm font-bold">UUID Generator</span>
@@ -426,7 +443,7 @@
         </div>
         <div class="card-sharp p-4 flex items-center justify-between border-gray-800 hover:border-emerald-500 group">
           <span class="font-mono text-gray-500 text-xs">0x10</span>
-          <span class="text-white text-sm font-bold">Checksum Calculator</span>
+          <span class="text-white text-sm font-bold">Checksum Calc</span>
           <span class="text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
         </div>
       </div>
