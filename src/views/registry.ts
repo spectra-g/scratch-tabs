@@ -1,6 +1,15 @@
 import React from "react";
 import { LucideIcon } from "../components/Icons";
 
+export interface SmartViewSyncConfig {
+  enableScrollSync?: boolean;
+  enableClickSync?: boolean;
+  // Format-specific: map preview element to source line number
+  getLineFromElement?: (element: HTMLElement, content: string) => number | null;
+  // Format-specific: map source line number to preview element selector
+  getElementSelectorFromLine?: (line: number, content: string) => string | null;
+}
+
 export interface SmartView {
   id: string;
   languageId: string;
@@ -9,6 +18,7 @@ export interface SmartView {
   component: React.ComponentType<SmartViewProps>;
   mode: 'replaces' | 'side-by-side'; // Define the view's behavior
   priority?: number; // For ordering multiple views for same language
+  syncConfig?: SmartViewSyncConfig; // Optional sync configuration
 }
 
 export interface SmartViewProps {
