@@ -127,10 +127,11 @@ describe('Tablet Metadata Actions', () => {
   describe('Metadata consistency with tablet implementations', () => {
     it('should have WordCount metadata with correct properties', () => {
       const wordCountMetadata = tabletMetadata.find(meta => meta.id === 'wordcount');
-      
+
       expect(wordCountMetadata).toEqual({
         id: 'wordcount',
         label: 'Word Count',
+        description: expect.any(String),
         keywords: expect.arrayContaining([
           'word', 'count', 'text', 'analysis', 'statistics'
         ]),
@@ -142,9 +143,10 @@ describe('Tablet Metadata Actions', () => {
       tabletMetadata.forEach(meta => {
         expect(meta).toHaveProperty('id');
         expect(meta).toHaveProperty('label');
+        expect(meta).toHaveProperty('description');
         expect(meta).toHaveProperty('keywords');
         expect(Array.isArray(meta.keywords)).toBe(true);
-        
+
         // getActionsForContext is optional, but if present should be a function
         if (meta.getActionsForContext) {
           expect(typeof meta.getActionsForContext).toBe('function');
@@ -155,19 +157,19 @@ describe('Tablet Metadata Actions', () => {
 
   describe('Dynamic action discovery', () => {
     it('should support multiple tablets with action discovery', () => {
-      const tabletsWithActions = tabletMetadata.filter(meta => 
+      const tabletsWithActions = tabletMetadata.filter(meta =>
         typeof meta.getActionsForContext === 'function'
       );
 
       // At minimum, WordCount should have actions
       expect(tabletsWithActions.length).toBeGreaterThanOrEqual(1);
-      
+
       const wordCountMeta = tabletsWithActions.find(meta => meta.id === 'wordcount');
       expect(wordCountMeta).toBeDefined();
     });
 
     it('should allow tablets without actions', () => {
-      const tabletsWithoutActions = tabletMetadata.filter(meta => 
+      const tabletsWithoutActions = tabletMetadata.filter(meta =>
         !meta.getActionsForContext
       );
 
@@ -200,11 +202,11 @@ describe('Tablet Metadata Actions', () => {
         content: 'Short', // Insufficient content
       };
 
-      const allValidActions = tabletMetadata.flatMap(meta => 
+      const allValidActions = tabletMetadata.flatMap(meta =>
         meta.getActionsForContext?.(validContext) || []
       );
 
-      const allInvalidActions = tabletMetadata.flatMap(meta => 
+      const allInvalidActions = tabletMetadata.flatMap(meta =>
         meta.getActionsForContext?.(invalidContext) || []
       );
 

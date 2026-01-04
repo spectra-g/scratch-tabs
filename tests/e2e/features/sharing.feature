@@ -1,4 +1,3 @@
-@sharing
 Feature: Tab Sharing
 
   Background:

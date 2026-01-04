@@ -52,19 +52,20 @@ export class TabBarActions {
   }
 
   async selectTablet(tabletName: string) {
-    // Wait for the tablet selector modal to appear
-    // Use a more specific selector that includes the unique width classes
-    const tabletSelector = this.page.locator('.bg-surface.border-base.rounded-lg.shadow-lg.w-96');
-    await expect(tabletSelector).toBeVisible();
+    // Wait for the tool selector modal to appear using its accessible role and label
+    const toolSelector = this.page.getByRole('dialog', { name: 'Tool Selector' });
+    await expect(toolSelector).toBeVisible();
 
-    // Click on the tablet with the specified name - use exact text matching to avoid conflicts
-    // Find the element with .font-medium.text-base that has exactly the text we want
-    const tabletOption = this.page.locator('.font-medium.text-base').filter({ hasText: new RegExp(`^${tabletName}$`) });
-    await expect(tabletOption).toBeVisible();
-    await tabletOption.click();
+    // Click on the tool card with the specified label
+    // The ToolCard renders the label in a span (List) or h3 (Grid)
+    const toolCard = toolSelector.locator('button').filter({
+      has: this.page.locator('span, h3').filter({ hasText: new RegExp(`^${tabletName}$`) })
+    }).first();
 
-    // Wait for the tablet tab to appear instead of waiting for modal to hide
-    // This is more reliable as the modal classes might match other elements
+    await expect(toolCard).toBeVisible();
+    await toolCard.click();
+
+    // Wait for the tablet tab to appear to confirm the action
     const tabletTab = this.page.locator(`[data-testid="tab-${tabletName}"]`);
     await expect(tabletTab).toBeVisible();
   }
@@ -122,8 +123,8 @@ export class TabBarActions {
     // Parse the expected order string (e.g., "Welcome, Scratch 1, Scratch 3, Scratch 2, Scratch 4")
     const expectedTabNames = expectedOrder.split(',').map(name => name.trim());
 
-    // Get all visible tabs in order
-    const tabs = this.page.locator('[data-testid^="tab-"]');
+    // Get all visible tabs in order (excluding the tab-bar-empty-area)
+    const tabs = this.page.locator('[data-testid^="tab-"]:not([data-testid="tab-bar-empty-area"])');
     const tabCount = await tabs.count();
 
     // Verify we have the expected number of tabs

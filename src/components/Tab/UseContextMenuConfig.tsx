@@ -108,11 +108,11 @@ export const useContextMenuConfig = (
     isRightSide &&
     splitViewStore.splitView.rightTabs.length > 1;
   const canUnsplit = splitViewStore.splitView.isSplit && isRightSide;
-  const canShowFromSample = !!tab && !tab.isTablet;
+  const canShowFromSample = !!tab && !tab.isTablet && !tab.isRich;
   const canCloseToLeft = tabIndex > 0;
   const canCloseToRight = tabIndex < currentTabList.length - 1;
   const canCloseAllExcept = currentTabList.length > 1;
-  const canCompareFromClipboard = !!tab && !tab.isTablet;
+  const canCompareFromClipboard = !!tab && !tab.isTablet && !tab.isRich;
   const isPinned = tab?.isPinned || false;
   const canDownload = !!tab && !tab.isTablet;
   const canRename = !!tab;
@@ -120,7 +120,7 @@ export const useContextMenuConfig = (
     ? splitViewStore.splitView.rightTabHistory
     : splitViewStore.splitView.leftTabHistory;
   const canCompareWithPrevious =
-    history && history.length >= 2 && !tab?.isTablet;
+    history && history.length >= 2 && !tab?.isTablet && !tab?.isRich;
   const canGroupTypes = (() => {
     if (currentTabList.length < 3) return false;
     const tabLanguages = currentTabList.map(
@@ -152,7 +152,9 @@ export const useContextMenuConfig = (
       currentTab &&
       otherSideTab &&
       !currentTab.isTablet &&
-      !otherSideTab.isTablet
+      !otherSideTab.isTablet &&
+      !currentTab.isRich &&
+      !otherSideTab.isRich
     );
   })();
 
@@ -406,14 +408,14 @@ Add any other context about the problem here.
       label: "Share",
       icon: Share2,
       action: handleOpenShareModal,
-      condition: !!tab && !tab.isTablet,
+      condition: !!tab && !tab.isTablet && !tab.isRich,
     },
     {
       id: "transformations",
       label: "Transformations",
       icon: Layers,
       action: handleOpenTransformations,
-      condition: !!tab && !tab.isTablet,
+      condition: !!tab && !tab.isTablet && !tab.isRich,
     },
     {
       id: "rename",
@@ -427,14 +429,14 @@ Add any other context about the problem here.
       label: "Copy content",
       icon: Copy,
       action: handleCopyContent,
-      condition: !!tab && !tab.isTablet,
+      condition: !!tab && !tab.isTablet && !tab.isRich,
     },
     {
       id: "splitTab",
       label: "Split Tab...",
       icon: Scissors,
       action: handleOpenSplitModal,
-      condition: !!tab && !tab.isTablet,
+      condition: !!tab && !tab.isTablet && !tab.isRich,
     },
     {
       id: "fromSample",

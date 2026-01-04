@@ -15,26 +15,31 @@ export const tabletMetadata: TabletMetadata[] = [
   {
     id: "base64",
     label: "Base64",
+    description: "Encode and decode text to/from Base64 format with support for URL-safe variant.",
     keywords: ["base64", "encode", "decode", "encoding", "binary"],
   },
   {
     id: "calculator",
     label: "Calculator",
+    description: "A quick mathematical calculator for expressions, percentages, and conversions.",
     keywords: ["calculator", "math", "arithmetic", "compute", "calculate"],
   },
   {
     id: "clipboard",
     label: "Clipboard",
+    description: "Manage your clipboard history, save frequently used snippets, and organize your text assets.",
     keywords: ["clipboard", "copy", "paste", "history", "snippets"],
   },
   {
     id: "converter",
     label: "Converter",
+    description: "Multi-purpose converter for numbers (hex, dec, bin), case transformations, and more.",
     keywords: ["convert", "encode", "decode", "hash", "transform", "format"],
   },
   {
     id: "cron",
     label: "Cron Expression Builder",
+    description: "Visual builder and explainer for Cron expressions with execution preview and schedule visualization.",
     keywords: [
       "cron",
       "schedule",
@@ -49,26 +54,31 @@ export const tabletMetadata: TabletMetadata[] = [
   {
     id: "tempemail",
     label: "Temp Email",
+    description: "Generate temporary, disposable email addresses to receive verification codes and protect your privacy.",
     keywords: ["email", "temporary", "disposable", "mail", "inbox"],
   },
   {
     id: "ipdetails",
     label: "IP Details",
+    description: "Lookup details for any IP address, including geolocation, ISP, and network information.",
     keywords: ["ip", "address", "location", "network", "geolocation"],
   },
   {
     id: "jsonmapper",
     label: "JSON Mapper",
+    description: "Map and transform JSON structures using a simple, intuitive rule-based interface.",
     keywords: ["json", "mapper", "transform", "mapping", "data"],
   },
   {
     id: "jwt",
     label: "JWT",
+    description: "Decode and inspect JSON Web Tokens to view headers, payloads, and verify signatures.",
     keywords: ["jwt", "token", "json web token", "authentication", "decode"],
   },
   {
     id: "openmetrics",
     label: "OpenMetrics Viewer",
+    description: "Visualize and analyze OpenMetrics/Prometheus exposition data with ease.",
     keywords: [
       "metrics",
       "prometheus",
@@ -81,11 +91,13 @@ export const tabletMetadata: TabletMetadata[] = [
   {
     id: "password",
     label: "Password Generator",
+    description: "Generate strong, secure, and customizable passwords with entropy analysis.",
     keywords: ["password", "generator", "secure", "random", "crypto"],
   },
   {
     id: "pomodoro",
     label: "Pomodoro Timer",
+    description: "A simple productivity timer based on the Pomodoro Technique with work/break sessions.",
     keywords: ["pomodoro", "timer", "productivity", "focus", "time"],
   },
   // {
@@ -96,6 +108,7 @@ export const tabletMetadata: TabletMetadata[] = [
   {
     id: "regex",
     label: "Regex Tester",
+    description: "Test and debug regular expressions with live matching, groups, and detailed explanations.",
     keywords: [
       "regex",
       "regexp",
@@ -109,16 +122,19 @@ export const tabletMetadata: TabletMetadata[] = [
   {
     id: "restclient",
     label: "REST Client",
+    description: "Full-featured HTTP client for testing REST APIs with support for methods, headers, and payloads.",
     keywords: ["rest", "api", "http", "client", "request", "curl"],
   },
   {
     id: "graphql",
     label: "GraphQL Client",
+    description: "Interactive GraphQL playground for exploring schemas and executing queries and mutations.",
     keywords: ["graphql", "api", "query", "mutation", "subscription", "schema"],
   },
   {
     id: "shapesnap",
     label: "Shape Snap",
+    description: "Create quick sketches and diagrams using a simple, pen-based drawing interface.",
     keywords: [
       "draw",
       "diagram",
@@ -131,6 +147,7 @@ export const tabletMetadata: TabletMetadata[] = [
   {
     id: "urlparser",
     label: "URL Parser",
+    description: "Deconstruct and analyze URLs into components (scheme, host, path, query params).",
     keywords: [
       "url",
       "uri",
@@ -147,16 +164,19 @@ export const tabletMetadata: TabletMetadata[] = [
   {
     id: "usergen",
     label: "User Generator",
+    description: "Generate synthetic user profiles with names, emails, addresses, and bios for testing.",
     keywords: ["user", "generator", "random", "profile", "data"],
   },
   {
     id: "uuid",
     label: "UUID Generator",
+    description: "Batch generate unique identifiers (v1, v4) for development and testing.",
     keywords: ["uuid", "guid", "identifier", "unique", "generate"],
   },
   {
     id: "vault",
     label: "Command Vault",
+    description: "A centralized repository for your frequently used commands and scripts.",
     keywords: [
       "vault",
       "snippets",
@@ -166,65 +186,68 @@ export const tabletMetadata: TabletMetadata[] = [
       "commands",
     ],
   },
-{
-  id: "wordcount",
-  label: "Word Count",
-  keywords: [
-    "word",
-    "count",
-    "text",
-    "analysis",
-    "statistics",
-    "readability",
-    "writing",
-    "seo",
-    "keywords",
-    "density",
-    "flesch",
-    "kincaid",
-    "syllables",
-    "sentences",
-    "paragraphs",
-    "characters",
-  ],
-  // NEW: Implement the action discovery logic for Word Count here.
-  // This function is lightweight and has no heavy dependencies.
-  getActionsForContext: (context) => {
-    const actions: TabletAction[] = [];
-    if (context.source === 'editor-tab' && context.tab && context.content && context.content.length > 50) {
-      actions.push({
-        id: 'wordcount.new-tab-from-content',
-        label: 'Open in Word Count',
-        icon: FileText,
-        action: () => {
-          if (!context.tab) return;
-          tabletActionService.handleAction({
-            targetTablet: 'wordcount',
-            action: 'new-tab',
-            payload: {
-              content: context.content || '',
-              title: context.tab.title,
-            },
-            source: {
-              tabId: context.tab.id,
-              titleHint: `${context.tab.title} (Analysis)`,
-              side: context.side,
-            }
-          });
-        }
-      });
-    }
-    return actions;
+  {
+    id: "wordcount",
+    label: "Word Count",
+    description: "Detailed text analysis with word/character counts, readability scores, and keyword density.",
+    keywords: [
+      "word",
+      "count",
+      "text",
+      "analysis",
+      "statistics",
+      "readability",
+      "writing",
+      "seo",
+      "keywords",
+      "density",
+      "flesch",
+      "kincaid",
+      "syllables",
+      "sentences",
+      "paragraphs",
+      "characters",
+    ],
+    // NEW: Implement the action discovery logic for Word Count here.
+    // This function is lightweight and has no heavy dependencies.
+    getActionsForContext: (context) => {
+      const actions: TabletAction[] = [];
+      if (context.source === 'editor-tab' && context.tab && context.content && context.content.length > 50) {
+        actions.push({
+          id: 'wordcount.new-tab-from-content',
+          label: 'Open in Word Count',
+          icon: FileText,
+          action: () => {
+            if (!context.tab) return;
+            tabletActionService.handleAction({
+              targetTablet: 'wordcount',
+              action: 'new-tab',
+              payload: {
+                content: context.content || '',
+                title: context.tab.title,
+              },
+              source: {
+                tabId: context.tab.id,
+                titleHint: `${context.tab.title} (Analysis)`,
+                side: context.side,
+              }
+            });
+          }
+        });
+      }
+      return actions;
+    },
   },
-},
-{
-  id: "emoji",
-  label: "Emoji as Data",
-  keywords: ["emoji", "unicode", "symbols", "formatter", "picker", "data", "encoding"],
-},
+  {
+    id: "emoji",
+    label: "Emoji as Data",
+    description: "Search and discover emojis with their Unicode, HTML, and Hex representations.",
+    keywords: ["emoji", "unicode", "symbols", "formatter", "picker", "data", "encoding"],
+  },
   {
     id: "loremipsum",
     label: "Lorem Ipsum Generator",
+    description: "Generate high-quality placeholder text (paragraphs, sentences, words) for your designs and mockups.",
     keywords: ["lorem", "ipsum", "placeholder", "text", "mock", "data", "generator"],
     getActionsForContext: (context) => {
       // Always available from any context
@@ -238,9 +261,9 @@ export const tabletMetadata: TabletMetadata[] = [
               targetTablet: 'loremipsum',
               action: 'new-tab',
               payload: {},
-              source: { 
+              source: {
                 titleHint: 'Lorem Ipsum Generator',
-                side: context.side 
+                side: context.side
               },
             });
           },
@@ -251,10 +274,11 @@ export const tabletMetadata: TabletMetadata[] = [
   {
     id: "checksum",
     label: "Checksum",
+    description: "Calculate and verify file/text integrity using MD5, SHA-1, SHA-256, and CRC32 hashes.",
     keywords: ["checksum", "hash", "md5", "sha", "crc32", "verify", "integrity"],
     getActionsForContext: (context) => {
       const actions = [];
-      
+
       // Always available
       actions.push({
         id: 'calculate-checksum',
@@ -265,20 +289,21 @@ export const tabletMetadata: TabletMetadata[] = [
             targetTablet: 'checksum',
             action: 'new-tab',
             payload: context.content ? { text: context.content } : {},
-            source: { 
+            source: {
               titleHint: 'Checksum',
-              side: context.side 
+              side: context.side
             },
           });
         },
       });
-      
+
       return actions;
     },
   },
   {
     id: "datetime",
     label: "Date & Time",
+    description: "Comprehensive date and time toolkit with timestamp conversion, timezone tracking, and duration math.",
     keywords: ["date", "time", "timestamp", "timezone", "convert", "parse", "duration", "calculator"],
   },
   {
@@ -303,9 +328,9 @@ export const tabletMetadata: TabletMetadata[] = [
           /mindmap/i,
           /timeline/i
         ];
-        
-        const isMermaidCode = mermaidPatterns.some(pattern => pattern.test(context.content));
-        
+
+        const isMermaidCode = mermaidPatterns.some(pattern => pattern.test(context.content || ''));
+
         if (isMermaidCode) {
           return [{
             id: 'open-diagram-editor',
@@ -315,11 +340,11 @@ export const tabletMetadata: TabletMetadata[] = [
               tabletActionService.handleAction({
                 targetTablet: 'diagram',
                 action: 'new-tab',
-                payload: { mermaidCode: context.content },
-                source: { 
+                payload: { mermaidCode: context.content || '' },
+                source: {
                   tabId: context.tab?.id,
                   titleHint: 'Diagram Editor',
-                  side: context.side 
+                  side: context.side
                 }
               });
             }
@@ -337,23 +362,23 @@ export const tabletMetadata: TabletMetadata[] = [
     getActionsForContext: (context) => {
       if (context.source === 'editor-tab' && context.content) {
         // Check if content contains color values
-        const hasColors = /(?:#[a-fA-F0-9]{3,6}|rgb\(|hsl\(|color:)/i.test(context.content);
+        const hasColors = /(?:#[a-fA-F0-9]{3,6}|rgb\(|hsl\(|color:)/i.test(context.content || '');
         if (hasColors) {
           return [
             {
               id: 'extract-colors-from-css',
-              label: 'Extract Colors to Palette',
+              label: 'Extract Colours to Palette',
               icon: Palette,
               action: () => {
                 // Extract colors from CSS/code and open colour palette
                 tabletActionService.handleAction({
                   targetTablet: 'colourpalette',
                   action: 'new-tab',
-                  payload: { extractFromText: context.content },
-                  source: { 
+                  payload: { extractFromText: context.content || '' },
+                  source: {
                     tabId: context.tab?.id,
                     titleHint: 'Colour Palette',
-                    side: context.side 
+                    side: context.side
                   },
                 });
               },

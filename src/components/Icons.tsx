@@ -95,6 +95,7 @@ export {
   Tag,
   Tag as TagIcon,
   PlusCircle,
+  Puzzle,
   Square,
   Disc,
   PlayCircle,
@@ -179,6 +180,7 @@ export {
   Sparkles,
   Sun,
   Moon,
+  Blocks as Extension,
 } from 'lucide-react';
 
 // Export types separately

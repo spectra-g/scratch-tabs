@@ -358,8 +358,10 @@ Feature: Rich Text Editor
     When I click the Rich Text toggle in the status bar
     Then I should see the Rich Text editor is displayed
     When I type "This will be deleted" in the Rich Text editor
+    And the Rich Text editor should contain "This will be deleted"
     When I select all text in the Rich Text editor
     And I press Delete
+    And the Rich Text editor should not contain "This will be deleted"
     When I click the close button on the "Scratch 1" tab
     Then the tab should close immediately without confirmation
     And the "Scratch 1" tab should not exist on the page

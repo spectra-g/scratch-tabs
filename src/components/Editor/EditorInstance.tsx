@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback, useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Editor } from "@monaco-editor/react";
 import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
@@ -6,11 +6,11 @@ import { useRootStore } from "../../stores";
 import { useTabsStore } from "../../stores/tabsStore";
 import { useSplitViewStore } from "../../stores/splitViewStore";
 import { useEditorScrollManager } from "../../hooks/useEditorScrollManager";
-import { useTabletSelector } from "../../hooks/useTabletSelector";
+import { useToolSelector } from "../../hooks/useToolSelector";
 import { useEditorActions } from "../../hooks/useEditorActions";
 import { useEditorAI } from "../../hooks/useEditorAI";
-import { TabletSelector } from "../../tablets";
-import { Tablet } from "../../tablets";
+import { ToolSelectorModal } from "../ToolSelector";
+import { toolService, ToolItem } from "../../services/toolService";
 import { useAIStore } from "../../stores/aiStore";
 import { modelManager } from "../../services/modelManager";
 import { useStoreWithEqualityFn } from "zustand/traditional";
@@ -124,14 +124,10 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
     activeTabId,
   );
   const {
-    showTabletSelector,
-    tabletQuery,
-    selectorPosition,
-    tabletSelectorContainerRef,
-    closeTabletSelector,
-  } = useTabletSelector(
-    editorRef,
-    editorContainerRef,
+    showToolSelector,
+    toolQuery: tabletQuery,
+    closeToolSelector,
+  } = useToolSelector(
     activeTabId,
     updateTabContent,
   );
@@ -564,7 +560,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
       });
 
       // Keep the original onDidPaste as backup (though it fires too late)
-      editor.onDidPaste((e) => {
+      editor.onDidPaste((_e) => {
         try {
           const currentTab = latestActiveTabRef.current;
           if (currentTab) {
@@ -594,32 +590,24 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
     }
   };
 
-  const handleTabletSelect = (tablet: Tablet) => {
+  const handleToolSelect = async (item: ToolItem) => {
     try {
-      // Convert to tablet
-      const state = tablet.createInitialState();
-      const serializedState = tablet.serializeState
-        ? tablet.serializeState(state)
-        : JSON.stringify(state);
-      updateTabState(activeTabId, {
-        isTablet: true,
-        tabletState: serializedState,
-        content: "",
-        language: "plaintext",
-        languageLocked: true,
-        title: tablet.label,
+      await toolService.executeTool(item, {
+        side,
+        activeWorkspaceId: activeTab?.workspaceId || "default",
+        addTab: (tabData, isRight) => useRootStore.getState().addTab(tabData, isRight),
+        updateTab: updateTabState,
+        activeTabId: activeTabId
       });
-      closeTabletSelector(true);
+      closeToolSelector(true);
     } catch (error) {
-      console.warn("[EditorInstance] Failed to handle tablet select:", error);
+      console.warn("[EditorInstance] Failed to handle tool select:", error);
     }
   };
 
-  const handleTabletSelectorClose = () => {
-    try {
-      closeTabletSelector(true);
-    } catch (error) {
-      console.warn("[EditorInstance] Failed to close tablet selector:", error);
+  const handleToolSelectorClose = () => {
+    if (showToolSelector) {
+      closeToolSelector(true);
     }
   };
 
@@ -675,22 +663,12 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
           // NO `value`, `defaultValue`, `language`, or `onChange` props!
           // The model manager now controls everything imperatively.
           />
-          {showTabletSelector && (
-            <div
-              ref={tabletSelectorContainerRef}
-              style={{
-                position: "absolute",
-                left: `${selectorPosition.x}px`,
-                top: `${selectorPosition.y}px`,
-                zIndex: 50,
-              }}
-            >
-              <TabletSelector
-                searchQuery={tabletQuery}
-                onSelect={handleTabletSelect}
-                onClose={handleTabletSelectorClose}
-              />
-            </div>
+          {showToolSelector && (
+            <ToolSelectorModal
+              initialSearch={tabletQuery}
+              onSelect={handleToolSelect}
+              onClose={handleToolSelectorClose}
+            />
           )}
         </div>
       </div>

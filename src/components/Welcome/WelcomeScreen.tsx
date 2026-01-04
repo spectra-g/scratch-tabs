@@ -1,26 +1,20 @@
-import React, { useRef, useEffect, useCallback } from "react";
+import React, { useRef, useEffect, useCallback, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useRootStore } from "../../stores";
-import { useTabletSelector } from "../../hooks/useTabletSelector";
-import { TabletSelector } from "../../tablets";
-import { Tablet } from "../../tablets";
+import { ToolSelectorModal } from "../ToolSelector";
+import { toolService, ToolItem } from "../../services/toolService";
 import { TabActions } from "../Tab/TabActions";
-import { FileText, Layers, Upload, FolderOpen, File, Package } from "../Icons";
-import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
+import { FileText, Extension, Upload, FolderOpen, File, Package } from "../Icons";
 import { ImportExportService } from "../../features/import-export/ImportExportService";
-
 export const WelcomeScreen: React.FC = () => {
   const { handleNewTab, handleNewPopulatedTab } = useRootStore();
   const welcomeRef = useRef<HTMLDivElement>(null);
   const tabletButtonRef = useRef<HTMLButtonElement>(null);
-  const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
 
-  const {
-    showTabletSelector,
-    selectorPosition,
-    tabletSelectorContainerRef,
-    openTabletSelector,
-    closeTabletSelector,
-  } = useTabletSelector(editorRef, welcomeRef, null, undefined);
+  const location = useLocation();
+  const pathSegments = location.pathname.split("/").filter(Boolean);
+
+  const [showToolSelector, setShowToolSelector] = useState(false);
 
   const handleDoubleClick = useCallback(() => {
     handleNewTab(false);
@@ -36,51 +30,30 @@ export const WelcomeScreen: React.FC = () => {
     [handleNewTab],
   );
 
-  const handleTabletSelect = useCallback(
-    (tablet: Tablet) => {
-      const state = tablet.createInitialState();
-      const serializedState = tablet.serializeState
-        ? tablet.serializeState(state)
-        : JSON.stringify(state);
-      const now = Date.now();
-
-      handleNewPopulatedTab({
-        id: crypto.randomUUID(),
-        title: tablet.label,
-        content: "",
-        language: "plaintext",
-        languageLocked: true,
-        isTablet: true,
-        tabletState: serializedState,
-        cursorPosition: { lineNumber: 1, column: 1 },
-        dateCreated: now,
-        lastModified: now,
-        workspaceId: "", // Will be set by the store
+  const handleToolSelect = useCallback(
+    async (item: ToolItem) => {
+      await toolService.executeTool(item, {
+        side: 'left',
+        activeWorkspaceId: '', // Default for welcome
+        addTab: (tabData) => handleNewPopulatedTab(tabData),
       });
-
-      closeTabletSelector(false);
+      setShowToolSelector(false);
     },
-    [handleNewPopulatedTab, closeTabletSelector],
+    [handleNewPopulatedTab],
   );
 
   const handleCreateNewTab = useCallback(() => {
     handleNewTab(false);
   }, [handleNewTab]);
 
-  const handleOpenTabletSelector = useCallback(() => {
-    // Center the tablet selector on the screen for welcome screen
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const selectorWidth =
-      window.innerWidth >= 1024 ? 700 : window.innerWidth >= 768 ? 600 : 384;
-    const selectorHeight =
-      window.innerHeight >= 1024 ? 600 : window.innerHeight >= 768 ? 500 : 384;
-
-    const centerX = (viewportWidth - selectorWidth) / 2;
-    const centerY = (viewportHeight - selectorHeight) / 2;
-
-    openTabletSelector({ x: centerX, y: centerY });
-  }, [openTabletSelector]);
+  const handleOpenToolSelector = useCallback(() => {
+    // Delay opening the selector slightly (50ms) to allow double-clicks on the
+    // trigger button to propagate to the container first. This prevents the
+    // modal from intercepting the second click of a double-click action.
+    setTimeout(() => {
+      setShowToolSelector(true);
+    }, 50);
+  }, []);
 
   const handleImportFromClipboard = useCallback(async () => {
     try {
@@ -108,7 +81,6 @@ export const WelcomeScreen: React.FC = () => {
           const content = e.target?.result as string;
           if (content) {
             // Extract filename without extension for tab title
-            const fileName = file.name.replace(/\.[^/.]+$/, "");
             handleNewTab(false, content);
             // Update the tab title after creation
             // Note: This is a simplified approach - in a real implementation
@@ -172,14 +144,11 @@ export const WelcomeScreen: React.FC = () => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if (
         e.key === "/" &&
-        !showTabletSelector &&
-        !(
-          e.target instanceof HTMLInputElement ||
-          e.target instanceof HTMLTextAreaElement
-        )
+        !showToolSelector &&
+        pathSegments.length === 0 &&
+        location.pathname === "/"
       ) {
-        e.preventDefault();
-        handleOpenTabletSelector();
+        handleOpenToolSelector();
       }
     };
 
@@ -187,7 +156,7 @@ export const WelcomeScreen: React.FC = () => {
     return () => {
       document.removeEventListener("keydown", handleGlobalKeyDown);
     };
-  }, [showTabletSelector, handleOpenTabletSelector]);
+  }, [showToolSelector, handleOpenToolSelector]);
 
   const actions = [
     {
@@ -205,10 +174,10 @@ export const WelcomeScreen: React.FC = () => {
       clickable: true,
     },
     {
-      icon: Layers,
+      icon: Extension,
       title: "Open specialized tablet",
       action: "Press / key",
-      onClick: handleOpenTabletSelector,
+      onClick: handleOpenToolSelector,
       clickable: true,
     },
     {
@@ -239,28 +208,7 @@ export const WelcomeScreen: React.FC = () => {
       {/* Tab Actions Bar */}
       <div className="flex justify-end bg-surface h-8">
         <TabActions
-          onShowTabletSelector={() => {
-            // Center the tablet selector on the screen for welcome screen
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
-            const selectorWidth =
-              window.innerWidth >= 1024
-                ? 700
-                : window.innerWidth >= 768
-                  ? 600
-                  : 384;
-            const selectorHeight =
-              window.innerHeight >= 1024
-                ? 600
-                : window.innerHeight >= 768
-                  ? 500
-                  : 384;
-
-            const centerX = (viewportWidth - selectorWidth) / 2;
-            const centerY = (viewportHeight - selectorHeight) / 2;
-
-            openTabletSelector({ x: centerX, y: centerY });
-          }}
+          onShowTabletSelector={() => setShowToolSelector(true)}
           tabletButtonRef={tabletButtonRef}
         />
       </div>
@@ -344,23 +292,11 @@ export const WelcomeScreen: React.FC = () => {
         </div>
       </div>
 
-      {showTabletSelector && (
-        <div
-          ref={tabletSelectorContainerRef}
-          style={{
-            position: "absolute",
-            left: `${selectorPosition.x}px`,
-            top: `${selectorPosition.y}px`,
-            zIndex: 50,
-          }}
-        >
-          <TabletSelector
-            searchQuery=""
-            onSelect={handleTabletSelect}
-            onClose={() => closeTabletSelector(false)}
-            showSearch={true}
-          />
-        </div>
+      {showToolSelector && (
+        <ToolSelectorModal
+          onSelect={handleToolSelect}
+          onClose={() => setShowToolSelector(false)}
+        />
       )}
     </div>
   );
