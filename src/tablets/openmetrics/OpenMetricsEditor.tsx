@@ -44,7 +44,7 @@ export const OpenMetricsEditor: React.FC<OpenMetricsEditorProps> = ({
     return (
       <div
         key={`error-${lineNumber}`}
-        className="absolute left-0 right-0 bg-red-900/30 flex items-center px-2"
+        className="absolute left-0 right-0 bg-danger-subtle flex items-center px-2"
         style={{ top: `${top}px`, height: `${lineHeight}px` }}
         title={error.message}
       >

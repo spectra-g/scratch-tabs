@@ -26,7 +26,7 @@ const HtmlPreview: React.FC<HtmlPreviewProps> = ({ content }) => {
 
   if (!content.trim()) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-400">
+      <div className="flex items-center justify-center h-full text-muted">
         <p>No HTML content to preview</p>
       </div>
     );

@@ -181,7 +181,7 @@ const DateTimeTabletComponent: React.FC<DateTimeTabletProps> = ({ state, onChang
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Top Bar: Input & Quick Adjust */}
-          <div className="p-8 pb-6 border-b border-base bg-surface-secondary/20">
+          <div className="tablet-toolbar p-5">
             <div className="max-w-4xl mx-auto w-full">
               <SmartInput
                 inputValue={state.data.inputValue}
@@ -196,7 +196,7 @@ const DateTimeTabletComponent: React.FC<DateTimeTabletProps> = ({ state, onChang
           <div className="flex-1 flex overflow-hidden">
             {/* Left Column: Conversions & Formats */}
             <div className="w-7/12 border-r border-base flex flex-col overflow-hidden">
-              <div className="flex items-center gap-2 p-4 border-b border-base bg-surface-secondary/10">
+              <div className="flex items-center gap-2 p-4 border-b border-base bg-surface-secondary">
                 <Braces size={16} className="text-secondary" />
                 <h2 className="text-xs font-bold text-secondary uppercase tracking-widest">Transformations & Formats</h2>
               </div>
@@ -206,8 +206,8 @@ const DateTimeTabletComponent: React.FC<DateTimeTabletProps> = ({ state, onChang
             </div>
 
             {/* Right Column: Analysis & Debugging */}
-            <div className="w-5/12 flex flex-col overflow-hidden bg-surface-secondary/5">
-              <div className="flex items-center gap-2 p-4 border-b border-base bg-surface-secondary/10">
+            <div className="w-5/12 flex flex-col overflow-hidden bg-surface">
+              <div className="flex items-center gap-2 p-4 border-b border-base bg-surface-secondary">
                 <Shield size={16} className="text-secondary" />
                 <h2 className="text-xs font-bold text-secondary uppercase tracking-widest">Analysis & Debugger</h2>
               </div>
@@ -215,9 +215,9 @@ const DateTimeTabletComponent: React.FC<DateTimeTabletProps> = ({ state, onChang
               <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
                 {/* Humanization */}
                 {state.data.parsedDate && (
-                  <div className="bg-primary/5 p-4 rounded-xl border border-primary/20">
+                  <div className="bg-info-subtle p-4 rounded-xl border border-info">
                     <div className="flex items-center gap-2 mb-2">
-                      <Info size={14} className="text-primary" />
+                      <Info size={14} className="text-info" />
                       <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Humanization</span>
                     </div>
                     <p className="text-lg font-medium text-main leading-tight">

@@ -169,8 +169,8 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
         <div
           {...getRootProps()}
           className={`border-2 border-dashed rounded-md transition-colors ${isDragActive
-              ? "border-primary bg-primary/10"
-              : "border-base hover:border-muted"
+            ? "border-primary bg-primary/10"
+            : "border-base hover:border-muted bg-canvas"
             }`}
         >
           <textarea

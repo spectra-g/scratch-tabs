@@ -9,6 +9,10 @@ export interface TabletMetadata {
   description?: string;
   // NEW: Add the optional action discovery function to the metadata.
   getActionsForContext?(context: TabletActionContext): TabletAction[];
+  // NEW: Configuration for the tablet's shell behavior
+  config?: {
+    showStandardHeader: boolean;
+  };
 }
 
 export const tabletMetadata: TabletMetadata[] = [

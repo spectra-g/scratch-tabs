@@ -29,9 +29,9 @@ export const SnapshotCard: React.FC<SnapshotCardProps> = ({
   return (
     <div
       className={`p-3 rounded-lg border transition-colors ${isActive
-          ? "bg-primary/20 border-primary/30"
+          ? "bg-info-subtle border-info"
           : isCompare
-            ? "bg-purple-500/20 border-purple-500/30"
+            ? "bg-info-subtle border-info"
             : "border-base hover:border-base"
         }`}
     >
@@ -78,7 +78,7 @@ export const SnapshotCard: React.FC<SnapshotCardProps> = ({
           <button
             onClick={onToggleCompare}
             className={`px-2 py-1 text-xs rounded flex items-center ${isCompare
-                ? "bg-purple-500/30 text-purple-300"
+                ? "bg-info-subtle text-info"
                 : "bg-surface-secondary text-secondary hover:bg-gray-600"
               }`}
           >

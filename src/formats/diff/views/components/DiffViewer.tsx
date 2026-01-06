@@ -135,7 +135,7 @@ export const DiffViewer: React.FC<SmartViewProps> = ({
       {/* Main content */}
       <div className="flex flex-1 min-h-0">
         {/* File Navigator */}
-        <div className="w-80 border-r border-base flex flex-col">
+        <div className="w-80 border-r border-base flex flex-col bg-surface-secondary">
           <FileNavigator
             files={filteredFiles}
             selectedFileId={selectedFileId}

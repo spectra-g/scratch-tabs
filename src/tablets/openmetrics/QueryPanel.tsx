@@ -226,7 +226,7 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({
         </div>
 
         {error && (
-          <div className="mt-2 p-2 bg-red-900/20 border border-red-900/30 rounded text-sm text-red-400 flex items-start">
+          <div className="mt-2 p-2 bg-danger-subtle border border-danger rounded text-sm text-danger flex items-start">
             <AlertCircle size={16} className="mr-2 flex-shrink-0 mt-0.5" />
             <div>{error}</div>
           </div>

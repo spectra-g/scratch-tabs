@@ -249,7 +249,7 @@ const TempEmailTabletUI: React.FC<{
             <button
               onClick={generateEmail}
               disabled={isGenerating}
-              className="mt-4 w-full py-3 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-colors"
+              className="mt-4 w-full py-3 bg-info-subtle hover:bg-info-subtle/80 text-info rounded-lg transition-colors"
             >
               {isGenerating ? (
                 <div className="flex items-center justify-center space-x-2">
@@ -261,7 +261,7 @@ const TempEmailTabletUI: React.FC<{
               )}
             </button>
           ) : (
-            <div className="mt-4 bg-surface-secondary border border-base rounded-lg p-4">
+            <div className="mt-4 tablet-card">
               <div className="flex items-center justify-between">
                 <div className="font-mono text-main break-all flex-1 mr-3">
                   {state.data.emailAddress}
@@ -270,7 +270,7 @@ const TempEmailTabletUI: React.FC<{
                   onClick={handleCopyEmail}
                   className={`p-2 rounded transition-colors ${
                     copiedEmail
-                      ? "text-green-400 bg-green-400/10"
+                      ? "text-success bg-success-subtle"
                       : "text-secondary hover:bg-element-hover"
                   }`}
                   title={copiedEmail ? "Copied!" : "Copy email address"}
