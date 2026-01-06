@@ -389,7 +389,7 @@
             <span class="text-emerald-500 font-mono text-xs">→</span>
           </div>
           <p class="text-gray-400 text-xs mb-4 font-mono">Text Editor → Interactive Tree with Tools</p>
-          <img src="img/layer-02-json.png" alt="JSON Tree view with interactive navigation" class="w-full h-auto border border-gray-800">
+          <img src="https://scratchtabs.b-cdn.net/layer-02-json.png" alt="JSON Tree view with interactive navigation" class="w-full h-auto border border-gray-800 cursor-pointer hover:border-emerald-500 transition-colors" onclick="openModal(this.src)">
         </div>
 
         <!-- Markdown Promotion -->
@@ -399,7 +399,7 @@
             <span class="text-emerald-500 font-mono text-xs">→</span>
           </div>
           <p class="text-gray-400 text-xs mb-4 font-mono">Text Editor → Live HTML Preview</p>
-          <img src="img/layer-02-markdown.png" alt="Markdown split view with live preview" class="w-full h-auto border border-gray-800">
+          <img src="https://scratchtabs.b-cdn.net/layer-02-markdown.png" alt="Markdown split view with live preview" class="w-full h-auto border border-gray-800 cursor-pointer hover:border-emerald-500 transition-colors" onclick="openModal(this.src)">
         </div>
 
         <!-- cURL Promotion -->
@@ -409,7 +409,7 @@
             <span class="text-emerald-500 font-mono text-xs">→</span>
           </div>
           <p class="text-gray-400 text-xs mb-4 font-mono">Raw Command → CURL UI Builder</p>
-          <img src="img/layer-02-curl.png" alt="REST Client with cURL auto-parsing" class="w-full h-auto border border-gray-800">
+          <img src="https://scratchtabs.b-cdn.net/layer-02-curl.png" alt="REST Client with cURL auto-parsing" class="w-full h-auto border border-gray-800 cursor-pointer hover:border-emerald-500 transition-colors" onclick="openModal(this.src)">
         </div>
       </div>
     </div>
@@ -423,7 +423,7 @@
           <span class="text-emerald-500 font-mono text-xs">[LAYER_03] // SPECIALIZED_UTILITIES</span>
         </div>
         <p class="text-lg text-gray-400 max-w-3xl leading-relaxed">
-          A collection of 25+ standalone mini-apps for the tasks that usually require a dozen browser tabs. No data intake required—just pure, offline utility.
+          A collection of 25+ standalone mini-apps for the tasks that usually require a dozen browser tabs. No data intake required - just pure, offline utility.
         </p>
       </div>
 
@@ -580,8 +580,14 @@
     </div>
   </footer>
 
+  <!-- Image Modal -->
+  <div id="imgModal" class="img-modal" onclick="this.classList.remove('active')">
+    <img src="" alt="">
+  </div>
+
   <script>
     document.getElementById("currentYear").textContent = new Date().getFullYear();
+    function openModal(src) { const m = document.getElementById('imgModal'); m.querySelector('img').src = src; m.classList.add('active'); }
     const mobileMenuButton = document.getElementById("mobile-menu-button");
     const mobileMenu = document.getElementById("mobile-menu");
     const mobileMenuLinks = mobileMenu.querySelectorAll("a");
