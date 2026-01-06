@@ -12,9 +12,9 @@ import {
   Trash2,
   Check,
   History as HistoryIcon,
-  KeyRound,
   RefreshCw,
   Sparkles,
+  KeyRound,
 } from "lucide-react";
 import { wordlist } from "./wordlist";
 import { SensitiveDataManager } from "../../utils/sensitiveDataManager";
@@ -406,14 +406,17 @@ const PasswordGeneratorUI: React.FC<{
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-6 bg-canvas h-full flex flex-col text-main">
-      <div className="bg-surface-raised/50 border border-base/50 rounded-lg p-4 space-y-4 flex-shrink-0">
-        <h2 className="text-lg font-semibold text-main flex items-center gap-2">
-          <KeyRound size={20} /> Password & Passphrase Generator
-        </h2>
+    <div className="p-4 space-y-6 bg-canvas h-full flex flex-col text-main overflow-y-auto custom-scrollbar">
+      {/* Header */}
+      <div className="flex items-center space-x-3 pb-2 border-b border-base">
+        <KeyRound size={24} className="text-primary" />
+        <h2 className="text-2xl font-bold text-main">Password Generator</h2>
+      </div>
+      {/* Generator Settings Card */}
+      <div className="tablet-card space-y-4 flex-shrink-0">
 
         {/* Mode Toggle */}
-        <div className="flex bg-surface-raised/50 rounded-lg p-0.5 self-start">
+        <div className="flex bg-surface-secondary/50 rounded-lg p-0.5 self-start">
           <button
             onClick={() =>
               onChange({ ...state, data: { ...data, mode: "password" } })
@@ -445,19 +448,19 @@ const PasswordGeneratorUI: React.FC<{
                 },
               })
             }
-            className="flex-1 font-mono text-lg text-main bg-canvas/50 px-3 py-2 rounded-md border border-base/50 focus:border-primary/50 focus:outline-none transition-colors"
+            className="flex-1 font-mono text-lg text-main bg-canvas px-3 py-2 rounded-md border border-base focus:border-primary/50 focus:outline-none transition-colors"
             placeholder="Generated password (editable)"
           />
           <button
             onClick={regenerate}
-            className="p-2 text-muted hover:text-main hover:bg-surface-secondary/50 rounded-md transition-colors"
+            className="p-2 text-muted hover:text-main hover:bg-surface-secondary rounded-md transition-colors"
             title="Regenerate"
           >
             <RefreshCw size={18} />
           </button>
           <button
             onClick={handleCopyToHistory}
-            className={`p-2 rounded-md transition-all duration-150 relative ${copiedId === "current" ? "text-green-400 hover:text-green-300" : "text-muted hover:text-main hover:bg-surface-secondary/50"}`}
+            className={`p-2 rounded-md transition-all duration-150 relative ${copiedId === "current" ? "text-green-400 hover:text-green-300" : "text-muted hover:text-main hover:bg-surface-secondary"}`}
             title="Copy and Save to History"
           >
             {copiedId === "current" ? <Check size={18} /> : <Copy size={18} />}
@@ -466,7 +469,7 @@ const PasswordGeneratorUI: React.FC<{
 
         {/* Strength Meter */}
         <div className="flex items-center space-x-3 pt-1">
-          <div className="flex-1 bg-surface-secondary/50 rounded-full h-1.5">
+          <div className="flex-1 bg-surface-secondary rounded-full h-1.5">
             <motion.div
               className={`h-1.5 rounded-full ${passwordStrength.color.replace("text-", "bg-")}`}
               initial={{ width: 0 }}
@@ -506,7 +509,7 @@ const PasswordGeneratorUI: React.FC<{
                   }
                   className="flex-1 h-2 bg-surface-secondary rounded-lg appearance-none cursor-pointer range-lg accent-blue-500"
                 />
-                <span className="text-sm font-mono bg-surface-secondary/60 px-2 py-0.5 rounded w-12 text-center flex-shrink-0">
+                <span className="text-sm font-mono bg-surface-secondary px-2 py-0.5 rounded w-12 text-center flex-shrink-0">
                   {passwordSettings.length}
                 </span>
               </div>
@@ -569,7 +572,7 @@ const PasswordGeneratorUI: React.FC<{
                   }
                   className="flex-1 h-2 bg-surface-secondary rounded-lg appearance-none cursor-pointer range-lg accent-blue-500"
                 />
-                <span className="text-sm font-mono bg-surface-secondary/60 px-2 py-0.5 rounded w-12 text-center flex-shrink-0">
+                <span className="text-sm font-mono bg-surface-secondary px-2 py-0.5 rounded w-12 text-center flex-shrink-0">
                   {passphraseSettings.wordCount}
                 </span>
               </div>
@@ -588,7 +591,7 @@ const PasswordGeneratorUI: React.FC<{
                     updatePassphraseSettings({ separator: e.target.value })
                   }
                   maxLength={1}
-                  className="bg-surface-secondary/60 rounded w-12 text-center p-1"
+                  className="bg-surface-secondary rounded w-12 text-center p-1"
                 />
               </div>
               <div className="flex items-center space-x-3">
@@ -602,7 +605,7 @@ const PasswordGeneratorUI: React.FC<{
                       capitalize: e.target.value as Capitalization,
                     })
                   }
-                  className="bg-surface-secondary/60 rounded p-1 text-sm"
+                  className="bg-surface-secondary rounded p-1 text-sm"
                 >
                   <option value="none">lowercase</option>
                   <option value="title">Title Case</option>
@@ -632,7 +635,7 @@ const PasswordGeneratorUI: React.FC<{
             </button>
           )}
         </div>
-        <div className="overflow-y-auto custom-scrollbar border border-base/50 rounded-lg bg-surface-raised/30 flex-grow">
+        <div className="overflow-y-auto custom-scrollbar border border-base rounded-lg bg-surface-secondary flex-grow">
           {history.length === 0 ? (
             <div className="text-center text-muted italic py-10 flex flex-col items-center">
               <Sparkles size={32} className="opacity-50 mb-2" />
@@ -640,7 +643,7 @@ const PasswordGeneratorUI: React.FC<{
             </div>
           ) : (
             <table className="w-full text-sm text-left text-secondary">
-              <thead className="text-xs text-muted uppercase bg-surface-secondary/50 sticky top-0 z-10">
+              <thead className="text-xs text-muted uppercase bg-surface-secondary sticky top-0 z-10 border-b border-base">
                 <tr>
                   <th scope="col" className="px-4 py-2">
                     Password
@@ -660,7 +663,7 @@ const PasswordGeneratorUI: React.FC<{
                 {history.map((entry) => (
                   <tr
                     key={entry.id}
-                    className="border-b border-base/50 hover:bg-surface-secondary/30"
+                    className="border-b border-base hover:bg-surface-highlight/30"
                   >
                     <td className="px-4 py-2 font-mono">
                       <span
@@ -682,7 +685,7 @@ const PasswordGeneratorUI: React.FC<{
                           )
                         }
                         placeholder="e.g., Google"
-                        className="w-full bg-transparent focus:bg-surface-secondary/50 border-0 border-b border-base/50 focus:border-primary focus:ring-0 px-1 py-0.5 text-xs text-gray-100 placeholder-muted transition"
+                        className="w-full bg-transparent focus:bg-surface-highlight border-0 border-b border-base focus:border-primary focus:ring-0 px-1 py-0.5 text-xs text-main placeholder-muted transition"
                       />
                     </td>
                     <td>
@@ -697,7 +700,7 @@ const PasswordGeneratorUI: React.FC<{
                           )
                         }
                         placeholder="e.g., Primary Login"
-                        className="w-full bg-transparent focus:bg-surface-secondary/50 border-0 border-b border-base/50 focus:border-primary focus:ring-0 px-1 py-0.5 text-xs text-gray-100 placeholder-muted transition"
+                        className="w-full bg-transparent focus:bg-surface-highlight border-0 border-b border-base focus:border-primary focus:ring-0 px-1 py-0.5 text-xs text-main placeholder-muted transition"
                       />
                     </td>
                     <td className="px-4 py-2 text-center">
@@ -743,6 +746,9 @@ export const PasswordTablet: Tablet = {
   id: "password",
   label: "Password Generator",
   keywords: ["password", "generator", "secure", "random", "key", "passphrase"],
+  config: {
+    showStandardHeader: false,
+  },
 
   createInitialState(): PasswordTabletState {
     const initialPasswordSettings: PasswordSettings = {
@@ -813,13 +819,23 @@ export const PasswordTablet: Tablet = {
             loadedData.length || defaultState.data.passwordSettings.length;
         }
 
-        return { type: "password", data: finalData };
+
+        const result: PasswordTabletState = { type: "password", data: finalData };
+        return result;
       }
     } catch (e) {
       console.error(
-        "Failed to deserialize password state, returning default:",
+        "Failed to deserialize password state, attempting partial load:",
         e,
       );
+      try {
+        const data = JSON.parse(json);
+        const result: PasswordTabletState = { ...defaultState, ...data, type: "password" };
+        return result;
+      } catch (e) {
+        console.error("Failed to parse JSON even for partial load:", e);
+        return defaultState;
+      }
     }
     return defaultState;
   },

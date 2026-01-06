@@ -33,7 +33,7 @@ export const VaultSidebarCanvas: React.FC<VaultSidebarCanvasProps> = ({
 
   // Clear delete confirmation on click outside
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleClickOutside = () => {
       if (deleteConfirmCategory) {
         setDeleteConfirmCategory(null);
       }
@@ -46,16 +46,12 @@ export const VaultSidebarCanvas: React.FC<VaultSidebarCanvasProps> = ({
   }, [deleteConfirmCategory]);
 
   return (
-    <div className="flex flex-col h-full bg-surface-secondary border-r border-base w-64 flex-shrink-0">
+    <div className="tablet-sidebar overflow-hidden flex flex-col h-full bg-surface-secondary border-r border-base">
       {/* Header */}
-      <div className="px-4 py-4 border-b border-base">
-        <div className="flex items-center gap-3 mb-4">
-          <Archive className="text-secondary" size={20} />
-          <h2 className="text-lg font-semibold text-main">Vault</h2>
-        </div>
-        <p className="text-xs text-secondary">
-          Select a category to view commands
-        </p>
+      <div className="p-4 border-b border-base flex items-center justify-between flex-shrink-0">
+        <h2 className="font-semibold text-main flex items-center gap-2">
+          <Archive size={18} /> Command Vault
+        </h2>
       </div>
 
       {/* Add Category Button */}
@@ -127,19 +123,17 @@ export const VaultSidebarCanvas: React.FC<VaultSidebarCanvasProps> = ({
               return (
                 <div
                   key={category}
-                  className={`group flex items-center gap-1 rounded-md transition-colors ${
-                    selectedCategory === category
-                      ? "bg-element-active"
-                      : "hover:bg-element-hover"
-                  }`}
+                  className={`group flex items-center gap-1 rounded-md transition-colors ${selectedCategory === category
+                    ? "bg-element-active"
+                    : "hover:bg-element-hover"
+                    }`}
                 >
                   <button
                     onClick={() => onSelectCategory(category)}
-                    className={`flex-1 flex items-center justify-between px-3 py-2 text-sm ${
-                      selectedCategory === category
-                        ? "text-main"
-                        : "text-secondary"
-                    }`}
+                    className={`flex-1 flex items-center justify-between px-3 py-2 text-sm ${selectedCategory === category
+                      ? "text-main"
+                      : "text-secondary"
+                      }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <IconComponent size={16} className="flex-shrink-0" />

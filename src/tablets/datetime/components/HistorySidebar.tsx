@@ -37,7 +37,7 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
 
     if (isCollapsed) {
         return (
-            <div className="w-12 border-r border-base flex flex-col items-center py-4 bg-surface-secondary/30">
+            <div className="w-12 border-r border-base flex flex-col items-center py-4 bg-surface-secondary">
                 <button
                     onClick={() => setIsCollapsed(false)}
                     className="p-2 text-secondary hover:text-main hover:bg-element-hover rounded-md mb-4"
@@ -54,7 +54,7 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
     }
 
     return (
-        <div className="w-72 border-r border-base flex flex-col bg-surface-secondary/30">
+        <div className="tablet-sidebar">
             <div className="p-4 border-b border-base flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <History size={18} className="text-primary" />

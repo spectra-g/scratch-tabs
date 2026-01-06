@@ -400,16 +400,38 @@ select::-webkit-scrollbar-thumb:hover {
 }
 
 @layer components {
+  /* Tablet Structural Contract */
+  .tablet-root {
+    @apply flex h-full w-full overflow-hidden bg-surface;
+  }
+
+  .tablet-sidebar {
+    @apply w-72 flex-shrink-0 border-r border-base bg-surface-secondary flex flex-col overflow-y-auto custom-scrollbar;
+  }
+
+  .tablet-content-area {
+    @apply flex-1 flex flex-col min-w-0 bg-surface overflow-hidden;
+  }
+
+  .tablet-scroll-container {
+    @apply flex-1 overflow-y-auto custom-scrollbar p-4;
+  }
+
+  .tablet-card {
+    @apply bg-element border border-base rounded-lg p-4 shadow-sm;
+  }
+
+  .tablet-toolbar {
+    @apply flex-none border-b border-base bg-surface-secondary p-3 flex items-center;
+  }
+
+  /* Search Highlight Styles */
   .search-highlight-line {
     @apply bg-blue-900 bg-opacity-20;
-    /* Example Tailwind class */
-    /* Or use direct CSS: background-color: rgba(30, 64, 175, 0.2); */
   }
 
   .search-highlight-match {
     @apply bg-yellow-500 bg-opacity-40 rounded-sm;
-    /* Example Tailwind class */
-    /* Or use direct CSS: background-color: rgba(234, 179, 8, 0.4); border-radius: 2px; */
   }
 
   /* Optional: Style for inline decorations if needed */

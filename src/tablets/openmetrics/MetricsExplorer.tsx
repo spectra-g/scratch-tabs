@@ -299,15 +299,15 @@ const TypeBadge: React.FC<{ type: string | undefined }> = ({ type }) => {
   const getTypeColor = (type: string) => {
     switch (type) {
       case "counter":
-        return "bg-primary/20 text-primary";
+        return "bg-info-subtle text-info";
       case "gauge":
-        return "bg-green-500/20 text-green-400";
+        return "bg-success-subtle text-success";
       case "histogram":
-        return "bg-purple-500/20 text-purple-400";
+        return "bg-info-subtle text-info";
       case "summary":
-        return "bg-yellow-500/20 text-yellow-400";
+        return "bg-warning-subtle text-warning";
       default:
-        return "bg-surface-secondary/20 text-muted";
+        return "bg-surface-secondary text-muted";
     }
   };
 

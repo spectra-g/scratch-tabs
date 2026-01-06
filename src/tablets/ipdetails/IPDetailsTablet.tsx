@@ -118,7 +118,7 @@ const IPDetailsTabletUI: React.FC<{
         ) : (
           <div className="space-y-6">
             {/* IP Address */}
-            <div className="bg-surface-raised border border-base rounded-lg p-4">
+            <div className="tablet-card">
               <div className="flex items-center justify-between">
                 <div className="text-sm font-medium text-muted">
                   IP Address
@@ -137,7 +137,7 @@ const IPDetailsTabletUI: React.FC<{
             </div>
 
             {/* Location Details */}
-            <div className="bg-surface-raised border border-base rounded-lg divide-y divide-base">
+            <div className="tablet-card divide-y divide-base">
               <div className="p-4">
                 <h3 className="text-sm font-medium text-muted mb-3">
                   Location

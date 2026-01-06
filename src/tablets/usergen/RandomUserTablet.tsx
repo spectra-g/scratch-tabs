@@ -260,9 +260,9 @@ export const RandomUserTablet: Tablet = {
         : null;
 
     return (
-      <div ref={containerRef} className="h-full bg-canvas flex">
+      <div ref={containerRef} className="tablet-root">
         {/* Left Panel - History */}
-        <div className="w-72 border-r border-base flex flex-col">
+        <div className="tablet-sidebar">
           <div className="p-4 border-b border-base">
             <div className="flex items-center space-x-3 mb-6">
               <Users className="text-secondary" size={24} />
@@ -383,7 +383,7 @@ export const RandomUserTablet: Tablet = {
               <button
                 onClick={generateUsers}
                 disabled={isGenerating}
-                className="w-full bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-md px-4 py-2 text-sm font-medium flex items-center justify-center space-x-2 transition-colors"
+                className="w-full bg-info-subtle hover:bg-info-subtle/80 text-info rounded-md px-4 py-2 text-sm font-medium flex items-center justify-center space-x-2 transition-colors"
               >
                 <RotateCw
                   size={16}
@@ -438,7 +438,7 @@ export const RandomUserTablet: Tablet = {
         </div>
 
         {/* Right Panel - Editor */}
-        <div className="flex-1 flex flex-col">
+        <div className="tablet-content-area">
           <div className="flex items-center justify-between px-4 py-2 border-b border-base">
             <div className="text-sm text-secondary">
               {selectedResult
@@ -449,7 +449,7 @@ export const RandomUserTablet: Tablet = {
               <button
                 onClick={copyToClipboard}
                 disabled={!selectedResult}
-                className={`p-1 rounded transition-colors ${isCopied ? "text-green-400" : selectedResult ? "text-secondary hover:bg-element-hover" : "text-muted cursor-not-allowed"}`}
+                className={`p-1 rounded transition-colors ${isCopied ? "text-success" : selectedResult ? "text-secondary hover:bg-element-hover" : "text-muted cursor-not-allowed"}`}
                 title={isCopied ? "Copied!" : "Copy to clipboard"}
               >
                 {isCopied ? <Check size={16} /> : <Copy size={16} />}
@@ -457,7 +457,7 @@ export const RandomUserTablet: Tablet = {
               <button
                 onClick={() => handleOpenInNewTab(selectedIndex)}
                 disabled={!selectedResult}
-                className={`p-1 rounded transition-colors ${openedResultIndex === selectedIndex ? "text-green-400" : selectedResult ? "text-secondary hover:bg-element-hover" : "text-muted cursor-not-allowed"}`}
+                className={`p-1 rounded transition-colors ${openedResultIndex === selectedIndex ? "text-success" : selectedResult ? "text-secondary hover:bg-element-hover" : "text-muted cursor-not-allowed"}`}
                 title={
                   openedResultIndex === selectedIndex
                     ? "Opened"
@@ -472,7 +472,7 @@ export const RandomUserTablet: Tablet = {
               </button>
             </div>
           </div>
-          <div className="flex-1">
+          <div className="flex-1 bg-canvas">
             <Editor
               height="100%"
               language={selectedResult?.format || "plaintext"}

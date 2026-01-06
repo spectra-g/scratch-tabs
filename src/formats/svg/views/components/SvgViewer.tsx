@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { SmartViewProps } from '../../../../views/registry';
 import {
   Eye,
-  EyeOff,
   Zap,
   Copy,
   Check,
@@ -12,7 +11,6 @@ import {
   CheckCircle,
   AlertTriangle,
   X,
-  Square, // Replacing Maximize2
   PlusCircle, // Replacing ZoomIn
   Minus, // Replacing ZoomOut  
   RotateCcw,
@@ -40,7 +38,6 @@ interface SvgStats {
 export const SvgViewer: React.FC<SmartViewProps> = ({
   content,
   onContentChange,
-  tabId,
   side,
 }) => {
   const [selectedElement, setSelectedElement] = useState<ElementInfo | null>(null);
@@ -59,7 +56,6 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
   const [copySuccess, setCopySuccess] = useState(false);
 
   const svgContainerRef = useRef<HTMLDivElement>(null);
-  const inspectorRef = useRef<HTMLDivElement>(null);
   const { activeLeftEditor, activeRightEditor } = useActiveEditorStore();
 
   // Get the appropriate editor based on the side
@@ -345,7 +341,6 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
 
       // Get background color from theme
       const computedStyle = getComputedStyle(document.documentElement);
-      const isDark = document.documentElement.classList.contains('dark');
 
       // Use canvas color for background (matches the preview)
       // We need to parse the RGB values from the CSS variable
@@ -477,7 +472,7 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
   return (
     <div className="h-full flex flex-col bg-canvas">
       {/* Toolbar */}
-      <div className="flex-shrink-0 bg-surface border-b border-base p-3">
+      <div className="flex-shrink-0 bg-surface-secondary border-b border-base p-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <h3 className="text-sm font-medium text-main flex items-center">
