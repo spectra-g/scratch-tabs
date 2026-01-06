@@ -214,6 +214,21 @@
         padding: 32px 24px;
       }
     }
+
+    /* Simple Modal */
+    .img-modal {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      cursor: pointer;
+    }
+    .img-modal.active { display: flex; align-items: center; justify-content: center; }
+    .img-modal img { max-width: 90%; max-height: 90%; object-fit: contain; }
   </style>
 </head>
 
@@ -370,13 +385,11 @@
         <!-- JSON/CSV Promotion -->
         <div class="card-sharp p-5">
           <div class="flex items-center justify-between mb-3">
-            <h3 class="text-white font-mono text-sm">JSON / CSV</h3>
+            <h3 class="text-white font-mono text-sm">JSON</h3>
             <span class="text-emerald-500 font-mono text-xs">→</span>
           </div>
-          <p class="text-gray-400 text-xs mb-4 font-mono">Text Editor → Interactive Tree & Table</p>
-          <div class="visual-placeholder h-48">
-            [IMAGE: Screenshot of JSON Tree view with 'Back to Editor' button visible in top-left corner]
-          </div>
+          <p class="text-gray-400 text-xs mb-4 font-mono">Text Editor → Interactive Tree with Tools</p>
+          <img src="img/layer-02-json.png" alt="JSON Tree view with interactive navigation" class="w-full h-auto border border-gray-800">
         </div>
 
         <!-- Markdown Promotion -->
@@ -386,9 +399,7 @@
             <span class="text-emerald-500 font-mono text-xs">→</span>
           </div>
           <p class="text-gray-400 text-xs mb-4 font-mono">Text Editor → Live HTML Preview</p>
-          <div class="visual-placeholder h-48">
-            [IMAGE: Split view - raw markdown text on left, rendered HTML preview on right]
-          </div>
+          <img src="img/layer-02-markdown.png" alt="Markdown split view with live preview" class="w-full h-auto border border-gray-800">
         </div>
 
         <!-- cURL Promotion -->
@@ -397,10 +408,8 @@
             <h3 class="text-white font-mono text-sm">CURL</h3>
             <span class="text-emerald-500 font-mono text-xs">→</span>
           </div>
-          <p class="text-gray-400 text-xs mb-4 font-mono">Raw Command → REST Client Builder</p>
-          <div class="visual-placeholder h-48">
-            [IMAGE: REST Client UI showing headers and body params auto-parsed from cURL string]
-          </div>
+          <p class="text-gray-400 text-xs mb-4 font-mono">Raw Command → CURL UI Builder</p>
+          <img src="img/layer-02-curl.png" alt="REST Client with cURL auto-parsing" class="w-full h-auto border border-gray-800">
         </div>
       </div>
     </div>
