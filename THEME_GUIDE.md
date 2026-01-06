@@ -207,6 +207,7 @@ Use this conversion table:
    - Dynamic width/height classes
    - Inline styles for dynamic sizing
    - Custom spacing and positioning
+   - **Note:** Structural classes (`.tablet-sidebar`, `.tablet-content-area`) provide ONLY semantic structure—width and overflow must be added explicitly. See `LAYOUT_GUIDELINES.md` → "Structural Class Philosophy" for details.
 
 6. **Modals**: Ensure `BaseModal` and custom modal containers use `bg-surface` and `border-base`.
 
@@ -466,6 +467,13 @@ Document new exceptions here as they're discovered.
 4. **Group related utilities**
    ```tsx
    <input className="input-themed" /> {/* Includes bg, border, text, focus */}
+   ```
+
+5. **Use structural classes with explicit dimensions**
+   ```tsx
+   {/* Structural classes provide semantics, NOT dimensions */}
+   <div className="tablet-sidebar w-72 overflow-y-auto custom-scrollbar">
+   <div className="tablet-content-area overflow-hidden">
    ```
 
 ### ❌ DON'T

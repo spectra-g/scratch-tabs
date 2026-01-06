@@ -46,7 +46,7 @@ export const VaultSidebarCanvas: React.FC<VaultSidebarCanvasProps> = ({
   }, [deleteConfirmCategory]);
 
   return (
-    <div className="tablet-sidebar overflow-hidden flex flex-col h-full bg-surface-secondary border-r border-base">
+    <div className="tablet-sidebar w-72 overflow-y-auto custom-scrollbar h-full">
       {/* Header */}
       <div className="p-4 border-b border-base flex items-center justify-between flex-shrink-0">
         <h2 className="font-semibold text-main flex items-center gap-2">

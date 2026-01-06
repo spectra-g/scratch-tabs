@@ -262,7 +262,7 @@ export const RandomUserTablet: Tablet = {
     return (
       <div ref={containerRef} className="tablet-root">
         {/* Left Panel - History */}
-        <div className="tablet-sidebar">
+        <div className="tablet-sidebar w-72 overflow-y-auto custom-scrollbar">
           <div className="p-4 border-b border-base">
             <div className="flex items-center space-x-3 mb-6">
               <Users className="text-secondary" size={24} />
@@ -438,7 +438,7 @@ export const RandomUserTablet: Tablet = {
         </div>
 
         {/* Right Panel - Editor */}
-        <div className="tablet-content-area">
+        <div className="tablet-content-area overflow-hidden">
           <div className="flex items-center justify-between px-4 py-2 border-b border-base">
             <div className="text-sm text-secondary">
               {selectedResult

@@ -28,17 +28,42 @@ All main views (Tablets, Smart Views) follow a **Canvas -> Content** hierarchy.
 - **Rationale**: Provides a visual "utility belt" look that is distinct from the main canvas and the work surface.
 
 ### 4. Sidebars (Layer 2)
-- **Class**: `tablet-sidebar` (Standardized: `w-72 flex-shrink-0 border-r border-base bg-surface-secondary`)
+- **Structural Class**: `.tablet-sidebar`
+  - **CSS Definition**: `flex-shrink-0 border-r border-base bg-surface-secondary flex flex-col`
+  - **Required JSX Classes**: `w-72 overflow-y-auto custom-scrollbar` (add explicitly)
 - **Purpose**: Parameter panels, history lists, or file navigators.
-- **Consistency Note**: Sidebars MUST be exactly `w-72` to prevent the UI from "jumping" when switching tabs.
-- **⚠️ IMPORTANT**: Only use `.tablet-sidebar` for **fixed-width** sidebars. For dynamic/resizable panels (e.g., GraphQL schema explorer), use individual classes with `bg-surface-secondary` instead.
+- **Consistency Note**: Fixed-width sidebars MUST be exactly `w-72` to prevent the UI from "jumping" when switching tabs.
+- **⚠️ IMPORTANT**: Structural classes provide ONLY semantic structure. Width and overflow must be added explicitly in JSX for flexibility.
+
+**Standard Sidebar Pattern:**
+```tsx
+<div className="tablet-sidebar w-72 overflow-y-auto custom-scrollbar">
+  {/* sidebar content */}
+</div>
+```
+
+**Dynamic/Resizable Panel Pattern:**
+```tsx
+<div className="border-r border-base bg-surface-secondary flex flex-col" style={{ width: `${panelWidth}%` }}>
+  {/* dynamic panel content */}
+</div>
+```
 
 ### 5. Content Area
-- **Container**: `flex-1 overflow-hidden bg-surface`
+- **Structural Class**: `.tablet-content-area`
+  - **CSS Definition**: `flex-1 flex flex-col min-w-0 bg-surface`
+  - **Required JSX Classes**: `overflow-hidden` (add when needed for scroll containment)
 - **Purpose**: The actual workspace. This is "Layer 1".
 - **Padding**:
     - `p-4` (Standard for text-based tools).
     - `p-0` (For full-width tables/editors/canvases).
+
+**Standard Content Area Pattern:**
+```tsx
+<div className="tablet-content-area overflow-hidden">
+  {/* content */}
+</div>
+```
 
 ---
 
@@ -101,12 +126,62 @@ To avoid "muddy" colors in Dark Mode, **NEVER** use hardcoded opacity (e.g., `bg
 
 ---
 
+## Structural Class Philosophy
+
+### Design Principle: Minimal & Decoupled
+
+Structural classes (`.tablet-root`, `.tablet-sidebar`, `.tablet-content-area`, etc.) provide **ONLY semantic structure and theming**. They are intentionally minimal to support maximum flexibility.
+
+**What Structural Classes Provide:**
+- ✅ Semantic background colors (theme-aware)
+- ✅ Borders and visual separation
+- ✅ Flex layout direction
+- ✅ Basic structural positioning
+
+**What Structural Classes DO NOT Provide:**
+- ❌ Fixed widths (add `w-72`, `w-64`, etc. explicitly)
+- ❌ Overflow behavior (add `overflow-hidden`, `overflow-y-auto` explicitly)
+- ❌ Scrollbar styling (add `custom-scrollbar` explicitly)
+- ❌ Padding/margins (add `p-4`, `px-6`, etc. as needed)
+
+**Why This Matters:**
+
+1. **Flexibility for Resizable Panels**: Components can use `style={{ width: '${x}%' }}` without fighting CSS
+2. **Sticky Header Support**: Developers control overflow context explicitly
+3. **Custom Scroll Contexts**: Different tablets may need different scroll behaviors
+4. **Performance**: Components can optimize scroll handling per use case
+
+**Standard Pattern:**
+```tsx
+// ✅ CORRECT - Explicit dimensions and overflow
+<div className="tablet-root">
+  <div className="tablet-sidebar w-72 overflow-y-auto custom-scrollbar">
+    {/* sidebar */}
+  </div>
+  <div className="tablet-content-area overflow-hidden">
+    {/* content */}
+  </div>
+</div>
+
+// ❌ WRONG - Assuming structural classes include dimensions
+<div className="tablet-root">
+  <div className="tablet-sidebar">  {/* Missing w-72! */}
+    {/* sidebar */}
+  </div>
+  <div className="tablet-content-area">  {/* Missing overflow-hidden! */}
+    {/* content */}
+  </div>
+</div>
+```
+
+---
+
 ## When to Use Structural Classes vs. Individual Classes
 
 ### Use Structural Classes (`.tablet-root`, `.tablet-sidebar`, etc.) For:
 ✅ **New components** being built from scratch
 ✅ **Simple layouts** with standard structure (header + sidebar + content)
-✅ **Fixed-width sidebars** (always 288px)
+✅ **Standard sidebars** (when you'll add `w-72` explicitly in JSX)
 ✅ **Single-column reading tablets** (like IP Details) where layout is straightforward
 
 ### Use Individual Classes For:
@@ -174,3 +249,25 @@ When standardizing an existing tablet:
 4. **Rollback if needed**
    - If structure breaks, revert to original layout classes
    - Keep semantic color improvements only
+
+---
+
+## Performance Best Practices
+
+### Memoize Expensive Lookups
+
+When using tablet metadata or registry lookups inside render cycles, wrap them in `useMemo`:
+
+**❌ BAD - Iterates on every render:**
+```tsx
+const tabletMeta = tabletRegistry.getAllMetadata().find(m => m.id === tabletType);
+```
+
+**✅ GOOD - Memoized with dependency:**
+```tsx
+const tabletMeta = useMemo(() => {
+  return tabletRegistry.getAllMetadata().find(m => m.id === tabletType);
+}, [tabletType]);
+```
+
+**Why:** Registry lookups iterate through arrays and should only run when the dependency changes, not on every render cycle.

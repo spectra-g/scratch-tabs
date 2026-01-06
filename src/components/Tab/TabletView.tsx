@@ -202,6 +202,12 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
     setIsLoading(true);
   };
 
+  // Get tablet metadata to check config (memoized to prevent re-iteration on every render)
+  const tabletMeta = useMemo(() => {
+    return tabletRegistry.getAllMetadata().find(m => m.id === tabletType);
+  }, [tabletType]);
+  const showStandardHeader = tabletMeta?.config?.showStandardHeader ?? false;
+
   // Now handle all the conditional rendering after hooks are called
   if (!tab.isTablet || !tab.tabletState) {
     return null;
@@ -239,10 +245,6 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
     );
   }
 
-  // Get tablet metadata to check config
-  const tabletMeta = tabletRegistry.getAllMetadata().find(m => m.id === tabletType);
-  const showStandardHeader = tabletMeta?.config?.showStandardHeader ?? false;
-
   return (
     <TabletErrorBoundary
       tabletType={tabletType || "unknown"}
@@ -263,7 +265,7 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
             </div>
           </div>
         )}
-        <div className="tablet-content-area">
+        <div className="tablet-content-area overflow-hidden">
           <ActiveTabletComponent
             state={state}
             onChange={handleTabletStateChange}

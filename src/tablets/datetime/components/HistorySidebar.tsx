@@ -54,7 +54,7 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
     }
 
     return (
-        <div className="tablet-sidebar">
+        <div className="tablet-sidebar w-72 overflow-y-auto custom-scrollbar">
             <div className="p-4 border-b border-base flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <History size={18} className="text-primary" />
