@@ -1,5 +1,4 @@
 import { Tablet, TabletState } from "../types";
-import { Key } from "../../components/Icons";
 import { JwtDecoder } from "./components/JwtDecoder";
 import { JwtEditor } from "./components/JwtEditor";
 import { JwtVerifier } from "./components/JwtVerifier";
@@ -18,6 +17,9 @@ export const JwtTablet: Tablet = {
   id: "jwt",
   label: "JWT",
   keywords: ["jwt", "token", "json web token", "decode", "verify", "sign"],
+  config: {
+    showStandardHeader: false,
+  },
 
   createInitialState(): JwtTabletState {
     return {
@@ -241,11 +243,8 @@ export const JwtTablet: Tablet = {
     return (
       <div className="h-full bg-canvas flex flex-col">
         {/* Header */}
-        <div className="flex-none p-4 border-b border-base">
-          <div className="flex items-center space-x-3">
-            <Key className="text-muted" size={24} />
-            <h2 className="text-xl font-semibold text-main">JWT</h2>
-          </div>
+        <div className="flex items-center space-x-3 p-4 border-b border-base flex-none">
+          <h2 className="text-2xl font-bold text-main">JWT</h2>
         </div>
 
         {/* Tabs */}
@@ -264,7 +263,7 @@ export const JwtTablet: Tablet = {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto custom-scrollbar bg-surface">
+        <div className="flex-1 overflow-auto custom-scrollbar bg-surface p-4">
           {data.activeTab === "decode" && (
             <JwtDecoder
               token={data.token}

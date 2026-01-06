@@ -20,6 +20,9 @@ export const VaultTablet: Tablet = {
     "commands",
     "cheat sheet",
   ],
+  config: {
+    showStandardHeader: false,
+  },
 
   createInitialState(): VaultTabletState {
     return {
@@ -119,7 +122,7 @@ export const VaultTablet: Tablet = {
   },
 
   render(state: VaultTabletState, onChange) {
-    const bridge = useTabletBridge();
+    useTabletBridge();
     const containerRef = useRef<HTMLDivElement>(null);
 
     // Local state

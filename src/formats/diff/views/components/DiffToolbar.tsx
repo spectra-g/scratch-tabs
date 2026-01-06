@@ -57,7 +57,7 @@ export const DiffToolbar: React.FC<DiffToolbarProps> = ({
   }, [isCopied]);
 
   return (
-    <div className="flex-none border-b border-base p-3 bg-surface/50">
+    <div className="flex-none border-b border-base p-3 bg-surface-secondary">
       {/* Top row: Main controls */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-4">
@@ -66,8 +66,8 @@ export const DiffToolbar: React.FC<DiffToolbarProps> = ({
             <button
               onClick={() => onViewModeChange('side-by-side')}
               className={`flex items-center space-x-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${viewMode === 'side-by-side'
-                  ? 'bg-primary text-white'
-                  : 'text-main hover:text-white hover:bg-element-hover'
+                ? 'bg-primary text-white'
+                : 'text-main hover:text-white hover:bg-element-hover'
                 }`}
               title="Side-by-side view"
             >
@@ -77,8 +77,8 @@ export const DiffToolbar: React.FC<DiffToolbarProps> = ({
             <button
               onClick={() => onViewModeChange('unified')}
               className={`flex items-center space-x-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${viewMode === 'unified'
-                  ? 'bg-primary text-white'
-                  : 'text-main hover:text-white hover:bg-element-hover'
+                ? 'bg-primary text-white'
+                : 'text-main hover:text-white hover:bg-element-hover'
                 }`}
               title="Unified view"
             >
@@ -91,8 +91,8 @@ export const DiffToolbar: React.FC<DiffToolbarProps> = ({
           <button
             onClick={() => onToggleWhitespaceChanges(!hideWhitespaceChanges)}
             className={`flex items-center space-x-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${hideWhitespaceChanges
-                ? 'bg-warning/20 text-warning hover:bg-warning/30'
-                : 'bg-element text-main hover:bg-element-hover'
+              ? 'bg-warning/20 text-warning hover:bg-warning/30'
+              : 'bg-element text-main hover:bg-element-hover'
               }`}
             title={hideWhitespaceChanges ? 'Show whitespace changes' : 'Hide whitespace changes'}
           >
@@ -127,8 +127,8 @@ export const DiffToolbar: React.FC<DiffToolbarProps> = ({
         <button
           onClick={handleCopyDiff}
           className={`flex items-center space-x-2 px-3 py-1.5 rounded text-sm transition-colors ${isCopied
-              ? "bg-success/20 text-success"
-              : "bg-element text-main hover:bg-element-hover"
+            ? "bg-success/20 text-success"
+            : "bg-element text-main hover:bg-element-hover"
             }`}
           title={isCopied ? "Copied!" : "Copy filtered diff"}
         >

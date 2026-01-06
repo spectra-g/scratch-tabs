@@ -81,20 +81,20 @@ export const SnapshotManager: React.FC<SnapshotManagerProps> = ({
           Diff Summary
         </h3>
         <div className="grid grid-cols-3 gap-4 text-center">
-          <div className="bg-green-900/20 p-2 rounded">
-            <div className="text-green-400 text-lg font-semibold">
+          <div className="bg-success-subtle p-2 rounded">
+            <div className="text-success text-lg font-semibold">
               {diffResult.added.length}
             </div>
             <div className="text-xs text-muted">Added</div>
           </div>
-          <div className="bg-yellow-900/20 p-2 rounded">
-            <div className="text-yellow-400 text-lg font-semibold">
+          <div className="bg-warning-subtle p-2 rounded">
+            <div className="text-warning text-lg font-semibold">
               {diffResult.changed.length}
             </div>
             <div className="text-xs text-muted">Changed</div>
           </div>
-          <div className="bg-red-900/20 p-2 rounded">
-            <div className="text-red-400 text-lg font-semibold">
+          <div className="bg-danger-subtle p-2 rounded">
+            <div className="text-danger text-lg font-semibold">
               {diffResult.removed.length}
             </div>
             <div className="text-xs text-muted">Removed</div>
@@ -111,14 +111,14 @@ export const SnapshotManager: React.FC<SnapshotManagerProps> = ({
       <div className="space-y-4">
         {diffResult.added.length > 0 && (
           <div className="space-y-2">
-            <h4 className="text-sm font-medium text-green-400">
+            <h4 className="text-sm font-medium text-success">
               Added Metrics
             </h4>
             <div className="space-y-1">
               {diffResult.added.map((metric, index) => (
                 <div
                   key={`added-${index}`}
-                  className="p-2 bg-green-900/10 border border-green-900/20 rounded text-xs font-mono"
+                  className="p-2 bg-success-subtle border border-success rounded text-xs font-mono"
                 >
                   {formatMetricLine(metric)}
                 </div>
@@ -129,24 +129,24 @@ export const SnapshotManager: React.FC<SnapshotManagerProps> = ({
 
         {diffResult.changed.length > 0 && (
           <div className="space-y-2">
-            <h4 className="text-sm font-medium text-yellow-400">
+            <h4 className="text-sm font-medium text-warning">
               Changed Metrics
             </h4>
             <div className="space-y-1">
               {diffResult.changed.map((change, index) => (
                 <div
                   key={`changed-${index}`}
-                  className="p-2 bg-yellow-900/10 border border-yellow-900/20 rounded text-xs"
+                  className="p-2 bg-warning-subtle border border-warning rounded text-xs"
                 >
                   <div className="font-mono">{formatMetricLine(change.to)}</div>
                   <div className="mt-1 flex items-center">
                     <span className="text-muted mr-2">From:</span>
-                    <span className="text-yellow-400">{change.from.value}</span>
+                    <span className="text-warning">{change.from.value}</span>
                     <span className="text-muted mx-2">To:</span>
-                    <span className="text-yellow-400">{change.to.value}</span>
+                    <span className="text-warning">{change.to.value}</span>
                     <span className="text-muted mx-2">Diff:</span>
                     <span
-                      className={`${change.to.value > change.from.value ? "text-green-400" : "text-red-400"}`}
+                      className={`${change.to.value > change.from.value ? "text-success" : "text-danger"}`}
                     >
                       {(change.to.value - change.from.value).toFixed(2)}
                     </span>
@@ -159,14 +159,14 @@ export const SnapshotManager: React.FC<SnapshotManagerProps> = ({
 
         {diffResult.removed.length > 0 && (
           <div className="space-y-2">
-            <h4 className="text-sm font-medium text-red-400">
+            <h4 className="text-sm font-medium text-danger">
               Removed Metrics
             </h4>
             <div className="space-y-1">
               {diffResult.removed.map((metric, index) => (
                 <div
                   key={`removed-${index}`}
-                  className="p-2 bg-red-900/10 border border-red-900/20 rounded text-xs font-mono"
+                  className="p-2 bg-danger-subtle border border-danger rounded text-xs font-mono"
                 >
                   {formatMetricLine(metric)}
                 </div>

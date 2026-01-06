@@ -1023,7 +1023,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
 
   return (
     <div
-      className="flex flex-col h-full bg-surface-secondary text-main"
+      className="flex flex-col h-full bg-canvas text-main"
       onKeyDown={handleKeyDown}
       tabIndex={0}
       data-testid="csv-table-viewer"
@@ -1077,13 +1077,13 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
       {/* Virtualized Table */}
       <div
         ref={tableContainerRef}
-        className="flex-1 overflow-auto custom-scrollbar"
+        className="flex-1 overflow-auto custom-scrollbar bg-surface"
         style={{ contain: "strict" }}
         data-testid="csv-table-container"
       >
         {/* Fixed Header */}
         <div
-          className="bg-surface sticky top-0 z-10 border-b border-base"
+          className="bg-surface-secondary sticky top-0 z-10 border-b border-base"
           style={{
             display: "grid",
             gridTemplateColumns,
@@ -1094,7 +1094,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
           {table.getHeaderGroups()[0]?.headers.map((header) => (
             <div
               key={header.id}
-              className="border-r border-base p-2 text-left font-medium text-main bg-surface"
+              className="border-r border-base p-2 text-left font-medium text-main bg-surface-secondary"
               data-testid="column-header"
             >
               {flexRender(header.column.columnDef.header, header.getContext())}

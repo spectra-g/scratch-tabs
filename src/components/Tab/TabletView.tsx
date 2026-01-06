@@ -202,6 +202,12 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
     setIsLoading(true);
   };
 
+  // Get tablet metadata to check config (memoized to prevent re-iteration on every render)
+  const tabletMeta = useMemo(() => {
+    return tabletRegistry.getAllMetadata().find(m => m.id === tabletType);
+  }, [tabletType]);
+  const showStandardHeader = tabletMeta?.config?.showStandardHeader ?? false;
+
   // Now handle all the conditional rendering after hooks are called
   if (!tab.isTablet || !tab.tabletState) {
     return null;
@@ -247,11 +253,24 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
       onCloseTab={handleCloseTab}
       onRetry={handleRetry}
     >
-      <div className="h-full">
-        <ActiveTabletComponent
-          state={state}
-          onChange={handleTabletStateChange}
-        />
+      <div className="tablet-root text-main">
+        {showStandardHeader && (
+          <div className="tablet-toolbar justify-between">
+            <div className="flex items-center space-x-3">
+              {/* Note: Icon rendering would ideally be dynamic if we had the icon component available in metadata or registry.
+                  For now, we'll use the label. If icons are needed, we'd need to fetch them.
+                  However, standard header usually implies a simple title.
+               */}
+              <h2 className="text-xl font-semibold text-main">{tabletMeta?.label || "Tablet"}</h2>
+            </div>
+          </div>
+        )}
+        <div className="tablet-content-area overflow-hidden">
+          <ActiveTabletComponent
+            state={state}
+            onChange={handleTabletStateChange}
+          />
+        </div>
       </div>
     </TabletErrorBoundary>
   );

@@ -16,15 +16,15 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   const getTypeColor = (type: string | undefined) => {
     switch (type) {
       case "counter":
-        return "bg-primary/20 text-primary border-primary/30";
+        return "bg-info-subtle text-info border-info";
       case "gauge":
-        return "bg-green-500/20 text-green-400 border-green-500/30";
+        return "bg-success-subtle text-success border-success";
       case "histogram":
-        return "bg-purple-500/20 text-purple-400 border-purple-500/30";
+        return "bg-info-subtle text-info border-info";
       case "summary":
-        return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+        return "bg-warning-subtle text-warning border-warning";
       default:
-        return "bg-surface-secondary/20 text-muted border-base/30";
+        return "bg-surface-secondary text-muted border-base";
     }
   };
 
@@ -63,31 +63,31 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       )}
 
       <div className="grid grid-cols-2 gap-2 mb-3">
-        <div className="text-center p-1 bg-black/20 rounded">
+        <div className="text-center p-1 bg-surface-secondary rounded">
           <div className="text-xs text-muted">Count</div>
           <div className="text-sm font-medium">{metricInfo.count}</div>
         </div>
 
         {metricInfo.type === "counter" || metricInfo.type === "gauge" ? (
-          <div className="text-center p-1 bg-black/20 rounded">
+          <div className="text-center p-1 bg-surface-secondary rounded">
             <div className="text-xs text-muted">Current</div>
             <div className="text-sm font-medium">
               {formatNumber(samples[0]?.value || 0)}
             </div>
           </div>
         ) : (
-          <div className="text-center p-1 bg-black/20 rounded">
+          <div className="text-center p-1 bg-surface-secondary rounded">
             <div className="text-xs text-muted">Sum</div>
             <div className="text-sm font-medium">{formatNumber(sum)}</div>
           </div>
         )}
 
-        <div className="text-center p-1 bg-black/20 rounded">
+        <div className="text-center p-1 bg-surface-secondary rounded">
           <div className="text-xs text-muted">Min</div>
           <div className="text-sm font-medium">{formatNumber(min)}</div>
         </div>
 
-        <div className="text-center p-1 bg-black/20 rounded">
+        <div className="text-center p-1 bg-surface-secondary rounded">
           <div className="text-xs text-muted">Max</div>
           <div className="text-sm font-medium">{formatNumber(max)}</div>
         </div>

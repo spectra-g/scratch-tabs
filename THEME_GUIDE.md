@@ -4,6 +4,10 @@
 **Status:** ✅ Production Ready
 **Architecture:** Semantic Design Tokens with CSS Variables
 
+**📖 Related Documentation:**
+- For **structural layout patterns and when to use structural classes**, see `LAYOUT_GUIDELINES.md`
+- This guide focuses on **theme colors, semantic tokens, and color refactoring**
+
 ---
 
 ## 📋 Table of Contents
@@ -194,9 +198,18 @@ Use this conversion table:
 
 3. **Simplify Focus Rings**: Use `focus:ring-2 focus:border-focus`. Remove manual color definitions.
 
-4. **No Raw Colors**: Do not use `bg-white`, `bg-gray-900`, `text-blue-500` unless absolutely necessary for a specific non-theme element (e.g., syntax highlighting).
+4. **No Raw Colors**: Do not use `bg-white`, `bg-gray-900`, `text-blue-500` unless:
+   - Component is a **documented exception** (see Exceptions section above)
+   - Absolutely necessary for non-theme elements (e.g., syntax highlighting)
 
-5. **Modals**: Ensure `BaseModal` and custom modal containers use `bg-surface` and `border-base`.
+5. **⚠️ Preserve Layout Structure**: When refactoring, maintain existing:
+   - Flex direction and arrangement
+   - Dynamic width/height classes
+   - Inline styles for dynamic sizing
+   - Custom spacing and positioning
+   - **Note:** Structural classes (`.tablet-sidebar`, `.tablet-content-area`) provide ONLY semantic structure—width and overflow must be added explicitly. See `LAYOUT_GUIDELINES.md` → "Structural Class Philosophy" for details.
+
+6. **Modals**: Ensure `BaseModal` and custom modal containers use `bg-surface` and `border-base`.
 
 ### Step 4: Example Refactor
 
@@ -222,12 +235,17 @@ Use this conversion table:
 </div>
 ```
 
-### Step 5: Test Both Modes
+### Step 5: Test Both Modes & Functionality
 
 1. Toggle theme using the sun/moon icon in the status bar
 2. Verify the component looks correct in both light and dark modes
 3. Check hover states, focus states, and text contrast
 4. Use browser DevTools to inspect computed colors
+5. **⚠️ CRITICAL**: Test component functionality:
+   - Verify layout structure hasn't changed (no unexpected columns/rows)
+   - Test dynamic features (resizing, dragging, responsive behavior)
+   - Check that tablet-specific functionality still works
+6. **If layout breaks**: Revert structural classes, keep only color updates
 
 ---
 
@@ -399,11 +417,38 @@ find src/ -type f \( -name "*.tsx" -o -name "*.ts" \) -exec sed -i '' 's/bg-them
 
 ---
 
+## Exceptions to Theme System
+
+### Non-Themed Components
+
+⚠️ **Some components must NOT use theme colors** to maintain functionality:
+
+| Component | Required Style | Reason |
+|-----------|---------------|--------|
+| **HTML Preview** | `bg-white` (always) | HTML content expects standard white canvas; theming breaks rendering |
+
+**Example:**
+```tsx
+// ❌ WRONG - Breaks HTML rendering
+<div className="h-full w-full bg-canvas">
+  <iframe src="..." />
+</div>
+
+// ✅ CORRECT - Always white
+<div className="h-full w-full bg-white">
+  <iframe src="..." />
+</div>
+```
+
+Document new exceptions here as they're discovered.
+
+---
+
 ## Best Practices
 
 ### ✅ DO
 
-1. **Use semantic tokens exclusively**
+1. **Use semantic tokens exclusively** (except documented exceptions)
    ```tsx
    <div className="bg-surface text-main border-base">
    ```
@@ -422,6 +467,13 @@ find src/ -type f \( -name "*.tsx" -o -name "*.ts" \) -exec sed -i '' 's/bg-them
 4. **Group related utilities**
    ```tsx
    <input className="input-themed" /> {/* Includes bg, border, text, focus */}
+   ```
+
+5. **Use structural classes with explicit dimensions**
+   ```tsx
+   {/* Structural classes provide semantics, NOT dimensions */}
+   <div className="tablet-sidebar w-72 overflow-y-auto custom-scrollbar">
+   <div className="tablet-content-area overflow-hidden">
    ```
 
 ### ❌ DON'T
