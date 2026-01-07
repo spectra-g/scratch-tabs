@@ -143,13 +143,13 @@ function generateChangelogHTML(releases, maxVersions) {
           <p class="text-gray-500 text-sm mb-8">
             Want to suggest a feature or report a bug? Join the conversation on GitHub or Discord.
           </p>
-          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <a href="https://github.com/spectra-g/scratch-tabs-feedback/issues" target="_blank"
               class="terminal-button px-6 py-2">
-              <span class="text-gray-500 mr-2">$</span> open_github_issue
+              <span class="text-gray-500 mr-2">$</span> open_github_issue<span class="cursor-blink">|</span>
             </a>
             <a href="https://discord.gg/HwsfpTzMVS" target="_blank" class="terminal-button px-6 py-2">
-              <span class="text-gray-500 mr-2">$</span> join_the_discord
+              <span class="text-gray-500 mr-2">$</span> join_the_discord<span class="cursor-blink">|</span>
             </a>
           </div>
         </div>`;
@@ -232,6 +232,53 @@ function updateWelcomeScreenVersion(latestVersion) {
 }
 
 /**
+ * Update version in all landing page HTML files
+ */
+function updateLandingPagesVersion(latestVersion) {
+  const landingDir = path.join(__dirname, '..', 'landing');
+  const landingPages = ['index.html', 'changelog.html', 'features.html', 'tablets.html', 'faq.html'];
+
+  try {
+    landingPages.forEach(page => {
+      const filePath = path.join(landingDir, page);
+
+      if (!fs.existsSync(filePath)) {
+        console.log(`⚠️  Landing page not found: ${page}`);
+        return;
+      }
+
+      let content = fs.readFileSync(filePath, 'utf8');
+      let updated = false;
+
+      // Update footer version: SCRATCH_TABS // v1.14.0 -> SCRATCH_TABS // v{latestVersion}
+      const footerVersionRegex = /(SCRATCH_TABS \/\/ v)[\d.]+/g;
+      if (footerVersionRegex.test(content)) {
+        content = content.replace(footerVersionRegex, `$1${latestVersion}`);
+        updated = true;
+      }
+
+      // Special case: Update launch button in changelog.html
+      if (page === 'changelog.html') {
+        const launchButtonRegex = /(launch_latest_v)[\d.]+/g;
+        if (launchButtonRegex.test(content)) {
+          content = content.replace(launchButtonRegex, `$1${latestVersion}`);
+          updated = true;
+        }
+      }
+
+      if (updated) {
+        fs.writeFileSync(filePath, content, 'utf8');
+        console.log(`✅ Updated version to ${latestVersion} in landing/${page}`);
+      } else {
+        console.log(`⚠️  No version pattern found in landing/${page}`);
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error updating landing pages version:', error.message);
+  }
+}
+
+/**
  * Main function
  */
 function main() {
@@ -277,9 +324,10 @@ function main() {
     // Update changelog.html
     updateChangelogFile(changelogHTML);
 
-    // Update version in welcome screen
+    // Update version in welcome screen and landing pages
     const latestVersion = releases[0].version;
     updateWelcomeScreenVersion(latestVersion);
+    updateLandingPagesVersion(latestVersion);
 
     console.log('🎉 Changelog generation completed successfully!');
     console.log(`📝 Latest version: ${latestVersion}`);
@@ -301,5 +349,6 @@ module.exports = {
   generateChangelogHTML,
   updateChangelogFile,
   updateWelcomeScreenVersion,
+  updateLandingPagesVersion,
   stripEmojis
 };
