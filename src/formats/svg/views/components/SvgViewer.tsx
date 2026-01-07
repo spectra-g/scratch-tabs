@@ -653,9 +653,9 @@ export const SvgViewer: React.FC<SmartViewProps> = ({
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-medium text-main">Element Inspector</h4>
                 <button
-                  onClick={() => setSelectedElement(null)}
+                  onClick={() => setShowInspector(false)}
                   className="p-1 hover:bg-element-hover rounded transition-colors"
-                  title="Clear Selection"
+                  title="Close Inspector"
                 >
                   <X size={14} />
                 </button>

@@ -1,13 +1,14 @@
 # Scratch Tabs Changelog Configuration
 config:
-  max_versions: 10  # Maximum number of versions to display
+  max_versions: 100  # Maximum number of versions to display
 
 releases:
   - version: "1.15.0"
     type: "release"
     draft: true
     date: "2026-01-03"
-    headline: "🎨 Colour Palette: Canvas-First UX & Smart Tools"
+    headline: "Colour Palette: Canvas-First UX & Smart Tools"
+    summary: "Complete rewrite with canvas-first interface, intelligent generation, and slide-over feature panels"
     description: "A complete rewrite of the Colour Palette tool, introducing a world-class canvas-first interface, intelligent generation, and peripheral features integrated via slide-over panels."
     categories:
       - name: "✨ New Features"
@@ -35,7 +36,8 @@ releases:
     type: "latest"
     draft: false
     date: "2025-12-29"
-    headline: "🔗 Share Tabs with Privacy-First URLs"
+    headline: "Share Tabs with Privacy-First URLs"
+    summary: "Share tab content via URLs with compression, smart trimming, and hash-based zero-knowledge privacy"
     description: "Share tab content via shareable URLs with intelligent compression, smart trimming for large content, and hash-based routing that guarantees zero-knowledge privacy - your content never reaches server logs."
     categories:
       - name: "✨ New Features"
@@ -45,7 +47,7 @@ releases:
           - "**Auto-Balancing Greedy Selection:** Intelligent algorithm that automatically unselects heavy fields to fit within URL limits while maximizing smaller, informative keys"
           - "**Smart Content Trimming:** Fallback line-range selector for text-based or malformed content ensuring you can always share high-density snippets"
           - "**Hash-Based Privacy Routing:** URLs use hash fragments (#/s/...) ensuring content never appears in server logs or network requests - true zero-knowledge sharing"
-          - "**Visual Size Feedback:** Real-time color-coded budget bar with individual key weight estimation and \"heavy offender\" warnings"
+          - "**Visual Size Feedback:** Real-time colour-coded budget bar with individual key weight estimation and \"heavy offender\" warnings"
       - name: "🔒 Privacy & Security"
         changes:
           - "**Zero-Knowledge Architecture:** Hash routing ensures shared content exists only in browser memory - never transmitted to servers, proxies, or logging systems"
@@ -56,7 +58,8 @@ releases:
     type: "release"
     draft: false
     date: "2025-12-23"
-    headline: "⌚ Date/Time \"Command Center\" & Smart Inputs"
+    headline: "Date/Time Command Center & Smart Inputs"
+    summary: "Date/Time tablet with command-line inputs, natural language arithmetic, and multi-zone comparison"
     description: "Major transformation of the Date/Time tablet into a high-performance productivity tool with command-line inputs, natural language arithmetic, and multi-zone comparison."
     categories:
       - name: "✨ New Features"
@@ -70,7 +73,8 @@ releases:
     type: "release"
     draft: false
     date: "2025-12-05"
-    headline: "🗂️ Command Vault Complete Rework"
+    headline: "Command Vault Complete Rework"
+    summary: "Command Vault redesign with categories, search, scratchpad, and improved workflow"
     description: "Complete redesign of Command Vault focused on command management with categories, search, scratchpad for temporary edits, and improved workflow"
     categories:
       - name: "✨ New Features"
@@ -87,7 +91,8 @@ releases:
     type: "release"
     draft: false
     date: "2025-12-03"
-    headline: "🌓 Light/Dark Mode & Editor Enhancements"
+    headline: "Light/Dark Mode & Editor Enhancements"
+    summary: "Theme system with Light/Dark mode toggle, bug fixes, and rich text improvements"
     description: "Major theme system update with Light/Dark mode toggle for editor and smart views, plus critical bug fixes and rich text improvements"
     categories:
       - name: "✨ New Features"
@@ -105,7 +110,8 @@ releases:
     type: "release"
     draft: false
     date: "2025-11-18"
-    headline: "🐛 Bug Fixes"
+    headline: "Bug Fixes"
+    summary: "Fixed clipboard processing in JSON comparison and Mermaid PNG export"
     description: "Fixed clipboard content processing in JSON comparison workflows and Mermaid diagram PNG export"
     categories:
       - name: "🐛 Fixed"
@@ -117,7 +123,8 @@ releases:
     type: "release"
     draft: false
     date: "2025-11-14"
-    headline: "🔍 JSON Query Panel & Navigation"
+    headline: "JSON Query Panel & Navigation"
+    summary: "JMESPath query panel, structure-aware navigation, and enhanced CSV editing"
     description: "Powerful JMESPath query panel for JSON filtering and transformation, structure-aware navigation, and enhanced CSV editing capabilities"
     categories:
       - name: "✨ New Features"
@@ -135,7 +142,8 @@ releases:
     type: "release"
     draft: false
     date: "2025-11-12"
-    headline: "🚀 JSON & CSV Features"
+    headline: "JSON & CSV Features"
+    summary: "JSON equality checking, CSV export strategies, and smart delimiter detection"
     description: "Major enhancements with intelligent JSON equality checking, professional CSV export with configurable strategies, and smart TSV/CSV detection and processing"
     categories:
       - name: "✨ New Features"
@@ -154,7 +162,8 @@ releases:
     type: "release"  # latest, beta, alpha
     draft: false
     date: "2025-11-11"
-    headline: "🎯 JSON Data Extraction and Calculator improvements"
+    headline: "JSON Data Extraction and Calculator improvements"
+    summary: "JSON data extraction tool, calculator readability, and bug fixes"
     description: "New powerful JSON data extraction tool with filtering, enhanced calculator readability, and critical bug fixes"
     categories:
       - name: "✨ New Features"
@@ -171,7 +180,8 @@ releases:
     type: "release"  # latest, beta, alpha
     draft: false
     date: "2025-11-01"
-    headline: "🔧 Calculator enhancements, JSON Mapper joins, and smart fixes"
+    headline: "Calculator enhancements, JSON Mapper joins, and smart fixes"
+    summary: "Calculator bit manipulation, JSON Mapper joins, and intelligent auto-fix"
     description: "Major calculator upgrade with bit manipulation tools, powerful JSON Mapper joins, and intelligent JSON auto-fix capabilities"
     categories:
       - name: "✨ New Features"
@@ -192,7 +202,8 @@ releases:
     type: "release"  # latest, beta, alpha
     draft: false
     date: "2025-10-24"
-    headline: "✂️ Split tabs, JSON improvements, and bug fixes"
+    headline: "Split tabs, JSON improvements, and bug fixes"
+    summary: "Split tab functionality, JSON sanitize, and smart view enhancements"
     description: "Major update with split tab functionality, enhanced JSON features, and critical bug fixes"
     categories:
       - name: "✨ New Features"
@@ -213,7 +224,8 @@ releases:
     type: "release"  # latest, beta, alpha
     draft: false
     date: "2025-10-15"
-    headline: "🚀 GraphQL tablet and Pomodoro fixes"
+    headline: "GraphQL tablet and Pomodoro fixes"
+    summary: "GraphQL query builder with schema introspection and Pomodoro timer fix"
     description: "New GraphQL query builder and critical Pomodoro timer bug fix"
     categories:
       - name: "✨ New Features"
@@ -227,7 +239,8 @@ releases:
     type: "release"  # latest, beta, alpha
     draft: false
     date: "2025-10-07"
-    headline: "✨ Rich text enhancements and bug fixes"
+    headline: "Rich text enhancements and bug fixes"
+    summary: "Rich text headings, underline, separators, and critical bug fixes"
     description: "Enhanced rich text editing with new formatting options and critical bug fixes"
     categories:
       - name: "✨ New Features"
@@ -245,7 +258,8 @@ releases:
     type: "release"  # latest, beta, alpha
     draft: false
     date: "2025-09-25"
-    headline: "🛠️ New tablets and improvements"
+    headline: "New tablets and improvements"
+    summary: "Five new tablets: Mermaid, Checksum, DateTime, Colour Palette, Lorem Ipsum"
     description: "Five new specialized tablets plus enhanced regex explanations and curl parsing"
     categories:
       - name: "✨ New Features"
@@ -268,7 +282,8 @@ releases:
     type: "release"  # latest, beta, alpha
     draft: false
     date: "2025-08-28"
-    headline: "🎉 Rich text editing"
+    headline: "Rich text editing"
+    summary: "Rich text editor with images, tables, lists, and code blocks"
     description: "Rich text supporting images, tables, lists and more"
     categories:
       - name: "✨ New Features"
@@ -285,8 +300,10 @@ releases:
 
   - version: "1.2.0"
     type: "release"  # latest, beta, alpha
+    draft: false
     date: "2025-08-15"
-    headline: "🎉 Properties and INI Smart View"
+    headline: "Properties and INI Smart View"
+    summary: "Smart Views for Properties and INI formats with editing and conversion"
     description: "Smart View for Properties and INI formats"
     categories:
       - name: "✨ New Features"
@@ -304,8 +321,10 @@ releases:
 
   - version: "1.1.0"
     type: "release"  # latest, beta, alpha
+    draft: false
     date: "2025-08-11"
-    headline: "🎉 Curl command builder"
+    headline: "Curl command builder"
+    summary: "Feature-rich Curl command builder Smart View with improved detection"
     description: "Smart View for Curl commands and various other bug fixes"
     categories:
       - name: "✨ New Features"
@@ -327,8 +346,10 @@ releases:
 
   - version: "1.0.0"
     type: "release"  # latest, beta, alpha
+    draft: false
     date: "2025-08-06"
-    headline: "🎉 Initial Public Release"
+    headline: "Initial Public Release"
+    summary: "First stable release with 50+ tools, multi-tab workspace, and privacy-first design"
     description: "The first stable release of Scratch Tabs, bringing a comprehensive suite of developer tools directly to your browser."
     categories:
       - name: "✨ New Features"
@@ -350,8 +371,10 @@ releases:
 
   - version: "0.9.0-beta"
     type: "beta"
+    draft: false
     date: "2025-07-20"
-    headline: "🧪 Beta Release"
+    headline: "Beta Release"
+    summary: "Feature-complete beta with REST client, JWT toolkit, and performance optimizations"
     description: "Feature-complete beta release with extensive testing and polish."
     categories:
       - name: "🆕 Added"
@@ -377,8 +400,10 @@ releases:
 
   - version: "0.8.0-alpha"
     type: "alpha"
+    draft: false
     date: "2025-05-05"
-    headline: "🚀 Alpha Release"
+    headline: "Alpha Release"
+    summary: "Initial alpha with core tab interface, JSON formatter, and plugin architecture"
     description: "Initial alpha release with core functionality and architecture foundation."
     categories:
       - name: "🆕 Added"

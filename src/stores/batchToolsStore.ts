@@ -3,25 +3,25 @@ import { create } from "zustand";
 export interface TransformationConfig {
   // Condition (applies to all transformations below)
   condition?:
-    | {
-        type:
-          | "contains"
-          | "not-contains"
-          | "starts-with"
-          | "ends-with"
-          | "regex"
-          | "blank"
-          | "not-blank"
-          | "line-number"
-          | "line-range"
-          | "every-nth";
-        value?: string; // For text-based conditions
-        lineNumber?: number; // For line number conditions
-        startLine?: number; // For range conditions
-        endLine?: number;
-        nthInterval?: number; // For every-nth conditions
-      }
-    | false;
+  | {
+    type:
+    | "contains"
+    | "not-contains"
+    | "starts-with"
+    | "ends-with"
+    | "regex"
+    | "blank"
+    | "not-blank"
+    | "line-number"
+    | "line-range"
+    | "every-nth";
+    value?: string; // For text-based conditions
+    lineNumber?: number; // For line number conditions
+    startLine?: number; // For range conditions
+    endLine?: number;
+    nthInterval?: number; // For every-nth conditions
+  }
+  | false;
 
   // Whitespace & Cleanup
   trim?: boolean;
@@ -31,29 +31,30 @@ export interface TransformationConfig {
 
   // Sorting & Line Order
   sortLines?:
-    | "asc"
-    | "desc"
-    | "natural"
-    | "numeric-asc"
-    | "numeric-desc"
-    | "length"
-    | false;
+  | "asc"
+  | "desc"
+  | "natural"
+  | "numeric-asc"
+  | "numeric-desc"
+  | "length"
+  | false;
   reverseLines?: boolean;
   removeDuplicates?: boolean;
 
   // Case Conversion
   caseTransform?:
-    | "upper"
-    | "lower"
-    | "title"
-    | "sentence"
-    | "camel"
-    | "pascal"
-    | "kebab"
-    | "snake"
-    | "invert"
-    | "alternating"
-    | false;
+  | "upper"
+  | "lower"
+  | "title"
+  | "sentence"
+  | "camel"
+  | "pascal"
+  | "kebab"
+  | "snake"
+  | "invert"
+  | "alternating"
+  | "screaming-snake"
+  | false;
 
   // Prefix/Suffix & Numbering
   addPrefix?: string;
@@ -66,24 +67,24 @@ export interface TransformationConfig {
 
   // Indentation
   changeIndentation?:
-    | { action: "add" | "remove"; amount: number; type: "tabs" | "spaces" }
-    | false;
+  | { action: "add" | "remove"; amount: number; type: "tabs" | "spaces" }
+  | false;
 
   // Duplicate / Pad
   duplicateLines?: number | false;
   padLines?:
-    | { length: number; align: "left" | "right" | "center"; char: string }
-    | false;
+  | { length: number; align: "left" | "right" | "center"; char: string }
+  | false;
 
   // Filtering & Selection
   filterByRegex?: { pattern: string; caseSensitive?: boolean } | false;
   filterByKeyword?:
-    | {
-        keyword: string;
-        action: "keep" | "remove";
-        position?: "contains" | "starts" | "ends";
-      }
-    | false;
+  | {
+    keyword: string;
+    action: "keep" | "remove";
+    position?: "contains" | "starts" | "ends";
+  }
+  | false;
   keepFirstNLines?: number | false;
   keepLastNLines?: number | false;
 

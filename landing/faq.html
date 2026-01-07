@@ -1,801 +1,328 @@
 <!doctype html>
-<html lang="en" style="scroll-behavior: smooth">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FAQ | Scratch Tabs</title>
-    <meta
-      name="description"
-      content="Frequently Asked Questions about Scratch Tabs - Your Local Data Playground & JSON Toolkit"
-    />
-    <meta
-      name="keywords"
-      content="faq, frequently asked questions, scratch tabs, json editor, developer tools"
-    />
+<html lang="en" style="scroll-behavior: smooth; background-color: #050505">
+<!--
+  ███████╗ ██████╗██████╗  █████╗ ████████╗ ██████╗██╗  ██╗    ████████╗ █████╗ ██████╗ ███████╗
+  ██╔════╝██╔════╝██╔══██╗██╔══██╗╚══██╔══╝██╔════╝██║  ██║    ╚══██╔══╝██╔══██╗██╔══██╗██╔════╝
+  ███████╗██║     ██████╔╝███████║   ██║   ██║     ███████║       ██║   ███████║██████╔╝███████╗
+  ╚════██║██║     ██╔══██╗██╔══██║   ██║   ██║     ██╔══██║       ██║   ██╔══██║██╔══██╗╚════██║
+  ███████║╚██████╗██║  ██║██║  ██║   ██║   ╚██████╗██║  ██║       ██║   ██║  ██║██████╔╝███████║
+  ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝       ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚══════╝
 
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://scratchtabs.com/faq.html" />
-    <meta
-      property="og:title"
-      content="FAQ - Scratch Tabs"
-    />
-    <meta
-      property="og:description"
-      content="Frequently Asked Questions about Scratch Tabs - Your Local Data Playground & JSON Toolkit"
-    />
-    <meta
-      property="og:image"
-      content="https://scratchtabs.b-cdn.net/og-image.png"
-    />
+  👋 Hey developer! You found the source. Nice.
 
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://scratchtabs.com/faq.html" />
-    <meta
-      property="twitter:title"
-      content="FAQ - Scratch Tabs"
-    />
-    <meta
-      property="twitter:description"
-      content="Frequently Asked Questions about Scratch Tabs - Your Local Data Playground & JSON Toolkit"
-    />
-    <meta
-      property="twitter:image"
-      content="https://scratchtabs.b-cdn.net/og-image.png"
-    />
+  📝 What is this?
+     A privacy-first developer toolkit that runs 100% in your browser.
+     No servers. No tracking. No accounts. Just pure client-side power.
 
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css"
-      rel="stylesheet"
-    />
-    <link rel="icon" href="https://scratchtabs.b-cdn.net/favicon.svg" type="image/svg+xml" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  🔒 Privacy Philosophy:
+     • Your data never leaves your device
+     • Zero analytics, zero cookies
+     • All processing happens locally via IndexedDB
+     • Even our CDN only serves static assets
 
-    <!-- Structured Data for SEO -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        "mainEntity": [
-          {
-            "@type": "Question",
-            "name": "Is Scratch Tabs really free?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Yes, Scratch Tabs is completely free and will remain free forever. No premium features, no paywalls, no hidden costs. We believe powerful developer tools should be accessible to everyone."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "How does client-side processing work?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "All processing happens directly in your browser using JavaScript. No data is sent to any server, ensuring complete privacy. Your JSON, passwords, and all other data stay on your machine."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "Do I need to create an account?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "No account required! Scratch Tabs works entirely offline and stores your data locally in your browser. Just launch the app and start working immediately."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "What browsers are supported?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Scratch Tabs works on all modern browsers including Chrome, Firefox, Safari, and Edge. We recommend using the latest version for the best experience."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "Can I use it offline?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Absolutely! Once loaded, Scratch Tabs works completely offline. All features including editing, AI summary, data conversion etc. work without an internet connection."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "How do I share my work?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Scratch Tabs is designed as a local-only app to keep you in complete control of your data. You can export your workspaces to files and share those files directly. This ensures your data never touches any servers and stays entirely under your control."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "What makes it different from other tools?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Unlike other tools that require accounts, installations, or send your data to servers, Scratch Tabs is completely client-side. It combines data editing, data conversion, transformation, and specialized tools in one privacy-focused package."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "I'm not a developer, is it for me?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Absolutely! It's not just developers who copy-paste data as part of their workflow. Use the editor as a home for your temporary data. Make use of tools such as Pomodoro for your focused working needs, Shape Snap to intuitively sketch, Clipboard Manager so you can gather data efficiently, Password Generator, Command Vault, Prompt Manager and more!"
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "How can I provide feedback or report issues?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "We welcome feedback! You can report issues, suggest features, or join discussions through our GitHub Issues or Discord community."
-            }
-          }
-        ]
-      }
-    </script>
+  🛠️ Tech Stack:
+     React 18 • TypeScript • Monaco Editor • Zustand • IndexedDB
+     Built with care for developers who care about privacy.
 
-    <style>
-      /* ========== GLASSMORPHISM REDESIGN - TECH-FORWARD AESTHETIC ========== */
+  💡 Contribute:
+     github.com/spectra-g/scratch-tabs-feedback
 
-      html {
-        scroll-padding-top: 5rem;
-        scroll-behavior: smooth;
-      }
+  ⚡ Made with code and coffee by developers, for developers.
+-->
 
-      /* ========== ANIMATED GRADIENT BACKGROUND ========== */
-      body {
-        font-family: 'Inter', 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        background-color: #0D0C1D;
-        color: #F5F5F5;
-        position: relative;
-        overflow-x: hidden;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FAQ | Scratch Tabs</title>
+  <meta name="description"
+    content="Frequently Asked Questions about Scratch Tabs - Your Local Data Playground & JSON Toolkit" />
+  <meta name="keywords" content="faq, frequently asked questions, scratch tabs, json editor, developer tools" />
 
-      /* Animated teal gradient background with organic movement */
-      body::before {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background:
-          radial-gradient(ellipse 120% 100% at 100% 100%, rgba(0, 160, 180, 0.6) 0%, transparent 50%),
-          radial-gradient(ellipse 100% 80% at 100% 50%, rgba(0, 140, 160, 0.4) 0%, transparent 45%),
-          radial-gradient(ellipse 150% 40% at 50% 100%, rgba(0, 120, 140, 0.3) 0%, transparent 40%),
-          linear-gradient(90deg, rgba(0, 10, 20, 1) 0%, rgba(0, 20, 30, 0.8) 60%, transparent 100%);
-        filter: blur(60px);
-        z-index: -1;
-        animation: diagonalShift 20s ease-in-out infinite;
-      }
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://scratchtabs.com/faq.html" />
+  <meta property="og:title" content="FAQ - Scratch Tabs" />
+  <meta property="og:description"
+    content="Frequently Asked Questions about Scratch Tabs - Your Local Data Playground & JSON Toolkit" />
+  <meta property="og:image" content="https://scratchtabs.b-cdn.net/og-image.png" />
 
-      @keyframes diagonalShift {
-        0%, 100% {
-          opacity: 1;
-          transform: translate(0, 0) scale(1) rotate(0deg);
-        }
-        20% {
-          transform: translate(8%, -6%) scale(1.08) rotate(2.5deg);
-        }
-        35% {
-          transform: translate(-5%, 9%) scale(0.92) rotate(-2deg);
-        }
-        55% {
-          transform: translate(12%, -3%) scale(1.12) rotate(-3.5deg);
-        }
-        70% {
-          transform: translate(-6%, 7%) scale(1.18) rotate(1deg);
-        }
-        85% {
-          transform: translate(4%, -4%) scale(0.95) rotate(2.8deg);
-        }
-      }
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://scratchtabs.com/faq.html" />
+  <meta property="twitter:title" content="FAQ - Scratch Tabs" />
+  <meta property="twitter:description"
+    content="Frequently Asked Questions about Scratch Tabs - Your Local Data Playground & JSON Toolkit" />
+  <meta property="twitter:image" content="https://scratchtabs.b-cdn.net/og-image.png" />
 
-      /* ========== TYPOGRAPHY ========== */
-      .section-title {
-        color: #F5F5F5;
-        text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.25);
-      }
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
+  <link rel="icon" href="https://scratchtabs.b-cdn.net/favicon.svg" type="image/svg+xml" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
 
-      /* ========== HEADER / NAV (GLASSMORPHISM) ========== */
-      header {
-        background: rgba(15, 15, 30, 0.6) !important;
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-      }
-
-      /* Logo - make it white (inverted) */
-      header img {
-        filter: brightness(0) invert(1);
-      }
-
-      /* ========== BUTTONS ========== */
-      .primary-button {
-        background: transparent;
-        backdrop-filter: blur(5px);
-        -webkit-backdrop-filter: blur(5px);
-        border: 2px solid rgba(30, 150, 220, 0.8);
-        color: rgba(60, 170, 240, 1);
-        font-weight: 600;
-        padding: 0.5rem 1rem;
-        border-radius: 0.375rem;
-        transition: all 0.3s ease;
-        display: inline-block;
-        text-decoration: none;
-      }
-
-      .primary-button:hover {
-        background-color: rgba(20, 80, 140, 0.9);
-        color: #FFFFFF;
-        border-color: rgba(60, 170, 240, 1);
-        box-shadow: 0 0 25px rgba(30, 150, 220, 0.6);
-        transform: scale(1.05);
-      }
-
-      .secondary-button {
-        background: transparent;
-        backdrop-filter: blur(5px);
-        -webkit-backdrop-filter: blur(5px);
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        color: #F5F5F5;
-        font-weight: 600;
-        padding: 0.5rem 1rem;
-        border-radius: 0.375rem;
-        transition: all 0.3s ease;
-        display: inline-block;
-        text-decoration: none;
-      }
-
-      .secondary-button:hover {
-        border-color: rgba(60, 170, 240, 0.8);
-        color: rgba(60, 170, 240, 1);
-        box-shadow: 0 0 15px rgba(30, 150, 220, 0.3);
-      }
-
-      /* ========== SECTIONS ========== */
-      section[class*="bg-gray"],
-      section.py-16,
-      section.py-20 {
-        background: rgba(255, 255, 255, 0.05) !important;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      /* ========== FOOTER (GLASSMORPHISM) ========== */
-      footer {
-        background: rgba(15, 15, 30, 0.4);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      /* ========== UTILITY ========== */
-      .logo-size {
-        width: 22px;
-        height: 22px;
-      }
-
-      /* ========== FAQ SPECIFIC STYLES ========== */
-      .faq-item {
-        background: rgba(255, 255, 255, 0.08) !important;
-        backdrop-filter: blur(15px);
-        -webkit-backdrop-filter: blur(15px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 12px;
-        transition: all 0.3s ease;
-      }
-
-      .faq-item:hover {
-        background: rgba(255, 255, 255, 0.12) !important;
-        border-color: rgba(0, 160, 180, 0.5);
-        transform: translateY(-2px);
-      }
-
-      .faq-item summary {
-        cursor: pointer;
-        padding: 1rem 1.5rem;
-        list-style: none;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      .faq-item summary::-webkit-details-marker {
-        display: none;
-      }
-
-      .faq-item summary .arrow {
-        transition: transform 0.2s ease-in-out;
-      }
-
-      .faq-item[open] > summary .arrow {
-        transform: rotate(180deg);
-      }
-
-      .faq-item div {
-        padding: 0 1.5rem 1.5rem 1.5rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-      }
-    </style>
-  </head>
-
-  <body class="antialiased">
-    <header
-      class="py-4 px-6 sticky top-0 z-50"
-    >
-      <div class="container mx-auto flex justify-between items-center">
-        <a href="index.html" class="flex items-center space-x-2">
-          <img
-            src="https://scratchtabs.b-cdn.net/favicon-gray.svg"
-            alt="Scratch Tabs Logo"
-            class="logo-size"
-          />
-          <!-- Responsive text size for the brand name -->
-          <span class="text-xl sm:text-2xl font-semibold text-white"
-            >Scratch Tabs</span
-          >
+<body class="antialiased">
+  <header class="py-4 px-6 sticky top-0 z-50">
+    <div class="container mx-auto flex justify-between items-center">
+      <a href="index.html" class="flex items-center space-x-2">
+        <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs Logo" class="logo-size" />
+        <span class="text-xl sm:text-2xl font-bold text-white font-mono">SCRATCH_TABS</span>
+      </a>
+      <nav class="hidden md:flex items-center space-x-6">
+        <a href="features.html"
+          class="text-xs font-mono text-gray-500 hover:text-emerald-500 transition-colors uppercase tracking-tighter">FEATURES</a>
+        <a href="tablets.html"
+          class="text-xs font-mono text-gray-500 hover:text-emerald-500 transition-colors uppercase tracking-tighter">TABLETS</a>
+        <a href="changelog.html"
+          class="text-xs font-mono text-gray-500 hover:text-emerald-500 transition-colors uppercase tracking-tighter">CHANGELOG</a>
+        <a href="index.html#tech-specs"
+          class="text-xs font-mono text-gray-500 hover:text-emerald-500 transition-colors uppercase tracking-tighter">PRIVACY</a>
+        <a href="faq.html"
+          class="text-xs font-mono text-emerald-500 transition-colors uppercase tracking-tighter">FAQ</a>
+      </nav>
+      <div class="flex items-center space-x-2">
+        <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button text-xs">
+          <span class="text-gray-500 mr-2">$</span> launch_app<span class="cursor-blink">|</span>
         </a>
-        <!-- Desktop Nav -->
-        <nav class="hidden md:flex items-center space-x-6">
-          <a
-            href="features.html"
-            class="text-sm text-gray-300 hover:text-white transition-colors"
-            >Features</a
-          >
-          <a
-            href="tablets.html"
-            class="text-sm text-gray-300 hover:text-white transition-colors"
-            >Tablets</a
-          >
-          <a
-            href="changelog.html"
-            class="text-sm text-gray-300 hover:text-white transition-colors"
-            >Changelog</a
-          >
-          <a
-            href="index.html#privacy"
-            class="text-sm text-gray-300 hover:text-white transition-colors"
-            >Privacy</a
-          >
-          <a
-            href="faq.html"
-            class="text-sm text-blue-400 font-medium"
-            >FAQ</a
-          >
-        </nav>
-        <div class="flex items-center space-x-2">
-          <a
-            href="https://app.scratchtabs.com"
-            target="_blank"
-            class="primary-button text-sm"
-          >
-            Launch App
-          </a>
-          <!-- Mobile Menu Button -->
-          <button
-            id="mobile-menu-button"
-            class="md:hidden p-2 text-gray-300 hover:text-white"
-          >
-            <svg
-              class="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 6h16M4 12h16M4 18h16"
-              ></path>
+        <button id="mobile-menu-button" class="md:hidden p-2 text-gray-500 hover:text-emerald-500 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div id="mobile-menu" class="hidden md:hidden mt-4 border-t border-gray-800 pt-4 pb-4 px-6 bg-black">
+      <a href="features.html"
+        class="block py-2 text-xs font-mono text-gray-500 hover:text-emerald-500 uppercase tracking-tighter">FEATURES</a>
+      <a href="tablets.html"
+        class="block py-2 text-xs font-mono text-gray-500 hover:text-emerald-500 uppercase tracking-tighter">TABLETS</a>
+      <a href="changelog.html"
+        class="block py-2 text-xs font-mono text-gray-500 hover:text-emerald-500 uppercase tracking-tighter">CHANGELOG</a>
+      <a href="index.html#tech-specs"
+        class="block py-2 text-xs font-mono text-gray-500 hover:text-emerald-500 uppercase tracking-tighter">PRIVACY</a>
+      <a href="faq.html" class="block py-2 text-xs font-mono text-emerald-500 uppercase tracking-tighter">FAQ</a>
+    </div>
+  </header>
+
+  <!-- FAQ Section -->
+  <section id="faq" class="py-24 border-b border-gray-800">
+    <div class="container mx-auto px-6">
+      <h1 class="text-3xl md:text-5xl font-bold text-center mb-16 uppercase tracking-tighter font-mono">
+        <span class="text-emerald-500">KNOWLEDGE</span>_BASE
+      </h1>
+      <div class="max-w-4xl mx-auto space-y-4">
+        <details class="faq-item">
+          <summary>
+            Is Scratch Tabs really free?
+            <svg class="arrow w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
             </svg>
-          </button>
+          </summary>
+          <div class="faq-content">
+            <p class="mb-4">
+              Yes, Scratch Tabs is completely free and will remain free forever. No premium features, no paywalls, no
+              hidden costs. We believe powerful developer tools should be accessible to everyone.
+            </p>
+            <p>
+              If the app has helped your productivity, consider supporting it with a
+              <a href="https://ko-fi.com/scratchtabs" target="_blank"
+                class="text-emerald-500 hover:underline">coffee</a>.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>
+            How does client-side processing work?
+            <svg class="arrow w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </summary>
+          <div class="faq-content">
+            <p>
+              All processing happens directly in your browser using JavaScript. No data is sent to any server, ensuring
+              complete privacy. Your JSON, passwords, and all other data stay on your machine.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>
+            Do I need to create an account?
+            <svg class="arrow w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </summary>
+          <div class="faq-content">
+            <p>
+              No account required! Scratch Tabs works entirely offline and stores your data locally in your browser.
+              Just launch the app and start working immediately.
+            </p>
+            </p>
+          </div>
+        </details>
+        <details class="faq-item">
+          <summary>
+            What browsers are supported?
+            <svg class="arrow w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </summary>
+          <div class="faq-content">
+            <p>
+              Scratch Tabs works on all modern browsers including Chrome, Firefox, Safari, and Edge. We recommend using
+              the latest version for the best experience.
+            </p>
+          </div>
+        </details>
+        <details class="faq-item">
+          <summary>
+            Can I use it offline?
+            <svg class="arrow w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </summary>
+          <div class="faq-content">
+            <p>
+              Absolutely! Once loaded, Scratch Tabs works completely offline. All features including editing, AI
+              summary, and data conversion work without an internet connection.
+            </p>
+          </div>
+        </details>
+        <details class="faq-item">
+          <summary>
+            How do I share my work?
+            <svg class="arrow w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </summary>
+          <div class="faq-content">
+            <p>
+              Scratch Tabs uses privacy-first URL sharing. You can generate shareable links where compressed data is
+              embedded directly in the hash fragment (#), ensuring it never reaches our servers.
+            </p>
+          </div>
+        </details>
+        <details class="faq-item">
+          <summary>
+            What makes it different from other tools?
+            <svg class="arrow w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </summary>
+          <div class="faq-content">
+            <p>
+              Unlike other tools that require accounts or send data to servers, Scratch Tabs is 100% client-side. It
+              combines data editing, conversion, and specialized engineering tablets in one unified, privacy-focused
+              environment.
+            </p>
+          </div>
+        </details>
+        <details class="faq-item">
+          <summary>
+            I'm not a developer, is it for me?
+            <svg class="arrow w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </summary>
+          <div class="faq-content">
+            <p>
+              Absolutely! Many non-developers use Scratch Tabs for its Pomodoro timer, secure password generation,
+              clipboard management, and focus-oriented text editing.
+            </p>
+          </div>
+        </details>
+        <details class="faq-item">
+          <summary>
+            How can I provide feedback?
+            <svg class="arrow w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </summary>
+          <div class="faq-content">
+            <p>
+              We welcome feedback via <a href="https://github.com/spectra-g/scratch-tabs-feedback/issues"
+                target="_blank" class="text-emerald-500 hover:underline">GitHub Issues</a> or our <a
+                href="https://discord.gg/HwsfpTzMVS" target="_blank" class="text-emerald-500 hover:underline">Discord
+                community</a>.
+            </p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- Call to Action -->
+  <section class="py-24 border-b border-gray-800">
+    <div class="container mx-auto px-6 text-center">
+      <h2 class="text-3xl md:text-5xl font-bold text-white mb-8 uppercase tracking-tighter font-mono">
+        Ready to Get Started?
+      </h2>
+      <p class="text-gray-400 text-lg mb-12 max-w-2xl mx-auto leading-relaxed">
+        Join thousands of developers who've streamlined their local data workflow.
+        <span class="text-white">No setup. No accounts. Just powerful tools that work.</span>
+      </p>
+      <div class="flex flex-col sm:flex-row gap-6 justify-center items-center mb-12">
+        <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button text-xl px-12 py-4">
+          <span class="text-gray-500 mr-2">$</span> launch_app<span class="cursor-blink">|</span>
+        </a>
+        <a href="index.html" class="terminal-button text-xl px-12 py-4 opacity-70 hover:opacity-100">
+          <span class="text-gray-500 mr-2">$</span> back_to_home<span class="cursor-blink">|</span>
+        </a>
+      </div>
+      <div class="flex flex-wrap justify-center gap-8 text-xs font-mono text-gray-600 uppercase tracking-widest">
+        <span>✓ NO_REGISTRATION</span>
+        <span>✓ OFFLINE_CAPABLE</span>
+        <span>✓ ZERO_DATA_COLLECTION</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 border-t border-gray-800 bg-black">
+    <div class="container mx-auto px-6">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-8">
+        <div class="flex items-center space-x-3">
+          <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.14.0</span>
+        </div>
+
+        <div class="flex space-x-8">
+          <a href="https://github.com/spectra-g/scratch-tabs-feedback/issues" target="_blank"
+            class="text-gray-500 hover:text-emerald-500 font-mono text-xs">GITHUB_ISSUES</a>
+          <a href="https://discord.gg/HwsfpTzMVS" target="_blank"
+            class="text-gray-500 hover:text-emerald-500 font-mono text-xs">DISCORD</a>
+          <a href="https://ko-fi.com/scratchtabs" target="_blank"
+            class="text-gray-500 hover:text-emerald-500 font-mono text-xs">KO-FI</a>
+        </div>
+
+        <div class="text-gray-600 font-mono text-xs">
+          Built for developers, by developers.
         </div>
       </div>
-      <!-- Mobile Menu -->
-      <div id="mobile-menu" class="hidden md:hidden mt-4">
-        <a
-          href="features.html"
-          class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded"
-          >Features</a
-        >
-        <a
-          href="tablets.html"
-          class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded"
-          >Tablets</a
-        >
-        <a
-          href="changelog.html"
-          class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded"
-          >Changelog</a
-        >
-        <a
-          href="index.html#privacy"
-          class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded"
-          >Privacy</a
-        >
-        <a
-          href="faq.html"
-          class="block py-2 px-4 text-sm text-blue-400 font-medium"
-          >FAQ</a
-        >
+      <div class="mt-8 text-center text-gray-700 text-[10px] font-mono">
+        &copy; <span id="currentYear"></span> SCRATCH_TABS. NO_TRACKING. NO_ACCOUNTS. 100%_CLIENT_SIDE.
       </div>
-    </header>
+    </div>
+  </footer>
 
-    <!-- FAQ Section -->
-    <section id="faq" class="py-16 bg-gray-800/30">
-      <div class="container mx-auto px-6">
-        <h2
-          class="section-title text-3xl md:text-4xl font-bold text-center mb-12"
-        >
-          Frequently Asked Questions
-        </h2>
-        <div class="max-w-4xl mx-auto space-y-4">
-          <details class="faq-item bg-gray-800 rounded-lg">
-            <summary class="text-lg font-semibold text-white">
-              Is Scratch Tabs really free?<svg
-                class="arrow w-5 h-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                ></path>
-              </svg>
-            </summary>
-            <div class="pt-4">
-              <p class="text-gray-400 pt-4">
-                Yes, Scratch Tabs is completely free and will remain free
-                forever. No premium features, no paywalls, no hidden costs. We
-                believe powerful developer tools should be accessible to
-                everyone.
-              </p>
-              <p class="text-gray-400 pt-6">
-                If the app has helped your productivity, saved you time, or just
-                made your dev life a little smoother — consider supporting it
-                with a
-                <a
-                  href="https://ko-fi.com/scratchtabs"
-                  target="_blank"
-                  class="text-blue-400 hover:text-blue-300"
-                  >coffee (or two!)</a
-                >.
-              </p>
-            </div>
-          </details>
-          <details class="faq-item bg-gray-800 rounded-lg">
-            <summary class="text-lg font-semibold text-white">
-              How does client-side processing work?<svg
-                class="arrow w-5 h-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                ></path>
-              </svg>
-            </summary>
-            <div class="pt-4">
-              <p class="text-gray-400 pt-4">
-                All processing happens directly in your browser using
-                JavaScript. No data is sent to any server, ensuring complete
-                privacy. Your JSON, passwords, and all other data stay on your
-                machine.
-              </p>
-            </div>
-          </details>
-          <details class="faq-item bg-gray-800 rounded-lg">
-            <summary class="text-lg font-semibold text-white">
-              Do I need to create an account?<svg
-                class="arrow w-5 h-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                ></path>
-              </svg>
-            </summary>
-            <div class="pt-4">
-              <p class="text-gray-400 pt-4">
-                No account required! Scratch Tabs works entirely offline and
-                stores your data locally in your browser. Just launch the app
-                and start working immediately.
-              </p>
-            </div>
-          </details>
-          <details class="faq-item bg-gray-800 rounded-lg">
-            <summary class="text-lg font-semibold text-white">
-              What browsers are supported?<svg
-                class="arrow w-5 h-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                ></path>
-              </svg>
-            </summary>
-            <div class="pt-4">
-              <p class="text-gray-400 pt-4">
-                Scratch Tabs works on all modern browsers including Chrome,
-                Firefox, Safari, and Edge. We recommend using the latest version
-                for the best experience.
-              </p>
-            </div>
-          </details>
-          <details class="faq-item bg-gray-800 rounded-lg">
-            <summary class="text-lg font-semibold text-white">
-              Can I use it offline?<svg
-                class="arrow w-5 h-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                ></path>
-              </svg>
-            </summary>
-            <div class="pt-4">
-              <p class="text-gray-400 pt-4">
-                Absolutely! Once loaded, Scratch Tabs works completely offline.
-                All features including editing, AI summary, data conversion etc.
-                work without an internet connection.
-              </p>
-            </div>
-          </details>
-          <details class="faq-item bg-gray-800 rounded-lg">
-            <summary class="text-lg font-semibold text-white">
-              How do I share my work?<svg
-                class="arrow w-5 h-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                ></path>
-              </svg>
-            </summary>
-            <div class="pt-4">
-              <p class="text-gray-400 pt-4">
-                Scratch Tabs is designed as a local-only app to keep you in
-                complete control of your data. You can export your workspaces to
-                files and share those files directly. This ensures your data
-                never touches any servers and stays entirely under your control.
-              </p>
-            </div>
-          </details>
-          <details class="faq-item bg-gray-800 rounded-lg">
-            <summary class="text-lg font-semibold text-white">
-              What makes it different from other tools?<svg
-                class="arrow w-5 h-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                ></path>
-              </svg>
-            </summary>
-            <div class="pt-4">
-              <p class="text-gray-400 pt-4">
-                Unlike other tools that require accounts, installations, or send
-                your data to servers, Scratch Tabs is completely client-side. It
-                combines data editing, data conversion, transformation, and
-                specialized tools in one privacy-focused package.
-              </p>
-            </div>
-          </details>
-          <details class="faq-item bg-gray-800 rounded-lg">
-            <summary class="text-lg font-semibold text-white">
-              I'm not a developer, is it for me?<svg
-                class="arrow w-5 h-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                ></path>
-              </svg>
-            </summary>
-            <div class="pt-4">
-              <p class="text-gray-400 pt-4">
-                Absolutely! It's not just developers who copy-paste data as part
-                of their workflow. Use the editor as a home for your temporary
-                data. Make use of tools such as Pomodoro for your focused
-                working needs, Shape Snap to intuitively sketch, Clipboard
-                Manager so you can gather data efficiently, Password Generator,
-                Command Vault, Prompt Manager and more!
-              </p>
-            </div>
-          </details>
-          <details class="faq-item bg-gray-800 rounded-lg">
-            <summary class="text-lg font-semibold text-white">
-              How can I provide feedback or report issues?<svg
-                class="arrow w-5 h-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                ></path>
-              </svg>
-            </summary>
-            <div class="pt-4">
-              <p class="text-gray-400 pt-4">
-                We welcome feedback! You can report issues, suggest features, or
-                join discussions through our
-                <a
-                  href="https://github.com/spectra-g/scratch-tabs-feedback/issues"
-                  target="_blank"
-                  class="text-blue-400 hover:text-blue-300"
-                  >GitHub Issues</a
-                >
-                or
-                <a
-                  href="https://discord.gg/HwsfpTzMVS"
-                  target="_blank"
-                  class="text-blue-400 hover:text-blue-300"
-                  >Discord community</a
-                >.
-              </p>
-            </div>
-          </details>
-        </div>
-      </div>
-    </section>
+  <script>
+    document.getElementById("currentYear").textContent = new Date().getFullYear();
+    const mobileMenuButton = document.getElementById("mobile-menu-button");
+    const mobileMenu = document.getElementById("mobile-menu");
+    mobileMenuButton.addEventListener("click", () => {
+      mobileMenu.classList.toggle("hidden");
+    });
 
-    <!-- Call to Action -->
-    <section class="py-20">
-      <div class="container mx-auto px-6 text-center">
-        <h2 class="section-title text-3xl md:text-4xl font-bold mb-6">
-          Ready to Get Started?
-        </h2>
-        <p class="text-gray-300 text-lg mb-8 max-w-xl mx-auto">
-          Join developers who've streamlined their workflow with Scratch Tabs.
-          <strong>No setup. No learning curve. Just powerful tools that work.</strong>
-        </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-          <a
-            href="https://app.scratchtabs.com"
-            target="_blank"
-            class="primary-button text-xl font-bold py-4 px-10 rounded-lg shadow-lg"
-            >Launch App</a
-          >
-          <a
-            href="index.html"
-            class="secondary-button text-xl font-bold py-4 px-10 rounded-lg"
-            >Back to Home</a
-          >
-        </div>
-        <div class="text-sm text-gray-500 space-y-2">
-          <p>✓ No registration required</p>
-          <p>✓ Works offline</p>
-          <p>✓ Zero data collection</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="py-8 text-center border-t border-gray-700/50">
-      <div class="container mx-auto px-6">
-        <p class="text-sm text-gray-500 mb-4">
-          © <span id="currentYear"></span> Scratch Tabs. Your Local Data
-          Companion.
-        </p>
-        <div class="flex justify-center items-center space-x-6 mb-4">
-          <a
-            href="https://github.com/spectra-g/scratch-tabs-feedback/issues"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-gray-500 hover:text-white transition-colors duration-150 flex items-center space-x-2"
-            title="GitHub Issues"
-            ><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path
-                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.237 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
-              /></svg
-            ><span class="text-sm">GitHub Issues</span></a
-          >
-          <a
-            href="https://discord.gg/HwsfpTzMVS"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-gray-500 hover:text-white transition-colors duration-150 flex items-center space-x-2"
-            title="Join Discord"
-            ><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path
-                d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419-.019 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1568 2.4189Z"
-              /></svg
-            ><span class="text-sm">Join Discord</span></a
-          >
-          <a
-            href="https://ko-fi.com/scratchtabs"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-gray-500 hover:text-white transition-colors duration-150 flex items-center space-x-2"
-            title="Support the Project on Ko-fi"
-            ><svg
-              class="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M17 8h1a4 4 0 1 1 0 8h-1"></path>
-              <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"></path>
-              <line x1="6" x2="6" y1="2" y2="4"></line>
-              <line x1="10" x2="10" y1="2" y2="4"></line>
-              <line x1="14" x2="14" y1="2" y2="4"></line></svg
-            ><span class="text-sm">Support the Project</span></a
-          >
-        </div>
-        <p class="text-xs text-gray-600">
-          Connect with us for feedback, support, and community discussions.
-        </p>
-      </div>
-    </footer>
-
-    <script>
-      document.getElementById("currentYear").textContent =
-        new Date().getFullYear();
-
-      // Mobile menu toggle script
-      const mobileMenuButton = document.getElementById("mobile-menu-button");
-      const mobileMenu = document.getElementById("mobile-menu");
-      const mobileMenuLinks = mobileMenu.querySelectorAll("a");
-
-      mobileMenuButton.addEventListener("click", () => {
-        mobileMenu.classList.toggle("hidden");
+    // Close menu when a link is clicked
+    const mobileMenuLinks = mobileMenu.querySelectorAll("a");
+    mobileMenuLinks.forEach((link) => {
+      link.addEventListener("click", () => {
+        mobileMenu.classList.add("hidden");
       });
+    });
+  </script>
+</body>
 
-      // Close menu when a link is clicked
-      mobileMenuLinks.forEach((link) => {
-        link.addEventListener("click", () => {
-          mobileMenu.classList.add("hidden");
-        });
-      });
-    </script>
-  </body>
-</html> 
+</html>

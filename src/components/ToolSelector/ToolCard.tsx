@@ -8,23 +8,24 @@ interface ToolCardProps {
     variant?: 'grid' | 'list';
 }
 
-export const ToolCard: React.FC<ToolCardProps> = ({
+export const ToolCard = React.forwardRef<HTMLButtonElement, ToolCardProps>(({
     item,
     onClick,
     isFocused,
     variant = 'grid'
-}) => {
+}, ref) => {
     const Icon = item.icon;
 
     if (variant === 'list') {
         return (
             <button
+                ref={ref}
                 onClick={onClick}
                 className={`
                     group flex items-center p-3 w-full text-left
                     bg-surface hover:bg-element-hover border-b border-base last:border-0
                     transition-all duration-150 outline-none
-                    ${isFocused ? 'bg-element-hover ring-2 ring-inset ring-focus' : ''}
+                    ${isFocused ? 'bg-element-hover border-l-2 border-l-secondary' : ''}
                 `}
             >
                 <div className="p-2 bg-surface-raised rounded-lg mr-4 group-hover:bg-surface transition-colors flex-shrink-0">
@@ -47,13 +48,14 @@ export const ToolCard: React.FC<ToolCardProps> = ({
 
     return (
         <button
+            ref={ref}
             onClick={onClick}
             className={`
                 group relative flex flex-col items-center justify-center p-6 w-full text-center
                 bg-element hover:bg-element-hover border border-base rounded-2xl
                 transition-all duration-200 outline-none
                 hover:shadow-lg hover:-translate-y-1
-                ${isFocused ? 'ring-2 ring-focus border-focus z-10' : ''}
+                ${isFocused ? 'bg-element-hover border-secondary shadow-md z-10' : ''}
             `}
         >
             <div className="p-4 bg-surface-raised rounded-2xl mb-4 group-hover:bg-surface transition-colors shadow-sm">
@@ -64,4 +66,6 @@ export const ToolCard: React.FC<ToolCardProps> = ({
             </h3>
         </button>
     );
-};
+});
+
+ToolCard.displayName = 'ToolCard';

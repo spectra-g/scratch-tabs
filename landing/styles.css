@@ -1,0 +1,386 @@
+/* ===== Scratch Tabs - Shared Styles ===== */
+/* Terminal-themed design system for all landing pages */
+
+html {
+  scroll-padding-top: 5rem;
+  background-color: #050505; /* FOUC fix */
+}
+
+/* ===== PART 1: Global Styles ===== */
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #050505;
+  color: #F5F5F5;
+  position: relative;
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+.mono {
+  font-family: 'Fira Code', monospace;
+}
+
+/* ===== Developer Feel: Syntax Highlighting & Animations ===== */
+/* Blinking cursor animation for terminal feel */
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.cursor-blink {
+  animation: blink 1.2s infinite;
+  display: inline-block;
+}
+
+/* Syntax highlighting colors - terminal theme */
+.syntax-data {
+  color: #fb923c; /* orange - for data formats */
+  font-weight: 500;
+}
+
+.syntax-action {
+  color: #60a5fa; /* blue - for actions/verbs */
+  font-weight: 500;
+}
+
+.syntax-feature {
+  color: #10b981; /* emerald - for features */
+  font-weight: 500;
+}
+
+.syntax-tech {
+  color: #a78bfa; /* purple - for tech terms */
+  font-weight: 500;
+}
+
+/* ===== PART 2: Header / Navigation Bar ===== */
+header {
+  position: sticky;
+  top: 0;
+  background: #050505;
+  border-bottom: 1px solid #1f2937;
+  z-index: 1000;
+}
+
+header nav a {
+  transition: all 0.3s ease;
+}
+
+/* ===== PART 3: Cards & Sections ===== */
+.hero-gradient {
+  background: transparent;
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+.border-subtle {
+  border: 1px solid #1f2937;
+}
+
+.card-sharp {
+  background: #0a0a0a;
+  border: 1px solid #1f2937;
+  border-radius: 2px;
+  transition: all 0.2s ease;
+}
+
+.card-sharp:hover {
+  border-color: #10b981;
+}
+
+/* ===== PART 4: Buttons ===== */
+.terminal-button {
+  font-family: 'Fira Code', monospace;
+  background: #0a0a0a;
+  border: 1px solid #1f2937;
+  color: #10b981;
+  padding: 0.5rem 1rem;
+  border-radius: 2px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.terminal-button:hover {
+  background: #111827;
+  border-color: #10b981;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+}
+
+.section-title {
+  color: #FFFFFF;
+}
+
+/* ===== PART 5: Section Tags ===== */
+.section-tag {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #1f2937;
+  background: #0a0a0a;
+  margin-bottom: 1rem;
+}
+
+.section-tag span {
+  color: #10b981;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.75rem;
+}
+
+/* ===== PART 6: Logo & Icons ===== */
+.logo-size {
+  width: 22px;
+  height: 22px;
+  filter: brightness(0) invert(1);
+}
+
+/* ===== PART 7: Layout Utilities ===== */
+.visual-placeholder {
+  background: #0a0a0a;
+  border: 2px dashed #1f2937;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #4b5563;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.75rem;
+  text-align: center;
+  border-radius: 0px;
+}
+
+.bento-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .bento-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .bento-grid {
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(2, auto);
+  }
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+  .hero-content-card {
+    padding: 32px 24px;
+  }
+}
+
+/* ===== PART 8: Image Modal ===== */
+.img-modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.95);
+  cursor: pointer;
+}
+
+.img-modal.active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.img-modal img {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+}
+
+/* ===== PART 9: Format Badges & Grids ===== */
+.format-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: #0a0a0a;
+  border: 1px solid #1f2937;
+  color: #9ca3af;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.75rem;
+  margin: 0.25rem;
+  border-radius: 2px;
+  transition: all 0.2s ease;
+}
+
+.format-badge:hover {
+  border-color: #10b981;
+  color: #10b981;
+  background: #111827;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.tablet-card {
+  background: #0a0a0a;
+  border: 1px solid #1f2937;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.tablet-card:hover {
+  border-color: #10b981;
+  transform: translateY(-2px);
+}
+
+.cluster-box {
+  background: #0a0a0a;
+  border: 1px solid #1f2937;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.cluster-box:hover {
+  border-color: #10b981;
+}
+
+.keyword-badge {
+  display: inline-block;
+  background-color: #111827;
+  color: #9ca3af;
+  padding: 0.125rem 0.5rem;
+  border: 1px solid #1f2937;
+  border-radius: 2px;
+  font-size: 0.75rem;
+  font-family: 'Fira Code', monospace;
+  transition: all 0.2s ease;
+}
+
+.keyword-badge:hover {
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.new-badge {
+  display: inline-block;
+  background-color: #10b981;
+  color: #050505;
+  padding: 0.125rem 0.5rem;
+  border-radius: 2px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  font-family: 'Fira Code', monospace;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+  text-transform: uppercase;
+}
+
+/* ===== PART 10: Changelog Specific ===== */
+.changelog-entry {
+  position: relative;
+  padding-left: 2rem;
+  border-left: 1px solid #1f2937;
+  margin-bottom: 4rem;
+}
+
+.changelog-entry::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 0;
+  width: 9px;
+  height: 9px;
+  background: #050505;
+  border: 1px solid #1f2937;
+  border-radius: 50%;
+}
+
+.changelog-entry.latest::before {
+  background: #10b981;
+  border-color: #10b981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 2px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  font-family: 'Fira Code', monospace;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+.badge.latest {
+  background-color: #10b981;
+  color: #050505;
+}
+
+.badge.release {
+  background-color: #111827;
+  color: #9ca3af;
+  border-color: #1f2937;
+}
+
+.changelog-content {
+  font-family: 'Inter', sans-serif;
+}
+
+.changelog-content strong {
+  color: #F5F5F5;
+}
+
+/* ===== PART 11: FAQ Specific ===== */
+.faq-item {
+  background: #0a0a0a;
+  border: 1px solid #1f2937;
+  border-radius: 2px;
+  transition: all 0.2s ease;
+}
+
+.faq-item:hover {
+  border-color: #10b981;
+}
+
+.faq-item summary {
+  cursor: pointer;
+  padding: 1.25rem 1.5rem;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Fira Code', monospace;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-item summary .arrow {
+  transition: transform 0.2s ease-in-out;
+  color: #10b981;
+}
+
+.faq-item[open] > summary .arrow {
+  transform: rotate(180deg);
+}
+
+.faq-item[open] {
+  border-color: #10b981;
+}
+
+.faq-content {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #9ca3af;
+}

@@ -20,6 +20,9 @@ const JsonTreeViewModal: React.FC<JsonTreeViewModalProps> = ({
   jsonString,
   onClose,
 }) => {
+  // Use a stable ID for the modal's tree view state
+  const modalTabId = React.useMemo(() => 'json-tree-view-modal', []);
+
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
       onClose();
@@ -46,7 +49,7 @@ const JsonTreeViewModal: React.FC<JsonTreeViewModalProps> = ({
         <div className="flex-1 overflow-hidden">
           {/* --- Suspense Boundary --- */}
           <Suspense fallback={<LoadingIndicator />}>
-            <JsonTreeView jsonString={jsonString} />
+            <JsonTreeView jsonString={jsonString} tabId={modalTabId} />
           </Suspense>
         </div>
       </div>
