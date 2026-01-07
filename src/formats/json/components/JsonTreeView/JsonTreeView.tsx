@@ -22,6 +22,7 @@ import { useRootStore } from "../../../../stores";
 import { useWorkspaceStore } from "../../../../stores/workspaceStore";
 import { useSplitViewStore } from "../../../../stores/splitViewStore";
 import { detectFormat } from "../../../../formats";
+import { useNavigatorStore } from "../../stores/useNavigatorStore";
 
 // --- Interfaces ---
 interface JsonNodeData {
@@ -41,6 +42,7 @@ interface VisibleJsonNode extends JsonNodeData {
 interface JsonTreeViewProps {
   jsonString: string;
   onNodeSelect?: (path: string) => void;
+  tabId: string;
 }
 
 type SearchMode = "keyValue" | "path";
@@ -324,16 +326,31 @@ const findAllChildrenPaths = (
 
 // --- Main Component ---
 
-const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect }) => {
-  const [searchMode, setSearchMode] = useState<SearchMode>("keyValue");
-  const [searchExpansion, setSearchExpansion] = useState<SearchExpansion>("matched");
-  const [inputValue, setInputValue] = useState("");
-  const [showSettings, setShowSettings] = useState(false);
+const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect, tabId }) => {
+  // Get persistent state from store using selector to avoid unnecessary re-renders
+  const navigatorState = useNavigatorStore(state => state.getStateForTab(tabId));
+
+  // Persistent state (stored in Zustand)
+  const searchMode = navigatorState.searchMode;
+  const searchExpansion = navigatorState.searchExpansion;
+  const inputValue = navigatorState.inputValue;
+  const showSettings = navigatorState.showSettings;
+  const selectedPath = navigatorState.selectedPath;
+
+  // Memoize the Set conversion to prevent infinite re-renders
+  const expandedPaths = useMemo(() => new Set(navigatorState.expandedPaths), [navigatorState.expandedPaths]);
+
+  // Update functions for persistent state - get them directly from store without subscription
+  const setSearchMode = useCallback((mode: SearchMode) => useNavigatorStore.getState().setSearchMode(tabId, mode), [tabId]);
+  const setSearchExpansion = useCallback((expansion: SearchExpansion) => useNavigatorStore.getState().setSearchExpansion(tabId, expansion), [tabId]);
+  const setInputValue = useCallback((value: string) => useNavigatorStore.getState().setInputValue(tabId, value), [tabId]);
+  const setShowSettings = useCallback((show: boolean) => useNavigatorStore.getState().setShowSettings(tabId, show), [tabId]);
+  const setSelectedPath = useCallback((path: string) => useNavigatorStore.getState().setSelectedPath(tabId, path), [tabId]);
+  const setExpandedPaths = useCallback((paths: Set<string>) => useNavigatorStore.getState().setExpandedPaths(tabId, Array.from(paths)), [tabId]);
+
   const debouncedInputValue = useDebounce(inputValue, 300); // Debounce input value
-  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(
-    new Set([""]),
-  );
-  const [selectedPath, setSelectedPath] = useState<string>("");
+
+  // Local transient state (not persisted)
   const [parseError, setParseError] = useState<string | null>(null);
   const [evaluationStatus, setEvaluationStatus] = useState<string | null>(null);
   const listRef = useRef<List>(null);
@@ -453,10 +470,12 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
       setLastValidEvaluatedPath(path); // Store the path that worked
       // Expand necessary nodes (will trigger visibleNodes/filteredNodes recalc)
       const ancestors = getAncestorPaths(path);
-      setExpandedPaths((prev) => new Set([...prev, ...ancestors]));
+      // Get current state and merge with ancestors
+      const currentPaths = useNavigatorStore.getState().getStateForTab(tabId).expandedPaths;
+      setExpandedPaths(new Set([...currentPaths, ...ancestors]));
       setSelectedPath(path); // Select the evaluated path
     }
-  }, [debouncedInputValue, searchMode, parsedJson]); // Run when debounced input or mode changes
+  }, [debouncedInputValue, searchMode, parsedJson, setExpandedPaths, setSelectedPath, tabId]); // Run when debounced input or mode changes
 
   // --- Effect for Scrolling after state updates ---
   useEffect(() => {
@@ -500,18 +519,16 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
         setExpandedPaths(new Set(['', ...pathsToShow]));
       }
     }
-  }, [debouncedInputValue, searchMode, searchExpansion, rootNodeData]);
+  }, [debouncedInputValue, searchMode, searchExpansion, rootNodeData, setExpandedPaths]);
 
   // --- Callbacks ---
 
   const toggleNode = useCallback((path: string) => {
-    setExpandedPaths((prev) => {
-      const next = new Set(prev);
-      if (next.has(path)) next.delete(path);
-      else next.add(path);
-      return next;
-    });
-  }, []);
+    const next = new Set(expandedPaths);
+    if (next.has(path)) next.delete(path);
+    else next.add(path);
+    setExpandedPaths(next);
+  }, [expandedPaths, setExpandedPaths]);
 
   const toggleAllNodes = useCallback(
     (expand: boolean) => {
@@ -611,7 +628,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
     [addBackgroundTab, splitView.isSplit, activeWorkspaceId],
   );
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
     // Evaluation/filtering is now handled by the useEffect watching debouncedInputValue
     if (searchMode === "path") {
@@ -619,16 +636,25 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
     } else {
       setEvaluationStatus(null); // Clear status in key/value mode
     }
-  };
+  }, [setInputValue, searchMode]);
 
-  const handleModeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleModeChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const newMode = e.target.value as SearchMode;
     setSearchMode(newMode);
     setInputValue(""); // Clear input when changing mode
     setEvaluationStatus(null);
     setSelectedPath("");
     setLastValidEvaluatedPath(null); // Clear evaluated path state
-  };
+  }, [setSearchMode, setInputValue, setSelectedPath]);
+
+  // Wrapper to work with the existing button onClick handlers
+  const handleModeChangeFromButton = useCallback((newMode: SearchMode) => {
+    setSearchMode(newMode);
+    setInputValue(""); // Clear input when changing mode
+    setEvaluationStatus(null);
+    setSelectedPath("");
+    setLastValidEvaluatedPath(null); // Clear evaluated path state
+  }, [setSearchMode, setInputValue, setSelectedPath]);
 
   // --- Rendering ---
 
@@ -908,10 +934,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
                       </label>
                       <div className="flex gap-2">
                         <button
-                          onClick={() => {
-                            setSearchMode("keyValue");
-                            handleModeChange({ target: { value: "keyValue" } } as any);
-                          }}
+                          onClick={() => handleModeChangeFromButton("keyValue")}
                           className={`flex-1 px-3 py-1 text-xs rounded transition-colors ${
                             searchMode === "keyValue"
                               ? "bg-element-active text-info border border-focus"
@@ -921,10 +944,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect })
                           Key/Value
                         </button>
                         <button
-                          onClick={() => {
-                            setSearchMode("path");
-                            handleModeChange({ target: { value: "path" } } as any);
-                          }}
+                          onClick={() => handleModeChangeFromButton("path")}
                           className={`flex-1 px-3 py-1 text-xs rounded transition-colors ${
                             searchMode === "path"
                               ? "bg-element-active text-info border border-focus"

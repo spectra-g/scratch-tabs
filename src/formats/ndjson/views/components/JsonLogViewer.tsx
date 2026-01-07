@@ -493,6 +493,7 @@ export const JsonLogViewer: React.FC<SmartViewProps> = ({
             <div className="h-80">
               <JsonTreeView
                 jsonString={JSON.stringify(nestedObjectPopover.data, null, 2)}
+                tabId="ndjson-viewer-popover"
               />
             </div>
           </div>

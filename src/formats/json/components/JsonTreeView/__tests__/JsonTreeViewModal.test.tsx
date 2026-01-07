@@ -6,11 +6,12 @@ import JsonTreeViewModal from "../JsonTreeViewModal";
 
 // Mock the JsonTreeView component since it's lazy loaded
 jest.mock("../JsonTreeView", () => {
-  return function MockJsonTreeView({ jsonString }: { jsonString: string }) {
+  return function MockJsonTreeView({ jsonString, tabId }: { jsonString: string; tabId?: string }) {
     return (
       <div data-testid="json-tree-view">
         <div data-testid="json-string">{jsonString}</div>
         <div data-testid="tree-view-content">Mocked Tree View Content</div>
+        {tabId && <div data-testid="tab-id">{tabId}</div>}
       </div>
     );
   };

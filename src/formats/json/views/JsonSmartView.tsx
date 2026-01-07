@@ -280,6 +280,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
                 <Navigator
                   content={content}
                   onNodeSelect={handleNodeSelect}
+                  tabId={tabId}
                 />
               </div>
             </div>
