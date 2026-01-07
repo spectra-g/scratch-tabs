@@ -39,12 +39,22 @@ const DEFAULT_MERMAID_CONFIG = {
   flowchart: {
     useMaxWidth: true,
     htmlLabels: true,
-    curve: 'basis'
+    curve: 'basis',
+    padding: 15
   },
   sequence: {
     useMaxWidth: true,
     wrap: true,
     width: 150
+  },
+  class: {
+    padding: 15
+  },
+  state: {
+    padding: 15
+  },
+  er: {
+    padding: 15
   },
   gantt: { useMaxWidth: true },
   journey: { useMaxWidth: true },

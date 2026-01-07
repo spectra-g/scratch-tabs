@@ -17,6 +17,8 @@ export const MermaidEditor: React.FC<MermaidEditorProps> = ({
   onEditorReady
 }) => {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const [isThemeReady, setIsThemeReady] = React.useState(false);
+  const isDarkMode = useThemeStore(state => state.isDarkMode);
 
   const handleEditorDidMount = useCallback((editor: editor.IStandaloneCodeEditor, monaco: typeof import('monaco-editor')) => {
     editorRef.current = editor;
@@ -109,7 +111,16 @@ export const MermaidEditor: React.FC<MermaidEditorProps> = ({
           'editor.foreground': '#000000',
         },
       });
+
+      // Mark themes as ready after registration
+      setIsThemeReady(true);
+    } else {
+      // Themes already registered
+      setIsThemeReady(true);
     }
+
+    // Apply the correct theme immediately
+    monaco.editor.setTheme(isDarkMode ? 'mermaid-dark' : 'mermaid-light');
 
     // Configure editor options
     editor.updateOptions({
@@ -140,15 +151,23 @@ export const MermaidEditor: React.FC<MermaidEditorProps> = ({
     if (onEditorReady) {
       onEditorReady(editor);
     }
-  }, [onEditorReady]);
+  }, [onEditorReady, isDarkMode]);
+
+  // Update theme when dark mode changes
+  useEffect(() => {
+    if (editorRef.current && isThemeReady) {
+      const monaco = (window as any).monaco;
+      if (monaco && monaco.editor && typeof monaco.editor.setTheme === 'function') {
+        monaco.editor.setTheme(isDarkMode ? 'mermaid-dark' : 'mermaid-light');
+      }
+    }
+  }, [isDarkMode, isThemeReady]);
 
   const handleEditorChange = useCallback((value: string | undefined) => {
     if (value !== undefined) {
       onChange(value);
     }
   }, [onChange]);
-
-  const isDarkMode = useThemeStore(state => state.isDarkMode);
 
   return (
     <div className={`h-full ${className}`}>
@@ -158,7 +177,7 @@ export const MermaidEditor: React.FC<MermaidEditorProps> = ({
         value={value}
         onChange={handleEditorChange}
         onMount={handleEditorDidMount}
-        theme={isDarkMode ? "mermaid-dark" : "mermaid-light"}
+        theme={isThemeReady ? (isDarkMode ? "mermaid-dark" : "mermaid-light") : (isDarkMode ? "vs-dark" : "vs")}
         options={{
           fontSize: 14,
           fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',
