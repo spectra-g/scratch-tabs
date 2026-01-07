@@ -4,26 +4,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Developer Tool Features for JSON, Data & APIs | Scratch Tabs</title>
+  <title>Editor Features & Developer Tools | Scratch Tabs</title>
   <meta name="description"
-    content="Explore the powerful features of Scratch Tabs - A developer's sidekick for data manipulation with smart format recognition, specialized tablets, and workflow automation." />
+    content="Explore the powerful editing features of Scratch Tabs - Monaco editor, split view, rich text, macros, transformations, workspaces, and 38+ format support." />
   <meta name="keywords"
-    content="features, json editor, data transformation, smart format recognition, developer tools, jwt toolkit, regex tester, json mapper, scratch tabs" />
+    content="features, monaco editor, split view, diff tool, macros, transformations, workspaces, json editor, developer tools, scratch tabs" />
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://scratchtabs.com/features.html" />
-  <meta property="og:title" content="Features - The Ultimate Developer's Sidekick | Scratch Tabs" />
+  <meta property="og:title" content="Features - Complete Developer Workspace | Scratch Tabs" />
   <meta property="og:description"
-    content="Explore the powerful features of Scratch Tabs - A developer's sidekick for data manipulation with smart format recognition, specialized tablets, and workflow automation." />
+    content="Monaco-powered editor with split view, diff tool, macros, transformations, and 38+ format support. Zero installation required." />
   <meta property="og:image" content="https://scratchtabs.b-cdn.net/og-image.png" />
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image" />
   <meta property="twitter:url" content="https://scratchtabs.com/features.html" />
-  <meta property="twitter:title" content="Features - The Ultimate Developer's Sidekick | Scratch Tabs" />
+  <meta property="twitter:title" content="Features - Complete Developer Workspace | Scratch Tabs" />
   <meta property="twitter:description"
-    content="Explore the powerful features of Scratch Tabs - A developer's sidekick for data manipulation with smart format recognition, specialized tablets, and workflow automation." />
+    content="Monaco-powered editor with split view, diff tool, macros, transformations, and 38+ format support. Zero installation required." />
   <meta property="twitter:image" content="https://scratchtabs.b-cdn.net/og-image.png" />
 
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
@@ -63,7 +63,7 @@
     .card-sharp {
       background: #0a0a0a;
       border: 1px solid #1f2937;
-      border-radius: 4px;
+      border-radius: 2px;
       transition: all 0.2s ease;
     }
 
@@ -77,7 +77,7 @@
       border: 1px solid #1f2937;
       color: #10b981;
       padding: 0.5rem 1rem;
-      border-radius: 4px;
+      border-radius: 2px;
       transition: all 0.2s ease;
       display: inline-flex;
       align-items: center;
@@ -95,25 +95,43 @@
       filter: brightness(0) invert(1);
     }
 
-    .icon-placeholder {
-      background: #0a0a0a;
-      color: #10b981;
-      width: 3rem;
-      height: 3rem;
-      border: 1px solid #1f2937;
-      border-radius: 4px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1rem;
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
     }
 
-    .icon-tool {
-      width: 24px;
-      height: 24px;
-      stroke: currentColor;
-      fill: none;
-      stroke-width: 2;
+    .format-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      background: #0a0a0a;
+      border: 1px solid #1f2937;
+      color: #9ca3af;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      margin: 0.25rem;
+      border-radius: 2px;
+      transition: all 0.2s ease;
+    }
+
+    .format-badge:hover {
+      border-color: #10b981;
+      color: #10b981;
+    }
+
+    .section-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      border: 1px solid #1f2937;
+      background: #0a0a0a;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-tag span {
+      color: #10b981;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
     }
   </style>
 </head>
@@ -148,406 +166,664 @@
         </button>
       </div>
     </div>
-    <div id="mobile-menu" class="hidden md:hidden mt-4 border-t border-gray-800 pt-4 pb-4 px-6 bg-black">
+    <div id="mobile-menu" class="hidden md:hidden mt-4 border-t border-gray-800 pt-4 pb-4">
       <a href="features.html"
-        class="block py-2 text-xs font-mono text-emerald-500 uppercase tracking-tighter">FEATURES</a>
+        class="block py-2 px-4 text-xs font-mono text-emerald-500 uppercase tracking-tighter">FEATURES</a>
       <a href="tablets.html"
-        class="block py-2 text-xs font-mono text-gray-500 hover:text-emerald-500 uppercase tracking-tighter">TABLETS</a>
+        class="block py-2 px-4 text-xs font-mono text-gray-500 hover:text-emerald-500 uppercase tracking-tighter">TABLETS</a>
       <a href="changelog.html"
-        class="block py-2 text-xs font-mono text-gray-500 hover:text-emerald-500 uppercase tracking-tighter">CHANGELOG</a>
+        class="block py-2 px-4 text-xs font-mono text-gray-500 hover:text-emerald-500 uppercase tracking-tighter">CHANGELOG</a>
       <a href="index.html#tech-specs"
-        class="block py-2 text-xs font-mono text-gray-500 hover:text-emerald-500 uppercase tracking-tighter">PRIVACY</a>
+        class="block py-2 px-4 text-xs font-mono text-gray-500 hover:text-emerald-500 uppercase tracking-tighter">PRIVACY</a>
       <a href="faq.html"
-        class="block py-2 text-xs font-mono text-gray-500 hover:text-emerald-500 uppercase tracking-tighter">FAQ</a>
+        class="block py-2 px-4 text-xs font-mono text-gray-500 hover:text-emerald-500 uppercase tracking-tighter">FAQ</a>
     </div>
   </header>
 
-  <!-- Section 1: Hero Section -->
-  <section class="py-16 md:py-24 border-b border-gray-800">
+  <!-- HERO -->
+  <section class="pt-16 pb-24 md:pt-24 md:pb-32">
     <div class="container mx-auto px-6 text-center">
       <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight mb-6">
-        The Ultimate Developer's Sidekick,<br /><span class="text-emerald-500">Feature by Feature.</span>
+        A Complete Developer Workspace.<br />
+        <span class="text-emerald-500">Zero Installation.</span>
       </h1>
       <p class="text-lg md:text-xl text-gray-400 mb-8 max-w-3xl mx-auto leading-relaxed">
-        Scratch Tabs is more than a scratchpad. It's a powerful suite of integrated tools designed to handle every
-        intermediate data task in your workflow.
+        Monaco-powered editing. Split-screen views. Powerful transformations. 38+ formats. All running 100% in your browser.
       </p>
     </div>
   </section>
 
-  <!-- Section 2: Smart Format Recognition -->
-  <section class="py-16 border-b border-gray-800 bg-black">
+  <!-- SECTION 1: EDITOR POWERHOUSE -->
+  <section class="py-16 md:py-24 border-t border-gray-800">
     <div class="container mx-auto px-6">
-      <div class="text-center max-w-4xl mx-auto">
-        <h2 class="text-3xl md:text-4xl font-mono text-white mb-4">Instant Intelligence for Over 40 Data Formats</h2>
-        <p class="text-gray-400 text-lg mb-12">
-          Scratch Tabs is a polyglot data environment. When you paste data, it's not just formatted—it's loaded into a
-          specialized, interactive "workbench" or "smart view" that understands its structure.
+      <div class="mb-10">
+        <div class="section-tag">
+          <span>[EDITOR_CORE] // POWERHOUSE_EDITING</span>
+        </div>
+        <h2 class="text-3xl md:text-4xl font-mono text-white mb-4">Built on Monaco. Supercharged for Developers.</h2>
+        <p class="text-lg text-gray-400 max-w-3xl leading-relaxed">
+          The same editor that powers VS Code, enhanced with features designed for rapid data manipulation and workflow automation.
         </p>
-        <!-- Developer Scenarios as Individual Cards -->
-        <div class="space-y-8 mb-12">
-          <!-- JSON API Response Scenario -->
-          <div class="grid md:grid-cols-2 gap-8 items-stretch">
-            <div class="card-sharp p-6 flex items-center">
-              <div class="flex items-start space-x-4">
-                <div class="icon-placeholder flex-shrink-0">
-                  <svg class="icon-tool" viewBox="0 0 24 24">
-                    <path
-                      d="M9 5c-1.5 0-2.5 1-2.5 2.5v2c0 1.5-.5 2.5-2.5 2.5 2 0 2.5 1 2.5 2.5v2c0 1.5 1 2.5 2.5 2.5" />
-                    <path d="M15 5c1.5 0 2.5 1 2.5 2.5v2c0 1.5.5 2.5 2.5 2.5-2 0-2.5 1-2.5 2.5v2c0 1.5-1 2.5-2.5 2.5" />
-                  </svg>
-                </div>
-                <div>
-                  <p class="text-gray-400"><strong>When analyzing a messy API response,</strong> just paste the minified
-                    JSON. Scratch Tabs instantly formats it and presents an interactive tree view, letting you collapse
-                    nodes and search for keys without manual cleanup.</p>
-                </div>
-              </div>
-            </div>
-            <div class="order-first md:order-last flex items-center">
-              <img src="https://scratchtabs.b-cdn.net/scenario-json-tree.png" alt="JSON tree view"
-                class="rounded-lg border border-gray-600 w-full">
-            </div>
-          </div>
+      </div>
 
-          <!-- Log Troubleshooting Scenario -->
-          <div class="grid md:grid-cols-2 gap-8 items-stretch">
-            <div class="order-last md:order-first flex items-center">
-              <img src="https://scratchtabs.b-cdn.net/scenario-ndjson.png" alt="Log parsing"
-                class="rounded-lg border border-gray-600 w-full">
-            </div>
-            <div class="card-sharp p-6 flex items-center">
-              <div class="flex items-start space-x-4">
-                <div class="icon-placeholder flex-shrink-0">
-                  <svg class="icon-tool" viewBox="0 0 24 24">
-                    <path d="M4 6h16M4 12h16M4 18h7"></path>
-                  </svg>
-                </div>
-                <div>
-                  <p class="text-gray-400"><strong>When troubleshooting production errors with scattered log
-                      entries,</strong> just paste the multiple log lines. Scratch Tabs instantly parses and filters
-                    them, making error patterns immediately visible. For JSON logs with metadata prefixes, it
-                    automatically cleans them leaving pure JSONs.</p>
-                </div>
-              </div>
-            </div>
-          </div>
+      <div class="feature-grid mb-12">
+        <!-- Monaco Features -->
+        <div class="card-sharp p-6">
+          <h3 class="text-emerald-500 font-mono text-sm mb-3">// Monaco-Powered</h3>
+          <h4 class="text-white font-bold text-lg mb-2">Professional Code Editing</h4>
+          <ul class="text-gray-400 text-sm space-y-2">
+            <li>→ Syntax highlighting for 38+ languages</li>
+            <li>→ IntelliSense auto-completion</li>
+            <li>→ Multi-cursor editing</li>
+            <li>→ Find & replace with regex</li>
+            <li>→ Code folding & minimap</li>
+          </ul>
+        </div>
 
-          <!-- Regex Understanding Scenario -->
-          <div class="grid md:grid-cols-2 gap-8 items-stretch">
-            <div class="card-sharp p-6 flex items-center">
-              <div class="flex items-start space-x-4">
-                <div class="icon-placeholder flex-shrink-0">
-                  <svg class="icon-tool" viewBox="0 0 24 24">
-                    <path d="m18 16 4-4-4-4M6 8l-4 4 4 4" />
-                    <path d="m14.5 4-5 16" />
-                  </svg>
-                </div>
-                <div>
-                  <p class="text-gray-400"><strong>When struggling to understand a complicated regex pattern,</strong>
-                    paste it into the regex tablet. Scratch Tabs provides a human-readable interpretation of what the
-                    pattern actually matches.</p>
-                </div>
-              </div>
-            </div>
-            <div class="order-first md:order-last flex items-center">
-              <img src="https://scratchtabs.b-cdn.net/scenario-regex.png" alt="Regex explanation"
-                class="rounded-lg border border-gray-600 w-full">
-            </div>
-          </div>
+        <!-- Split View -->
+        <div class="card-sharp p-6">
+          <h3 class="text-emerald-500 font-mono text-sm mb-3">// Split-Screen</h3>
+          <h4 class="text-white font-bold text-lg mb-2">Side-by-Side Editing</h4>
+          <ul class="text-gray-400 text-sm space-y-2">
+            <li>→ Resizable dual-pane view</li>
+            <li>→ Independent tab sets per side</li>
+            <li>→ Compare files live</li>
+            <li>→ Copy between panes</li>
+            <li>→ Persistent layout per workspace</li>
+          </ul>
+        </div>
 
-          <!-- Cron Expression Scenario -->
-          <div class="grid md:grid-cols-2 gap-8 items-stretch">
-            <div class="order-last md:order-first flex items-center">
-              <img src="https://scratchtabs.b-cdn.net/scenario-cron.png" alt="Cron breakdown"
-                class="rounded-lg border border-gray-600 w-full">
-            </div>
-            <div class="card-sharp p-6 flex items-center">
-              <div class="flex items-start space-x-4">
-                <div class="icon-placeholder flex-shrink-0">
-                  <svg class="icon-tool" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12,6 12,12 16,14" />
-                  </svg>
-                </div>
-                <div>
-                  <p class="text-gray-400"><strong>When unsure if cron expressions will parse equivalently across
-                      systems,</strong> paste the cron syntax. Scratch Tabs gives you a full breakdown of the schedule
-                    timing and execution pattern.</p>
-                </div>
-              </div>
-            </div>
-          </div>
+        <!-- Rich Text -->
+        <div class="card-sharp p-6">
+          <h3 class="text-emerald-500 font-mono text-sm mb-3">// Rich-Text</h3>
+          <h4 class="text-white font-bold text-lg mb-2">Beyond Plain Text</h4>
+          <ul class="text-gray-400 text-sm space-y-2">
+            <li>→ TipTap-based rich editor</li>
+            <li>→ Image embedding support</li>
+            <li>→ Background textures (grid, lines)</li>
+            <li>→ Live markdown preview</li>
+            <li>→ Scroll-sync between views</li>
+          </ul>
+        </div>
 
-          <!-- Properties File Scenario -->
-          <div class="grid md:grid-cols-2 gap-8 items-stretch">
-            <div class="card-sharp p-6 flex items-center">
-              <div class="flex items-start space-x-4">
-                <div class="icon-placeholder flex-shrink-0">
-                  <svg class="icon-tool" viewBox="0 0 24 24">
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <path d="M3 9h18M9 21V9" />
-                  </svg>
-                </div>
-                <div>
-                  <p class="text-gray-400"><strong>When dealing with a messy application.properties file from a legacy
-                      system,</strong> paste the content. Scratch Tabs intelligently cleans and groups properties with
-                    one-click functions for instant organization.</p>
-                </div>
-              </div>
-            </div>
-            <div class="order-first md:order-last flex items-center">
-              <img src="https://scratchtabs.b-cdn.net/scenario-properties.png" alt="Properties organization"
-                class="rounded-lg border border-gray-600 w-full">
-            </div>
-          </div>
+        <!-- Diff Tool -->
+        <div class="card-sharp p-6">
+          <h3 class="text-emerald-500 font-mono text-sm mb-3">// Diff-Engine</h3>
+          <h4 class="text-white font-bold text-lg mb-2">Smart Comparison</h4>
+          <ul class="text-gray-400 text-sm space-y-2">
+            <li>→ Side-by-side diff viewer</li>
+            <li>→ Unified diff mode</li>
+            <li>→ Syntax-aware highlighting</li>
+            <li>→ Compare any two tabs instantly</li>
+            <li>→ Line-by-line navigation</li>
+          </ul>
+        </div>
+
+        <!-- Tab Management -->
+        <div class="card-sharp p-6">
+          <h3 class="text-emerald-500 font-mono text-sm mb-3">// Tab-System</h3>
+          <h4 class="text-white font-bold text-lg mb-2">Unlimited Tabs</h4>
+          <ul class="text-gray-400 text-sm space-y-2">
+            <li>→ Unlimited tabs per workspace</li>
+            <li>→ Pin important tabs</li>
+            <li>→ Drag-and-drop reordering</li>
+            <li>→ Duplicate & split operations</li>
+            <li>→ Group by language</li>
+          </ul>
+        </div>
+
+        <!-- Auto-Save -->
+        <div class="card-sharp p-6">
+          <h3 class="text-emerald-500 font-mono text-sm mb-3">// Persistence</h3>
+          <h4 class="text-white font-bold text-lg mb-2">Never Lose Work</h4>
+          <ul class="text-gray-400 text-sm space-y-2">
+            <li>→ Auto-save every 2.5 seconds</li>
+            <li>→ IndexedDB local storage</li>
+            <li>→ Cursor position memory</li>
+            <li>→ Per-tab undo/redo</li>
+            <li>→ Instant recovery on reload</li>
+          </ul>
         </div>
       </div>
-      <div class="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-        <div class="card-sharp p-6 flex items-start space-x-4">
-          <div class="icon-placeholder"><svg class="icon-tool" viewBox="0 0 24 24">
-              <path d="M4 4h16v16H4z" />
-              <path d="M4 12h16" />
-              <path d="M12 4v16" />
-            </svg></div>
-          <div>
-            <h3 class="text-xl font-bold text-white mb-2">Data Formats</h3>
-            <p class="text-gray-400 text-sm">Instantly parse, explore, and manipulate complex data. Our interactive
-              viewers for JSON, YAML, XML, and CSV turn raw text into navigable structures.</p>
-          </div>
+
+      <!-- Visual: Split View Screenshot -->
+      <div class="max-w-5xl mx-auto">
+        <div class="border border-gray-800 p-2 bg-black">
+          <div class="text-gray-500 font-mono text-xs mb-2 px-2">$ split_view --dual-pane</div>
+          <img src="https://scratchtabs.b-cdn.net/app-screenshot.png" alt="Split view editor"
+            class="w-full border border-gray-800">
         </div>
-        <div class="card-sharp p-6 flex items-start space-x-4">
-          <div class="icon-placeholder"><svg class="icon-tool" viewBox="0 0 24 24">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <path d="M3 9h18M9 21V9" />
-            </svg></div>
-          <div>
-            <h3 class="text-xl font-bold text-white mb-2">Configs & Markup</h3>
-            <p class="text-gray-400 text-sm">Manage your infrastructure and project files with ease. Get instant syntax
-              highlighting and smart views for HCL (Terraform), Dockerfiles, INI, .properties, and more.</p>
-          </div>
-        </div>
-        <div class="card-sharp p-6 flex items-start space-x-4">
-          <div class="icon-placeholder"><svg class="icon-tool" viewBox="0 0 24 24">
-              <path d="M4 6h16M4 12h16M4 18h7"></path>
-            </svg></div>
-          <div>
-            <h3 class="text-xl font-bold text-white mb-2">Logs & Metrics</h3>
-            <p class="text-gray-400 text-sm">Debug with clarity. Paste raw logs and get instant parsing for common
-              formats like Access Logs, NDJSON (JSON Logs), and Java/JS Stack Traces.</p>
-          </div>
-        </div>
-        <div class="card-sharp p-6 flex items-start space-x-4">
-          <div class="icon-placeholder"><svg class="icon-tool" viewBox="0 0 24 24">
-              <path d="m18 16 4-4-4-4M6 8l-4 4 4 4" />
-              <path d="m14.5 4-5 16" />
-            </svg></div>
-          <div>
-            <h3 class="text-xl font-bold text-white mb-2">Developer Utilities</h3>
-            <p class="text-gray-400 text-sm">Handle common developer artifacts with dedicated tools for Curl commands,
-              SQL queries, Diff/Patch files, and SVG with live preview.</p>
-          </div>
-        </div>
-      </div>
-      <div class="max-w-4xl mx-auto mt-12">
-        <img src="https://scratchtabs.b-cdn.net/app-screenshot.png" alt="Scratch Tabs smart view workbench"
-          class="rounded-lg shadow-2xl border border-gray-700/50">
       </div>
     </div>
   </section>
 
-  <!-- Section 3: Tablet Ecosystem -->
-  <section class="py-16 border-b border-gray-800">
+  <!-- SECTION 2: FORMAT MASTERY -->
+  <section class="py-16 md:py-24 border-t border-gray-800 bg-gray-900/30">
     <div class="container mx-auto px-6">
-      <div class="text-center max-w-4xl mx-auto">
-        <h2 class="text-3xl md:text-4xl font-mono text-white mb-4">A Complete Toolkit for Every Task. Zero
-          Installations.</h2>
-        <p class="text-gray-400 text-lg mb-12">
-          Beyond format recognition, Scratch Tabs includes a growing ecosystem of over 25 specialized 'Tablets'—powerful
-          mini-apps that solve specific developer problems, all running 100% in your browser.
+      <div class="mb-10">
+        <div class="section-tag">
+          <span>[FORMAT_SUPPORT] // 38_LANGUAGES</span>
+        </div>
+        <h2 class="text-3xl md:text-4xl font-mono text-white mb-4">Polyglot by Design.</h2>
+        <p class="text-lg text-gray-400 max-w-3xl leading-relaxed">
+          Automatic detection and syntax highlighting for every language and format you work with. Paste anything - it just works.
         </p>
       </div>
-      <div class="space-y-12">
-        <!-- Category: API & Web Development -->
-        <div class="card-sharp p-8">
-          <h3 class="text-2xl font-bold text-emerald-500 mb-6 font-mono">API & Web Development</h3>
-          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="border border-gray-800 p-6 rounded-sm bg-black">
-              <h4 class="font-bold text-white mb-2">JWT Toolkit</h4>
-              <p class="text-gray-400 text-sm">Decode, verify, and sign JWTs securely on the client-side. Manage your
-                keys and inspect token payloads without ever sending secrets over the network.</p>
-            </div>
-            <div class="border border-gray-800 p-6 rounded-sm bg-black">
-              <h4 class="font-bold text-white mb-2">URL Parser</h4>
-              <p class="text-gray-400 text-sm">Deconstruct complex URLs, analyze query parameters, and identify
-                potential security issues with a detailed component breakdown.</p>
-            </div>
-            <div class="border border-gray-800 p-6 rounded-sm bg-black">
-              <h4 class="font-bold text-white mb-2">REST Client</h4>
-              <p class="text-gray-400 text-sm">A convenient client for quick API checks and testing CORS-enabled or
-                local development endpoints.</p>
-            </div>
+
+      <!-- Format Categories -->
+      <div class="grid md:grid-cols-2 gap-8 mb-8">
+        <div class="card-sharp p-6">
+          <h3 class="text-emerald-500 font-mono text-sm mb-4">// Programming Languages (18)</h3>
+          <div class="flex flex-wrap">
+            <span class="format-badge">JavaScript</span>
+            <span class="format-badge">TypeScript</span>
+            <span class="format-badge">Python</span>
+            <span class="format-badge">Java</span>
+            <span class="format-badge">Go</span>
+            <span class="format-badge">Rust</span>
+            <span class="format-badge">C++</span>
+            <span class="format-badge">C#</span>
+            <span class="format-badge">PHP</span>
+            <span class="format-badge">Ruby</span>
+            <span class="format-badge">Kotlin</span>
+            <span class="format-badge">Scala</span>
+            <span class="format-badge">Groovy</span>
+            <span class="format-badge">R</span>
+            <span class="format-badge">Bash</span>
+            <span class="format-badge">SQL</span>
+            <span class="format-badge">Swift</span>
+            <span class="format-badge">Perl</span>
           </div>
         </div>
-        <!-- Category: Data Transformation & Analysis -->
-        <div class="card-sharp p-8">
-          <h3 class="text-2xl font-bold text-emerald-500 mb-6 font-mono">Data Transformation & Analysis</h3>
-          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="border border-gray-800 p-6 rounded-sm bg-black">
-              <h4 class="font-bold text-white mb-2">JSON Mapper</h4>
-              <p class="text-gray-400 text-sm">Visually map and transform complex JSON structures. Define rules with an
-                intuitive UI and generate transformation code, saving hours of manual scripting.</p>
-            </div>
-            <div class="border border-gray-800 p-6 rounded-sm bg-black">
-              <h4 class="font-bold text-white mb-2">Converters</h4>
-              <p class="text-gray-400 text-sm">A full suite of essential converters at your fingertips, including
-                Base64, URL encoding, and a powerful Checksum calculator (MD5, SHA-1/256/512).</p>
-            </div>
-            <div class="border border-gray-800 p-6 rounded-sm bg-black">
-              <h4 class="font-bold text-white mb-2">Diagram Editor</h4>
-              <p class="text-gray-400 text-sm">Create and visualize diagrams on the fly. Write Mermaid code for
-                flowcharts, sequence diagrams, and more with a live-updating preview.</p>
-            </div>
+
+        <div class="card-sharp p-6">
+          <h3 class="text-emerald-500 font-mono text-sm mb-4">// Data Formats (11)</h3>
+          <div class="flex flex-wrap">
+            <span class="format-badge">JSON</span>
+            <span class="format-badge">CSV</span>
+            <span class="format-badge">YAML</span>
+            <span class="format-badge">XML</span>
+            <span class="format-badge">NDJSON</span>
+            <span class="format-badge">GraphQL</span>
+            <span class="format-badge">HTML</span>
+            <span class="format-badge">CSS</span>
+            <span class="format-badge">SVG</span>
+            <span class="format-badge">Markdown</span>
+            <span class="format-badge">Plain Text</span>
           </div>
         </div>
-        <!-- Category: Productivity & Workflow -->
-        <div class="card-sharp p-8">
-          <h3 class="text-2xl font-bold text-emerald-500 mb-6 font-mono">Productivity & Workflow</h3>
-          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="border border-gray-800 p-6 rounded-sm bg-black">
-              <h4 class="font-bold text-white mb-2">Command Vault</h4>
-              <p class="text-gray-400 text-sm">Build your personal, searchable command and snippet library. Organize
-                your notes, code, and frequently used commands in one place.</p>
-            </div>
-            <div class="border border-gray-800 p-6 rounded-sm bg-black">
-              <h4 class="font-bold text-white mb-2">Pomodoro Timer</h4>
-              <p class="text-gray-400 text-sm">Stay focused and manage your work sessions effectively with an integrated
-                Pomodoro timer.</p>
-            </div>
-            <div class="border border-gray-800 p-6 rounded-sm bg-black">
-              <h4 class="font-bold text-white mb-2">Prompt Manager</h4>
-              <p class="text-gray-400 text-sm">Organize and refine your AI prompts for consistent, high-quality results.
-              </p>
-            </div>
+
+        <div class="card-sharp p-6">
+          <h3 class="text-emerald-500 font-mono text-sm mb-4">// Infrastructure (5)</h3>
+          <div class="flex flex-wrap">
+            <span class="format-badge">Dockerfile</span>
+            <span class="format-badge">Terraform/HCL</span>
+            <span class="format-badge">cURL</span>
+            <span class="format-badge">TOML</span>
+            <span class="format-badge">Apache VHost</span>
+          </div>
+        </div>
+
+        <div class="card-sharp p-6">
+          <h3 class="text-emerald-500 font-mono text-sm mb-4">// Config & Logs (4)</h3>
+          <div class="flex flex-wrap">
+            <span class="format-badge">INI</span>
+            <span class="format-badge">.properties</span>
+            <span class="format-badge">Diff/Patch</span>
+            <span class="format-badge">Stack Traces</span>
+            <span class="format-badge">Access Logs</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Smart Views Callout -->
+      <div class="card-sharp p-6 border-emerald-500/30">
+        <h3 class="text-emerald-500 font-mono text-sm mb-3">// Smart Views Enabled</h3>
+        <p class="text-gray-400 text-sm mb-4">
+          Six formats get specialized interactive workbenches that understand structure and enable advanced operations:
+        </p>
+        <div class="grid md:grid-cols-3 gap-4 text-sm">
+          <div class="text-gray-400">
+            <span class="text-white font-mono">→ JSON:</span> Tree view, path query, validation
+          </div>
+          <div class="text-gray-400">
+            <span class="text-white font-mono">→ CSV:</span> Table editor, sort, filter
+          </div>
+          <div class="text-gray-400">
+            <span class="text-white font-mono">→ Markdown:</span> Live preview, scroll sync
+          </div>
+          <div class="text-gray-400">
+            <span class="text-white font-mono">→ Diff:</span> Side-by-side comparison
+          </div>
+          <div class="text-gray-400">
+            <span class="text-white font-mono">→ Stack Trace:</span> Frame parsing
+          </div>
+          <div class="text-gray-400">
+            <span class="text-white font-mono">→ NDJSON:</span> Log aggregation
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Section 4: Streamline Your Workflow -->
-  <section class="py-16 bg-black border-b border-gray-800">
+  <!-- SECTION 3: WORKSPACE & ORGANIZATION -->
+  <section class="py-16 md:py-24 border-t border-gray-800">
     <div class="container mx-auto px-6">
-      <div class="text-center max-w-4xl mx-auto">
-        <h2 class="text-3xl md:text-4xl font-mono text-white mb-4">Work Faster, Not Harder.</h2>
-        <p class="text-gray-400 text-lg mb-12">
-          Scratch Tabs is built to eliminate context switching and accelerate your workflow with powerful organizational
-          and automation features.
+      <div class="mb-10">
+        <div class="section-tag">
+          <span>[ORGANIZATION] // WORKSPACE_SYSTEM</span>
+        </div>
+        <h2 class="text-3xl md:text-4xl font-mono text-white mb-4">Organize. Context-Switch. Scale.</h2>
+        <p class="text-lg text-gray-400 max-w-3xl leading-relaxed">
+          Multiple isolated workspaces with persistent state. Switch between projects instantly without losing your place.
         </p>
       </div>
-      <div class="grid md:grid-cols-2 gap-8">
+
+      <div class="feature-grid">
+        <!-- Workspaces -->
         <div class="card-sharp p-6">
-          <h3 class="text-xl font-bold text-white mb-2">Multi-Tab Workspaces</h3>
-          <p class="text-gray-400 text-sm">Organize your work with persistent tabs and workspaces. Your session is
-            always saved locally, ready for you to pick up right where you left off.</p>
+          <h3 class="text-emerald-500 font-mono text-sm mb-3">// Workspaces</h3>
+          <h4 class="text-white font-bold text-lg mb-2">Multiple Contexts</h4>
+          <ul class="text-gray-400 text-sm space-y-2">
+            <li>→ Isolated tab collections</li>
+            <li>→ Workspace notes & links</li>
+            <li>→ Last-accessed tracking</li>
+            <li>→ Instant context switching</li>
+            <li>→ Auto-save before switch</li>
+          </ul>
         </div>
+
+        <!-- Tab Management -->
         <div class="card-sharp p-6">
-          <h3 class="text-xl font-bold text-white mb-2">Advanced Global Search</h3>
-          <p class="text-gray-400 text-sm">Instantly find anything across all your open tabs. Search by content, filter
-            by file type, or scope your search to the current workspace.</p>
+          <h3 class="text-emerald-500 font-mono text-sm mb-3">// Tab-Operations</h3>
+          <h4 class="text-white font-bold text-lg mb-2">Advanced Tab Control</h4>
+          <ul class="text-gray-400 text-sm space-y-2">
+            <li>→ Pin critical tabs</li>
+            <li>→ Close left/right/all-except</li>
+            <li>→ Duplicate tabs</li>
+            <li>→ Group by language</li>
+            <li>→ Tab history tracking</li>
+          </ul>
         </div>
+
+        <!-- Global Search -->
         <div class="card-sharp p-6">
-          <h3 class="text-xl font-bold text-white mb-2">Powerful Batch Tools</h3>
-          <p class="text-gray-400 text-sm">Automate repetitive text transformations. Choose from powerful operations
-            like trimming, sorting, find/replace, and more with live preview before applying them to your content.</p>
-          <img src="https://scratchtabs.b-cdn.net/transformations.png" alt="Batch Tools"
-            class="mt-4 border border-gray-800 grayscale hover:grayscale-0 transition-all duration-300">
-        </div>
-        <div class="card-sharp p-6">
-          <h3 class="text-xl font-bold text-white mb-2">Smart Diff Tool</h3>
-          <p class="text-gray-400 text-sm">Compare any two tabs with an intelligent, side-by-side diff viewer that
-            highlights changes with syntax awareness.</p>
-          <img src="https://scratchtabs.b-cdn.net/diff.png" alt="Smart Diff Tool"
-            class="mt-4 border border-gray-800 grayscale hover:grayscale-0 transition-all duration-300">
+          <h3 class="text-emerald-500 font-mono text-sm mb-3">// Search-Engine</h3>
+          <h4 class="text-white font-bold text-lg mb-2">Find Anything, Fast</h4>
+          <ul class="text-gray-400 text-sm space-y-2">
+            <li>→ Search across all tabs</li>
+            <li>→ Filter by format/language</li>
+            <li>→ Content preview in results</li>
+            <li>→ Jump to matches instantly</li>
+            <li>→ Workspace-scoped search</li>
+          </ul>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Section 5: Privacy -->
-  <section class="py-16 bg-black border-b border-gray-800">
+  <!-- SECTION 4: DATA TRANSFORMATION -->
+  <section class="py-16 md:py-24 border-t border-gray-800 bg-black">
+    <div class="container mx-auto px-6">
+      <div class="mb-10">
+        <div class="section-tag">
+          <span>[TRANSFORMATION] // BATCH_ENGINE</span>
+        </div>
+        <h2 class="text-3xl md:text-4xl font-mono text-white mb-4">Automate the Tedious.</h2>
+        <p class="text-lg text-gray-400 max-w-3xl leading-relaxed">
+          Powerful batch transformations with live preview. Apply operations conditionally across thousands of lines in seconds.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-8 mb-8">
+        <!-- Transformations List -->
+        <div class="card-sharp p-6">
+          <h3 class="text-emerald-500 font-mono text-sm mb-4">// 15+ Operations</h3>
+          <div class="grid grid-cols-2 gap-3 text-sm text-gray-400">
+            <div>→ Find & replace (regex)</div>
+            <div>→ Case conversions</div>
+            <div>→ Trim whitespace</div>
+            <div>→ Add prefix/suffix</div>
+            <div>→ Sort lines (asc/desc)</div>
+            <div>→ Remove duplicates</div>
+            <div>→ Reverse order</div>
+            <div>→ Number lines</div>
+            <div>→ Duplicate lines</div>
+            <div>→ Extract matches</div>
+            <div>→ Add/remove blank lines</div>
+            <div>→ Custom JS snippets</div>
+          </div>
+        </div>
+
+        <!-- Conditional Logic -->
+        <div class="card-sharp p-6">
+          <h3 class="text-emerald-500 font-mono text-sm mb-4">// Conditional Logic</h3>
+          <p class="text-gray-400 text-sm mb-3">Apply transformations only to lines matching:</p>
+          <div class="space-y-2 text-sm text-gray-400">
+            <div>→ Contains/not contains text</div>
+            <div>→ Starts with/ends with pattern</div>
+            <div>→ Regex pattern matches</div>
+            <div>→ Blank/non-blank lines</div>
+            <div>→ Specific line numbers</div>
+            <div>→ Line ranges (e.g., 10-50)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visual: Transformation Preview -->
+      <div class="card-sharp p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-white font-mono text-sm">Live Preview Before Apply</h3>
+          <span class="text-emerald-500 font-mono text-xs">↓ EXAMPLE</span>
+        </div>
+        <img src="https://scratchtabs.b-cdn.net/transformations.png" alt="Transformation preview"
+          class="w-full border border-gray-800">
+      </div>
+
+      <!-- AI Features -->
+      <div class="mt-8 card-sharp p-6 border-emerald-500/30">
+        <h3 class="text-emerald-500 font-mono text-sm mb-3">// AI-Powered (Client-Side)</h3>
+        <p class="text-gray-400 text-sm mb-2">
+          <span class="text-white font-mono">→ Text Summarization:</span> In-browser AI using transformers (no data sent to servers)
+        </p>
+        <p class="text-gray-400 text-sm">
+          <span class="text-white font-mono">→ Content Generation:</span> Template-based generation with AI assistance
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 5: SHARING & COLLABORATION -->
+  <section class="py-16 md:py-24 border-t border-gray-800">
+    <div class="container mx-auto px-6">
+      <div class="mb-10">
+        <div class="section-tag">
+          <span>[PORTABILITY] // SHARE_EXPORT</span>
+        </div>
+        <h2 class="text-3xl md:text-4xl font-mono text-white mb-4">Your Data, Your Way.</h2>
+        <p class="text-lg text-gray-400 max-w-3xl leading-relaxed">
+          Share tabs via URL or export entire workspaces. All privacy-first, with no data touching our servers.
+        </p>
+      </div>
+
+      <div class="feature-grid">
+        <!-- Offline Sharing -->
+        <div class="card-sharp p-6">
+          <h3 class="text-emerald-500 font-mono text-sm mb-3">// URL-Sharing</h3>
+          <h4 class="text-white font-bold text-lg mb-2">Shareable Links</h4>
+          <ul class="text-gray-400 text-sm space-y-2">
+            <li>→ Generate shareable URLs</li>
+            <li>→ Content compressed in hash</li>
+            <li>→ Never hits server logs</li>
+            <li>→ Format-specific trimming</li>
+            <li>→ Size validation built-in</li>
+          </ul>
+        </div>
+
+        <!-- Import/Export -->
+        <div class="card-sharp p-6">
+          <h3 class="text-emerald-500 font-mono text-sm mb-3">// Import-Export</h3>
+          <h4 class="text-white font-bold text-lg mb-2">Workspace Portability</h4>
+          <ul class="text-gray-400 text-sm space-y-2">
+            <li>→ Export as ZIP archive</li>
+            <li>→ SHA-256 integrity checks</li>
+            <li>→ Version compatibility (1.1.0)</li>
+            <li>→ Conflict resolution on import</li>
+            <li>→ Preserves all metadata</li>
+          </ul>
+        </div>
+
+        <!-- Clipboard Integration -->
+        <div class="card-sharp p-6">
+          <h3 class="text-emerald-500 font-mono text-sm mb-3">// Clipboard</h3>
+          <h4 class="text-white font-bold text-lg mb-2">Smart Paste Detection</h4>
+          <ul class="text-gray-400 text-sm space-y-2">
+            <li>→ Auto-format on paste</li>
+            <li>→ Image paste support</li>
+            <li>→ Clipboard history tracking</li>
+            <li>→ Paste to new tab</li>
+            <li>→ Format auto-detection</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 6: PRODUCTIVITY BOOSTERS -->
+  <section class="py-16 md:py-24 border-t border-gray-800 bg-gray-900/30">
+    <div class="container mx-auto px-6">
+      <div class="mb-10">
+        <div class="section-tag">
+          <span>[PRODUCTIVITY] // WORKFLOW_TOOLS</span>
+        </div>
+        <h2 class="text-3xl md:text-4xl font-mono text-white mb-4">Small Features. Big Impact.</h2>
+        <p class="text-lg text-gray-400 max-w-3xl leading-relaxed">
+          Keyboard shortcuts, macros, themes, and polish that makes the difference between good and great.
+        </p>
+      </div>
+
+      <div class="feature-grid">
+        <!-- Macros -->
+        <div class="card-sharp p-6">
+          <h3 class="text-emerald-500 font-mono text-sm mb-3">// Macros</h3>
+          <h4 class="text-white font-bold text-lg mb-2">Record & Replay</h4>
+          <ul class="text-gray-400 text-sm space-y-2">
+            <li>→ Record keystroke sequences</li>
+            <li>→ Playback single iteration</li>
+            <li>→ Replay to end (continuous)</li>
+            <li>→ Cursor movement tracking</li>
+            <li>→ Selection operations</li>
+          </ul>
+        </div>
+
+        <!-- Keyboard Shortcuts -->
+        <div class="card-sharp p-6">
+          <h3 class="text-emerald-500 font-mono text-sm mb-3">// Shortcuts</h3>
+          <h4 class="text-white font-bold text-lg mb-2">Keyboard-First</h4>
+          <ul class="text-gray-400 text-sm space-y-2">
+            <li>→ Tab management hotkeys</li>
+            <li>→ Split view controls</li>
+            <li>→ Workspace switching</li>
+            <li>→ Macro triggers</li>
+            <li>→ Search activation</li>
+          </ul>
+        </div>
+
+        <!-- Themes -->
+        <div class="card-sharp p-6">
+          <h3 class="text-emerald-500 font-mono text-sm mb-3">// Appearance</h3>
+          <h4 class="text-white font-bold text-lg mb-2">Light/Dark Mode</h4>
+          <ul class="text-gray-400 text-sm space-y-2">
+            <li>→ Toggle between themes</li>
+            <li>→ System preference sync</li>
+            <li>→ Persistent across sessions</li>
+            <li>→ Per-tab font sizing</li>
+            <li>→ Preview mode toggle</li>
+          </ul>
+        </div>
+
+        <!-- Smart Detection -->
+        <div class="card-sharp p-6">
+          <h3 class="text-emerald-500 font-mono text-sm mb-3">// Auto-Format</h3>
+          <h4 class="text-white font-bold text-lg mb-2">Paste Intelligence</h4>
+          <ul class="text-gray-400 text-sm space-y-2">
+            <li>→ Detects minified content</li>
+            <li>→ Auto-formats on paste</li>
+            <li>→ Language detection</li>
+            <li>→ Confidence scoring</li>
+            <li>→ Manual override option</li>
+          </ul>
+        </div>
+
+        <!-- Performance -->
+        <div class="card-sharp p-6">
+          <h3 class="text-emerald-500 font-mono text-sm mb-3">// Performance</h3>
+          <h4 class="text-white font-bold text-lg mb-2">Optimized for Scale</h4>
+          <ul class="text-gray-400 text-sm space-y-2">
+            <li>→ LRU model caching (10 max)</li>
+            <li>→ Debounced saves (2.5s)</li>
+            <li>→ Lazy content loading</li>
+            <li>→ Cursor position caching</li>
+            <li>→ Content sampling for detection</li>
+          </ul>
+        </div>
+
+        <!-- Offline -->
+        <div class="card-sharp p-6">
+          <h3 class="text-emerald-500 font-mono text-sm mb-3">// Offline-First</h3>
+          <h4 class="text-white font-bold text-lg mb-2">Works Anywhere</h4>
+          <ul class="text-gray-400 text-sm space-y-2">
+            <li>→ 100% browser-based</li>
+            <li>→ No network required</li>
+            <li>→ IndexedDB persistence</li>
+            <li>→ Service worker ready</li>
+            <li>→ Air-gap compatible</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 7: TABLETS (CONDENSED) -->
+  <section class="py-16 md:py-24 border-t border-gray-800 bg-black">
+    <div class="container mx-auto px-6">
+      <div class="mb-10">
+        <div class="section-tag">
+          <span>[UTILITIES] // 32_TABLETS</span>
+        </div>
+        <h2 class="text-3xl md:text-4xl font-mono text-white mb-4">Built-In Utility Arsenal.</h2>
+        <p class="text-lg text-gray-400 max-w-3xl leading-relaxed">
+          32+ specialized mini-apps for common developer tasks. No installations, no external sites, no tracking.
+        </p>
+      </div>
+
+      <!-- Top Tablets Grid -->
+      <div class="grid md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+        <div class="card-sharp p-4">
+          <h4 class="text-white font-mono text-sm mb-1">JWT Toolkit</h4>
+          <p class="text-gray-500 text-xs">Decode, verify, sign</p>
+        </div>
+        <div class="card-sharp p-4">
+          <h4 class="text-white font-mono text-sm mb-1">REST Client</h4>
+          <p class="text-gray-500 text-xs">HTTP testing</p>
+        </div>
+        <div class="card-sharp p-4">
+          <h4 class="text-white font-mono text-sm mb-1">GraphQL Client</h4>
+          <p class="text-gray-500 text-xs">Query playground</p>
+        </div>
+        <div class="card-sharp p-4">
+          <h4 class="text-white font-mono text-sm mb-1">Regex Tester</h4>
+          <p class="text-gray-500 text-xs">Live matching</p>
+        </div>
+        <div class="card-sharp p-4">
+          <h4 class="text-white font-mono text-sm mb-1">JSON Mapper</h4>
+          <p class="text-gray-500 text-xs">Transform structures</p>
+        </div>
+        <div class="card-sharp p-4">
+          <h4 class="text-white font-mono text-sm mb-1">Base64 Encoder</h4>
+          <p class="text-gray-500 text-xs">Encode/decode</p>
+        </div>
+        <div class="card-sharp p-4">
+          <h4 class="text-white font-mono text-sm mb-1">Password Gen</h4>
+          <p class="text-gray-500 text-xs">Secure passwords</p>
+        </div>
+        <div class="card-sharp p-4">
+          <h4 class="text-white font-mono text-sm mb-1">UUID Generator</h4>
+          <p class="text-gray-500 text-xs">v1, v4, bulk</p>
+        </div>
+        <div class="card-sharp p-4">
+          <h4 class="text-white font-mono text-sm mb-1">Cron Builder</h4>
+          <p class="text-gray-500 text-xs">Schedule parser</p>
+        </div>
+        <div class="card-sharp p-4">
+          <h4 class="text-white font-mono text-sm mb-1">Diagram Editor</h4>
+          <p class="text-gray-500 text-xs">Mermaid preview</p>
+        </div>
+        <div class="card-sharp p-4">
+          <h4 class="text-white font-mono text-sm mb-1">Checksum Calc</h4>
+          <p class="text-gray-500 text-xs">MD5, SHA-256</p>
+        </div>
+        <div class="card-sharp p-4">
+          <h4 class="text-white font-mono text-sm mb-1">Word Count</h4>
+          <p class="text-gray-500 text-xs">Text analysis</p>
+        </div>
+      </div>
+
+      <div class="text-center">
+        <p class="text-gray-400 mb-4">Plus 20+ more utilities including URL parser, colour palette, date tools, emoji search, and productivity timers.</p>
+        <a href="tablets.html" class="terminal-button">
+          <span class="text-gray-500 mr-2">$</span> view_all_tablets
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 8: PRIVACY -->
+  <section class="py-16 md:py-24 border-t border-gray-800">
     <div class="container mx-auto px-6 text-center">
+      <div class="section-tag mx-auto">
+        <span>[FOUNDATION] // PRIVACY_FIRST</span>
+      </div>
       <h2 class="text-3xl md:text-4xl font-mono text-white mb-6">Your Data is Yours. Period.</h2>
       <p class="text-gray-400 text-lg mb-8 max-w-2xl mx-auto">
-        We fundamentally believe your data is yours alone. Scratch Tabs operates entirely within your browser with
-        uncompromising privacy.
+        We fundamentally believe your data is yours alone. Scratch Tabs operates entirely within your browser with uncompromising privacy.
       </p>
-      <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto text-center">
-        <div class="card-sharp p-6 bg-black">
+      <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        <div class="card-sharp p-6">
           <div class="text-emerald-500 text-2xl mb-3">✓</div>
-          <h3 class="font-bold text-white mb-2">100% Client-Side Processing</h3>
-          <p class="text-gray-400 text-sm">Everything happens locally on your machine. No data is ever sent to a server.
-          </p>
+          <h3 class="font-bold text-white mb-2 font-mono text-sm">100% Client-Side</h3>
+          <p class="text-gray-400 text-sm">Everything happens locally on your machine. No data is ever sent to a server.</p>
         </div>
-        <div class="card-sharp p-6 bg-black">
+        <div class="card-sharp p-6">
           <div class="text-emerald-500 text-2xl mb-3">✓</div>
-          <h3 class="font-bold text-white mb-2">No Accounts, No Tracking</h3>
-          <p class="text-gray-400 text-sm">We don't need to know who you are. There are no user accounts, analytics, or
-            cookies.</p>
+          <h3 class="font-bold text-white mb-2 font-mono text-sm">No Accounts. No Tracking.</h3>
+          <p class="text-gray-400 text-sm">We don't need to know who you are. Zero analytics, zero cookies, zero fingerprinting.</p>
         </div>
-        <div class="card-sharp p-6 bg-black">
+        <div class="card-sharp p-6">
           <div class="text-emerald-500 text-2xl mb-3">✓</div>
-          <h3 class="font-bold text-white mb-2">Works Completely Offline</h3>
-          <p class="text-gray-400 text-sm">Once loaded, all core features work without an internet connection, ensuring
-            your work is never interrupted.</p>
+          <h3 class="font-bold text-white mb-2 font-mono text-sm">Works Completely Offline</h3>
+          <p class="text-gray-400 text-sm">Once loaded, all core features work without an internet connection.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Call to Action -->
-  <section class="py-20 border-b border-gray-800">
+  <!-- CALL TO ACTION -->
+  <section class="py-20 border-t border-gray-800">
     <div class="container mx-auto px-6 text-center">
-      <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">
-        Ready to Upgrade Your Workflow?
-      </h2>
-      <p class="text-gray-400 text-lg mb-8 max-w-xl mx-auto">
-        Experience the power of a dedicated developer sidekick. <span class="text-white">No installation. No setup. Just
-          instant productivity.</span>
-      </p>
-      <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button text-lg px-12 py-4">
-        launch_app_now
-      </a>
+      <h2 class="text-3xl md:text-5xl font-mono text-white mb-8">READY TO LAUNCH?</h2>
+      <div class="flex flex-col sm:flex-row gap-6 justify-center">
+        <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button text-xl px-12 py-5">
+          <span class="text-gray-500 mr-2">$</span> launch_app
+        </a>
+      </div>
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer class="py-12 bg-black">
+  <!-- FOOTER -->
+  <footer class="py-12 border-t border-gray-800 bg-black">
     <div class="container mx-auto px-6">
-      <div
-        class="flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0 text-center md:text-left">
-        <div class="flex items-center space-x-2">
-          <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs Logo"
-            class="logo-size opacity-50" />
-          <span class="text-xl font-bold text-gray-500 font-mono">SCRATCH_TABS</span>
+      <div class="flex flex-col md:flex-row justify-between items-center gap-8">
+        <div class="flex items-center space-x-3">
+          <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.14.0</span>
         </div>
+
         <div class="flex space-x-8">
           <a href="https://github.com/spectra-g/scratch-tabs-feedback/issues" target="_blank"
-            class="text-xs font-mono text-gray-500 hover:text-emerald-500 transition-colors uppercase tracking-widest">GITHUB</a>
+            class="text-gray-500 hover:text-emerald-500 font-mono text-xs">GITHUB_ISSUES</a>
           <a href="https://discord.gg/HwsfpTzMVS" target="_blank"
-            class="text-xs font-mono text-gray-500 hover:text-emerald-500 transition-colors uppercase tracking-widest">DISCORD</a>
+            class="text-gray-500 hover:text-emerald-500 font-mono text-xs">DISCORD</a>
           <a href="https://ko-fi.com/scratchtabs" target="_blank"
-            class="text-xs font-mono text-gray-500 hover:text-emerald-500 transition-colors uppercase tracking-widest">KO-FI</a>
+            class="text-gray-500 hover:text-emerald-500 font-mono text-xs">KO-FI</a>
+        </div>
+
+        <div class="text-gray-600 font-mono text-xs">
+          Built for developers, by developers.
         </div>
       </div>
-      <div
-        class="mt-8 pt-8 border-t border-gray-900 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-        <p class="text-xs font-mono text-gray-600 uppercase tracking-tighter">
-          &copy; <span id="currentYear"></span> Built for developers, by developers.
-        </p>
-        <p class="text-xs font-mono text-gray-600 uppercase tracking-tighter">
-          100% Client-Side. 100% Private.
-        </p>
+      <div class="mt-8 text-center text-gray-700 text-[10px] font-mono">
+        &copy; <span id="currentYear"></span> SCRATCH_TABS. NO_TRACKING. NO_ACCOUNTS. 100%_CLIENT_SIDE.
       </div>
     </div>
   </footer>

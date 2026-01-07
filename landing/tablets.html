@@ -63,7 +63,7 @@
     .card-sharp {
       background: #0a0a0a;
       border: 1px solid #1f2937;
-      border-radius: 4px;
+      border-radius: 2px;
       transition: all 0.2s ease;
     }
 
@@ -77,7 +77,7 @@
       border: 1px solid #1f2937;
       color: #10b981;
       padding: 0.5rem 1rem;
-      border-radius: 4px;
+      border-radius: 2px;
       transition: all 0.2s ease;
       display: inline-flex;
       align-items: center;
@@ -101,7 +101,7 @@
       color: #9ca3af;
       padding: 0.125rem 0.5rem;
       border: 1px solid #1f2937;
-      border-radius: 4px;
+      border-radius: 2px;
       font-size: 0.75rem;
       font-family: 'Fira Code', monospace;
       transition: all 0.2s ease;
@@ -124,6 +124,21 @@
       margin-left: 0.5rem;
       vertical-align: middle;
       text-transform: uppercase;
+    }
+
+    .section-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      border: 1px solid #1f2937;
+      background: #0a0a0a;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-tag span {
+      color: #10b981;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
     }
   </style>
 </head>
@@ -191,9 +206,10 @@
 
       <!-- Category: API & Web Development -->
       <div>
-        <h2 class="text-2xl font-bold text-emerald-500 mb-2 font-mono uppercase tracking-tighter">01. API & Web
-          Development</h2>
-        <p class="text-gray-500 max-w-4xl mb-8">Essential tools for building, testing, and debugging modern web services
+        <div class="section-tag">
+          <span>[CATEGORY_01] // API_WEB_DEVELOPMENT</span>
+        </div>
+        <p class="text-gray-400 max-w-4xl mb-8 text-lg">Essential tools for building, testing, and debugging modern web services
           and applications.</p>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div class="card-sharp p-6 flex flex-col">
@@ -234,9 +250,10 @@
 
       <!-- Category: Data Transformation & Analysis -->
       <div>
-        <h2 class="text-2xl font-bold text-emerald-500 mb-2 font-mono uppercase tracking-tighter">02. Data
-          Transformation & Analysis</h2>
-        <p class="text-gray-500 max-w-4xl mb-8">Powerful utilities to parse, convert, verify, and visualize your data in
+        <div class="section-tag">
+          <span>[CATEGORY_02] // DATA_TRANSFORMATION_ANALYSIS</span>
+        </div>
+        <p class="text-gray-400 max-w-4xl mb-8 text-lg">Powerful utilities to parse, convert, verify, and visualize your data in
           any format.</p>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div class="card-sharp p-6 flex flex-col">
@@ -307,9 +324,10 @@
 
       <!-- Category: Productivity & Workflow -->
       <div>
-        <h2 class="text-2xl font-bold text-emerald-500 mb-2 font-mono uppercase tracking-tighter">03. Productivity &
-          Workflow</h2>
-        <p class="text-gray-500 max-w-4xl mb-8">Tools designed to keep you focused, organized, and efficient throughout
+        <div class="section-tag">
+          <span>[CATEGORY_03] // PRODUCTIVITY_WORKFLOW</span>
+        </div>
+        <p class="text-gray-400 max-w-4xl mb-8 text-lg">Tools designed to keep you focused, organized, and efficient throughout
           your development day.</p>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div class="card-sharp p-6 flex flex-col">
@@ -367,9 +385,10 @@
 
       <!-- Category: Generators & Utilities -->
       <div>
-        <h2 class="text-2xl font-bold text-emerald-500 mb-2 font-mono uppercase tracking-tighter">04. Generators &
-          Utilities</h2>
-        <p class="text-gray-500 max-w-4xl mb-8">Generate placeholder data, secure credentials, and unique identifiers on
+        <div class="section-tag">
+          <span>[CATEGORY_04] // GENERATORS_UTILITIES</span>
+        </div>
+        <p class="text-gray-400 max-w-4xl mb-8 text-lg">Generate placeholder data, secure credentials, and unique identifiers on
           demand.</p>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div class="card-sharp p-6 flex flex-col">
@@ -434,17 +453,17 @@
   <!-- Section 3: And More To Come... -->
   <section class="py-16 bg-black border-b border-gray-800">
     <div class="container mx-auto px-6 text-center">
-      <h2 class="text-3xl md:text-4xl font-mono text-white mb-4 uppercase tracking-tighter">An Ever-Growing Toolkit</h2>
+      <h2 class="text-3xl md:text-4xl font-mono text-white mb-4">AN EVER-GROWING TOOLKIT</h2>
       <p class="text-gray-400 text-lg max-w-2xl mx-auto mb-8">
         The Tablet ecosystem is constantly expanding. Have an idea for a tool that would make your life easier?
       </p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
         <a href="https://github.com/spectra-g/scratch-tabs-feedback/issues" target="_blank"
           class="terminal-button px-8 py-3">
-          suggest_on_github
+          <span class="text-gray-500 mr-2">$</span> suggest_on_github
         </a>
         <a href="https://discord.gg/HwsfpTzMVS" target="_blank" class="terminal-button px-8 py-3">
-          join_the_discord
+          <span class="text-gray-500 mr-2">$</span> join_the_discord
         </a>
       </div>
     </div>
@@ -459,7 +478,9 @@
           No setup. Just powerful tools that work.</span>
       </p>
       <a href="https://app.scratchtabs.com" target="_blank"
-        class="terminal-button text-xl px-12 py-4">launch_app_now</a>
+        class="terminal-button text-xl px-12 py-4">
+        <span class="text-gray-500 mr-2">$</span> launch_app
+      </a>
     </div>
   </section>
 
