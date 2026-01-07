@@ -1,5 +1,34 @@
 <!doctype html>
-<html lang="en" style="scroll-behavior: smooth">
+<html lang="en" style="scroll-behavior: smooth; background-color: #050505">
+<!--
+  ███████╗ ██████╗██████╗  █████╗ ████████╗ ██████╗██╗  ██╗    ████████╗ █████╗ ██████╗ ███████╗
+  ██╔════╝██╔════╝██╔══██╗██╔══██╗╚══██╔══╝██╔════╝██║  ██║    ╚══██╔══╝██╔══██╗██╔══██╗██╔════╝
+  ███████╗██║     ██████╔╝███████║   ██║   ██║     ███████║       ██║   ███████║██████╔╝███████╗
+  ╚════██║██║     ██╔══██╗██╔══██║   ██║   ██║     ██╔══██║       ██║   ██╔══██║██╔══██╗╚════██║
+  ███████║╚██████╗██║  ██║██║  ██║   ██║   ╚██████╗██║  ██║       ██║   ██║  ██║██████╔╝███████║
+  ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝       ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚══════╝
+
+  👋 Hey developer! You found the source. Nice.
+
+  📝 What is this?
+     A privacy-first developer toolkit that runs 100% in your browser.
+     No servers. No tracking. No accounts. Just pure client-side power.
+
+  🔒 Privacy Philosophy:
+     • Your data never leaves your device
+     • Zero analytics, zero cookies
+     • All processing happens locally via IndexedDB
+     • Even our CDN only serves static assets
+
+  🛠️ Tech Stack:
+     React 18 • TypeScript • Monaco Editor • Zustand • IndexedDB
+     Built with care for developers who care about privacy.
+
+  💡 Contribute:
+     github.com/spectra-g/scratch-tabs-feedback
+
+  ⚡ Made with code and coffee by developers, for developers.
+-->
 
 <head>
   <meta charset="UTF-8" />
@@ -28,125 +57,9 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
   <link rel="icon" href="https://scratchtabs.b-cdn.net/favicon.svg" type="image/svg+xml" />
   <link
-    href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600;700&display=swap"
     rel="stylesheet" />
-
-  <style>
-    html {
-      scroll-padding-top: 5rem;
-    }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #050505;
-      color: #F5F5F5;
-      position: relative;
-      min-height: 100vh;
-    }
-
-    h1,
-    h2,
-    h3,
-    h4,
-    .mono {
-      font-family: 'Fira Code', monospace;
-    }
-
-    header {
-      position: sticky;
-      top: 0;
-      background: #050505;
-      border-bottom: 1px solid #1f2937;
-      z-index: 1000;
-    }
-
-    .card-sharp {
-      background: #0a0a0a;
-      border: 1px solid #1f2937;
-      border-radius: 2px;
-      transition: all 0.2s ease;
-    }
-
-    .terminal-button {
-      font-family: 'Fira Code', monospace;
-      background: #0a0a0a;
-      border: 1px solid #1f2937;
-      color: #10b981;
-      padding: 0.5rem 1rem;
-      border-radius: 2px;
-      transition: all 0.2s ease;
-      display: inline-flex;
-      align-items: center;
-    }
-
-    .terminal-button:hover {
-      background: #111827;
-      border-color: #10b981;
-      box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
-    }
-
-    .logo-size {
-      width: 22px;
-      height: 22px;
-      filter: brightness(0) invert(1);
-    }
-
-    /* Changelog Timeline */
-    .changelog-entry {
-      position: relative;
-      padding-left: 2rem;
-      border-left: 1px solid #1f2937;
-      margin-bottom: 4rem;
-    }
-
-    .changelog-entry::before {
-      content: '';
-      position: absolute;
-      left: -5px;
-      top: 0;
-      width: 9px;
-      height: 9px;
-      background: #050505;
-      border: 1px solid #1f2937;
-      border-radius: 50%;
-    }
-
-    .changelog-entry.latest::before {
-      background: #10b981;
-      border-color: #10b981;
-      box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 0.125rem 0.5rem;
-      border-radius: 2px;
-      font-size: 0.65rem;
-      font-weight: 800;
-      font-family: 'Fira Code', monospace;
-      text-transform: uppercase;
-      border: 1px solid transparent;
-    }
-
-    .badge.latest {
-      background-color: #10b981;
-      color: #050505;
-    }
-
-    .badge.release {
-      background-color: #111827;
-      color: #9ca3af;
-      border-color: #1f2937;
-    }
-
-    .changelog-content {
-      font-family: 'Inter', sans-serif;
-    }
-
-    .changelog-content strong {
-      color: #F5F5F5;
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 
 <body class="antialiased">
@@ -187,7 +100,7 @@
       </nav>
       <div class="flex items-center space-x-2">
         <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button text-xs">
-          <span class="text-gray-500 mr-2">$</span> launch_app
+          <span class="text-gray-500 mr-2 cursor-blink">$</span> launch_app
         </a>
         <button id="mobile-menu-button" class="md:hidden p-2 text-gray-500 hover:text-emerald-500 transition-colors">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -524,10 +437,10 @@
           <div class="flex flex-col sm:flex-row gap-4 justify-center">
             <a href="https://github.com/spectra-g/scratch-tabs-feedback/issues" target="_blank"
               class="terminal-button px-6 py-2">
-              <span class="text-gray-500 mr-2">$</span> open_github_issue
+              <span class="text-gray-500 mr-2 cursor-blink">$</span> open_github_issue
             </a>
             <a href="https://discord.gg/HwsfpTzMVS" target="_blank" class="terminal-button px-6 py-2">
-              <span class="text-gray-500 mr-2">$</span> join_the_discord
+              <span class="text-gray-500 mr-2 cursor-blink">$</span> join_the_discord
             </a>
           </div>
         </div>

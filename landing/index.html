@@ -1,5 +1,34 @@
 <!doctype html>
-<html lang="en" style="scroll-behavior: smooth">
+<html lang="en" style="scroll-behavior: smooth; background-color: #050505">
+<!--
+  ███████╗ ██████╗██████╗  █████╗ ████████╗ ██████╗██╗  ██╗    ████████╗ █████╗ ██████╗ ███████╗
+  ██╔════╝██╔════╝██╔══██╗██╔══██╗╚══██╔══╝██╔════╝██║  ██║    ╚══██╔══╝██╔══██╗██╔══██╗██╔════╝
+  ███████╗██║     ██████╔╝███████║   ██║   ██║     ███████║       ██║   ███████║██████╔╝███████╗
+  ╚════██║██║     ██╔══██╗██╔══██║   ██║   ██║     ██╔══██║       ██║   ██╔══██║██╔══██╗╚════██║
+  ███████║╚██████╗██║  ██║██║  ██║   ██║   ╚██████╗██║  ██║       ██║   ██║  ██║██████╔╝███████║
+  ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝       ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚══════╝
+
+  👋 Hey developer! You found the source. Nice.
+
+  📝 What is this?
+     A privacy-first developer toolkit that runs 100% in your browser.
+     No servers. No tracking. No accounts. Just pure client-side power.
+
+  🔒 Privacy Philosophy:
+     • Your data never leaves your device
+     • Zero analytics, zero cookies
+     • All processing happens locally via IndexedDB
+     • Even our CDN only serves static assets
+
+  🛠️ Tech Stack:
+     React 18 • TypeScript • Monaco Editor • Zustand • IndexedDB
+     Built with care for developers who care about privacy.
+
+  💡 Contribute:
+     github.com/spectra-g/scratch-tabs-feedback
+
+  ⚡ Made with code and coffee by developers, for developers.
+-->
 
 <head>
   <meta charset="UTF-8" />
@@ -27,8 +56,9 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
   <link rel="icon" href="https://scratchtabs.b-cdn.net/favicon.svg" type="image/svg+xml" />
   <link
-    href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600;700&display=swap"
     rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
 
   <script type="application/ld+json">
     {
@@ -77,159 +107,6 @@
       ]
     }
   </script>
-
-  <style>
-    html {
-      scroll-padding-top: 5rem;
-      /* Offset for sticky header */
-    }
-
-    /* ===== PART 1: Global Styles & Animated Background ===== */
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #050505;
-      color: #F5F5F5;
-      position: relative;
-      min-height: 100vh;
-    }
-
-    h1,
-    h2,
-    h3,
-    .mono {
-      font-family: 'Fira Code', monospace;
-    }
-
-    /* ===== PART 2: Header / Navigation Bar ===== */
-    header {
-      position: sticky;
-      top: 0;
-      background: #050505;
-      border-bottom: 1px solid #1f2937;
-      z-index: 1000;
-    }
-
-    header nav a {
-      transition: all 0.3s ease;
-    }
-
-    /* ===== PART 3: Hero Section & Generic Cards ===== */
-    .hero-gradient {
-      background: transparent;
-      padding-top: 3rem;
-      padding-bottom: 3rem;
-    }
-
-    .border-subtle {
-      border: 1px solid #1f2937;
-      /* gray-800 */
-    }
-
-    .card-sharp {
-      background: #0a0a0a;
-      border: 1px solid #1f2937;
-      /* gray-800 */
-      border-radius: 2px;
-      /* sharp corners, max 2px */
-      transition: all 0.2s ease;
-    }
-
-    .card-sharp:hover {
-      border-color: #10b981;
-      /* emerald-500 */
-    }
-
-    /* ===== PART 6: Buttons ===== */
-    .terminal-button {
-      font-family: 'Fira Code', monospace;
-      background: #0a0a0a;
-      border: 1px solid #1f2937;
-      color: #10b981;
-      padding: 0.5rem 1rem;
-      border-radius: 2px;
-      /* sharp corners */
-      transition: all 0.2s ease;
-      display: inline-flex;
-      align-items: center;
-    }
-
-    .terminal-button:hover {
-      background: #111827;
-      border-color: #10b981;
-      box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
-    }
-
-    .section-title {
-      color: #FFFFFF;
-    }
-
-    /* Logo styling */
-    .logo-size {
-      width: 22px;
-      height: 22px;
-      filter: brightness(0) invert(1);
-    }
-
-    /* Placeholder Styling */
-    .visual-placeholder {
-      background: #0a0a0a;
-      border: 2px dashed #1f2937;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem;
-      color: #4b5563;
-      font-family: 'Fira Code', monospace;
-      font-size: 0.75rem;
-      text-align: center;
-      border-radius: 0px;
-      /* no rounding for placeholders */
-    }
-
-    .bento-grid {
-      display: grid;
-      gap: 0.75rem;
-      /* tighter gap for density */
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    }
-
-    @media (min-width: 1024px) {
-      .bento-grid {
-        grid-template-columns: repeat(4, 1fr);
-        grid-template-rows: repeat(2, auto);
-      }
-
-      .col-span-2 {
-        grid-column: span 2;
-      }
-
-      .row-span-2 {
-        grid-row: span 2;
-      }
-    }
-
-    /* Mobile-specific adjustments */
-    @media (max-width: 768px) {
-      .hero-content-card {
-        padding: 32px 24px;
-      }
-    }
-
-    /* Simple Modal */
-    .img-modal {
-      display: none;
-      position: fixed;
-      z-index: 9999;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.95);
-      cursor: pointer;
-    }
-    .img-modal.active { display: flex; align-items: center; justify-content: center; }
-    .img-modal img { max-width: 90%; max-height: 90%; object-fit: contain; }
-  </style>
 </head>
 
 <body class="antialiased">
@@ -300,7 +177,7 @@
       </nav>
       <div class="flex items-center space-x-2">
         <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button text-xs">
-          <span class="text-gray-500 mr-2">$</span> launch_app
+          <span class="text-gray-500 mr-2 cursor-blink">$</span> launch_app
         </a>
         <button id="mobile-menu-button" class="md:hidden p-2 text-gray-500 hover:text-emerald-500 transition-colors">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -336,14 +213,14 @@
             Finally, a home for your <span class="text-emerald-500">temporary data.</span>
           </h1>
           <p class="text-lg md:text-xl text-gray-400 mb-6 leading-relaxed">
-            Your IDE isn't a junk drawer. Scratch Tabs is the private, offline-first home for the <span class="text-white font-mono">Untitled-1</span> through <span class="text-white font-mono">Untitled-52</span> tabs you're afraid to close. Paste your minified JSON, messy logs, or code snippets here - analyze them without ever hitting 'Save As'.
+            Your IDE isn't a junk drawer. Scratch Tabs is the private, offline-first home for the <span class="text-white font-mono">Untitled-1</span> through <span class="text-white font-mono">Untitled-52</span> tabs you're afraid to close. Paste your minified <span class="syntax-data">JSON</span>, messy logs, or code snippets here - <span class="syntax-action">analyze</span> them without ever hitting 'Save As'.
           </p>
           <p class="text-base md:text-lg text-emerald-500 font-mono mb-8">
-            Powered by Monaco. No menus, no manual selection. Just paste; it auto-detects everything.
+            Powered by <span class="syntax-tech">Monaco</span>. No menus, no manual selection. Just paste; it <span class="syntax-action">auto-detects</span> everything.
           </p>
           <div class="flex flex-col sm:flex-row gap-4">
             <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button">
-              <span class="text-gray-500 mr-2">$</span> launch_app
+              <span class="text-gray-500 mr-2 cursor-blink">$</span> launch_app
             </a>
           </div>
         </div>
@@ -376,7 +253,7 @@
           <span class="text-emerald-500 font-mono text-xs">[LAYER_02] // THE_WORKBENCH</span>
         </div>
         <p class="text-lg text-gray-400 max-w-3xl leading-relaxed">
-          Raw text is just the beginning. One click <span class="text-emerald-500 font-mono">promotes</span> your data into a dedicated Workbench: a purpose-built environment for that specific format.
+          Raw text is just the beginning. One click <span class="text-emerald-500 font-mono syntax-action">promotes</span> your data into a dedicated Workbench: a purpose-built environment for that specific format.
         </p>
       </div>
 
@@ -385,30 +262,30 @@
         <!-- JSON/CSV Promotion -->
         <div class="card-sharp p-5">
           <div class="flex items-center justify-between mb-3">
-            <h3 class="text-white font-mono text-sm">JSON</h3>
+            <h3 class="text-white font-mono text-sm syntax-data">JSON</h3>
             <span class="text-emerald-500 font-mono text-xs">→</span>
           </div>
-          <p class="text-gray-400 text-xs mb-4 font-mono">Text Editor → Interactive Tree with Tools</p>
+          <p class="text-gray-400 text-xs mb-4 font-mono">Text Editor → <span class="syntax-feature">Interactive Tree</span> with Tools</p>
           <img src="https://scratchtabs.b-cdn.net/layer-02-json.png" alt="JSON Tree view with interactive navigation" class="w-full h-auto border border-gray-800 cursor-pointer hover:border-emerald-500 transition-colors" onclick="openModal(this.src)">
         </div>
 
         <!-- Markdown Promotion -->
         <div class="card-sharp p-5">
           <div class="flex items-center justify-between mb-3">
-            <h3 class="text-white font-mono text-sm">MARKDOWN</h3>
+            <h3 class="text-white font-mono text-sm syntax-data">MARKDOWN</h3>
             <span class="text-emerald-500 font-mono text-xs">→</span>
           </div>
-          <p class="text-gray-400 text-xs mb-4 font-mono">Text Editor → Live HTML Preview</p>
+          <p class="text-gray-400 text-xs mb-4 font-mono">Text Editor → <span class="syntax-feature">Live Preview</span></p>
           <img src="https://scratchtabs.b-cdn.net/layer-02-markdown.png" alt="Markdown split view with live preview" class="w-full h-auto border border-gray-800 cursor-pointer hover:border-emerald-500 transition-colors" onclick="openModal(this.src)">
         </div>
 
         <!-- cURL Promotion -->
         <div class="card-sharp p-5">
           <div class="flex items-center justify-between mb-3">
-            <h3 class="text-white font-mono text-sm">CURL</h3>
+            <h3 class="text-white font-mono text-sm syntax-tech">CURL</h3>
             <span class="text-emerald-500 font-mono text-xs">→</span>
           </div>
-          <p class="text-gray-400 text-xs mb-4 font-mono">Raw Command → CURL UI Builder</p>
+          <p class="text-gray-400 text-xs mb-4 font-mono">Raw Command → <span class="syntax-feature">UI Builder</span></p>
           <img src="https://scratchtabs.b-cdn.net/layer-02-curl.png" alt="REST Client with cURL auto-parsing" class="w-full h-auto border border-gray-800 cursor-pointer hover:border-emerald-500 transition-colors" onclick="openModal(this.src)">
         </div>
       </div>
@@ -541,7 +418,7 @@
       <h2 class="text-3xl md:text-5xl font-mono text-white mb-8">READY TO LAUNCH?</h2>
       <div class="flex flex-col sm:flex-row gap-6 justify-center">
         <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button text-xl px-12 py-5">
-          <span class="text-gray-500 mr-2">$</span> launch_app
+          <span class="text-gray-500 mr-2 cursor-blink">$</span> launch_app
         </a>
       </div>
     </div>

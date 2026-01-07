@@ -1,5 +1,34 @@
 <!doctype html>
-<html lang="en" style="scroll-behavior: smooth">
+<html lang="en" style="scroll-behavior: smooth; background-color: #050505">
+<!--
+  ███████╗ ██████╗██████╗  █████╗ ████████╗ ██████╗██╗  ██╗    ████████╗ █████╗ ██████╗ ███████╗
+  ██╔════╝██╔════╝██╔══██╗██╔══██╗╚══██╔══╝██╔════╝██║  ██║    ╚══██╔══╝██╔══██╗██╔══██╗██╔════╝
+  ███████╗██║     ██████╔╝███████║   ██║   ██║     ███████║       ██║   ███████║██████╔╝███████╗
+  ╚════██║██║     ██╔══██╗██╔══██║   ██║   ██║     ██╔══██║       ██║   ██╔══██║██╔══██╗╚════██║
+  ███████║╚██████╗██║  ██║██║  ██║   ██║   ╚██████╗██║  ██║       ██║   ██║  ██║██████╔╝███████║
+  ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝       ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚══════╝
+
+  👋 Hey developer! You found the source. Nice.
+
+  📝 What is this?
+     A privacy-first developer toolkit that runs 100% in your browser.
+     No servers. No tracking. No accounts. Just pure client-side power.
+
+  🔒 Privacy Philosophy:
+     • Your data never leaves your device
+     • Zero analytics, zero cookies
+     • All processing happens locally via IndexedDB
+     • Even our CDN only serves static assets
+
+  🛠️ Tech Stack:
+     React 18 • TypeScript • Monaco Editor • Zustand • IndexedDB
+     Built with care for developers who care about privacy.
+
+  💡 Contribute:
+     github.com/spectra-g/scratch-tabs-feedback
+
+  ⚡ Made with code and coffee by developers, for developers.
+-->
 
 <head>
   <meta charset="UTF-8" />
@@ -29,118 +58,9 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
   <link rel="icon" href="https://scratchtabs.b-cdn.net/favicon.svg" type="image/svg+xml" />
   <link
-    href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600;700&display=swap"
     rel="stylesheet" />
-
-  <style>
-    html {
-      scroll-padding-top: 5rem;
-    }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #050505;
-      color: #F5F5F5;
-      position: relative;
-      min-height: 100vh;
-    }
-
-    h1,
-    h2,
-    h3,
-    .mono {
-      font-family: 'Fira Code', monospace;
-    }
-
-    header {
-      position: sticky;
-      top: 0;
-      background: #050505;
-      border-bottom: 1px solid #1f2937;
-      z-index: 1000;
-    }
-
-    .card-sharp {
-      background: #0a0a0a;
-      border: 1px solid #1f2937;
-      border-radius: 2px;
-      transition: all 0.2s ease;
-    }
-
-    .card-sharp:hover {
-      border-color: #10b981;
-    }
-
-    .terminal-button {
-      font-family: 'Fira Code', monospace;
-      background: #0a0a0a;
-      border: 1px solid #1f2937;
-      color: #10b981;
-      padding: 0.5rem 1rem;
-      border-radius: 2px;
-      transition: all 0.2s ease;
-      display: inline-flex;
-      align-items: center;
-    }
-
-    .terminal-button:hover {
-      background: #111827;
-      border-color: #10b981;
-      box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
-    }
-
-    .logo-size {
-      width: 22px;
-      height: 22px;
-      filter: brightness(0) invert(1);
-    }
-
-    .keyword-badge {
-      display: inline-block;
-      background-color: #111827;
-      color: #9ca3af;
-      padding: 0.125rem 0.5rem;
-      border: 1px solid #1f2937;
-      border-radius: 2px;
-      font-size: 0.75rem;
-      font-family: 'Fira Code', monospace;
-      transition: all 0.2s ease;
-    }
-
-    .keyword-badge:hover {
-      border-color: #10b981;
-      color: #10b981;
-    }
-
-    .new-badge {
-      display: inline-block;
-      background-color: #10b981;
-      color: #050505;
-      padding: 0.125rem 0.5rem;
-      border-radius: 2px;
-      font-size: 0.65rem;
-      font-weight: 800;
-      font-family: 'Fira Code', monospace;
-      margin-left: 0.5rem;
-      vertical-align: middle;
-      text-transform: uppercase;
-    }
-
-    .section-tag {
-      display: inline-flex;
-      align-items: center;
-      padding: 0.5rem 1rem;
-      border: 1px solid #1f2937;
-      background: #0a0a0a;
-      margin-bottom: 1.5rem;
-    }
-
-    .section-tag span {
-      color: #10b981;
-      font-family: 'Fira Code', monospace;
-      font-size: 0.75rem;
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 
 <body class="antialiased">
@@ -164,7 +84,7 @@
       </nav>
       <div class="flex items-center space-x-2">
         <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button text-xs">
-          <span class="text-gray-500 mr-2">$</span> launch_app
+          <span class="text-gray-500 mr-2 cursor-blink">$</span> launch_app
         </a>
         <button id="mobile-menu-button" class="md:hidden p-2 text-gray-500 hover:text-emerald-500 transition-colors">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -361,16 +281,6 @@
             </div>
           </div>
           <div class="card-sharp p-6 flex flex-col">
-            <h3 class="text-xl font-bold text-white mb-2">Prompt Manager</h3>
-            <p class="text-gray-400 text-sm mb-4">Organize your AI prompts. Create, edit, and categorize prompts to get
-              consistent results from language models.</p>
-            <div class="mt-auto pt-4 flex flex-wrap gap-2">
-              <span class="keyword-badge">prompt</span>
-              <span class="keyword-badge">ai</span>
-              <span class="keyword-badge">templates</span>
-            </div>
-          </div>
-          <div class="card-sharp p-6 flex flex-col">
             <h3 class="text-xl font-bold text-white mb-2">Clipboard Manager</h3>
             <p class="text-gray-400 text-sm mb-4">Keeps a history of your clipboard items. Perfect for gathering data
               from multiple sources and recalling it later.</p>
@@ -460,10 +370,10 @@
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
         <a href="https://github.com/spectra-g/scratch-tabs-feedback/issues" target="_blank"
           class="terminal-button px-8 py-3">
-          <span class="text-gray-500 mr-2">$</span> suggest_on_github
+          <span class="text-gray-500 mr-2 cursor-blink">$</span> suggest_on_github
         </a>
         <a href="https://discord.gg/HwsfpTzMVS" target="_blank" class="terminal-button px-8 py-3">
-          <span class="text-gray-500 mr-2">$</span> join_the_discord
+          <span class="text-gray-500 mr-2 cursor-blink">$</span> join_the_discord
         </a>
       </div>
     </div>
@@ -479,38 +389,35 @@
       </p>
       <a href="https://app.scratchtabs.com" target="_blank"
         class="terminal-button text-xl px-12 py-4">
-        <span class="text-gray-500 mr-2">$</span> launch_app
+        <span class="text-gray-500 mr-2 cursor-blink">$</span> launch_app
       </a>
     </div>
   </section>
 
   <!-- Footer -->
-  <footer class="py-12 bg-black">
+  <footer class="py-12 border-t border-gray-800 bg-black">
     <div class="container mx-auto px-6">
-      <div
-        class="flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0 text-center md:text-left">
-        <div class="flex items-center space-x-2">
-          <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs Logo"
-            class="logo-size opacity-50" />
-          <span class="text-xl font-bold text-gray-500 font-mono">SCRATCH_TABS</span>
+      <div class="flex flex-col md:flex-row justify-between items-center gap-8">
+        <div class="flex items-center space-x-3">
+          <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.14.0</span>
         </div>
+
         <div class="flex space-x-8">
           <a href="https://github.com/spectra-g/scratch-tabs-feedback/issues" target="_blank"
-            class="text-xs font-mono text-gray-500 hover:text-emerald-500 transition-colors uppercase tracking-widest">GITHUB</a>
+            class="text-gray-500 hover:text-emerald-500 font-mono text-xs">GITHUB_ISSUES</a>
           <a href="https://discord.gg/HwsfpTzMVS" target="_blank"
-            class="text-xs font-mono text-gray-500 hover:text-emerald-500 transition-colors uppercase tracking-widest">DISCORD</a>
+            class="text-gray-500 hover:text-emerald-500 font-mono text-xs">DISCORD</a>
           <a href="https://ko-fi.com/scratchtabs" target="_blank"
-            class="text-xs font-mono text-gray-500 hover:text-emerald-500 transition-colors uppercase tracking-widest">KO-FI</a>
+            class="text-gray-500 hover:text-emerald-500 font-mono text-xs">KO-FI</a>
+        </div>
+
+        <div class="text-gray-600 font-mono text-xs">
+          Built for developers, by developers.
         </div>
       </div>
-      <div
-        class="mt-8 pt-8 border-t border-gray-900 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-        <p class="text-xs font-mono text-gray-600 uppercase tracking-tighter">
-          &copy; <span id="currentYear"></span> Built for developers, by developers.
-        </p>
-        <p class="text-xs font-mono text-gray-600 uppercase tracking-tighter">
-          100% Client-Side. 100% Private.
-        </p>
+      <div class="mt-8 text-center text-gray-700 text-[10px] font-mono">
+        &copy; <span id="currentYear"></span> SCRATCH_TABS. NO_TRACKING. NO_ACCOUNTS. 100%_CLIENT_SIDE.
       </div>
     </div>
   </footer>
