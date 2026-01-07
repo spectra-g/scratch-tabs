@@ -23,6 +23,7 @@ export const ToolSelectorModal: React.FC<ToolSelectorModalProps> = ({
     const [recentItems, setRecentItems] = useState<ToolItem[]>([]);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const searchInputRef = useRef<HTMLInputElement>(null);
+    const focusedItemRef = useRef<HTMLButtonElement>(null);
 
     // Load data
     useEffect(() => {
@@ -44,30 +45,160 @@ export const ToolSelectorModal: React.FC<ToolSelectorModalProps> = ({
         searchInputRef.current?.focus();
     }, []);
 
-    // Flatten all items for keyboard navigation
-    const allFlattenedItems = useMemo(() => {
-        if (searchQuery === '') {
-            return [
-                ...recentItems,
-                ...results.tablets,
-                ...results.smartViews,
-                ...results.formats,
-            ];
+    // Scroll focused item into view
+    useEffect(() => {
+        if (focusedItemRef.current && typeof focusedItemRef.current.scrollIntoView === 'function') {
+            focusedItemRef.current.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest',
+            });
         }
-        return [
-            ...results.tablets,
-            ...results.smartViews,
-            ...results.formats,
-        ];
+    }, [selectedIndex]);
+
+    // Flatten all items for keyboard navigation with metadata about their sections
+    const { allFlattenedItems, sectionInfo } = useMemo(() => {
+        const items: ToolItem[] = [];
+        const sections: Array<{ startIndex: number; count: number; layout: 'grid' | 'list'; gridColumns?: number }> = [];
+
+        if (searchQuery === '') {
+            // Recently Used section (grid)
+            if (recentItems.length > 0) {
+                sections.push({ startIndex: items.length, count: recentItems.length, layout: 'grid', gridColumns: 5 });
+                items.push(...recentItems);
+            }
+            // Tablets section (list)
+            if (results.tablets.length > 0) {
+                sections.push({ startIndex: items.length, count: results.tablets.length, layout: 'list' });
+                items.push(...results.tablets);
+            }
+            // Smart Views section (list)
+            if (results.smartViews.length > 0) {
+                sections.push({ startIndex: items.length, count: results.smartViews.length, layout: 'list' });
+                items.push(...results.smartViews);
+            }
+            // Formats section (list)
+            if (results.formats.length > 0) {
+                sections.push({ startIndex: items.length, count: results.formats.length, layout: 'list' });
+                items.push(...results.formats);
+            }
+        } else {
+            // Search results (all list layout)
+            if (results.tablets.length > 0) {
+                sections.push({ startIndex: items.length, count: results.tablets.length, layout: 'list' });
+                items.push(...results.tablets);
+            }
+            if (results.smartViews.length > 0) {
+                sections.push({ startIndex: items.length, count: results.smartViews.length, layout: 'list' });
+                items.push(...results.smartViews);
+            }
+            if (results.formats.length > 0) {
+                sections.push({ startIndex: items.length, count: results.formats.length, layout: 'list' });
+                items.push(...results.formats);
+            }
+        }
+
+        return { allFlattenedItems: items, sectionInfo: sections };
     }, [searchQuery, recentItems, results]);
 
+    // Helper to find which section an index belongs to
+    const getSectionForIndex = (index: number) => {
+        return sectionInfo.find(section =>
+            index >= section.startIndex && index < section.startIndex + section.count
+        );
+    };
+
     const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (allFlattenedItems.length === 0) return;
+
+        const currentSection = getSectionForIndex(selectedIndex);
+
         if (e.key === 'ArrowDown') {
             e.preventDefault();
-            setSelectedIndex(prev => (prev + 1) % (allFlattenedItems.length || 1));
+            if (!currentSection) {
+                setSelectedIndex(0);
+                return;
+            }
+
+            if (currentSection.layout === 'grid' && currentSection.gridColumns) {
+                // For grid: move down by gridColumns
+                const newIndex = selectedIndex + currentSection.gridColumns;
+                const sectionEnd = currentSection.startIndex + currentSection.count;
+
+                if (newIndex < sectionEnd) {
+                    // Stay within current section
+                    setSelectedIndex(newIndex);
+                } else {
+                    // Move to next section's first item
+                    const nextSectionIndex = sectionInfo.indexOf(currentSection) + 1;
+                    if (nextSectionIndex < sectionInfo.length) {
+                        setSelectedIndex(sectionInfo[nextSectionIndex].startIndex);
+                    } else {
+                        // Wrap to beginning
+                        setSelectedIndex(0);
+                    }
+                }
+            } else {
+                // For list: move to next item
+                const newIndex = selectedIndex + 1;
+                if (newIndex < allFlattenedItems.length) {
+                    setSelectedIndex(newIndex);
+                } else {
+                    setSelectedIndex(0); // Wrap around
+                }
+            }
         } else if (e.key === 'ArrowUp') {
             e.preventDefault();
-            setSelectedIndex(prev => (prev - 1 + (allFlattenedItems.length || 1)) % (allFlattenedItems.length || 1));
+            if (!currentSection) {
+                setSelectedIndex(0);
+                return;
+            }
+
+            if (currentSection.layout === 'grid' && currentSection.gridColumns) {
+                // For grid: move up by gridColumns
+                const newIndex = selectedIndex - currentSection.gridColumns;
+
+                if (newIndex >= currentSection.startIndex) {
+                    // Stay within current section
+                    setSelectedIndex(newIndex);
+                } else {
+                    // Move to previous section's last item
+                    const prevSectionIndex = sectionInfo.indexOf(currentSection) - 1;
+                    if (prevSectionIndex >= 0) {
+                        const prevSection = sectionInfo[prevSectionIndex];
+                        setSelectedIndex(prevSection.startIndex + prevSection.count - 1);
+                    } else {
+                        // Wrap to end
+                        setSelectedIndex(allFlattenedItems.length - 1);
+                    }
+                }
+            } else {
+                // For list: move to previous item
+                const newIndex = selectedIndex - 1;
+                if (newIndex >= 0) {
+                    setSelectedIndex(newIndex);
+                } else {
+                    setSelectedIndex(allFlattenedItems.length - 1); // Wrap around
+                }
+            }
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            if (!currentSection || currentSection.layout !== 'grid') return;
+
+            // For grid: move left
+            const posInSection = selectedIndex - currentSection.startIndex;
+            if (posInSection % (currentSection.gridColumns || 1) > 0) {
+                setSelectedIndex(selectedIndex - 1);
+            }
+        } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            if (!currentSection || currentSection.layout !== 'grid') return;
+
+            // For grid: move right
+            const posInSection = selectedIndex - currentSection.startIndex;
+            const sectionEnd = currentSection.startIndex + currentSection.count;
+            if ((posInSection + 1) % (currentSection.gridColumns || 1) !== 0 && selectedIndex + 1 < sectionEnd) {
+                setSelectedIndex(selectedIndex + 1);
+            }
         } else if (e.key === 'Enter') {
             e.preventDefault();
             const selected = allFlattenedItems[selectedIndex];
@@ -80,11 +211,9 @@ export const ToolSelectorModal: React.FC<ToolSelectorModalProps> = ({
     const renderSection = (title: string, items: ToolItem[], layout: 'grid' | 'list') => {
         if (items.length === 0) return null;
 
-        // Calculate global starting index for this section to handle selection across groups
-        let sectionStartIndex = 0;
-        if (title === 'Tablets') sectionStartIndex = recentItems.length;
-        else if (title === 'Smart Views') sectionStartIndex = recentItems.length + results.tablets.length;
-        else if (title === 'Formats') sectionStartIndex = recentItems.length + results.tablets.length + results.smartViews.length;
+        // Find the section start index by searching for the first item
+        const firstItemIndex = allFlattenedItems.indexOf(items[0]);
+        const sectionStartIndex = firstItemIndex >= 0 ? firstItemIndex : 0;
 
         return (
             <div className="mb-8">
@@ -92,15 +221,19 @@ export const ToolSelectorModal: React.FC<ToolSelectorModalProps> = ({
                     {title}
                 </h2>
                 <div className={layout === 'grid' ? "grid grid-cols-5 gap-3" : "flex flex-col gap-1"}>
-                    {items.map((item, index) => (
-                        <ToolCard
-                            key={item.id}
-                            item={item}
-                            variant={layout}
-                            isFocused={selectedIndex === sectionStartIndex + index}
-                            onClick={() => onSelect(item)}
-                        />
-                    ))}
+                    {items.map((item, index) => {
+                        const isFocused = selectedIndex === sectionStartIndex + index;
+                        return (
+                            <ToolCard
+                                key={item.id}
+                                item={item}
+                                variant={layout}
+                                isFocused={isFocused}
+                                onClick={() => onSelect(item)}
+                                ref={isFocused ? focusedItemRef : null}
+                            />
+                        );
+                    })}
                 </div>
             </div>
         );
@@ -175,7 +308,7 @@ export const ToolSelectorModal: React.FC<ToolSelectorModalProps> = ({
                 <div className="px-6 py-4 border-t border-base bg-surface-secondary/20 flex items-center justify-between text-[11px] text-muted font-medium">
                     <div className="flex items-center gap-6">
                         <span className="flex items-center gap-1.5">
-                            <kbd className="px-1.5 py-0.5 bg-surface border border-base rounded shadow-sm text-[10px]">↑↓</kbd>
+                            <kbd className="px-1.5 py-0.5 bg-surface border border-base rounded shadow-sm text-[10px]">↑↓←→</kbd>
                             <span>Navigate</span>
                         </span>
                         <span className="flex items-center gap-1.5">

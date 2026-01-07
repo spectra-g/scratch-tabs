@@ -38,11 +38,23 @@ describe('ToolCard', () => {
         expect(handleClick).toHaveBeenCalledTimes(1);
     });
 
-    it('applies focused styles when isFocused is true', () => {
-        const { rerender } = render(<ToolCard item={mockItem} onClick={() => { }} isFocused={false} />);
-        expect(screen.getByRole('button').className).not.toContain('ring-focus');
+    it('applies focused styles when isFocused is true (grid variant)', () => {
+        const { rerender } = render(<ToolCard item={mockItem} onClick={() => { }} isFocused={false} variant="grid" />);
+        const button = screen.getByRole('button');
+        expect(button.className).not.toContain('border-secondary');
+        expect(button.className).not.toContain('shadow-md');
 
-        rerender(<ToolCard item={mockItem} onClick={() => { }} isFocused={true} />);
-        expect(screen.getByRole('button').className).toContain('ring-focus');
+        rerender(<ToolCard item={mockItem} onClick={() => { }} isFocused={true} variant="grid" />);
+        expect(button.className).toContain('border-secondary');
+        expect(button.className).toContain('shadow-md');
+    });
+
+    it('applies focused styles when isFocused is true (list variant)', () => {
+        const { rerender } = render(<ToolCard item={mockItem} onClick={() => { }} isFocused={false} variant="list" />);
+        const button = screen.getByRole('button');
+        expect(button.className).not.toContain('border-l-secondary');
+
+        rerender(<ToolCard item={mockItem} onClick={() => { }} isFocused={true} variant="list" />);
+        expect(button.className).toContain('border-l-secondary');
     });
 });
