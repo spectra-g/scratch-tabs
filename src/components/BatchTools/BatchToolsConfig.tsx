@@ -201,7 +201,11 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
         <div className="space-y-3">
           <Select
             label="Condition type"
-            value={config.condition?.type || "none"}
+            value={
+              typeof config.condition === "object"
+                ? config.condition.type
+                : "none"
+            }
             onChange={(value) => {
               if (value === "none") {
                 onChange({ condition: false });
@@ -235,7 +239,6 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
           />
 
           {config.condition &&
-            config.condition !== false &&
             [
               "contains",
               "not-contains",
@@ -253,12 +256,12 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
                 onChange={(value) =>
                   onChange({
                     condition: {
-                      type: config.condition!.type,
+                      type: (config.condition as any).type,
                       value,
-                      lineNumber: config.condition!.lineNumber,
-                      startLine: config.condition!.startLine,
-                      endLine: config.condition!.endLine,
-                      nthInterval: config.condition!.nthInterval,
+                      lineNumber: (config.condition as any).lineNumber,
+                      startLine: (config.condition as any).startLine,
+                      endLine: (config.condition as any).endLine,
+                      nthInterval: (config.condition as any).nthInterval,
                     },
                   })
                 }
@@ -286,7 +289,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
               value={config.condition.lineNumber || 1}
               onChange={(lineNumber) =>
                 onChange({
-                  condition: { ...config.condition!, lineNumber },
+                  condition: { ...(config.condition as any), lineNumber },
                 })
               }
               min={1}
@@ -299,10 +302,10 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
             <>
               <NumberInput
                 label="Start line"
-                value={config.condition.startLine || 1}
+                value={(config.condition as any).startLine || 1}
                 onChange={(startLine) =>
                   onChange({
-                    condition: { ...config.condition!, startLine },
+                    condition: { ...(config.condition as any), startLine },
                   })
                 }
                 min={1}
@@ -311,10 +314,10 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
               />
               <NumberInput
                 label="End line"
-                value={config.condition.endLine || 10}
+                value={(config.condition as any).endLine || 10}
                 onChange={(endLine) =>
                   onChange({
-                    condition: { ...config.condition!, endLine },
+                    condition: { ...(config.condition as any), endLine },
                   })
                 }
                 min={1}
@@ -327,10 +330,10 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
           {config.condition && config.condition.type === "every-nth" && (
             <NumberInput
               label="Every Nth line"
-              value={config.condition.nthInterval || 2}
+              value={(config.condition as any).nthInterval || 2}
               onChange={(nthInterval) =>
                 onChange({
-                  condition: { ...config.condition!, nthInterval },
+                  condition: { ...(config.condition as any), nthInterval },
                 })
               }
               min={1}
@@ -464,6 +467,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
             { value: "snake", label: "snake_case" },
             { value: "invert", label: "InVeRt CaSe" },
             { value: "alternating", label: "aLtErNaTiNg CaSe" },
+            { value: "screaming-snake", label: "SCREAMING_SNAKE_CASE" },
           ]}
         />
       </ConfigSection>
@@ -482,7 +486,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
           value={config.addPrefix || ""}
           onChange={(value) => onChange({ addPrefix: value || undefined })}
           placeholder="Enter prefix text..."
-          description="Text to add at the beginning of each line"
+          description="Text to add at the beginning of each line (use $value for current line content)"
         />
 
         <TextInput
@@ -490,7 +494,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
           value={config.addSuffix || ""}
           onChange={(value) => onChange({ addSuffix: value || undefined })}
           placeholder="Enter suffix text..."
-          description="Text to add at the end of each line"
+          description="Text to add at the end of each line (use $value for current line content)"
         />
 
         <Select
@@ -555,16 +559,24 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
         <div className="space-y-3">
           <Select
             label="Indentation action"
-            value={config.changeIndentation?.action || "none"}
+            value={
+              typeof config.changeIndentation === "object"
+                ? config.changeIndentation.action
+                : "none"
+            }
             onChange={(value) => {
               if (value === "none") {
                 onChange({ changeIndentation: false });
               } else {
+                const current =
+                  (typeof config.changeIndentation === "object"
+                    ? config.changeIndentation
+                    : {}) as any;
                 onChange({
                   changeIndentation: {
                     action: value as "add" | "remove",
-                    amount: config.changeIndentation?.amount || 1,
-                    type: config.changeIndentation?.type || "spaces",
+                    amount: current.amount || 1,
+                    type: current.type || "spaces",
                   },
                 });
               }
@@ -580,12 +592,20 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
             <>
               <NumberInput
                 label="Amount"
-                value={config.changeIndentation.amount}
-                onChange={(amount) =>
-                  onChange({
-                    changeIndentation: { ...config.changeIndentation!, amount },
-                  })
+                value={
+                  typeof config.changeIndentation === "object"
+                    ? config.changeIndentation.amount
+                    : 1
                 }
+                onChange={(amount) => {
+                  const current =
+                    (typeof config.changeIndentation === "object"
+                      ? config.changeIndentation
+                      : {}) as any;
+                  onChange({
+                    changeIndentation: { ...current, amount },
+                  });
+                }}
                 min={1}
                 max={20}
                 description="Number of tabs or spaces"
@@ -593,15 +613,23 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
 
               <Select
                 label="Type"
-                value={config.changeIndentation.type}
-                onChange={(type) =>
+                value={
+                  typeof config.changeIndentation === "object"
+                    ? config.changeIndentation.type
+                    : "spaces"
+                }
+                onChange={(type) => {
+                  const current =
+                    (typeof config.changeIndentation === "object"
+                      ? config.changeIndentation
+                      : {}) as any;
                   onChange({
                     changeIndentation: {
-                      ...config.changeIndentation!,
+                      ...current,
                       type: type as "tabs" | "spaces",
                     },
-                  })
-                }
+                  });
+                }}
                 options={[
                   { value: "spaces", label: "Spaces" },
                   { value: "tabs", label: "Tabs" },
@@ -655,12 +683,20 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
             <>
               <NumberInput
                 label="Length"
-                value={config.padLines.length}
-                onChange={(length) =>
-                  onChange({
-                    padLines: { ...config.padLines!, length },
-                  })
+                value={
+                  typeof config.padLines === "object"
+                    ? config.padLines.length
+                    : 20
                 }
+                onChange={(length) => {
+                  const current =
+                    (typeof config.padLines === "object"
+                      ? config.padLines
+                      : {}) as any;
+                  onChange({
+                    padLines: { ...current, length },
+                  });
+                }}
                 min={1}
                 max={200}
                 description="Target line length"
@@ -668,15 +704,23 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
 
               <Select
                 label="Alignment"
-                value={config.padLines.align}
-                onChange={(align) =>
+                value={
+                  typeof config.padLines === "object"
+                    ? config.padLines.align
+                    : "left"
+                }
+                onChange={(align) => {
+                  const current =
+                    (typeof config.padLines === "object"
+                      ? config.padLines
+                      : {}) as any;
                   onChange({
                     padLines: {
-                      ...config.padLines!,
+                      ...current,
                       align: align as "left" | "right" | "center",
                     },
-                  })
-                }
+                  });
+                }}
                 options={[
                   { value: "left", label: "Left (pad right)" },
                   { value: "right", label: "Right (pad left)" },
@@ -686,12 +730,18 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
 
               <TextInput
                 label="Padding character"
-                value={config.padLines.char}
-                onChange={(char) =>
-                  onChange({
-                    padLines: { ...config.padLines!, char: char || " " },
-                  })
+                value={
+                  typeof config.padLines === "object" ? config.padLines.char : " "
                 }
+                onChange={(char) => {
+                  const current =
+                    (typeof config.padLines === "object"
+                      ? config.padLines
+                      : {}) as any;
+                  onChange({
+                    padLines: { ...current, char: char || " " },
+                  });
+                }}
                 placeholder="Enter padding character"
                 description="Character to use for padding"
               />
@@ -748,7 +798,7 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
                 onChange={(checked) =>
                   onChange({
                     filterByRegex: {
-                      ...config.filterByRegex!,
+                      ...((config.filterByRegex as any) || {}),
                       caseSensitive: checked,
                     },
                   })
@@ -782,49 +832,81 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
             <>
               <TextInput
                 label="Keyword"
-                value={config.filterByKeyword.keyword}
-                onChange={(keyword) =>
-                  onChange({
-                    filterByKeyword: { ...config.filterByKeyword!, keyword },
-                  })
+                value={
+                  typeof config.filterByKeyword === "object"
+                    ? config.filterByKeyword.keyword
+                    : ""
                 }
-                placeholder="Enter keyword to filter by..."
-              />
-
-              <Select
-                label="Action"
-                value={config.filterByKeyword.action}
-                onChange={(action) =>
+                onChange={(value) => {
+                  const current =
+                    (typeof config.filterByKeyword === "object"
+                      ? config.filterByKeyword
+                      : {}) as any;
                   onChange({
                     filterByKeyword: {
-                      ...config.filterByKeyword!,
-                      action: action as "keep" | "remove",
+                      action: current.action || "remove",
+                      position: current.position || "contains",
+                      keyword: value,
                     },
-                  })
-                }
-                options={[
-                  { value: "keep", label: "Keep matching lines" },
-                  { value: "remove", label: "Remove matching lines" },
-                ]}
+                  });
+                }}
+                placeholder="Enter keyword..."
               />
 
-              <Select
-                label="Position"
-                value={config.filterByKeyword.position || "contains"}
-                onChange={(position) =>
-                  onChange({
-                    filterByKeyword: {
-                      ...config.filterByKeyword!,
-                      position: position as "contains" | "starts" | "ends",
-                    },
-                  })
-                }
-                options={[
-                  { value: "contains", label: "Contains keyword" },
-                  { value: "starts", label: "Starts with keyword" },
-                  { value: "ends", label: "Ends with keyword" },
-                ]}
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <Select
+                  label="Action"
+                  value={
+                    typeof config.filterByKeyword === "object"
+                      ? config.filterByKeyword.action
+                      : "remove"
+                  }
+                  onChange={(value) => {
+                    const current =
+                      (typeof config.filterByKeyword === "object"
+                        ? config.filterByKeyword
+                        : {}) as any;
+                    onChange({
+                      filterByKeyword: {
+                        keyword: current.keyword || "",
+                        position: current.position || "contains",
+                        action: value as "keep" | "remove",
+                      },
+                    });
+                  }}
+                  options={[
+                    { value: "keep", label: "Keep matches" },
+                    { value: "remove", label: "Remove matches" },
+                  ]}
+                />
+
+                <Select
+                  label="Position"
+                  value={
+                    typeof config.filterByKeyword === "object"
+                      ? config.filterByKeyword.position || "contains"
+                      : "contains"
+                  }
+                  onChange={(value) => {
+                    const current =
+                      (typeof config.filterByKeyword === "object"
+                        ? config.filterByKeyword
+                        : {}) as any;
+                    onChange({
+                      filterByKeyword: {
+                        keyword: current.keyword || "",
+                        action: current.action || "remove",
+                        position: value as "contains" | "starts" | "ends",
+                      },
+                    });
+                  }}
+                  options={[
+                    { value: "contains", label: "Contains" },
+                    { value: "starts", label: "Starts with" },
+                    { value: "ends", label: "Ends with" },
+                  ]}
+                />
+              </div>
             </>
           )}
         </div>
@@ -945,24 +1027,61 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
           />
 
           {config.redaction && (
-            <>
+            <div className="space-y-4">
               <Select
-                label="Pattern recognition type"
-                value={config.redaction.patternType}
-                onChange={(value) =>
+                label="Pattern Type"
+                value={
+                  typeof config.redaction === "object"
+                    ? config.redaction.patternType
+                    : "exact"
+                }
+                onChange={(value) => {
+                  const current =
+                    typeof config.redaction === "object"
+                      ? config.redaction
+                      : {
+                        customPatterns: [],
+                        builtInPatterns: {
+                          emails: false,
+                          ipAddresses: false,
+                          creditCards: false,
+                          ssn: false,
+                          phoneNumbers: false,
+                          dates: false,
+                          urls: false,
+                          secrets: false,
+                        },
+                        redactionMode: "placeholder" as const,
+                        placeholderText: "[REDACTED]",
+                        maskCharacter: "*",
+                        patternType: "exact" as const,
+                      };
                   onChange({
                     redaction: {
-                      ...config.redaction!,
+                      ...current,
+                      customPatterns: current.customPatterns || [],
+                      builtInPatterns: current.builtInPatterns || {
+                        emails: false,
+                        ipAddresses: false,
+                        creditCards: false,
+                        ssn: false,
+                        phoneNumbers: false,
+                        dates: false,
+                        urls: false,
+                        secrets: false,
+                      },
+                      redactionMode: current.redactionMode || "placeholder",
+                      placeholderText: current.placeholderText || "[REDACTED]",
+                      maskCharacter: current.maskCharacter || "*",
                       patternType: value as "exact" | "wildcard" | "regex",
                     },
-                  })
-                }
+                  });
+                }}
                 options={[
-                  { value: "exact", label: "Exact match" },
+                  { value: "exact", label: "Exact Match" },
                   { value: "wildcard", label: "Wildcard (* and ?)" },
-                  { value: "regex", label: "Regular expression" },
+                  { value: "regex", label: "Regular Expression" },
                 ]}
-                description="How custom patterns should be interpreted"
               />
 
               <div>
@@ -972,13 +1091,16 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
                 <div className="space-y-2">
                   <Checkbox
                     label="Email addresses"
-                    checked={config.redaction.builtInPatterns.emails}
+                    checked={
+                      typeof config.redaction === "object" &&
+                      config.redaction.builtInPatterns.emails
+                    }
                     onChange={(checked) =>
                       onChange({
                         redaction: {
-                          ...config.redaction!,
+                          ...(config.redaction as any),
                           builtInPatterns: {
-                            ...config.redaction!.builtInPatterns,
+                            ...(config.redaction as any).builtInPatterns,
                             emails: checked,
                           },
                         },
@@ -987,13 +1109,16 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
                   />
                   <Checkbox
                     label="IP addresses"
-                    checked={config.redaction.builtInPatterns.ipAddresses}
+                    checked={
+                      typeof config.redaction === "object" &&
+                      config.redaction.builtInPatterns.ipAddresses
+                    }
                     onChange={(checked) =>
                       onChange({
                         redaction: {
-                          ...config.redaction!,
+                          ...(config.redaction as any),
                           builtInPatterns: {
-                            ...config.redaction!.builtInPatterns,
+                            ...(config.redaction as any).builtInPatterns,
                             ipAddresses: checked,
                           },
                         },
@@ -1002,13 +1127,16 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
                   />
                   <Checkbox
                     label="Credit card numbers"
-                    checked={config.redaction.builtInPatterns.creditCards}
+                    checked={
+                      typeof config.redaction === "object" &&
+                      config.redaction.builtInPatterns.creditCards
+                    }
                     onChange={(checked) =>
                       onChange({
                         redaction: {
-                          ...config.redaction!,
+                          ...(config.redaction as any),
                           builtInPatterns: {
-                            ...config.redaction!.builtInPatterns,
+                            ...(config.redaction as any).builtInPatterns,
                             creditCards: checked,
                           },
                         },
@@ -1017,13 +1145,16 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
                   />
                   <Checkbox
                     label="Social Security numbers"
-                    checked={config.redaction.builtInPatterns.ssn}
+                    checked={
+                      typeof config.redaction === "object" &&
+                      config.redaction.builtInPatterns.ssn
+                    }
                     onChange={(checked) =>
                       onChange({
                         redaction: {
-                          ...config.redaction!,
+                          ...(config.redaction as any),
                           builtInPatterns: {
-                            ...config.redaction!.builtInPatterns,
+                            ...(config.redaction as any).builtInPatterns,
                             ssn: checked,
                           },
                         },
@@ -1032,13 +1163,16 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
                   />
                   <Checkbox
                     label="Phone numbers"
-                    checked={config.redaction.builtInPatterns.phoneNumbers}
+                    checked={
+                      typeof config.redaction === "object" &&
+                      config.redaction.builtInPatterns.phoneNumbers
+                    }
                     onChange={(checked) =>
                       onChange({
                         redaction: {
-                          ...config.redaction!,
+                          ...(config.redaction as any),
                           builtInPatterns: {
-                            ...config.redaction!.builtInPatterns,
+                            ...(config.redaction as any).builtInPatterns,
                             phoneNumbers: checked,
                           },
                         },
@@ -1047,13 +1181,16 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
                   />
                   <Checkbox
                     label="Dates"
-                    checked={config.redaction.builtInPatterns.dates}
+                    checked={
+                      typeof config.redaction === "object" &&
+                      config.redaction.builtInPatterns.dates
+                    }
                     onChange={(checked) =>
                       onChange({
                         redaction: {
-                          ...config.redaction!,
+                          ...(config.redaction as any),
                           builtInPatterns: {
-                            ...config.redaction!.builtInPatterns,
+                            ...(config.redaction as any).builtInPatterns,
                             dates: checked,
                           },
                         },
@@ -1062,13 +1199,16 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
                   />
                   <Checkbox
                     label="URLs"
-                    checked={config.redaction.builtInPatterns.urls}
+                    checked={
+                      typeof config.redaction === "object" &&
+                      config.redaction.builtInPatterns.urls
+                    }
                     onChange={(checked) =>
                       onChange({
                         redaction: {
-                          ...config.redaction!,
+                          ...(config.redaction as any),
                           builtInPatterns: {
-                            ...config.redaction!.builtInPatterns,
+                            ...(config.redaction as any).builtInPatterns,
                             urls: checked,
                           },
                         },
@@ -1077,13 +1217,16 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
                   />
                   <Checkbox
                     label="API keys & secrets"
-                    checked={config.redaction.builtInPatterns.secrets}
+                    checked={
+                      typeof config.redaction === "object" &&
+                      config.redaction.builtInPatterns.secrets
+                    }
                     onChange={(checked) =>
                       onChange({
                         redaction: {
-                          ...config.redaction!,
+                          ...(config.redaction as any),
                           builtInPatterns: {
-                            ...config.redaction!.builtInPatterns,
+                            ...(config.redaction as any).builtInPatterns,
                             secrets: checked,
                           },
                         },
@@ -1097,55 +1240,62 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
                 <label className="block text-xs font-medium text-secondary mb-1">
                   Custom patterns
                 </label>
-                <div className="space-y-2">
-                  {config.redaction.customPatterns.map((pattern, index) => (
-                    <div key={index} className="flex space-x-2">
-                      <input
-                        type="text"
-                        value={pattern}
-                        onChange={(e) => {
-                          const newPatterns = [...config.redaction!.customPatterns];
-                          newPatterns[index] = e.target.value;
-                          onChange({
-                            redaction: {
-                              ...config.redaction!,
-                              customPatterns: newPatterns,
-                            },
-                          });
-                        }}
-                        placeholder={
-                          config.redaction.patternType === "exact"
-                            ? "Enter exact text to redact"
-                            : config.redaction.patternType === "wildcard"
-                              ? "Use * and ? wildcards"
-                              : "Enter regex pattern"
-                        }
-                        className="flex-1 px-3 py-2 bg-element border border-base rounded text-sm text-main placeholder-muted hover:bg-element-hover focus:ring-2 focus:border-focus transition-colors"
-                      />
-                      <button
-                        onClick={() => {
-                          const newPatterns = config.redaction!.customPatterns.filter(
-                            (_, i) => i !== index,
-                          );
-                          onChange({
-                            redaction: {
-                              ...config.redaction!,
-                              customPatterns: newPatterns,
-                            },
-                          });
-                        }}
-                        className="px-2 py-2 bg-danger-subtle hover:bg-danger-subtle/80 text-danger rounded text-sm transition-colors"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
+                <div className="space-y-2 max-h-40 overflow-y-auto border border-border rounded p-2">
+                  {((typeof config.redaction === "object" &&
+                    config.redaction.customPatterns) ||
+                    []).map((pattern, index) => (
+                      <div key={index} className="flex gap-2">
+                        <input
+                          type="text"
+                          className="flex-1 bg-surface-base border border-border rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                          value={pattern}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            const current = config.redaction as any;
+                            const newPatterns = [
+                              ...(current.customPatterns || []),
+                            ];
+                            newPatterns[index] = value;
+                            onChange({
+                              redaction: {
+                                ...current,
+                                customPatterns: newPatterns,
+                              },
+                            });
+                          }}
+                          placeholder="Enter pattern..."
+                        />
+                        <button
+                          onClick={() => {
+                            const current = config.redaction as any;
+                            const newPatterns = [
+                              ...(current.customPatterns || []),
+                            ];
+                            newPatterns.splice(index, 1);
+                            onChange({
+                              redaction: {
+                                ...current,
+                                customPatterns: newPatterns,
+                              },
+                            });
+                          }}
+                          className="p-2 hover:bg-surface-active rounded"
+                          title="Remove pattern"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
                   <button
                     onClick={() => {
+                      const current = config.redaction as any;
                       onChange({
                         redaction: {
-                          ...config.redaction!,
-                          customPatterns: [...config.redaction!.customPatterns, ""],
+                          ...current,
+                          customPatterns: [
+                            ...(current.customPatterns || []),
+                            "",
+                          ],
                         },
                       });
                     }}
@@ -1155,9 +1305,11 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
                   </button>
                 </div>
                 <p className="text-xs text-muted mt-1">
-                  {config.redaction.patternType === "exact"
+                  {typeof config.redaction === "object" &&
+                    config.redaction.patternType === "exact"
                     ? "Patterns will match exactly as typed"
-                    : config.redaction.patternType === "wildcard"
+                    : typeof config.redaction === "object" &&
+                      config.redaction.patternType === "wildcard"
                       ? "Use * for any characters, ? for single character"
                       : "JavaScript regex patterns (case-insensitive)"}
                 </p>
@@ -1165,15 +1317,38 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
 
               <Select
                 label="Redaction mode"
-                value={config.redaction.redactionMode}
-                onChange={(value) =>
+                value={
+                  (typeof config.redaction === "object" &&
+                    config.redaction.redactionMode) ||
+                  "placeholder"
+                }
+                onChange={(value) => {
+                  const current = (config.redaction as any) || {};
                   onChange({
                     redaction: {
-                      ...config.redaction!,
-                      redactionMode: value as "block" | "placeholder" | "mask" | "delete",
+                      customPatterns: [],
+                      builtInPatterns: {
+                        emails: false,
+                        ipAddresses: false,
+                        creditCards: false,
+                        ssn: false,
+                        phoneNumbers: false,
+                        dates: false,
+                        urls: false,
+                        secrets: false,
+                      },
+                      placeholderText: "[REDACTED]",
+                      maskCharacter: "*",
+                      patternType: "exact",
+                      ...current,
+                      redactionMode: value as
+                        | "block"
+                        | "placeholder"
+                        | "mask"
+                        | "delete",
                     },
-                  })
-                }
+                  });
+                }}
                 options={[
                   { value: "block", label: "Block style (█████)" },
                   { value: "placeholder", label: "Placeholder text" },
@@ -1183,40 +1358,72 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
                 description="How redacted content should appear"
               />
 
-              {config.redaction.redactionMode === "placeholder" && (
-                <TextInput
-                  label="Placeholder text"
-                  value={config.redaction.placeholderText}
-                  onChange={(value) =>
-                    onChange({
-                      redaction: {
-                        ...config.redaction!,
-                        placeholderText: value,
-                      },
-                    })
-                  }
-                  placeholder="[REDACTED]"
-                  description="Text to show in place of redacted content"
-                />
-              )}
+              {typeof config.redaction === "object" &&
+                config.redaction.redactionMode === "placeholder" && (
+                  <TextInput
+                    label="Placeholder text"
+                    value={config.redaction.placeholderText || ""}
+                    onChange={(value) => {
+                      const current = (config.redaction as any) || {};
+                      onChange({
+                        redaction: {
+                          customPatterns: [],
+                          builtInPatterns: {
+                            emails: false,
+                            ipAddresses: false,
+                            creditCards: false,
+                            ssn: false,
+                            phoneNumbers: false,
+                            dates: false,
+                            urls: false,
+                            secrets: false,
+                          },
+                          redactionMode: "placeholder",
+                          maskCharacter: "*",
+                          patternType: "exact",
+                          ...current,
+                          placeholderText: value,
+                        },
+                      });
+                    }}
+                    placeholder="[REDACTED]"
+                    description="Text to show in place of redacted content"
+                  />
+                )}
 
-              {config.redaction.redactionMode === "mask" && (
-                <TextInput
-                  label="Mask character"
-                  value={config.redaction.maskCharacter}
-                  onChange={(value) =>
-                    onChange({
-                      redaction: {
-                        ...config.redaction!,
-                        maskCharacter: value || "*",
-                      },
-                    })
-                  }
-                  placeholder="*"
-                  description="Character to use for masking (e.g., *, #, X)"
-                />
-              )}
-            </>
+              {typeof config.redaction === "object" &&
+                config.redaction.redactionMode === "mask" && (
+                  <TextInput
+                    label="Mask character"
+                    value={config.redaction.maskCharacter || "*"}
+                    onChange={(value) => {
+                      const current = (config.redaction as any) || {};
+                      onChange({
+                        redaction: {
+                          customPatterns: [],
+                          builtInPatterns: {
+                            emails: false,
+                            ipAddresses: false,
+                            creditCards: false,
+                            ssn: false,
+                            phoneNumbers: false,
+                            dates: false,
+                            urls: false,
+                            secrets: false,
+                          },
+                          redactionMode: "placeholder",
+                          placeholderText: "[REDACTED]",
+                          patternType: "exact",
+                          ...current,
+                          maskCharacter: value || "*",
+                        },
+                      });
+                    }}
+                    placeholder="*"
+                    description="Character to use for masking (e.g., *, #, X)"
+                  />
+                )}
+            </div>
           )}
         </div>
       </ConfigSection>
@@ -1255,36 +1462,50 @@ export const BatchToolsConfig: React.FC<BatchToolsConfigProps> = ({
               <TextInput
                 label="Find (RegEx)"
                 value={config.findReplaceRegex.find}
-                onChange={(find) =>
+                onChange={(value) => {
+                  const current = config.findReplaceRegex || {};
                   onChange({
-                    findReplaceRegex: { ...config.findReplaceRegex!, find },
-                  })
-                }
-                placeholder="(\w+):\s*(\d+)"
-                description="Use parentheses () to create capture groups"
+                    findReplaceRegex: {
+                      replace: "",
+                      flags: "g",
+                      ...current,
+                      find: value,
+                    },
+                  });
+                }}
+                placeholder="Regex pattern to find..."
               />
-
               <TextInput
                 label="Replace"
-                value={config.findReplaceRegex.replace}
-                onChange={(replace) =>
+                value={config.findReplaceRegex?.replace || ""}
+                onChange={(value) => {
+                  const current = config.findReplaceRegex || {};
                   onChange({
-                    findReplaceRegex: { ...config.findReplaceRegex!, replace },
-                  })
-                }
-                placeholder="Value: $2, Key: $1"
-                description="Use $1, $2, etc. to reference capture groups"
+                    findReplaceRegex: {
+                      find: "",
+                      flags: "g",
+                      ...current,
+                      replace: value,
+                    },
+                  });
+                }}
+                placeholder="Replacement text..."
               />
-
               <TextInput
                 label="Flags"
-                value={config.findReplaceRegex.flags || "g"}
-                onChange={(flags) =>
+                value={config.findReplaceRegex?.flags || "g"}
+                onChange={(value) => {
+                  const current = config.findReplaceRegex || {};
                   onChange({
-                    findReplaceRegex: { ...config.findReplaceRegex!, flags },
-                  })
-                }
-                placeholder="g"
+                    findReplaceRegex: {
+                      find: "",
+                      replace: "",
+                      ...current,
+                      flags: value,
+                    },
+                  });
+                }}
+                placeholder="Regex flags (e.g., g, i, m)..."
                 description="Regex flags (g=global, i=case-insensitive, m=multiline)"
               />
             </>

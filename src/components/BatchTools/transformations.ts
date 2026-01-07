@@ -121,24 +121,39 @@ function applyTransformationsToLines(
   lines: string[],
   config: TransformationConfig,
 ): string[] {
-  let processedLines = [...lines];
+  // Track both current text and original text for the first phase of transformations
+  let processedLines: { text: string; original: string }[] = lines.map(
+    (line) => ({
+      text: line,
+      original: line,
+    }),
+  );
 
   // 1. Whitespace & Cleanup
   if (config.trim) {
-    processedLines = processedLines.map((line) => line.trim());
+    processedLines = processedLines.map((line) => ({
+      ...line,
+      text: line.text.trim(),
+    }));
   }
 
   if (config.removeExtraWhitespace === "preserve-single") {
-    processedLines = processedLines.map((line) => line.replace(/\s+/g, " "));
+    processedLines = processedLines.map((line) => ({
+      ...line,
+      text: line.text.replace(/\s+/g, " "),
+    }));
   } else if (config.removeExtraWhitespace === "remove-all") {
-    processedLines = processedLines.map((line) => line.replace(/\s+/g, ""));
+    processedLines = processedLines.map((line) => ({
+      ...line,
+      text: line.text.replace(/\s+/g, ""),
+    }));
   }
 
   if (config.removeExtraBlankLines) {
-    const result: string[] = [];
+    const result: { text: string; original: string }[] = [];
     let lastWasEmpty = false;
     for (const line of processedLines) {
-      const isEmpty = line.trim() === "";
+      const isEmpty = line.text.trim() === "";
       if (!isEmpty || !lastWasEmpty) {
         result.push(line);
       }
@@ -148,19 +163,28 @@ function applyTransformationsToLines(
   }
 
   if (config.removeAllBlankLines) {
-    processedLines = processedLines.filter((line) => line.trim() !== "");
+    processedLines = processedLines.filter((line) => line.text.trim() !== "");
   }
 
   // 2. Case Conversion
   if (config.caseTransform) {
-    processedLines = processedLines.map((line) =>
-      transformCase(line, config.caseTransform!),
-    );
+    processedLines = processedLines.map((line) => ({
+      ...line,
+      text: transformCase(line.text, config.caseTransform!),
+    }));
   }
 
   // 3. Duplicates
   if (config.removeDuplicates) {
-    processedLines = [...new Set(processedLines)];
+    const seen = new Set<string>();
+    const result: { text: string; original: string }[] = [];
+    for (const line of processedLines) {
+      if (!seen.has(line.text)) {
+        seen.add(line.text);
+        result.push(line);
+      }
+    }
+    processedLines = result;
   }
 
   // 4. Filtering & Selection
@@ -171,19 +195,19 @@ function applyTransformationsToLines(
       const regex = new RegExp(pattern, flags);
 
       processedLines = processedLines.filter((line) => {
-        const matches = regex.test(line);
-        regex.lastIndex = 0; // Reset for global flag to prevent state issues
+        const matches = regex.test(line.text);
+        regex.lastIndex = 0; // Reset for global flag
         return matches;
       });
     } catch (e) {
-      // Invalid regex, skip filtering
+      // Invalid regex
     }
   }
 
   if (config.filterByKeyword) {
     const { keyword, action, position = "contains" } = config.filterByKeyword;
     processedLines = processedLines.filter((line) => {
-      const lowerLine = line.toLowerCase();
+      const lowerLine = line.text.toLowerCase();
       const lowerKeyword = keyword.toLowerCase();
       let matches = false;
 
@@ -207,28 +231,44 @@ function applyTransformationsToLines(
     processedLines = processedLines.slice(-config.keepLastNLines);
   }
 
-  // 5. Duplicate lines (before numbering so numbers are sequential)
+  // 5. Duplicate lines
   if (config.duplicateLines && config.duplicateLines > 1) {
-    const duplicated: string[] = [];
+    const duplicated: { text: string; original: string }[] = [];
     for (const line of processedLines) {
       for (let i = 0; i < config.duplicateLines; i++) {
-        duplicated.push(line);
+        duplicated.push({ ...line });
       }
     }
     processedLines = duplicated;
   }
 
   // 6. Prefix/Suffix & Numbering
-  if (config.addPrefix) {
-    processedLines = processedLines.map((line) => config.addPrefix + line);
-  }
+  // IMPORTANT: This creates the "final" text content for this line, but still using .original for interpolation
+  let finalLines: string[] = processedLines.map((line) => {
+    let resultText = line.text;
 
-  if (config.addSuffix) {
-    processedLines = processedLines.map((line) => line + config.addSuffix);
-  }
+    if (config.addPrefix || config.addSuffix) {
+      const valueForSubstitution = line.original; // USE ORIGINAL VALUE
+      let prefix = "";
+      let suffix = "";
+
+      if (config.addPrefix) {
+        prefix = config.addPrefix.replace(/\$value/g, valueForSubstitution);
+      }
+
+      if (config.addSuffix) {
+        suffix = config.addSuffix.replace(/\$value/g, valueForSubstitution);
+      }
+
+      resultText = prefix + resultText + suffix;
+    }
+    return resultText;
+  });
+
+  // ------- Transition to string[] processing for layout/formatting steps -------
 
   if (config.numberLines) {
-    processedLines = processedLines.map((line, index) => {
+    finalLines = finalLines.map((line, index) => {
       let prefix: string;
       switch (config.numberLines) {
         case "numeric":
@@ -254,12 +294,12 @@ function applyTransformationsToLines(
       type === "spaces" ? " ".repeat(amount) : "\t".repeat(amount);
 
     if (action === "add") {
-      processedLines = processedLines.map((line) => indentStr + line);
+      finalLines = finalLines.map((line) => indentStr + line);
     } else {
       // Remove indentation
       const removeStr =
         type === "spaces" ? " ".repeat(amount) : "\t".repeat(amount);
-      processedLines = processedLines.map((line) => {
+      finalLines = finalLines.map((line) => {
         if (line.startsWith(removeStr)) {
           return line.slice(removeStr.length);
         }
@@ -271,7 +311,7 @@ function applyTransformationsToLines(
   // 8. Padding
   if (config.padLines) {
     const { length, align, char } = config.padLines;
-    processedLines = processedLines.map((line) => {
+    finalLines = finalLines.map((line) => {
       if (line.length >= length) return line;
       const padding = char.repeat(length - line.length);
 
@@ -293,29 +333,29 @@ function applyTransformationsToLines(
 
   // 9. Randomize
   if (config.shuffleLines) {
-    processedLines = shuffleArray([...processedLines]);
+    finalLines = shuffleArray([...finalLines]);
   }
 
   // 10. Join/Split operations
   if (config.splitLines) {
     const allSplit: string[] = [];
-    for (const line of processedLines) {
+    for (const line of finalLines) {
       allSplit.push(...line.split(config.splitLines));
     }
-    processedLines = allSplit;
+    finalLines = allSplit;
   }
 
   // 11. Sorting & Line Order
   if (config.sortLines) {
-    processedLines = sortLines(processedLines, config.sortLines);
+    finalLines = sortLines(finalLines, config.sortLines);
   }
 
   if (config.reverseLines) {
-    processedLines = processedLines.reverse();
+    finalLines = finalLines.reverse();
   }
 
   // Join back to string
-  let result = processedLines.join("\n");
+  let result = finalLines.join("\n");
 
   // 12. Final formatting
   if (config.convertTabsSpaces === "tabs-to-spaces") {
@@ -399,6 +439,12 @@ function transformCase(
           index % 2 === 0 ? char.toLowerCase() : char.toUpperCase(),
         )
         .join("");
+    case "screaming-snake":
+      return text
+        .replace(/([a-z])([A-Z])/g, "$1_$2") // Handle camelCase boundaries
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, ""); // Trim leading/trailing underscores
     default:
       return text;
   }
@@ -525,7 +571,7 @@ function applyRegexFindReplace(
 
 function applyRedaction(
   text: string,
-  config: Exclude<TransformationConfig["redaction"], false>,
+  config: NonNullable<Exclude<TransformationConfig["redaction"], false>>,
 ): string {
   let result = text;
 
@@ -554,7 +600,7 @@ function applyRedaction(
 
     try {
       let regex: RegExp;
-      
+
       if (config.patternType === "exact") {
         // Escape special regex characters for exact matching
         const escapedPattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -583,7 +629,7 @@ function applyRedaction(
 
 function getRedactedValue(
   originalValue: string,
-  config: Exclude<TransformationConfig["redaction"], false>,
+  config: NonNullable<Exclude<TransformationConfig["redaction"], false>>,
 ): string {
   switch (config.redactionMode) {
     case "block":
