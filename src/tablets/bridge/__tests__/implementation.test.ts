@@ -34,7 +34,10 @@ describe("TabletBridge Implementation", () => {
     };
 
     mockSplitViewStore = {
-      isSplit: false,
+      splitView: {
+        isSplit: false,
+        activeSide: 'left',
+      },
     };
 
     mockModalStore = {
@@ -107,6 +110,7 @@ describe("TabletBridge Implementation", () => {
           languageLocked: false,
           workspaceId: "workspace-123",
         }),
+        false // toRightSide
       );
     });
 
@@ -120,6 +124,7 @@ describe("TabletBridge Implementation", () => {
         expect.objectContaining({
           language: "markdown",
         }),
+        false // toRightSide
       );
     });
 
@@ -136,6 +141,7 @@ describe("TabletBridge Implementation", () => {
           language: "typescript",
           languageLocked: true,
         }),
+        false // toRightSide
       );
     });
 
@@ -150,6 +156,7 @@ describe("TabletBridge Implementation", () => {
         expect.objectContaining({
           workspaceId: "custom-workspace-456",
         }),
+        false // toRightSide
       );
     });
 
@@ -163,6 +170,7 @@ describe("TabletBridge Implementation", () => {
         expect.objectContaining({
           workspaceId: "workspace-123",
         }),
+        false // toRightSide
       );
     });
 
@@ -187,6 +195,7 @@ describe("TabletBridge Implementation", () => {
         expect.objectContaining({
           cursorPosition: { lineNumber: 1, column: 1 },
         }),
+        false // toRightSide
       );
     });
 
@@ -205,6 +214,73 @@ describe("TabletBridge Implementation", () => {
       expect(call.dateCreated).toBeLessThanOrEqual(afterTime);
       expect(call.lastModified).toBeGreaterThanOrEqual(beforeTime);
       expect(call.lastModified).toBeLessThanOrEqual(afterTime);
+    });
+
+    it("should add tab to left side when not in split view", async () => {
+      mockSplitViewStore.splitView.isSplit = false;
+
+      await tabletBridge.createBackgroundTab({
+        title: "Test Tab",
+        content: "Test Content",
+      });
+
+      expect(mockRootStore.addBackgroundTab).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Test Tab",
+        }),
+        false // toRightSide should be false
+      );
+    });
+
+    it("should add tab to left side when in split view with left side active", async () => {
+      mockSplitViewStore.splitView.isSplit = true;
+      mockSplitViewStore.splitView.activeSide = 'left';
+
+      await tabletBridge.createBackgroundTab({
+        title: "Test Tab",
+        content: "Test Content",
+      });
+
+      expect(mockRootStore.addBackgroundTab).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Test Tab",
+        }),
+        false // toRightSide should be false
+      );
+    });
+
+    it("should add tab to right side when in split view with right side active", async () => {
+      mockSplitViewStore.splitView.isSplit = true;
+      mockSplitViewStore.splitView.activeSide = 'right';
+
+      await tabletBridge.createBackgroundTab({
+        title: "Test Tab",
+        content: "Test Content",
+      });
+
+      expect(mockRootStore.addBackgroundTab).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Test Tab",
+        }),
+        true // toRightSide should be true
+      );
+    });
+
+    it("should add tab to left side when activeSide is null", async () => {
+      mockSplitViewStore.splitView.isSplit = true;
+      mockSplitViewStore.splitView.activeSide = null;
+
+      await tabletBridge.createBackgroundTab({
+        title: "Test Tab",
+        content: "Test Content",
+      });
+
+      expect(mockRootStore.addBackgroundTab).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Test Tab",
+        }),
+        false // toRightSide should be false when activeSide is null
+      );
     });
   });
 
@@ -457,6 +533,7 @@ describe("TabletBridge Implementation", () => {
           content: content,
           language: "json",
         }),
+        false // toRightSide
       );
     });
 

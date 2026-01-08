@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Workflow, WorkflowStep, Prompt, Tag } from "../types";
 import { useTabletTabCreation } from "../../bridge";
+import { useTabletContext } from "../../bridge/context";
 
 interface PromptSelectorProps {
   prompts: Prompt[];
@@ -125,6 +126,7 @@ export const WorkflowEditor: React.FC<WorkflowEditorProps> = ({
 
   // Get bridge for tab creation
   const { createBackgroundTab } = useTabletTabCreation();
+  const { tabId } = useTabletContext();
 
   // Auto-enter edit mode for new workflows
   React.useEffect(() => {
@@ -353,7 +355,8 @@ ${content}`;
     createBackgroundTab(
       `${workflow.title} (${selectedSteps.size} steps)`,
       fullContent,
-      "markdown"
+      "markdown",
+      tabId
     );
 
     // Exit selection mode and show success
@@ -363,6 +366,7 @@ ${content}`;
     selectedSteps,
     workflow,
     createBackgroundTab,
+    tabId,
   ]);
 
   const getPromptById = (promptId: string) => {
@@ -422,11 +426,10 @@ ${content}`;
               <div className="flex items-center space-x-2">
                 {workflow.steps.length > 0 && (
                   <button
-                    className={`p-2 rounded-md transition-colors ${
-                      copiedAllSteps
+                    className={`p-2 rounded-md transition-colors ${copiedAllSteps
                         ? "text-green-400 bg-green-500/20"
                         : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
-                    }`}
+                      }`}
                     onClick={copyAllSteps}
                     title="Copy all steps"
                   >
@@ -495,11 +498,10 @@ ${content}`;
                         {tags.map((tag) => (
                           <button
                             key={tag.id}
-                            className={`flex items-center w-full px-3 py-2 text-sm text-left hover:bg-gray-700 transition-colors ${
-                              workflow.tags.includes(tag.id)
+                            className={`flex items-center w-full px-3 py-2 text-sm text-left hover:bg-gray-700 transition-colors ${workflow.tags.includes(tag.id)
                                 ? "bg-gray-700/50"
                                 : ""
-                            }`}
+                              }`}
                             onClick={() => handleTagToggle(tag.id)}
                           >
                             <span
@@ -534,11 +536,10 @@ ${content}`;
               <div className="flex items-center space-x-3">
                 <button
                   onClick={toggleSelectionMode}
-                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
-                    selectionMode
+                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm transition-colors ${selectionMode
                       ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
                       : "bg-gray-700/50 text-gray-300 hover:bg-gray-700"
-                  }`}
+                    }`}
                 >
                   {selectionMode ? (
                     <CheckSquare size={16} />
@@ -653,15 +654,12 @@ ${content}`;
                     }
                     onDragLeave={!selectionMode ? handleDragLeave : undefined}
                     onDrop={(e) => !selectionMode && handleDrop(e, index)}
-                    className={`group relative border rounded-lg p-4 transition-all ${
-                      isDragging ? "opacity-50 scale-95" : ""
-                    } ${
-                      isDragOver ? "border-blue-500/50 bg-blue-500/10" : ""
-                    } ${
-                      isSelected
+                    className={`group relative border rounded-lg p-4 transition-all ${isDragging ? "opacity-50 scale-95" : ""
+                      } ${isDragOver ? "border-blue-500/50 bg-blue-500/10" : ""
+                      } ${isSelected
                         ? "border-blue-500/50 bg-blue-500/10"
                         : "border-gray-700/50 bg-gray-800/50 hover:bg-gray-800/70"
-                    }`}
+                      }`}
                   >
                     <div className="flex items-start space-x-3">
                       {/* Selection Checkbox / Step Number & Drag Handle */}
@@ -718,11 +716,10 @@ ${content}`;
                           {!selectionMode && (
                             <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button
-                                className={`p-2 rounded-md transition-colors ${
-                                  isCopied
+                                className={`p-2 rounded-md transition-colors ${isCopied
                                     ? "text-green-400 bg-green-500/20"
                                     : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
-                                }`}
+                                  }`}
                                 onClick={() => copyStepToClipboard(index)}
                                 title="Copy step"
                               >

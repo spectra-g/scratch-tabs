@@ -13,6 +13,14 @@ jest.mock("../MappingTable", () => ({
   MappingTable: () => <div data-testid="mapping-table">Mapping Table Mock</div>,
 }));
 
+// Mock the context hook
+jest.mock('../../../bridge/context', () => ({
+  useTabletContext: jest.fn(() => ({
+    tabId: 'test-tab-id',
+  })),
+  TabletContextProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 describe("MappingEditor", () => {
   const mockMapping: MappingConfig = {
     id: "test-mapping-1",

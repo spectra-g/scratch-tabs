@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { FileText, ClipboardPaste, Trash2, Copy, ExternalLink, Check } from '../../../components/Icons';
 import Editor from '@monaco-editor/react';
 import { useTabletTabCreation } from '../../bridge';
+import { useTabletContext } from '../../bridge/context';
 import { useThemeStore } from '../../../stores/themeStore';
 
 interface WordCountInputProps {
@@ -14,10 +15,10 @@ interface WordCountInputProps {
   reportContent?: string;
 }
 
-export const WordCountInput: React.FC<WordCountInputProps> = ({ 
-  value, 
+export const WordCountInput: React.FC<WordCountInputProps> = ({
+  value,
   title = '',
-  onChange, 
+  onChange,
   onTitleChange,
   highlights = [],
   onEditorReady,
@@ -33,6 +34,7 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
 
   // Bridge hooks
   const { createBackgroundTab } = useTabletTabCreation();
+  const { tabId } = useTabletContext();
 
   // Sync local state with parent value
   useEffect(() => {
@@ -90,17 +92,18 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
 
   const handleOpenInNewTab = useCallback(async () => {
     if (!reportContent) return;
-    
+
     try {
       await createBackgroundTab(
         `Word Count Report - ${new Date().toLocaleDateString()}`,
         reportContent,
-        'markdown'
+        'markdown',
+        tabId
       );
     } catch (error) {
       console.error('Failed to create background tab:', error);
     }
-  }, [reportContent, createBackgroundTab]);
+  }, [reportContent, createBackgroundTab, tabId]);
 
 
   const handleEditorMount = useCallback((editor: any) => {
@@ -132,7 +135,7 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
   // Enhanced markdown to HTML converter with smaller fonts and proper tables
   const renderMarkdown = useCallback((markdown: string) => {
     let html = markdown;
-    
+
     // Convert markdown tables to HTML tables
     const tableRegex = /(\|.*\|\n)+/gm;
     html = html.replace(tableRegex, (match) => {
@@ -140,20 +143,20 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
       const headerLine = lines[0];
       const separatorLine = lines[1];
       const dataLines = lines.slice(2);
-      
+
       // Skip if no proper separator line
       if (!separatorLine || !separatorLine.includes('---')) {
         return match;
       }
-      
+
       // Process header
       const headers = headerLine.split('|').slice(1, -1).map(h => h.trim());
-      
+
       // Process data rows
-      const rows = dataLines.map(line => 
+      const rows = dataLines.map(line =>
         line.split('|').slice(1, -1).map(cell => cell.trim())
       );
-      
+
       let tableHtml = '<table class="w-full text-xs border-collapse border border-base mb-4">';
 
       // Header
@@ -183,10 +186,10 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
       });
       tableHtml += '</tbody>';
       tableHtml += '</table>';
-      
+
       return tableHtml;
     });
-    
+
     // Process other markdown elements with smaller fonts
     html = html
       .replace(/^# (.*$)/gm, '<h1 class="text-lg font-bold text-main mb-3 mt-4">$1</h1>')
@@ -200,7 +203,7 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
       .replace(/\n\n/g, '</p><p class="text-xs text-main mb-2">')
       .replace(/^(?!<[h|l|t|s])/gm, '<p class="text-xs text-main mb-2">')
       .replace(/\n/g, '<br>');
-    
+
     return html;
   }, []);
 
@@ -232,27 +235,25 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
           <div className="flex space-x-1 bg-element rounded-md p-1">
             <button
               onClick={() => setActiveTab('text')}
-              className={`px-3 py-1 text-xs rounded transition-colors ${
-                activeTab === 'text'
+              className={`px-3 py-1 text-xs rounded transition-colors ${activeTab === 'text'
                   ? 'bg-blue-500/20 text-blue-300'
                   : 'text-secondary hover:text-main'
-              }`}
+                }`}
             >
               Text Input
             </button>
             <button
               onClick={() => setActiveTab('report')}
-              className={`px-3 py-1 text-xs rounded transition-colors ${
-                activeTab === 'report'
+              className={`px-3 py-1 text-xs rounded transition-colors ${activeTab === 'report'
                   ? 'bg-blue-500/20 text-blue-300'
                   : 'text-secondary hover:text-main'
-              }`}
+                }`}
             >
               Report
             </button>
           </div>
         </div>
-        
+
         {/* Action Buttons */}
         <div className="flex items-center space-x-2">
           {activeTab === 'text' ? (
@@ -285,11 +286,10 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
             <>
               <button
                 onClick={handleCopyReport}
-                className={`p-1.5 rounded transition-colors ${
-                  copySuccess 
-                    ? 'text-green-400 bg-green-500/20' 
+                className={`p-1.5 rounded transition-colors ${copySuccess
+                    ? 'text-green-400 bg-green-500/20'
                     : 'text-secondary hover:text-main hover:bg-element-hover'
-                }`}
+                  }`}
                 title={copySuccess ? "Copied to clipboard!" : "Copy report to clipboard"}
                 disabled={!reportContent}
               >
@@ -307,7 +307,7 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
           )}
         </div>
       </div>
-      
+
       {/* Content Area */}
       <div className="flex-1 border border-base rounded-md overflow-hidden min-h-0 custom-scrollbar">
         {activeTab === 'text' ? (
@@ -345,7 +345,7 @@ export const WordCountInput: React.FC<WordCountInputProps> = ({
           </div>
         )}
       </div>
-      
+
       {/* Footer Info */}
       {activeTab === 'text' && localValue && (
         <div className="mt-2 text-xs text-muted flex-shrink-0">

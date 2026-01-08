@@ -15,6 +15,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { useTabletTabCreation } from "../../bridge";
+import { useTabletContext } from '../../bridge/context';
 import { useThemeStore } from "../../../stores/themeStore";
 import { MappingConfig, MappingRule, PathInfo } from "../types";
 import { MappingTable } from "./MappingTable";
@@ -76,6 +77,7 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
   const [showExportDropdown, setShowExportDropdown] = useState(false);
   const exportDropdownRef = useRef<HTMLDivElement>(null);
   const { createBackgroundTab } = useTabletTabCreation();
+  const { tabId } = useTabletContext();
   const { isDarkMode } = useThemeStore();
 
   // Sync local state changes back to parent (prevents data loss on tab switch)
@@ -263,13 +265,13 @@ export const MappingEditor: React.FC<MappingEditorProps> = ({
     const { csvString, filename } = generateRulesCsv();
 
     try {
-      await createBackgroundTab(filename, csvString, "csv");
+      await createBackgroundTab(filename, csvString, "csv", tabId);
       setShowExportDropdown(false);
     } catch (error) {
       console.error("Failed to create tab:", error);
       alert("Failed to create new tab");
     }
-  }, [currentSortedRules, generateRulesCsv, createBackgroundTab]);
+  }, [currentSortedRules, generateRulesCsv, createBackgroundTab, tabId]);
 
   const handleSourceJsonChange = (value: string | undefined) => {
     setSourceJson(value || "");

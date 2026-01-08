@@ -14,6 +14,7 @@ export interface TabCreationOptions {
   language?: string;
   languageLocked?: boolean;
   workspaceId?: string;
+  sourceTabId?: string; // ID of the tab that is creating this new tab (for split view placement)
 }
 
 /**
@@ -55,19 +56,19 @@ export interface ModalOperations {
 export interface TabletBridge {
   // Tab management
   createBackgroundTab: (options: TabCreationOptions) => Promise<void>;
-  
+
   // Device information
   getDeviceInfo: () => DeviceInfo;
-  
+
   // Language utilities
   detectLanguage: (content: string) => LanguageDetectionResult;
-  
+
   // Split view operations
   splitView: SplitViewOperations;
-  
+
   // Modal operations
   modals: ModalOperations;
-  
+
   // Workspace management
   getCurrentWorkspaceId: () => string | null;
 }
