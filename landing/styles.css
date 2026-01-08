@@ -197,6 +197,29 @@ header nav a {
   .card-sharp {
     border-left: 2px solid #10b981;
   }
+
+  /* Header fixes for mobile to prevent overlap */
+  header .container {
+    gap: 0.25rem;
+  }
+
+  /* Reduce button padding in header specifically to prevent overlap */
+  header .terminal-button {
+    width: auto;
+    padding: 0.375rem 0.625rem;
+    font-size: 0.625rem; /* Smaller button text on mobile */
+    white-space: nowrap;
+  }
+
+  /* Reduce hamburger menu button size */
+  header #mobile-menu-button {
+    padding: 0.25rem;
+  }
+
+  header #mobile-menu-button svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
 }
 
 /* ===== PART 8: Image Modal ===== */
