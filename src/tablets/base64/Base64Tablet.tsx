@@ -404,19 +404,36 @@ const Base64TabletUI: React.FC<{
     [state, onChange, history],
   );
 
+  // Keep a ref to the latest state to avoid race conditions in rapid updates
+  const stateRef = useRef(state);
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  // Robust updateData helper that uses ref for latest state
+  const updateData = useCallback(
+    (dataUpdates: Partial<typeof state.data>) => {
+      const newState = {
+        ...stateRef.current,
+        data: {
+          ...stateRef.current.data,
+          ...dataUpdates,
+        },
+      };
+      // Update ref immediately to prevent race conditions
+      stateRef.current = newState;
+      onChange(newState);
+    },
+    [onChange],
+  );
+
   // Update state helpers
   const setInput = useCallback(
     (value: string) => {
-      onChange({
-        ...state,
-        data: {
-          ...state.data,
-          input: value,
-          error: null,
-        },
-      });
+      updateData({ input: value, error: null });
     },
-    [state, onChange],
+    [updateData],
   );
 
   const setMode = useCallback(
@@ -491,15 +508,9 @@ const Base64TabletUI: React.FC<{
 
   const setIsDragging = useCallback(
     (dragging: boolean) => {
-      onChange({
-        ...state,
-        data: {
-          ...state.data,
-          isDragging: dragging,
-        },
-      });
+      updateData({ isDragging: dragging });
     },
-    [state, onChange],
+    [updateData],
   );
 
   const setLayout = useCallback(

@@ -8,6 +8,7 @@ import { Alert } from "./ui/Alert";
 import { Button } from "./ui/Button";
 import { useDebounce } from "../../../hooks/useDebounce";
 import { useThemeStore } from "../../../stores/themeStore";
+import { useModalStore } from "../../../stores/modalStore";
 
 interface JwtDecoderProps {
   token: string;
@@ -36,7 +37,16 @@ export const JwtDecoder: React.FC<JwtDecoderProps> = ({
   onTokenChange,
 }) => {
   const { isDarkMode } = useThemeStore();
+  const { setGlobalDragDropSuppressed } = useModalStore();
   const [localToken, setLocalToken] = useState(token);
+
+  // Suppress global drag-drop while this component is mounted
+  useEffect(() => {
+    setGlobalDragDropSuppressed(true);
+    return () => {
+      setGlobalDragDropSuppressed(false);
+    };
+  }, [setGlobalDragDropSuppressed]);
 
   // Update local token when prop changes
   useEffect(() => {

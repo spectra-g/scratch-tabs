@@ -68,8 +68,14 @@ export const ExportWorkspacesModal: React.FC<ExportWorkspacesModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-      <div className="bg-surface p-6 rounded-lg shadow-2xl w-full max-w-lg border border-base max-h-[80vh] flex flex-col">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-surface p-6 rounded-lg shadow-2xl w-full max-w-lg border border-base max-h-[80vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-main">
             Export Workspaces

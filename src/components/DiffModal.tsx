@@ -77,7 +77,10 @@ export const DiffModal: React.FC<DiffModalProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center"
+      onClick={handleCloseAndSave}
+    >
       <DiffModalUI
         leftTabTitle={leftTab.title}
         rightTabTitle={rightTab.title}

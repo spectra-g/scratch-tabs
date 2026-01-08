@@ -1,8 +1,9 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { ImportExportService } from "../../features/import-export/ImportExportService";
 import { ImportProcessSummary } from "../../features/import-export/types";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
+import { useModalStore } from "../../stores/modalStore";
 import { X, UploadCloud, AlertTriangle, CheckCircle } from "../Icons";
 
 interface ImportWorkspacesModalProps {
@@ -21,6 +22,17 @@ export const ImportWorkspacesModal: React.FC<ImportWorkspacesModalProps> = ({
   const [processingError, setProcessingError] = useState<string | null>(null);
   const service = useMemo(() => new ImportExportService(), []);
   const workspaceStore = useWorkspaceStore();
+  const { setGlobalDragDropSuppressed } = useModalStore();
+
+  // Suppress global drag-drop while this modal is open
+  useEffect(() => {
+    if (isOpen) {
+      setGlobalDragDropSuppressed(true);
+      return () => {
+        setGlobalDragDropSuppressed(false);
+      };
+    }
+  }, [isOpen, setGlobalDragDropSuppressed]);
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
@@ -97,8 +109,14 @@ export const ImportWorkspacesModal: React.FC<ImportWorkspacesModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-      <div className="bg-surface p-6 rounded-lg shadow-2xl w-full max-w-lg border border-base max-h-[80vh] flex flex-col">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+      onClick={handleClose}
+    >
+      <div
+        className="bg-surface p-6 rounded-lg shadow-2xl w-full max-w-lg border border-base max-h-[80vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-main">
             Import Workspaces

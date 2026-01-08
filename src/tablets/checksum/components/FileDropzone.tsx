@@ -1,7 +1,8 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { Upload, File, AlertCircle } from '../../../components/Icons';
 import { FileInfo } from '../types';
 import { formatFileSize } from '../utils/hashing';
+import { useModalStore } from '../../../stores/modalStore';
 
 interface FileDropzoneProps {
   onFileSelected: (file: File, fileInfo: FileInfo) => void;
@@ -16,6 +17,15 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const [dragError, setDragError] = useState<string | null>(null);
+  const { setGlobalDragDropSuppressed } = useModalStore();
+
+  // Suppress global drag-drop while this component is mounted
+  useEffect(() => {
+    setGlobalDragDropSuppressed(true);
+    return () => {
+      setGlobalDragDropSuppressed(false);
+    };
+  }, [setGlobalDragDropSuppressed]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();

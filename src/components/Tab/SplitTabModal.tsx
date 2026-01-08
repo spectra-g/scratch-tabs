@@ -271,8 +271,14 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <div className="bg-surface rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] flex flex-col overflow-hidden border border-base">
+    <div
+      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="bg-surface rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] flex flex-col overflow-hidden border border-base"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex-none flex items-center justify-between p-4 border-b border-base bg-surface-highlight">
           <h2 className="text-lg font-medium text-main">

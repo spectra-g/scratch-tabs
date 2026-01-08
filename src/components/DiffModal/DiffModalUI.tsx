@@ -30,6 +30,7 @@ export const DiffModalUI: React.FC<DiffModalUIProps> = ({
     <div
       className="bg-surface border border-base rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden w-[95vw] max-w-[1800px] h-full max-h-[90vh] mx-4"
       data-testid="diff-modal"
+      onClick={(e) => e.stopPropagation()}
     >
       {/* Header */}
       <div className="flex items-center justify-between bg-surface-highlight px-4 py-2 border-b border-base flex-wrap">
