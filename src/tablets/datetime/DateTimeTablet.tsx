@@ -161,12 +161,26 @@ const DateTimeTabletComponent: React.FC<DateTimeTabletProps> = ({ state, onChang
     handleSmartInputChange(date.toISOString(), date, null);
   }, [handleSmartInputChange]);
 
+  const handleFreezeToggle = useCallback(() => {
+    onChange({
+      ...state,
+      data: {
+        ...state.data,
+        isFrozen: !state.data.isFrozen
+      }
+    });
+  }, [onChange, state]);
+
   return (
     <div className="h-full flex flex-col bg-canvas text-main overflow-hidden">
-      <LiveHeader onSetInput={(val) => {
-        const result = intelligentParse(val);
-        handleSmartInputChange(val, result.date, null);
-      }} />
+      <LiveHeader
+        onSetInput={(val) => {
+          const result = intelligentParse(val);
+          handleSmartInputChange(val, result.date, null);
+        }}
+        isFrozen={state.data.isFrozen || false}
+        onFreezeToggle={handleFreezeToggle}
+      />
 
       <div className="flex-1 flex overflow-hidden">
         {/* Persistent Sidebar */}
@@ -321,7 +335,8 @@ export const DateTimeTablet: Tablet = {
         history: [],
         isOptimizing: false,
         selectedElementId: null,
-        expandedAccordionSections: ['timezone', 'calculator']
+        expandedAccordionSections: ['timezone', 'calculator'],
+        isFrozen: false
       }
     };
   },
@@ -351,6 +366,10 @@ export const DateTimeTablet: Tablet = {
           }));
         }
         data.inputValue = data.inputValue || 'now';
+        // Ensure backward compatibility for isFrozen
+        if (data.isFrozen === undefined) {
+          data.isFrozen = false;
+        }
         return { type: "datetime", data };
       }
     } catch {

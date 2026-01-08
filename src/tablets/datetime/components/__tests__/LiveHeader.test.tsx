@@ -15,6 +15,7 @@ jest.mock('../../../../components/Icons', () => ({
 
 describe('LiveHeader', () => {
   const mockOnSetInput = jest.fn();
+  const mockOnFreezeToggle = jest.fn();
 
   beforeEach(() => {
     jest.useFakeTimers();
@@ -27,6 +28,7 @@ describe('LiveHeader', () => {
       },
     });
     mockOnSetInput.mockClear();
+    mockOnFreezeToggle.mockClear();
   });
 
   afterEach(() => {
@@ -36,12 +38,12 @@ describe('LiveHeader', () => {
   });
 
   it('should render the live dashboard with all counters', () => {
-    render(<LiveHeader onSetInput={mockOnSetInput} />);
+    render(<LiveHeader onSetInput={mockOnSetInput} isFrozen={false} onFreezeToggle={mockOnFreezeToggle} />);
     expect(screen.getByText('Live Dashboard')).toBeInTheDocument();
   });
 
   it('should show check icon when copy button is clicked', async () => {
-    render(<LiveHeader onSetInput={mockOnSetInput} />);
+    render(<LiveHeader onSetInput={mockOnSetInput} isFrozen={false} onFreezeToggle={mockOnFreezeToggle} />);
 
     const copyButton = screen.getAllByTitle(/Copy/)[0];
 
@@ -60,11 +62,34 @@ describe('LiveHeader', () => {
   });
 
   it('should call onSetInput when the down arrow is clicked', () => {
-    render(<LiveHeader onSetInput={mockOnSetInput} />);
+    render(<LiveHeader onSetInput={mockOnSetInput} isFrozen={false} onFreezeToggle={mockOnFreezeToggle} />);
 
     const setInputBtns = screen.getAllByTestId('arrow-down-icon');
     fireEvent.click(setInputBtns[0].closest('button')!);
 
     expect(mockOnSetInput).toHaveBeenCalled();
+  });
+
+  it('should call onFreezeToggle when freeze button is clicked', () => {
+    render(<LiveHeader onSetInput={mockOnSetInput} isFrozen={false} onFreezeToggle={mockOnFreezeToggle} />);
+
+    const freezeButton = screen.getByText('FREEZE').closest('button');
+    fireEvent.click(freezeButton!);
+
+    expect(mockOnFreezeToggle).toHaveBeenCalled();
+  });
+
+  it('should show resume button when frozen', () => {
+    render(<LiveHeader onSetInput={mockOnSetInput} isFrozen={true} onFreezeToggle={mockOnFreezeToggle} />);
+
+    expect(screen.getByText('RESUME')).toBeInTheDocument();
+    expect(screen.queryByText('FREEZE')).not.toBeInTheDocument();
+  });
+
+  it('should show freeze button when not frozen', () => {
+    render(<LiveHeader onSetInput={mockOnSetInput} isFrozen={false} onFreezeToggle={mockOnFreezeToggle} />);
+
+    expect(screen.getByText('FREEZE')).toBeInTheDocument();
+    expect(screen.queryByText('RESUME')).not.toBeInTheDocument();
   });
 });
