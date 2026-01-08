@@ -108,7 +108,7 @@
   </header>
 
   <!-- HERO -->
-  <section class="pt-16 pb-24 md:pt-24 md:pb-32">
+  <section class="pt-16 pb-12 md:pt-24 md:pb-16">
     <div class="container mx-auto px-6 text-center">
       <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight mb-6">
         A Complete Developer Workspace.<br />
@@ -218,7 +218,7 @@
         <div class="border border-gray-800 p-2 bg-black">
           <div class="text-gray-500 font-mono text-xs mb-2 px-2">$ split_view --dual-pane</div>
           <img src="https://scratchtabs.b-cdn.net/app-screenshot.png" alt="Split view editor"
-            class="w-full border border-gray-800">
+            class="w-full border border-gray-800 cursor-pointer hover:border-emerald-500 transition-colors" onclick="openModal(this.src)">
         </div>
       </div>
     </div>
@@ -444,7 +444,7 @@
           <span class="text-emerald-500 font-mono text-xs">↓ EXAMPLE</span>
         </div>
         <img src="https://scratchtabs.b-cdn.net/transformations.png" alt="Transformation preview"
-          class="w-full border border-gray-800">
+          class="w-full border border-gray-800 cursor-pointer hover:border-emerald-500 transition-colors" onclick="openModal(this.src)">
       </div>
 
       <!-- AI Features -->
@@ -625,7 +625,7 @@
       </div>
 
       <!-- Top Tablets Grid -->
-      <div class="grid md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+      <div class="utility-grid gap-4 mb-8">
         <div class="card-sharp p-4">
           <h4 class="text-white font-mono text-sm mb-1">JWT Toolkit</h4>
           <p class="text-gray-500 text-xs">Decode, verify, sign</p>
@@ -755,8 +755,14 @@
     </div>
   </footer>
 
+  <!-- Image Modal -->
+  <div id="imgModal" class="img-modal" onclick="this.classList.remove('active')">
+    <img src="" alt="">
+  </div>
+
   <script>
     document.getElementById("currentYear").textContent = new Date().getFullYear();
+    function openModal(src) { const m = document.getElementById('imgModal'); m.querySelector('img').src = src; m.classList.add('active'); }
     const mobileMenuButton = document.getElementById("mobile-menu-button");
     const mobileMenu = document.getElementById("mobile-menu");
     mobileMenuButton.addEventListener("click", () => {

@@ -60,7 +60,7 @@ header {
   position: sticky;
   top: 0;
   background: #050505;
-  border-bottom: 1px solid #1f2937;
+  border-bottom: 1px solid #374151;
   z-index: 1000;
 }
 
@@ -76,12 +76,12 @@ header nav a {
 }
 
 .border-subtle {
-  border: 1px solid #1f2937;
+  border: 1px solid #374151;
 }
 
 .card-sharp {
   background: #0a0a0a;
-  border: 1px solid #1f2937;
+  border: 1px solid #374151;
   border-radius: 2px;
   transition: all 0.2s ease;
 }
@@ -94,7 +94,7 @@ header nav a {
 .terminal-button {
   font-family: 'Fira Code', monospace;
   background: #0a0a0a;
-  border: 1px solid #1f2937;
+  border: 1px solid #374151;
   color: #10b981;
   padding: 0.5rem 1rem;
   border-radius: 2px;
@@ -117,7 +117,7 @@ header nav a {
 .section-tag {
   display: inline-block;
   padding: 0.25rem 0.5rem;
-  border: 1px solid #1f2937;
+  border: 1px solid #374151;
   background: #0a0a0a;
   margin-bottom: 1rem;
 }
@@ -138,7 +138,7 @@ header nav a {
 /* ===== PART 7: Layout Utilities ===== */
 .visual-placeholder {
   background: #0a0a0a;
-  border: 2px dashed #1f2937;
+  border: 2px dashed #374151;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -153,12 +153,22 @@ header nav a {
 .bento-grid {
   display: grid;
   gap: 0.75rem;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, 1fr); /* MEDIUM PRIORITY: 2 columns on mobile for better density */
+}
+
+/* Large cards (cluster boxes with images) span both columns on mobile */
+.bento-grid > .flex-col {
+  grid-column: span 2;
 }
 
 @media (min-width: 640px) {
   .bento-grid {
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+
+  /* Reset column span for larger screens */
+  .bento-grid > .flex-col {
+    grid-column: auto;
   }
 }
 
@@ -173,6 +183,19 @@ header nav a {
 @media (max-width: 768px) {
   .hero-content-card {
     padding: 32px 24px;
+  }
+
+  /* HIGH PRIORITY: Mobile button improvements */
+  .terminal-button {
+    width: 100%;
+    justify-content: center;
+    padding: 0.875rem 1rem; /* ~14px top/bottom = 48px total height with font */
+    font-size: 0.875rem;
+  }
+
+  /* MEDIUM PRIORITY: Mobile card accent for visual hierarchy */
+  .card-sharp {
+    border-left: 2px solid #10b981;
   }
 }
 
@@ -206,7 +229,7 @@ header nav a {
   display: inline-block;
   padding: 0.25rem 0.75rem;
   background: #0a0a0a;
-  border: 1px solid #1f2937;
+  border: 1px solid #374151;
   color: #9ca3af;
   font-family: 'Fira Code', monospace;
   font-size: 0.75rem;
@@ -227,9 +250,28 @@ header nav a {
   gap: 1rem;
 }
 
+/* Utility arsenal grid - 2 columns on mobile */
+.utility-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .utility-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .utility-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
 .tablet-card {
   background: #0a0a0a;
-  border: 1px solid #1f2937;
+  border: 1px solid #374151;
   border-radius: 2px;
   transition: all 0.3s ease;
 }
@@ -241,7 +283,7 @@ header nav a {
 
 .cluster-box {
   background: #0a0a0a;
-  border: 1px solid #1f2937;
+  border: 1px solid #374151;
   border-radius: 2px;
   transition: all 0.3s ease;
 }
@@ -255,7 +297,7 @@ header nav a {
   background-color: #111827;
   color: #9ca3af;
   padding: 0.125rem 0.5rem;
-  border: 1px solid #1f2937;
+  border: 1px solid #374151;
   border-radius: 2px;
   font-size: 0.75rem;
   font-family: 'Fira Code', monospace;
@@ -285,7 +327,7 @@ header nav a {
 .changelog-entry {
   position: relative;
   padding-left: 2rem;
-  border-left: 1px solid #1f2937;
+  border-left: 1px solid #374151;
   margin-bottom: 4rem;
 }
 
@@ -297,7 +339,7 @@ header nav a {
   width: 9px;
   height: 9px;
   background: #050505;
-  border: 1px solid #1f2937;
+  border: 1px solid #374151;
   border-radius: 50%;
 }
 
@@ -326,7 +368,7 @@ header nav a {
 .badge.release {
   background-color: #111827;
   color: #9ca3af;
-  border-color: #1f2937;
+  border-color: #374151;
 }
 
 .changelog-content {
@@ -340,7 +382,7 @@ header nav a {
 /* ===== PART 11: FAQ Specific ===== */
 .faq-item {
   background: #0a0a0a;
-  border: 1px solid #1f2937;
+  border: 1px solid #374151;
   border-radius: 2px;
   transition: all 0.2s ease;
 }
