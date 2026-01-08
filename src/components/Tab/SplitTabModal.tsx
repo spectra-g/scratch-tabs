@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { useTabsStore } from "../../stores/tabsStore";
 import { useSplitViewStore } from "../../stores/splitViewStore";
 import { useRootStore } from "../../stores/rootStore";
+import { useThemeStore } from "../../stores/themeStore";
 import Editor from "@monaco-editor/react";
 
 interface SplitTabModalProps {
@@ -55,6 +56,7 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
 }) => {
   const tabsStore = useTabsStore();
   const rootStore = useRootStore();
+  const isDarkMode = useThemeStore((state) => state.isDarkMode);
   const tab = tabsStore.tabs.find((t) => t.id === tabId);
 
   const [config, setConfig] = useState<SplitConfig>({
@@ -271,10 +273,16 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <div className="bg-surface rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] flex flex-col overflow-hidden border border-base">
+    <div
+      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="bg-canvas rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] flex flex-col overflow-hidden border border-base"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="flex-none flex items-center justify-between p-4 border-b border-base bg-surface-highlight">
+        <div className="flex-none flex items-center justify-between p-4 border-b border-base bg-canvas">
           <h2 className="text-lg font-medium text-main">
             Split Tab: {tab.title}
           </h2>
@@ -290,7 +298,7 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
         {/* Body - Two Pane Layout */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Pane - Configuration */}
-          <div className="w-1/3 border-r border-base overflow-y-auto custom-scrollbar p-4 space-y-4">
+          <div className="w-1/3 border-r border-base bg-surface-secondary overflow-y-auto custom-scrollbar p-4 space-y-4">
             {/* Split Method */}
             <div>
               <label className="block text-sm font-medium text-secondary mb-2">
@@ -561,9 +569,9 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
           </div>
 
           {/* Right Pane - Live Preview */}
-          <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 flex flex-col overflow-hidden bg-surface">
             {/* Preview Header */}
-            <div className="flex-none p-4 border-b border-base bg-surface-highlight">
+            <div className="flex-none p-4 border-b border-base bg-surface-secondary">
               <h3 className="text-sm font-medium text-secondary mb-2">
                 Live Preview ({splitResults.length} tab
                 {splitResults.length !== 1 ? "s" : ""})
@@ -599,7 +607,7 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
                   height="100%"
                   language={tab.language}
                   value={splitResults[selectedPreviewIndex]?.content || ""}
-                  theme="vs-dark"
+                  theme={isDarkMode ? "vs-dark" : "vs"}
                   options={{
                     readOnly: true,
                     minimap: { enabled: false },
@@ -614,7 +622,7 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
         </div>
 
         {/* Footer - Actions */}
-        <div className="flex-none flex items-center justify-between p-4 border-t border-base bg-surface-highlight">
+        <div className="flex-none flex items-center justify-between p-4 border-t border-base bg-surface-secondary">
           <div className="text-sm text-muted">
             {splitResults.length > 0 && (
               <>

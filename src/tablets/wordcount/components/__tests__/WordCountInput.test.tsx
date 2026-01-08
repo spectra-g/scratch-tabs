@@ -30,6 +30,14 @@ jest.mock('../../../../stores/workspaceStore', () => ({
 
 // Remove the inline mock to use the external mock file
 
+// Mock the context hook
+jest.mock('../../../bridge/context', () => ({
+  useTabletContext: jest.fn(() => ({
+    tabId: 'test-tab-id',
+  })),
+  TabletContextProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 describe('WordCountInput', () => {
   const mockOnChange = jest.fn();
 
@@ -39,10 +47,10 @@ describe('WordCountInput', () => {
 
   it('should clear text when clear button is clicked', async () => {
     render(<WordCountInput value="Some text" onChange={mockOnChange} />);
-    
+
     const clearButton = screen.getByTitle('Clear text');
     fireEvent.click(clearButton);
-    
+
     // Wait for the onChange to be called
     await waitFor(() => {
       expect(mockOnChange).toHaveBeenCalledWith('');
@@ -51,14 +59,14 @@ describe('WordCountInput', () => {
 
   it('should disable clear button when text is empty', () => {
     render(<WordCountInput value="" onChange={mockOnChange} />);
-    
+
     const clearButton = screen.getByTitle('Clear text');
     expect(clearButton).toBeDisabled();
   });
 
   it('should enable clear button when text is present', () => {
     render(<WordCountInput value="Some text" onChange={mockOnChange} />);
-    
+
     const clearButton = screen.getByTitle('Clear text');
     expect(clearButton).not.toBeDisabled();
   });
@@ -66,12 +74,12 @@ describe('WordCountInput', () => {
   it('should handle paste from clipboard', async () => {
     const clipboardText = 'Pasted content';
     (navigator.clipboard.readText as jest.Mock).mockResolvedValue(clipboardText);
-    
+
     render(<WordCountInput value="" onChange={mockOnChange} />);
-    
+
     const pasteButton = screen.getByTitle('Paste from clipboard');
     fireEvent.click(pasteButton);
-    
+
     // Wait for the onChange to be called
     await waitFor(() => {
       expect(mockOnChange).toHaveBeenCalledWith(clipboardText);
@@ -79,18 +87,18 @@ describe('WordCountInput', () => {
   });
 
   it('should handle clipboard paste error gracefully', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
     (navigator.clipboard.readText as jest.Mock).mockRejectedValue(new Error('Clipboard error'));
-    
+
     render(<WordCountInput value="" onChange={mockOnChange} />);
-    
+
     const pasteButton = screen.getByTitle('Paste from clipboard');
     fireEvent.click(pasteButton);
-    
+
     await waitFor(() => {
       expect(consoleSpy).toHaveBeenCalledWith('Failed to read clipboard:', expect.any(Error));
     });
-    
+
     consoleSpy.mockRestore();
   });
 });

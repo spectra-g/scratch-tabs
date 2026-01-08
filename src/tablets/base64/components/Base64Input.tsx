@@ -1,8 +1,9 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Upload, FileUp } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { handleFileDrop } from "../utils/base64Utils";
+import { useModalStore } from "../../../stores/modalStore";
 
 interface Base64InputProps {
   value: string;
@@ -27,6 +28,15 @@ export const Base64Input: React.FC<Base64InputProps> = ({
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isFocused, setIsFocused] = useState(false);
+  const { setGlobalDragDropSuppressed } = useModalStore();
+
+  // Suppress global drag-drop while this component is mounted
+  useEffect(() => {
+    setGlobalDragDropSuppressed(true);
+    return () => {
+      setGlobalDragDropSuppressed(false);
+    };
+  }, [setGlobalDragDropSuppressed]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: async (acceptedFiles) => {
@@ -87,7 +97,7 @@ export const Base64Input: React.FC<Base64InputProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-canvas/80 backdrop-blur-sm flex items-center justify-center rounded-lg z-10"
+          className="absolute inset-0 bg-canvas/80 backdrop-blur-sm flex items-center justify-center rounded-lg z-10 pointer-events-none"
         >
           <div className="text-center">
             <FileUp size={48} className="mx-auto mb-2 text-info" />

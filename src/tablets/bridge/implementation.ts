@@ -10,13 +10,13 @@ import { useModalStore } from '../../stores/modalStore';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import { detectFormat } from '../../formats';
 import type { Tab } from '../../types';
-import type { 
-  TabletBridge, 
-  TabCreationOptions, 
-  DeviceInfo, 
+import type {
+  TabletBridge,
+  TabCreationOptions,
+  DeviceInfo,
   LanguageDetectionResult,
   SplitViewOperations,
-  ModalOperations 
+  ModalOperations
 } from './types';
 
 // Define store interfaces to avoid unknown types
@@ -31,7 +31,11 @@ interface WorkspaceStoreInterface {
 }
 
 interface SplitViewStoreInterface {
-  isSplit: boolean;
+  splitView: {
+    isSplit: boolean;
+    activeSide: 'left' | 'right' | null;
+    [key: string]: any;
+  };
   [key: string]: any;
 }
 
@@ -74,7 +78,7 @@ class TabletBridgeImpl implements TabletBridge {
    * Create a background tab without stealing focus
    */
   async createBackgroundTab(options: TabCreationOptions): Promise<void> {
-    if (!this.rootStore || !this.workspaceStore) {
+    if (!this.rootStore || !this.workspaceStore || !this.splitViewStore) {
       throw new Error('Bridge not initialized. Call initialize() first.');
     }
 
@@ -95,7 +99,25 @@ class TabletBridgeImpl implements TabletBridge {
       workspaceId,
     };
 
-    this.rootStore.addBackgroundTab(newTab);
+    // Determine which side to add the tab to
+    // If sourceTabId is provided, check which side it's on
+    // Otherwise fall back to activeSide for backward compatibility
+    const isSplit = this.splitViewStore.splitView.isSplit;
+    let toRightSide = false;
+
+    if (isSplit) {
+      if (options.sourceTabId) {
+        // Check if the source tab is on the right side
+        const isOnRight = this.splitViewStore.splitView.rightTabs.includes(options.sourceTabId);
+        toRightSide = isOnRight;
+      } else {
+        // Fall back to activeSide if sourceTabId not provided
+        const activeSide = this.splitViewStore.splitView.activeSide;
+        toRightSide = activeSide === 'right';
+      }
+    }
+
+    this.rootStore.addBackgroundTab(newTab, toRightSide);
   }
 
   /**
@@ -132,7 +154,7 @@ class TabletBridgeImpl implements TabletBridge {
         // This is a placeholder - actual implementation would need to match the split view API
         console.warn('Split view operations not fully implemented in bridge');
       },
-      
+
       closeCurrentSplit: () => {
         if (!this.splitViewStore) {
           throw new Error('Bridge not initialized. Call initialize() first.');
@@ -140,7 +162,7 @@ class TabletBridgeImpl implements TabletBridge {
         // Implementation placeholder
         console.warn('Split view operations not fully implemented in bridge');
       },
-      
+
       isSplitViewActive: () => {
         if (!this.splitViewStore) {
           return false;
@@ -162,7 +184,7 @@ class TabletBridgeImpl implements TabletBridge {
         }
         this.modalStore.setGlobalDragDropSuppressed(suppress);
       },
-      
+
       isGlobalDragDropSuppressed: () => {
         if (!this.modalStore) {
           throw new Error('Bridge not initialized. Call initialize() first.');

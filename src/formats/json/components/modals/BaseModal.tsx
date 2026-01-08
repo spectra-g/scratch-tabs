@@ -23,11 +23,15 @@ export const BaseModal: React.FC<BaseModalProps> = ({
   return (
     // --- Backdrop ---
     // Slightly darker, more blur potential if needed later
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+    <div
+      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
       {/* --- Modal Container --- */}
       {/* Slightly lighter dark bg, refined border, larger shadow, constrained width/height */}
       <div
         className={`bg-surface rounded-lg shadow-xl ${widthClass} ${maxWidthClass} ${maxHeightClass} flex flex-col overflow-hidden border border-base`}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* --- Modal Header --- */}
         <div className="flex-none flex items-center justify-between p-3 border-b border-base bg-surface">

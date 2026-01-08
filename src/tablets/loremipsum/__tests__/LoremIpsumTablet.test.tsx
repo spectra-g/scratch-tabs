@@ -25,6 +25,14 @@ jest.mock('../../bridge', () => ({
   })),
 }));
 
+// Mock the context hook
+jest.mock('../../bridge/context', () => ({
+  useTabletContext: jest.fn(() => ({
+    tabId: 'test-tab-id',
+  })),
+  TabletContextProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 describe('LoremIpsumTablet', () => {
   const createMockState = (overrides: Partial<LoremIpsumState> = {}): LoremIpsumState => ({
     type: 'loremipsum',
@@ -194,22 +202,22 @@ describe('LoremIpsumTablet', () => {
     it('should auto-generate content when settings change with existing content', async () => {
       const generateContent = require('../utils/generator').generateContent;
       generateContent.mockReturnValue('Auto-generated updated content');
-      
+
       const state = createMockState({
         generatedOutput: 'Initial content',
         isGenerating: false,
       });
-      
+
       render(<LoremIpsumTablet state={state} onChange={mockOnChange} />);
-      
+
       // Clear any previous calls
       mockOnChange.mockClear();
       generateContent.mockClear();
-      
+
       // Change theme setting (this should trigger auto-generation)
       const businessTheme = screen.getByText('Business');
       fireEvent.click(businessTheme);
-      
+
       // Should auto-generate when settings change
       await waitFor(() => {
         expect(generateContent).toHaveBeenCalledWith(
@@ -218,7 +226,7 @@ describe('LoremIpsumTablet', () => {
           })
         );
       });
-      
+
       // Should update with new content
       await waitFor(() => {
         expect(mockOnChange).toHaveBeenCalledWith(
@@ -233,14 +241,14 @@ describe('LoremIpsumTablet', () => {
 
     it('should recover from stuck generating state after timeout', async () => {
       const oldTimestamp = Date.now() - 6000; // 6 seconds ago (past the 5 second timeout)
-      
+
       const state = createMockState({
         isGenerating: true,
         lastGeneratedAt: oldTimestamp,
       });
-      
+
       render(<LoremIpsumTablet state={state} onChange={mockOnChange} />);
-      
+
       // Should recover from stuck state
       await waitFor(() => {
         expect(mockOnChange).toHaveBeenCalledWith(
@@ -259,7 +267,7 @@ describe('LoremIpsumTablet', () => {
       useTabletTabCreation.mockReturnValue({
         createBackgroundTab: mockCreateBackgroundTab,
       });
-      
+
       const state = createMockState({
         generatedOutput: 'Test generated content',
         settings: { ...createMockState().settings, mode: 'markdown' },
@@ -272,7 +280,8 @@ describe('LoremIpsumTablet', () => {
       expect(mockCreateBackgroundTab).toHaveBeenCalledWith(
         'Generated Markdown Content',
         'Test generated content',
-        'markdown'
+        'markdown',
+        'test-tab-id'
       );
     });
 
@@ -323,10 +332,10 @@ describe('LoremIpsumTablet', () => {
 
       // Should show character count
       expect(screen.getAllByText(/characters/i).length).toBeGreaterThan(0);
-      
+
       // Should show word count
       expect(screen.getAllByText(/words/i).length).toBeGreaterThan(0);
-      
+
       // Should show line count
       expect(screen.getAllByText(/lines/i).length).toBeGreaterThan(0);
     });

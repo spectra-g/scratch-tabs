@@ -26,9 +26,9 @@ export function useTabletBridge(): TabletBridge {
   // Initialize the bridge with current store instances
   useEffect(() => {
     tabletBridge.initialize(
-      rootStore as any, 
-      workspaceStore as any, 
-      splitViewStore as any, 
+      rootStore as any,
+      workspaceStore as any,
+      splitViewStore as any,
       modalStore as any,
       isMobile
     );
@@ -47,14 +47,15 @@ export function useTabletBridge(): TabletBridge {
  */
 export function useTabletTabCreation() {
   const bridge = useTabletBridge();
-  
+
   const createBackgroundTab = useCallback(
-    (title: string, content: string, language?: string) => {
+    (title: string, content: string, language?: string, sourceTabId?: string) => {
       return bridge.createBackgroundTab({
         title,
         content,
         language,
-        languageLocked: false
+        languageLocked: false,
+        sourceTabId
       });
     },
     [bridge]
@@ -68,7 +69,7 @@ export function useTabletTabCreation() {
  */
 export function useTabletDeviceInfo() {
   const bridge = useTabletBridge();
-  
+
   const getDeviceInfo = useCallback(() => {
     return bridge.getDeviceInfo();
   }, [bridge]);
@@ -90,7 +91,7 @@ export function useTabletDeviceInfo() {
  */
 export function useTabletLanguageDetection() {
   const bridge = useTabletBridge();
-  
+
   const detectLanguage = useCallback((content: string) => {
     return bridge.detectLanguage(content);
   }, [bridge]);

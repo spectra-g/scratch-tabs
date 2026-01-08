@@ -13,6 +13,7 @@ import { AccessibilityMatrix } from './components/AccessibilityMatrix';
 import { ExportPanel } from './components/ExportPanel';
 import { HistoryPanel } from './components/HistoryPanel';
 import { useTabletTabCreation } from '../bridge';
+import { useTabletContext } from '../bridge/context';
 
 interface ColourPaletteTabletProps {
   state: ColourPaletteState;
@@ -41,6 +42,7 @@ export const ColourPaletteTablet: React.FC<ColourPaletteTabletProps> = ({
   onChange,
 }) => {
   const { createBackgroundTab } = useTabletTabCreation();
+  const { tabId } = useTabletContext();
 
   // -- Local UI State --
   const [activePanel, setActivePanel] = useState<'image' | 'preview' | 'accessibility' | 'export' | 'history' | null>(null);
@@ -115,11 +117,11 @@ export const ColourPaletteTablet: React.FC<ColourPaletteTabletProps> = ({
 
   const handleCreateNewTab = useCallback(async (content: string, language: string, title: string) => {
     try {
-      await createBackgroundTab(title, content, language);
+      await createBackgroundTab(title, content, language, tabId);
     } catch {
       navigator.clipboard.writeText(content).catch(() => { });
     }
-  }, [createBackgroundTab]);
+  }, [createBackgroundTab, tabId]);
 
   return (
     <div className="relative h-full w-full bg-surface overflow-hidden flex flex-row">

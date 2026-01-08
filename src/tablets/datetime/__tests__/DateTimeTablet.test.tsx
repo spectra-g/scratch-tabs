@@ -11,9 +11,12 @@ const DateTimeTabletComponent: React.FC<{ state: DateTimeTabletState, onChange: 
 
 // Mock the components and icons to avoid complex dependencies
 jest.mock('../components/LiveHeader', () => ({
-  LiveHeader: ({ onSetInput }: any) => (
+  LiveHeader: ({ onSetInput, isFrozen, onFreezeToggle }: any) => (
     <div data-testid="live-header">
       <button onClick={() => onSetInput('2025-12-22')}>Set Live</button>
+      <button onClick={onFreezeToggle}>
+        {isFrozen ? 'RESUME' : 'FREEZE'}
+      </button>
     </div>
   )
 }));
@@ -71,6 +74,7 @@ describe('DateTimeTablet', () => {
       isOptimizing: false,
       selectedElementId: null,
       expandedAccordionSections: [],
+      isFrozen: false,
       ...overrides
     }
   });
@@ -134,6 +138,51 @@ describe('DateTimeTablet', () => {
       expect(initialState.type).toBe('datetime');
       expect(initialState.data.inputValue).toBe('now');
       expect(initialState.data.selectedTimezones).toHaveLength(1);
+      expect(initialState.data.isFrozen).toBe(false);
+    });
+
+    it('should handle freeze toggle', () => {
+      const state = createMockState();
+      render(<DateTimeTabletComponent state={state} onChange={mockOnChange} />);
+
+      const freezeButton = screen.getByText('FREEZE');
+      fireEvent.click(freezeButton);
+
+      expect(mockOnChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            isFrozen: true
+          })
+        })
+      );
+    });
+
+    it('should serialize and deserialize state with isFrozen', () => {
+      const state = createMockState({ isFrozen: true });
+      const serialized = DateTimeTablet.serializeState(state);
+      const deserialized = DateTimeTablet.deserializeState(serialized) as DateTimeTabletState;
+
+      expect(deserialized.data.isFrozen).toBe(true);
+    });
+
+    it('should default isFrozen to false when deserializing old state', () => {
+      const oldStateJson = JSON.stringify({
+        type: "datetime",
+        data: {
+          inputValue: 'now',
+          parsedDate: null,
+          error: null,
+          selectedTimezones: [],
+          history: [],
+          isOptimizing: false,
+          selectedElementId: null,
+          expandedAccordionSections: []
+          // Note: no isFrozen field
+        }
+      });
+
+      const deserialized = DateTimeTablet.deserializeState(oldStateJson) as DateTimeTabletState;
+      expect(deserialized.data.isFrozen).toBe(false);
     });
   });
 });

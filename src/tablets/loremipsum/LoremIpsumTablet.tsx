@@ -4,6 +4,7 @@ import { SettingsPanel } from './components/SettingsPanel';
 import { OutputArea } from './components/OutputArea';
 import { generateContent, validateOptions, getLanguageForMode } from './utils/generator';
 import { useTabletTabCreation } from '../bridge';
+import { useTabletContext } from '../bridge/context';
 
 interface LoremIpsumTabletProps {
   state: LoremIpsumState;
@@ -15,6 +16,7 @@ export const LoremIpsumTablet: React.FC<LoremIpsumTabletProps> = ({
   onChange,
 }) => {
   const { createBackgroundTab } = useTabletTabCreation();
+  const { tabId } = useTabletContext();
 
   const updateSettings = useCallback((updates: Partial<LoremIpsumSettings>) => {
     const newSettings = { ...state.settings, ...updates };
@@ -120,9 +122,10 @@ export const LoremIpsumTablet: React.FC<LoremIpsumTabletProps> = ({
     createBackgroundTab(
       `Generated ${modeLabels[state.settings.mode]} Content`,
       state.generatedOutput,
-      language
+      language,
+      tabId
     );
-  }, [state.generatedOutput, state.settings.mode, createBackgroundTab]);
+  }, [state.generatedOutput, state.settings.mode, createBackgroundTab, tabId]);
 
   useEffect(() => {
     if (state.isGenerating && state.lastGeneratedAt) {
@@ -155,7 +158,8 @@ export const LoremIpsumTablet: React.FC<LoremIpsumTabletProps> = ({
           </div>
           <div className="text-right">
             <div className="text-xs text-muted">
-              {state.lastGeneratedAt ? `Last generated: ${new Date(state.lastGeneratedAt).toLocaleTimeString()}` : ''}
+              {state.lastGeneratedAt ? `Last generated: ${new Date(state.lastGeneratedAt).toLocaleTimeString()
+                }` : ''}
             </div>
           </div>
         </div>

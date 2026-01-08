@@ -156,9 +156,17 @@ const DragDropOverlay: React.FC = () => {
 
   useEffect(() => {
     const handleDragOver = (e: DragEvent) => {
+      // Always prevent default to allow drops to work properly
       e.preventDefault();
+
+      // If suppressed, don't show UI or process, but allow the event to work for local handlers
+      if (isImportModalActive || isGlobalDragDropSuppressed) {
+        return;
+      }
+
       e.stopPropagation();
-      if (!isImportModalActive && !isGlobalDragDropSuppressed && e.dataTransfer) {
+
+      if (e.dataTransfer) {
         // Check if any item is a file or directory
         let containsFilesOrFolders = false;
         if (e.dataTransfer.items) {
@@ -180,8 +188,14 @@ const DragDropOverlay: React.FC = () => {
     };
 
     const handleDragLeave = (e: DragEvent) => {
+      // Don't show UI if suppressed, but don't block the event
+      if (isImportModalActive || isGlobalDragDropSuppressed) {
+        return;
+      }
+
       e.preventDefault();
       e.stopPropagation();
+
       if (
         e.relatedTarget === null ||
         (e.relatedTarget as Node).nodeName === "HTML"
@@ -191,13 +205,18 @@ const DragDropOverlay: React.FC = () => {
     };
 
     const handleDrop = async (e: DragEvent) => {
+      // Always prevent default to allow drop to work
       e.preventDefault();
-      e.stopPropagation();
-      setIsDragging(false);
 
+      // If suppressed, don't process the drop or stop propagation (let local handlers work)
       if (isImportModalActive || isGlobalDragDropSuppressed || !e.dataTransfer?.items) {
+        setIsDragging(false);
         return;
       }
+
+      // Only stop propagation if we're actually processing the drop
+      e.stopPropagation();
+      setIsDragging(false);
 
       setIsProcessingDrop(true);
       const allFiles: File[] = [];

@@ -21,6 +21,7 @@ export interface DateTimeTabletData {
   isOptimizing: boolean;
   selectedElementId: string | null;
   expandedAccordionSections?: string[];
+  isFrozen?: boolean;
 }
 
 export interface DateTimeTabletState extends TabletState {

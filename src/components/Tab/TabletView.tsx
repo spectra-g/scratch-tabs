@@ -11,6 +11,8 @@ import { Tab } from "../../types.ts";
 import { TabletErrorBoundary } from "../Tablet/TabletErrorBoundary";
 import { useRootStore } from "../../stores";
 import { useTabletCounting } from "../../tablets/utils/useTabletCounting";
+import { TabletContextProvider } from "../../tablets/bridge/context";
+
 
 interface TabletViewProps {
   tab: Tab;
@@ -266,10 +268,12 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
           </div>
         )}
         <div className="tablet-content-area overflow-hidden">
-          <ActiveTabletComponent
-            state={state}
-            onChange={handleTabletStateChange}
-          />
+          <TabletContextProvider value={{ tabId: tab.id }}>
+            <ActiveTabletComponent
+              state={state}
+              onChange={handleTabletStateChange}
+            />
+          </TabletContextProvider>
         </div>
       </div>
     </TabletErrorBoundary>

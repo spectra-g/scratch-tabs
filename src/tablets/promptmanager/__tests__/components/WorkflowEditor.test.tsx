@@ -13,6 +13,14 @@ Object.defineProperty(navigator, 'clipboard', {
   writable: true
 });
 
+// Mock the context hook
+jest.mock('../../../bridge/context', () => ({
+  useTabletContext: jest.fn(() => ({
+    tabId: 'test-tab-id',
+  })),
+  TabletContextProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 describe("WorkflowEditor", () => {
   const mockWorkflow: Workflow = {
     id: "workflow-1",
@@ -78,33 +86,33 @@ describe("WorkflowEditor", () => {
   describe("Rendering", () => {
     it("should render the workflow editor", () => {
       render(<WorkflowEditor {...mockProps} />);
-      
+
       expect(screen.getByText("Test Workflow")).toBeInTheDocument();
       expect(screen.getByText("This is a test workflow")).toBeInTheDocument();
     });
 
     it("should display tags", () => {
       render(<WorkflowEditor {...mockProps} />);
-      
+
       expect(screen.getByText("Tag 1")).toBeInTheDocument();
       expect(screen.getByText("Tag 2")).toBeInTheDocument();
     });
 
     it("should display edit button", () => {
       render(<WorkflowEditor {...mockProps} />);
-      
+
       expect(screen.getByTitle("Edit workflow")).toBeInTheDocument();
     });
 
     it("should display copy button", () => {
       render(<WorkflowEditor {...mockProps} />);
-      
+
       expect(screen.getByTitle("Copy all steps")).toBeInTheDocument();
     });
 
     it("should display tag management button", () => {
       render(<WorkflowEditor {...mockProps} />);
-      
+
       expect(screen.getByTitle("Manage tags")).toBeInTheDocument();
     });
   });
@@ -112,50 +120,50 @@ describe("WorkflowEditor", () => {
   describe("Workflow Editing", () => {
     it("should allow editing title when edit mode is activated", async () => {
       render(<WorkflowEditor {...mockProps} />);
-      
+
       // Click the edit button to enter edit mode
       const editButton = screen.getByTitle("Edit workflow");
       await userEvent.click(editButton);
-      
+
       // Now the title should be editable
       const titleInput = screen.getByDisplayValue("Test Workflow");
       await userEvent.clear(titleInput);
       await userEvent.type(titleInput, "Updated Workflow");
-      
+
       expect(titleInput).toHaveValue("Updated Workflow");
     });
 
     it("should allow editing description when edit mode is activated", async () => {
       render(<WorkflowEditor {...mockProps} />);
-      
+
       // Click the edit button to enter edit mode
       const editButton = screen.getByTitle("Edit workflow");
       await userEvent.click(editButton);
-      
+
       // Now the description should be editable
       const descriptionInput = screen.getByDisplayValue("This is a test workflow");
       await userEvent.clear(descriptionInput);
       await userEvent.type(descriptionInput, "Updated description");
-      
+
       expect(descriptionInput).toHaveValue("Updated description");
     });
 
     it("should save changes when save button is clicked", async () => {
       render(<WorkflowEditor {...mockProps} />);
-      
+
       // Enter edit mode
       const editButton = screen.getByTitle("Edit workflow");
       await userEvent.click(editButton);
-      
+
       // Edit the title
       const titleInput = screen.getByDisplayValue("Test Workflow");
       await userEvent.clear(titleInput);
       await userEvent.type(titleInput, "Updated Workflow");
-      
+
       // Click save button
       const saveButton = screen.getByTitle("Save changes");
       await userEvent.click(saveButton);
-      
+
       expect(mockProps.onUpdateWorkflow).toHaveBeenCalledWith("workflow-1", {
         title: "Updated Workflow",
         description: "This is a test workflow"
@@ -166,10 +174,10 @@ describe("WorkflowEditor", () => {
   describe("Copy Functionality", () => {
     it("should copy all steps when copy button is clicked", async () => {
       render(<WorkflowEditor {...mockProps} />);
-      
+
       const copyButton = screen.getByTitle("Copy all steps");
       await userEvent.click(copyButton);
-      
+
       // Should call navigator.clipboard.writeText
       expect(navigator.clipboard.writeText).toHaveBeenCalled();
     });
@@ -178,11 +186,11 @@ describe("WorkflowEditor", () => {
   describe("Tag Management", () => {
     it("should show tag selector when tag button is clicked", async () => {
       render(<WorkflowEditor {...mockProps} />);
-      
+
       // Click tag management button
       const tagButton = screen.getByTitle("Manage tags");
       await userEvent.click(tagButton);
-      
+
       // Should show tag selector
       expect(screen.getByText("Tag 3")).toBeInTheDocument();
     });

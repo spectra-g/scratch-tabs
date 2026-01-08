@@ -3,6 +3,7 @@ import { Tablet, TabletState } from "../types";
 import { Editor } from "@monaco-editor/react";
 import { Users, Copy, RotateCw, Check, ExternalLink } from "lucide-react";
 import { useTabletTabCreation } from "../bridge";
+import { useTabletContext } from "../bridge/context";
 import { useThemeStore } from "../../stores/themeStore";
 
 interface GenerationResult {
@@ -89,6 +90,7 @@ export const RandomUserTablet: Tablet = {
     );
     const containerRef = useRef<HTMLDivElement>(null);
     const { createBackgroundTab } = useTabletTabCreation();
+    const { tabId } = useTabletContext();
     const [error, setError] = useState<string | null>(null);
     const isDarkMode = useThemeStore((state) => state.isDarkMode);
 
@@ -244,13 +246,15 @@ export const RandomUserTablet: Tablet = {
         createBackgroundTab(
           `Random User ${new Date(result.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
           result.content,
-          result.format
+          result.format,
+          tabId
         );
         setTimeout(() => setOpenedResultIndex(null), 1500);
       },
       [
         state.data.results,
         createBackgroundTab,
+        tabId,
       ],
     );
 
@@ -418,11 +422,10 @@ export const RandomUserTablet: Tablet = {
                         },
                       })
                     }
-                    className={`w-full px-4 py-3 text-left hover:bg-element-hover transition-colors ${
-                      state.data.selectedResult === index
-                        ? "bg-element-hover"
-                        : ""
-                    }`}
+                    className={`w-full px-4 py-3 text-left hover:bg-element-hover transition-colors ${state.data.selectedResult === index
+                      ? "bg-element-hover"
+                      : ""
+                      }`}
                   >
                     <div className="text-sm font-medium text-main">
                       {new Date(result.timestamp).toLocaleTimeString()}

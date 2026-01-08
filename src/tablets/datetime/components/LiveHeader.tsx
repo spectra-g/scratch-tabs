@@ -36,11 +36,12 @@ const CounterItem: React.FC<CounterItemProps> = ({ label, value, id, copiedId, o
 
 interface LiveHeaderProps {
   onSetInput: (value: string) => void;
+  isFrozen: boolean;
+  onFreezeToggle: () => void;
 }
 
-export const LiveHeader: React.FC<LiveHeaderProps> = ({ onSetInput }) => {
+export const LiveHeader: React.FC<LiveHeaderProps> = ({ onSetInput, isFrozen, onFreezeToggle }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [isFrozen, setIsFrozen] = useState(false);
   const { copy, copiedId } = useClipboard();
 
   useEffect(() => {
@@ -95,7 +96,7 @@ export const LiveHeader: React.FC<LiveHeaderProps> = ({ onSetInput }) => {
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setIsFrozen(!isFrozen)}
+            onClick={onFreezeToggle}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all border ${isFrozen
               ? 'bg-primary text-white border-primary shadow-sm active:scale-95'
               : 'bg-element hover:bg-element-hover text-secondary border-base'

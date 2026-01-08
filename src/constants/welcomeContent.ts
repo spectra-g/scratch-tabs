@@ -1,48 +1,40 @@
-export const WELCOME_TAB_CONTENT = `# Welcome to Scratch Tabs: The Ultimate Developer Toolkit
+export const WELCOME_TAB_CONTENT = `# Ready to work.
 
-Scratch Tabs transforms your browser into a powerful, privacy-first workspace. It's more than a simple text editor—it's a collection of tools designed to streamline your daily tasks **without ever sending your data to a server**.
+Here's how to accomplish common tasks in Scratch Tabs:
+
+### 🧹 I need to clean up data
+*   **Messy JSON?** Just paste it. We auto-format and validate it.
+*   **Log files?** Paste NDJSON or log dumps. We'll clean prefixes and highlight syntax.
+*   **CSVs?** Paste raw comma-separated text to get a spreadsheet view.
+*   **Try Smart Views:** Paste cURL, HTML, Markdown, INI, Properties, or YAML to unlock interactive editing interfaces.
+
+### 🛠️ I need a utility
+Don't bookmark external sites. Click the **tools icon** in the top-right to launch:
+*   **JWT Decoder** - Decode, verify, and sign tokens
+*   **REST Client** - Test APIs with full request/response inspection (CORS limitations apply)
+*   **Regex Tester** - Build patterns with live match highlighting
+*   **Base64 Encoder/Decoder** - Convert text and files instantly
+*   **DateTime Converter** - Parse timestamps and convert timezones
+*   **Password Generator** - Create secure passwords with custom rules
+*   **UUID Generator** - Generate v1 and v4 UUIDs
+*   **Checksum Calculator** - Verify file integrity with MD5, SHA-1, SHA-256, SHA-512
+*   **Cron Builder** - Create cron expressions with natural language
+*   **Lorem Ipsum Generator** - Generate placeholder text
+*   **And 15+ more...**
+
+### 📝 I need to organize
+*   **Split View:** Right-click any tab and choose Split. Work on two files side-by-side.
+*   **Workspaces:** Switch contexts using the sidebar menu. Each workspace has its own tabs and layout.
+*   **Pin Tabs:** Right-click any tab to pin it, it'll stay at the front of your tab bar.
+*   **Search Everything:** Press \`Cmd + Shift + F\` to search across all tabs in your workspace.
+
+### 🚀 Quick tips
+*   **Drag & drop files** directly onto the window to open them
+*   **Paste anything** and we'll auto-detect the format (JSON, CSV, YAML, code, etc.)
+*   **Use batch tools** (right-click in editor) to transform text: sort lines, remove duplicates, add prefixes, and more
+*   **Share tabs** via URL - content is compressed in the hash, never sent to our servers
 
 ---
 
-### 🔒 100% Private & Offline-First
-
-Your privacy is paramount. Everything you do in Scratch Tabs stays on your machine, leveraging your browser's local storage (IndexedDB).
-
-*   **No Cloud, No Servers, No Sign-Up**: Your tabs, workspaces, and content are yours alone.
-
-### 🛠️ More Than a Text Editor
-
-Unlock a suite of integrated tools we call **"Tablets"** and intelligent **"Smart Views"** that adapt to your content.
-
-*   **Powerful Tablets**:
-    *   **REST Client**: Craft and send HTTP requests without leaving your editor.
-    *   **JWT Debugger**: Decode, verify, and edit JSON Web Tokens.
-    *   **Regex Tester**: Build and test regular expressions instantly.
-    *   **Base64 & Converters**: Handle various encoding and data conversion tasks.
-    *   *And many more...*
-*   **Intelligent Smart Views**:
-    *   **CSV Editor**: View and edit CSV files in a clean, table-based interface.
-    *   **Markdown Preview**: See your rendered markdown side-by-side with your code.
-    *   **JSON Tree View**: Navigate complex JSON objects with ease.
-    *   **Curl builder**: Build Curl commands with a helpful UI.
-    *   *And many more...*
-
-### ⚡ A Seamless Workflow
-
-Work faster with features designed for efficiency.
-
-*   **Drag & Drop Anything**: Drop files or entire folders to open them in new tabs instantly.
-*   **Automatic Language Detection**: Paste code from any language, and Scratch Tabs will detect, format, and highlight it.
-*   **Automatic Cleaning**: Paste stringified JSON and see it unstringified and formatted automatically, paste NDJSON and see any prefixes removed leaving pure JSON on each new line.
-*   **Advanced Text Tools**: Utilize powerful batch transformations to clean, sort, and manipulate text in bulk.
-*   **Organize Your Way**: Use split view to work on multiple tabs at once and organize your work into separate Workspaces.
-
-### How to Get Started
-
-1.  **Create a tab**: Double-click this empty area or use the \`+\` button.
-2.  **Paste some code**: Copy a snippet of JSON, Python, or any other language and paste it in.
-3.  **Explore a Tablet**: Click the `+` menu and select a tool like the **REST Client** or **Regex Tester**.
-4.  **Drag a file**: Drop a local \`.csv\` or \`.md\` file onto the window to see it open automatically.
-
-Happy scratching!
+*Your data is stored locally in your browser. Clear your browser cache to wipe it. No accounts. No tracking. 100% client-side.*
 `;
