@@ -210,16 +210,11 @@ function updateWelcomeScreenVersion(latestVersion) {
     if (fs.existsSync(WELCOME_SCREEN_FILE)) {
       let content = fs.readFileSync(WELCOME_SCREEN_FILE, 'utf8');
 
-      // Look for version patterns in JSX
-      const versionPattern = /(Version\s+)([\d.-]+[\$\d]*)/g;
+      // Look for version pattern in JSX: // vX.X.X
+      const versionPattern = /(\/\/\s+v)([\d.-]+[\$\d]*)/g;
 
-      let updated = false;
       if (versionPattern.test(content)) {
         content = content.replace(versionPattern, `$1${latestVersion}`);
-        updated = true;
-      }
-
-      if (updated) {
         fs.writeFileSync(WELCOME_SCREEN_FILE, content, 'utf8');
         console.log(`✅ Updated version to ${latestVersion} in WelcomeScreen.tsx`);
       } else {
