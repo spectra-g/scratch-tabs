@@ -229,9 +229,9 @@ export const WelcomeScreen: React.FC = () => {
               alt="Scratch Tabs Logo"
               className="w-7 h-7 mr-4 flex-shrink-0"
             />
-            <h1 className="text-3xl font-light text-main">Scratch Tabs</h1>
+            <h1 className="text-3xl font-mono font-medium text-main">SCRATCH_TABS</h1>
           </div>
-          <p className="text-muted text-sm mt-2">Version 1.14.0</p>
+          <p className="text-muted text-sm font-mono mt-2">// v1.14.0</p>
         </div>
 
         {/* Actions Grid */}
