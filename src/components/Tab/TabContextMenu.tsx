@@ -11,6 +11,7 @@ import { SplitTabModal } from "./SplitTabModal";
 import { ShareModal } from "../Share/ShareModal";
 import { ContextMenuAction, TabSide } from "../../constants";
 import { useTabsStore } from "../../stores/tabsStore";
+import { ToolSelectorModal } from "../ToolSelector";
 
 interface ContextMenuActionPayload {
   action: ContextMenuAction;
@@ -61,7 +62,7 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
     closeThisContextMenu(); // Close context menu when download modal closes
   };
 
-  const { menuItems, confirmationDialogProps, splitModalProps, shareModalProps }: UseContextMenuConfigReturn =
+  const { menuItems, confirmationDialogProps, splitModalProps, shareModalProps, tabletModalOpen, onOpenTabletModal, onSelectTool }: UseContextMenuConfigReturn =
     useContextMenuConfig(
       tabId,
       isRightSide,
@@ -76,6 +77,7 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
   useClickOutside(menuRef, () => {
     if (
       !showDownloadModal &&
+      !tabletModalOpen &&
       (!confirmationDialogProps || !confirmationDialogProps.isOpen) &&
       (!splitModalProps || !splitModalProps.isOpen) &&
       (!shareModalProps || !shareModalProps.isOpen)
@@ -88,7 +90,8 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
     <>
       {/* Hide context menu when any modal is open, but keep component mounted */}
       {(!splitModalProps || !splitModalProps.isOpen) &&
-        (!shareModalProps || !shareModalProps.isOpen) && (
+        (!shareModalProps || !shareModalProps.isOpen) &&
+        !tabletModalOpen && (
           <div
             ref={menuRef}
             className="absolute bg-surface border border-base rounded shadow-lg z-50 py-1"
@@ -139,6 +142,16 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
       {/* Render the share modal */}
       {shareModalProps && shareModalProps.isOpen && tab && (
         <ShareModal tab={tab} onClose={shareModalProps.onClose} />
+      )}
+
+      {/* Render the tool selector modal */}
+      {tabletModalOpen && (
+        <ToolSelectorModal
+          onSelect={onSelectTool}
+          onClose={() => {
+            closeThisContextMenu();
+          }}
+        />
       )}
     </>
   );

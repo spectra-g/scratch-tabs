@@ -13,6 +13,7 @@ export {
   EyeOff,
   Info,
   Clock,
+  HelpCircle,
 
   // Actions
   Edit,
@@ -181,6 +182,8 @@ export {
   Sun,
   Moon,
   Blocks as Extension,
+  Split,
+  Maximize,
 } from 'lucide-react';
 
 // Export types separately

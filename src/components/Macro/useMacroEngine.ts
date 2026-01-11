@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import * as monaco from "monaco-editor";
+import { useMacroStore } from "../../stores/macroStore";
 
 // --- Constants ---
 const MAX_PLAY_TO_END_ITERATIONS = 500;
@@ -82,6 +83,10 @@ export interface MacroEngine {
   canInteract: boolean;
   canPlay: boolean;
   canStop: boolean;
+  forceVisible: boolean;
+  setForceVisible: (visible: boolean) => void;
+  handleClearRecording: () => void;
+  executingActionIndex: number;
 }
 
 // Utility function to safely check if a model is disposed
@@ -112,10 +117,12 @@ export const useMacroEngine = (
 ): MacroEngine => {
   const [status, setStatus] = useState<MacroStatus>("idle");
   const [recordedActions, setRecordedActions] = useState<Action[]>([]);
+  const [forceVisible, setForceVisible] = useState(false);
   const listenersRef = useRef<monaco.IDisposable[]>([]);
   const isPastingRef = useRef<boolean>(false);
   // Ref to manage stopping playToEnd cleanly
   const stopPlayToEndRef = useRef<boolean>(false);
+  const [executingActionIndex, setExecutingActionIndex] = useState<number>(0);
 
   // --- Recording Setup Effect ---
   useEffect(() => {
@@ -137,6 +144,9 @@ export const useMacroEngine = (
       disposables.push(
         editor.onKeyDown((e) => {
           try {
+            // ONLY record if the editor actually has focus
+            if (!editor.hasTextFocus()) return;
+
             const { key } = e.browserEvent;
             const ctrlCmd = e.ctrlKey || e.metaKey;
             const shift = e.shiftKey;
@@ -187,13 +197,13 @@ export const useMacroEngine = (
                 actionToAdd = { type: ACTION_TYPE.CHAR, value: "\t" };
               } // Record Tab as a character
               // Navigation keys (don't prevent default)
-              else if (key === "ArrowLeft")
+              else if (key === "ArrowLeft" || key === "Left")
                 actionToAdd = { type: ACTION_TYPE.MOVE_LEFT };
-              else if (key === "ArrowRight")
+              else if (key === "ArrowRight" || key === "Right")
                 actionToAdd = { type: ACTION_TYPE.MOVE_RIGHT };
-              else if (key === "ArrowUp")
+              else if (key === "ArrowUp" || key === "Up")
                 actionToAdd = { type: ACTION_TYPE.MOVE_UP };
-              else if (key === "ArrowDown")
+              else if (key === "ArrowDown" || key === "Down")
                 actionToAdd = { type: ACTION_TYPE.MOVE_DOWN };
               else if (key === "Home")
                 actionToAdd = { type: ACTION_TYPE.MOVE_HOME };
@@ -261,6 +271,8 @@ export const useMacroEngine = (
     };
   }, [editor, status]); // Rerun effect when status or editor changes
 
+
+
   // --- Playback Core Logic (Single Iteration) ---
   const playSingleMacroIteration = useCallback(async (): Promise<{
     success: boolean;
@@ -277,8 +289,12 @@ export const useMacroEngine = (
 
       try {
         editor.focus(); // Ensure focus before starting playback iteration
+        setExecutingActionIndex(0);
 
-        for (const action of recordedActions) {
+        for (let i = 0; i < recordedActions.length; i++) {
+          const action = recordedActions[i];
+          setExecutingActionIndex(i);
+
           // Get selection just before operations that need it (like type/paste)
           // Trigger-based commands manage their own cursor/selection state
           let selectionForEdit: monaco.Selection | null = null;
@@ -408,6 +424,7 @@ export const useMacroEngine = (
     if (!editor || status !== "idle") return;
     setRecordedActions([]);
     setStatus("recording");
+    setForceVisible(true);
     editor.focus();
   }, [editor, status]);
 
@@ -428,6 +445,26 @@ export const useMacroEngine = (
     // No need to focus editor here, user might want to click elsewhere
   }, [status, recordedActions.length]);
 
+  const handleClearRecording = useCallback(() => {
+    setRecordedActions([]);
+    setStatus("idle");
+    setForceVisible(false);
+    stopPlayToEndRef.current = true; // Stop any active playback
+    // Also reset global store to prevent parent component from re-showing it via sync effect
+    useMacroStore.getState().setForceShowToolbar(false, null, null);
+  }, []);
+
+  // Stop recording/playing if toolbar becomes invisible (e.g. tab switch)
+  useEffect(() => {
+    if (!forceVisible && status !== "idle") {
+      handleStopRecording();
+    }
+  }, [forceVisible, status, handleStopRecording]);
+
+  const handleSetForceVisible = useCallback((visible: boolean) => {
+    setForceVisible(visible);
+  }, []);
+
   // --- Playback Handlers ---
   const handlePlayRecording = useCallback(async () => {
     if (!editor || status !== "idle" || recordedActions.length === 0) return;
@@ -447,6 +484,9 @@ export const useMacroEngine = (
     if (!editor || status !== "idle" || recordedActions.length === 0) return;
     setStatus("playingToEnd");
     stopPlayToEndRef.current = false; // Reset stop flag
+
+    // Yield to event loop to allow UI to update and show Stop button
+    await new Promise(r => setTimeout(r, 0));
 
     try {
       // Store the end position of the *previous* full iteration
@@ -537,21 +577,43 @@ export const useMacroEngine = (
   // Computed values
   const canInteract = status === "idle";
   const canPlay = canInteract && recordedActions.length > 0;
-  // Can stop if recording OR playing OR if idle with something recorded (to clear)
+  // Can stop if recording OR playing (any play status) OR if idle with something recorded (to clear)
   const canStop =
     status === "recording" ||
+    status === "playingOnce" ||
     status === "playingToEnd" ||
     (status === "idle" && recordedActions.length > 0);
 
-  return {
-    status,
-    recordedActions,
-    handleStartRecording,
-    handleStopRecording,
-    handlePlayRecording,
-    handlePlayToEnd,
-    canInteract,
-    canPlay,
-    canStop,
-  };
+  return useMemo(
+    () => ({
+      status,
+      recordedActions,
+      handleStartRecording,
+      handleStopRecording,
+      handlePlayRecording,
+      handlePlayToEnd,
+      canInteract,
+      canPlay,
+      canStop,
+      forceVisible,
+      setForceVisible: handleSetForceVisible,
+      handleClearRecording,
+      executingActionIndex,
+    }),
+    [
+      status,
+      recordedActions,
+      handleStartRecording,
+      handleStopRecording,
+      handlePlayRecording,
+      handlePlayToEnd,
+      canInteract,
+      canPlay,
+      canStop,
+      forceVisible,
+      handleSetForceVisible,
+      handleClearRecording,
+      executingActionIndex,
+    ],
+  );
 };

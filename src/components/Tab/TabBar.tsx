@@ -17,6 +17,7 @@ import { Tab } from "../../types";
 import { formatRegistry } from "../../formats";
 import { WorkspaceSwitcher } from "../Workspace/WorkspaceSwitcher";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
+import { HamburgerMenu } from "./HamburgerMenu";
 import {
   DndContext,
   DragEndEvent,
@@ -647,16 +648,19 @@ export const TabBar: React.FC<TabBarProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-center space-x-1">
           <TabActions
             side={side}
             onShowTabletSelector={() => setShowToolSelector(!showToolSelector)}
             newTabButtonRef={newTabButtonRef}
             tabletButtonRef={tabletButtonRef}
           />
-          {/* Only show WorkspaceSwitcher on the right side when split, or on the left when not split */}
+          {/* Only show WorkspaceSwitcher and HamburgerMenu on the right side when split, or on the left when not split */}
           {(isRightSide ? splitView.isSplit : !splitView.isSplit) && (
-            <WorkspaceSwitcher />
+            <>
+              <WorkspaceSwitcher />
+              <HamburgerMenu />
+            </>
           )}
         </div>
       </div>

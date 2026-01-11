@@ -19,11 +19,20 @@ export const ContextMenuItem: React.FC<ContextMenuItemProps> = ({ item }) => {
 
   const handleMouseEnter = () => {
     if (item.submenu) {
+      // Clear any existing timeout
       if (leaveTimeout.current) {
         clearTimeout(leaveTimeout.current);
         leaveTimeout.current = null;
       }
+      // Show submenu immediately
       setIsSubmenuVisible(true);
+    } else {
+      // If entering a non-submenu item, hide any visible submenu immediately
+      if (leaveTimeout.current) {
+        clearTimeout(leaveTimeout.current);
+        leaveTimeout.current = null;
+      }
+      setIsSubmenuVisible(false);
     }
   };
 
@@ -34,7 +43,7 @@ export const ContextMenuItem: React.FC<ContextMenuItemProps> = ({ item }) => {
         if (submenuRef.current && !submenuRef.current.matches(":hover")) {
           setIsSubmenuVisible(false);
         }
-      }, 150);
+      }, 50); // Reduced from 150ms to 50ms for faster response
     }
   };
 

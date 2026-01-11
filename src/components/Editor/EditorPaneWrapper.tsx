@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useMemo, useCallback, useRef } from "react";
+import React, { Suspense, lazy, useMemo, useCallback, useRef, useEffect } from "react";
 import { useRootStore } from "../../stores";
 import { useTabsStore } from "../../stores/tabsStore";
 import { useSplitViewStore } from "../../stores/splitViewStore";
@@ -16,6 +16,9 @@ import { useClipboardStore } from "../../stores/clipboardStore";
 import { BatchToolsModal } from "../BatchTools/BatchToolsModal";
 import { useSmartViewSync } from "../../hooks/useSmartViewSync";
 import type * as Monaco from "monaco-editor";
+import { FloatingMacroToolbar } from "../Macro/FloatingMacroToolbar";
+import { useMacroEngine } from "../Macro/useMacroEngine";
+import { useMacroStore } from "../../stores/macroStore";
 
 // Lazy load the RichTextEditor component
 const RichTextEditor = lazy(() => import("../RichText/RichTextEditor").then(module => ({ default: module.RichTextEditor })));
@@ -75,7 +78,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
         prev.content === next.content &&
         prev.richContent === next.richContent &&
         prev.isRich === next.isRich &&
-        prev.backgroundTexture === next.backgroundTexture &&
+        prev.richContent?.attrs?.backgroundTexture === next.richContent?.attrs?.backgroundTexture &&
         prev.language === next.language &&
         prev.title === next.title &&
         prev.isTablet === next.isTablet &&
@@ -107,7 +110,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
     if (!activeTab || !activeTabId) return;
 
     // Check if there's pending image data and cursor position
-    const { pendingImageData, pendingImageCursorPosition, setPendingImageCursorOffset } = useClipboardStore.getState();
+    const { pendingImageCursorPosition, setPendingImageCursorOffset } = useClipboardStore.getState();
 
     // Migrate existing plain text content to rich format, including cursor position mapping
     const migration = migrateTextToRich(
@@ -165,6 +168,22 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
     editorInstanceRef.current = editor;
   }, []);
 
+  // Macro engine for this pane
+  const macroEngine = useMacroEngine(editorInstanceRef.current);
+
+  // Sync macro toolbar visibility from store
+  const { forceShowToolbar, targetTabId, targetSide } = useMacroStore((state) => ({
+    forceShowToolbar: state.forceShowToolbar,
+    targetTabId: state.targetTabId,
+    targetSide: state.targetSide,
+  }), shallow);
+
+  useEffect(() => {
+    // Only set forceVisible if this is the correct tab AND side
+    const isTarget = targetTabId === activeTabId && targetSide === side;
+    macroEngine.setForceVisible(forceShowToolbar && isTarget);
+  }, [forceShowToolbar, targetTabId, targetSide, activeTabId, side, macroEngine]);
+
   // Sync scroll and clicks between editor and preview
   useSmartViewSync({
     editor: editorInstanceRef.current,
@@ -179,7 +198,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
     <div
       ref={containerRef}
       data-editor-pane-side={side}
-      className={`flex h-full w-full overflow-hidden ${shouldShowSideBySidePreview ? "flex-row" : "flex-col"}`}
+      className={`flex h-full w-full overflow-hidden relative ${shouldShowSideBySidePreview ? "flex-row" : "flex-col"}`}
     >
       {/* Editor/Tablet/Extended View Container */}
       <div
@@ -283,6 +302,14 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
 
       {/* BatchToolsModal - Always available regardless of view mode */}
       <BatchToolsModal onApply={handleBatchToolsApply} />
+
+      {/* Floating Macro Toolbar - Shows when recording/playing for the correct tab/side */}
+      {!activeTab?.isTablet && !activeTab?.isRich && forceShowToolbar && targetTabId === activeTabId && targetSide === side && (
+        <FloatingMacroToolbar
+          editor={editorInstanceRef.current}
+          engine={macroEngine}
+        />
+      )}
     </div>
   );
 };

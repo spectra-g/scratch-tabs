@@ -203,9 +203,17 @@ export const useRootStore = create<RootStore>((set, get) => {
     },
 
     handleNewPopulatedTab: async (tabInput, toRightSide = false) => {
-      const { canAddNewTab, addTab } = get();
-      if (!canAddNewTab(toRightSide)) {
-        return undefined;
+      const { addTab } = get();
+      // Populated tabs (tablets, rich text, or tabs with content) bypass the empty tab limit
+      // Only check the limit if this is truly an empty scratch tab
+      const isPopulated = tabInput.isTablet || tabInput.isRich || (tabInput.content && tabInput.content.length > 0);
+
+      if (!isPopulated) {
+        const { canAddNewTab } = get();
+        if (!canAddNewTab(toRightSide)) {
+          console.error('[handleNewPopulatedTab] Cannot add new tab - empty tab limit reached');
+          return undefined;
+        }
       }
 
       const ensuredWorkspaceId = await useWorkspaceStore
