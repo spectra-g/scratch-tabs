@@ -146,6 +146,19 @@ export const FloatingMacroToolbar: React.FC<FloatingMacroToolbarProps> = ({
         return 'Shift+Home';
       case ACTION_TYPE.SELECT_END:
         return 'Shift+End';
+      // Word-level operations
+      case ACTION_TYPE.MOVE_WORD_LEFT:
+        return 'Word Left';
+      case ACTION_TYPE.MOVE_WORD_RIGHT:
+        return 'Word Right';
+      case ACTION_TYPE.SELECT_WORD_LEFT:
+        return 'Select Word Left';
+      case ACTION_TYPE.SELECT_WORD_RIGHT:
+        return 'Select Word Right';
+      case ACTION_TYPE.DELETE_WORD_LEFT:
+        return 'Delete Word Left';
+      case ACTION_TYPE.DELETE_WORD_RIGHT:
+        return 'Delete Word Right';
       default:
         return 'Unknown action';
     }

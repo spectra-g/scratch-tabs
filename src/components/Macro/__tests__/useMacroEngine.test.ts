@@ -456,4 +456,346 @@ describe("useMacroEngine", () => {
             expect(result.current.recordedActions).toHaveLength(0);
         });
     });
+
+    describe("Word-level operations", () => {
+        let onKeyDownCallback: any;
+
+        beforeEach(() => {
+            mockEditor.onKeyDown.mockImplementation((cb: any) => {
+                onKeyDownCallback = cb;
+                return { dispose: jest.fn() };
+            });
+        });
+
+        it("should record word navigation with Ctrl+Arrow on Windows/Linux", () => {
+            // Mock Windows/Linux platform
+            Object.defineProperty(navigator, 'platform', {
+                value: 'Win32',
+                configurable: true,
+            });
+
+            const { result } = renderHook(() => useMacroEngine(mockEditor));
+
+            act(() => {
+                result.current.handleStartRecording();
+            });
+
+            // Ctrl+Right (word right)
+            act(() => {
+                onKeyDownCallback({
+                    browserEvent: { key: "ArrowRight" },
+                    ctrlKey: true,
+                    metaKey: false,
+                    shiftKey: false,
+                    altKey: false,
+                });
+            });
+
+            expect(result.current.recordedActions).toContainEqual({
+                type: ACTION_TYPE.MOVE_WORD_RIGHT,
+            });
+
+            // Ctrl+Left (word left)
+            act(() => {
+                onKeyDownCallback({
+                    browserEvent: { key: "ArrowLeft" },
+                    ctrlKey: true,
+                    metaKey: false,
+                    shiftKey: false,
+                    altKey: false,
+                });
+            });
+
+            expect(result.current.recordedActions).toContainEqual({
+                type: ACTION_TYPE.MOVE_WORD_LEFT,
+            });
+        });
+
+        it("should record word navigation with Option+Arrow on Mac", () => {
+            // Mock Mac platform
+            Object.defineProperty(navigator, 'platform', {
+                value: 'MacIntel',
+                configurable: true,
+            });
+
+            const { result } = renderHook(() => useMacroEngine(mockEditor));
+
+            act(() => {
+                result.current.handleStartRecording();
+            });
+
+            // Option+Right (word right on Mac)
+            act(() => {
+                onKeyDownCallback({
+                    browserEvent: { key: "ArrowRight" },
+                    ctrlKey: false,
+                    metaKey: false,
+                    shiftKey: false,
+                    altKey: true,
+                });
+            });
+
+            expect(result.current.recordedActions).toContainEqual({
+                type: ACTION_TYPE.MOVE_WORD_RIGHT,
+            });
+
+            // Option+Left (word left on Mac)
+            act(() => {
+                onKeyDownCallback({
+                    browserEvent: { key: "ArrowLeft" },
+                    ctrlKey: false,
+                    metaKey: false,
+                    shiftKey: false,
+                    altKey: true,
+                });
+            });
+
+            expect(result.current.recordedActions).toContainEqual({
+                type: ACTION_TYPE.MOVE_WORD_LEFT,
+            });
+        });
+
+        it("should record word selection with Ctrl+Shift+Arrow on Windows/Linux", () => {
+            Object.defineProperty(navigator, 'platform', {
+                value: 'Linux',
+                configurable: true,
+            });
+
+            const { result } = renderHook(() => useMacroEngine(mockEditor));
+
+            act(() => {
+                result.current.handleStartRecording();
+            });
+
+            // Ctrl+Shift+Right (select word right)
+            act(() => {
+                onKeyDownCallback({
+                    browserEvent: { key: "ArrowRight" },
+                    ctrlKey: true,
+                    metaKey: false,
+                    shiftKey: true,
+                    altKey: false,
+                });
+            });
+
+            expect(result.current.recordedActions).toContainEqual({
+                type: ACTION_TYPE.SELECT_WORD_RIGHT,
+            });
+
+            // Ctrl+Shift+Left (select word left)
+            act(() => {
+                onKeyDownCallback({
+                    browserEvent: { key: "ArrowLeft" },
+                    ctrlKey: true,
+                    metaKey: false,
+                    shiftKey: true,
+                    altKey: false,
+                });
+            });
+
+            expect(result.current.recordedActions).toContainEqual({
+                type: ACTION_TYPE.SELECT_WORD_LEFT,
+            });
+        });
+
+        it("should record word selection with Option+Shift+Arrow on Mac", () => {
+            Object.defineProperty(navigator, 'platform', {
+                value: 'MacIntel',
+                configurable: true,
+            });
+
+            const { result } = renderHook(() => useMacroEngine(mockEditor));
+
+            act(() => {
+                result.current.handleStartRecording();
+            });
+
+            // Option+Shift+Right (select word right on Mac)
+            act(() => {
+                onKeyDownCallback({
+                    browserEvent: { key: "ArrowRight" },
+                    ctrlKey: false,
+                    metaKey: false,
+                    shiftKey: true,
+                    altKey: true,
+                });
+            });
+
+            expect(result.current.recordedActions).toContainEqual({
+                type: ACTION_TYPE.SELECT_WORD_RIGHT,
+            });
+        });
+
+        it("should record line selection with Cmd+Shift+Arrow on Mac (Home/End behavior)", () => {
+            Object.defineProperty(navigator, 'platform', {
+                value: 'MacIntel',
+                configurable: true,
+            });
+
+            const { result } = renderHook(() => useMacroEngine(mockEditor));
+
+            act(() => {
+                result.current.handleStartRecording();
+            });
+
+            // Cmd+Shift+Right = Select to end of line (like Shift+End)
+            act(() => {
+                onKeyDownCallback({
+                    browserEvent: { key: "ArrowRight" },
+                    ctrlKey: false,
+                    metaKey: true,
+                    shiftKey: true,
+                    altKey: false,
+                });
+            });
+
+            expect(result.current.recordedActions).toContainEqual({
+                type: ACTION_TYPE.SELECT_END,
+            });
+
+            // Cmd+Shift+Left = Select to beginning of line (like Shift+Home)
+            act(() => {
+                onKeyDownCallback({
+                    browserEvent: { key: "ArrowLeft" },
+                    ctrlKey: false,
+                    metaKey: true,
+                    shiftKey: true,
+                    altKey: false,
+                });
+            });
+
+            expect(result.current.recordedActions).toContainEqual({
+                type: ACTION_TYPE.SELECT_HOME,
+            });
+        });
+
+        it("should record line navigation with Cmd+Arrow on Mac (Home/End behavior)", () => {
+            Object.defineProperty(navigator, 'platform', {
+                value: 'MacIntel',
+                configurable: true,
+            });
+
+            const { result } = renderHook(() => useMacroEngine(mockEditor));
+
+            act(() => {
+                result.current.handleStartRecording();
+            });
+
+            // Cmd+Right = Move to end of line (like End key)
+            act(() => {
+                onKeyDownCallback({
+                    browserEvent: { key: "ArrowRight" },
+                    ctrlKey: false,
+                    metaKey: true,
+                    shiftKey: false,
+                    altKey: false,
+                });
+            });
+
+            expect(result.current.recordedActions).toContainEqual({
+                type: ACTION_TYPE.MOVE_END,
+            });
+
+            // Cmd+Left = Move to beginning of line (like Home key)
+            act(() => {
+                onKeyDownCallback({
+                    browserEvent: { key: "ArrowLeft" },
+                    ctrlKey: false,
+                    metaKey: true,
+                    shiftKey: false,
+                    altKey: false,
+                });
+            });
+
+            expect(result.current.recordedActions).toContainEqual({
+                type: ACTION_TYPE.MOVE_HOME,
+            });
+        });
+
+        it("should record word deletion with Ctrl+Backspace/Delete on Windows/Linux", () => {
+            Object.defineProperty(navigator, 'platform', {
+                value: 'Win32',
+                configurable: true,
+            });
+
+            const { result } = renderHook(() => useMacroEngine(mockEditor));
+
+            act(() => {
+                result.current.handleStartRecording();
+            });
+
+            // Ctrl+Backspace (delete word left)
+            act(() => {
+                onKeyDownCallback({
+                    browserEvent: { key: "Backspace" },
+                    ctrlKey: true,
+                    metaKey: false,
+                    shiftKey: false,
+                    altKey: false,
+                });
+            });
+
+            expect(result.current.recordedActions).toContainEqual({
+                type: ACTION_TYPE.DELETE_WORD_LEFT,
+            });
+
+            // Ctrl+Delete (delete word right)
+            act(() => {
+                onKeyDownCallback({
+                    browserEvent: { key: "Delete" },
+                    ctrlKey: true,
+                    metaKey: false,
+                    shiftKey: false,
+                    altKey: false,
+                });
+            });
+
+            expect(result.current.recordedActions).toContainEqual({
+                type: ACTION_TYPE.DELETE_WORD_RIGHT,
+            });
+        });
+
+        it("should record word deletion with Option+Backspace/Delete on Mac", () => {
+            Object.defineProperty(navigator, 'platform', {
+                value: 'MacIntel',
+                configurable: true,
+            });
+
+            const { result } = renderHook(() => useMacroEngine(mockEditor));
+
+            act(() => {
+                result.current.handleStartRecording();
+            });
+
+            // Option+Backspace (delete word left on Mac)
+            act(() => {
+                onKeyDownCallback({
+                    browserEvent: { key: "Backspace" },
+                    ctrlKey: false,
+                    metaKey: false,
+                    shiftKey: false,
+                    altKey: true,
+                });
+            });
+
+            expect(result.current.recordedActions).toContainEqual({
+                type: ACTION_TYPE.DELETE_WORD_LEFT,
+            });
+
+            // Option+Delete (delete word right on Mac)
+            act(() => {
+                onKeyDownCallback({
+                    browserEvent: { key: "Delete" },
+                    ctrlKey: false,
+                    metaKey: false,
+                    shiftKey: false,
+                    altKey: true,
+                });
+            });
+
+            expect(result.current.recordedActions).toContainEqual({
+                type: ACTION_TYPE.DELETE_WORD_RIGHT,
+            });
+        });
+    });
 });

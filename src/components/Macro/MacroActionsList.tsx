@@ -28,6 +28,13 @@ const ACTION_SYMBOLS: Record<
   [ACTION_TYPE.MOVE_END]: "⇥",
   [ACTION_TYPE.SELECT_HOME]: "[⇤S]",
   [ACTION_TYPE.SELECT_END]: "[⇥S]",
+  // Word-level operations
+  [ACTION_TYPE.MOVE_WORD_LEFT]: "⇠",
+  [ACTION_TYPE.MOVE_WORD_RIGHT]: "⇢",
+  [ACTION_TYPE.SELECT_WORD_LEFT]: "[⇠S]",
+  [ACTION_TYPE.SELECT_WORD_RIGHT]: "[⇢S]",
+  [ACTION_TYPE.DELETE_WORD_LEFT]: "⌫W",
+  [ACTION_TYPE.DELETE_WORD_RIGHT]: "⌦W",
 };
 
 interface MacroActionsListProps {

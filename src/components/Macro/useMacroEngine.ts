@@ -30,6 +30,13 @@ export const ACTION_TYPE = {
   MOVE_END: "moveEnd",
   SELECT_HOME: "selectHome",
   SELECT_END: "selectEnd",
+  // Word-level operations
+  MOVE_WORD_LEFT: "moveWordLeft",
+  MOVE_WORD_RIGHT: "moveWordRight",
+  SELECT_WORD_LEFT: "selectWordLeft",
+  SELECT_WORD_RIGHT: "selectWordRight",
+  DELETE_WORD_LEFT: "deleteWordLeft",
+  DELETE_WORD_RIGHT: "deleteWordRight",
 } as const;
 
 // Action Type Definition
@@ -51,7 +58,13 @@ export type Action =
   | { type: typeof ACTION_TYPE.MOVE_HOME }
   | { type: typeof ACTION_TYPE.MOVE_END }
   | { type: typeof ACTION_TYPE.SELECT_HOME }
-  | { type: typeof ACTION_TYPE.SELECT_END };
+  | { type: typeof ACTION_TYPE.SELECT_END }
+  | { type: typeof ACTION_TYPE.MOVE_WORD_LEFT }
+  | { type: typeof ACTION_TYPE.MOVE_WORD_RIGHT }
+  | { type: typeof ACTION_TYPE.SELECT_WORD_LEFT }
+  | { type: typeof ACTION_TYPE.SELECT_WORD_RIGHT }
+  | { type: typeof ACTION_TYPE.DELETE_WORD_LEFT }
+  | { type: typeof ACTION_TYPE.DELETE_WORD_RIGHT };
 
 // Monaco Command IDs
 const MONACO_CMD = {
@@ -69,6 +82,13 @@ const MONACO_CMD = {
   CURSOR_END: "cursorEnd",
   CURSOR_HOME_SELECT: "cursorHomeSelect",
   CURSOR_END_SELECT: "cursorEndSelect",
+  // Word-level operations
+  CURSOR_WORD_LEFT: "cursorWordLeft",
+  CURSOR_WORD_RIGHT: "cursorWordRight",
+  CURSOR_WORD_LEFT_SELECT: "cursorWordLeftSelect",
+  CURSOR_WORD_RIGHT_SELECT: "cursorWordRightSelect",
+  DELETE_WORD_LEFT: "deleteWordLeft",
+  DELETE_WORD_RIGHT: "deleteWordRight",
   // Added TYPE for standard character insertion during playback (optional, but safer)
   TYPE: "type",
 } as const;
@@ -113,6 +133,17 @@ const getModelValueInRange = (
   }
 };
 
+// Utility function to check if key is an arrow key
+const isArrowKey = (key: string, direction: "left" | "right" | "up" | "down"): boolean => {
+  const directionMap = {
+    left: ["ArrowLeft", "Left"],
+    right: ["ArrowRight", "Right"],
+    up: ["ArrowUp", "Up"],
+    down: ["ArrowDown", "Down"],
+  };
+  return directionMap[direction].includes(key);
+};
+
 export const useMacroEngine = (
   editor: monaco.editor.IStandaloneCodeEditor | null,
 ): MacroEngine => {
@@ -151,25 +182,71 @@ export const useMacroEngine = (
             const { key } = e.browserEvent;
             const ctrlCmd = e.ctrlKey || e.metaKey;
             const shift = e.shiftKey;
+            const alt = e.altKey;
+
+            // Word-level operations: Alt/Option on Mac, Ctrl on Windows/Linux
+            const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+            const isWordOperation = isMac
+              ? (alt && !e.ctrlKey && !e.metaKey)  // Mac: Option only
+              : (e.ctrlKey && !alt && !e.metaKey); // Win/Linux: Ctrl only
+
+            // Line-level operations on Mac: Cmd+Arrow = Home/End
+            const isLineOperation = isMac && e.metaKey && !alt && !e.ctrlKey;
 
             let actionToAdd: Action | null = null;
             let isPasteIntent = false;
 
-            // --- Handle only non-character keys or modified keys ---
-            if (shift) {
-              if (key === "ArrowLeft")
+            // --- Handle word-level operations ---
+            // Mac: Option for word operations
+            // Windows/Linux: Ctrl for word operations
+            // Exclude paste/copy operations (handled separately)
+            const keyLower = key.toLowerCase();
+            const isPasteCopyKey = keyLower === 'v' || keyLower === 'c' || keyLower === 'x';
+
+            if (isWordOperation && shift && !isPasteCopyKey) {
+              // Word selection
+              if (isArrowKey(key, "left"))
+                actionToAdd = { type: ACTION_TYPE.SELECT_WORD_LEFT };
+              else if (isArrowKey(key, "right"))
+                actionToAdd = { type: ACTION_TYPE.SELECT_WORD_RIGHT };
+            } else if (isWordOperation && !shift && !isPasteCopyKey) {
+              // Word navigation
+              if (isArrowKey(key, "left"))
+                actionToAdd = { type: ACTION_TYPE.MOVE_WORD_LEFT };
+              else if (isArrowKey(key, "right"))
+                actionToAdd = { type: ACTION_TYPE.MOVE_WORD_RIGHT };
+              // Word deletion
+              else if (key === "Backspace")
+                actionToAdd = { type: ACTION_TYPE.DELETE_WORD_LEFT };
+              else if (key === "Delete")
+                actionToAdd = { type: ACTION_TYPE.DELETE_WORD_RIGHT };
+            }
+            // --- Handle line-level operations on Mac (Cmd+Arrow = Home/End) ---
+            else if (isLineOperation && shift) {
+              if (isArrowKey(key, "left"))
+                actionToAdd = { type: ACTION_TYPE.SELECT_HOME };
+              else if (isArrowKey(key, "right"))
+                actionToAdd = { type: ACTION_TYPE.SELECT_END };
+            } else if (isLineOperation && !shift) {
+              if (isArrowKey(key, "left"))
+                actionToAdd = { type: ACTION_TYPE.MOVE_HOME };
+              else if (isArrowKey(key, "right"))
+                actionToAdd = { type: ACTION_TYPE.MOVE_END };
+            }
+            // --- Handle character/line-level selection and navigation ---
+            else if (shift) {
+              if (isArrowKey(key, "left"))
                 actionToAdd = { type: ACTION_TYPE.SELECT_LEFT };
-              else if (key === "ArrowRight")
+              else if (isArrowKey(key, "right"))
                 actionToAdd = { type: ACTION_TYPE.SELECT_RIGHT };
-              else if (key === "ArrowUp")
+              else if (isArrowKey(key, "up"))
                 actionToAdd = { type: ACTION_TYPE.SELECT_UP };
-              else if (key === "ArrowDown")
+              else if (isArrowKey(key, "down"))
                 actionToAdd = { type: ACTION_TYPE.SELECT_DOWN };
               else if (key === "Home")
                 actionToAdd = { type: ACTION_TYPE.SELECT_HOME };
               else if (key === "End")
                 actionToAdd = { type: ACTION_TYPE.SELECT_END };
-              // Let Shift+Other keys fall through (e.g., Shift+Enter, Shift+Tab)
             } else if (ctrlCmd) {
               if (key.toLowerCase() === "v") {
                 isPasteIntent = true;
@@ -196,15 +273,15 @@ export const useMacroEngine = (
               } // Don't prevent default, let Monaco insert newline
               else if (key === "Tab") {
                 actionToAdd = { type: ACTION_TYPE.CHAR, value: "\t" };
-              } // Record Tab as a character
-              // Navigation keys (don't prevent default)
-              else if (key === "ArrowLeft" || key === "Left")
+              }
+              // Navigation keys
+              else if (isArrowKey(key, "left"))
                 actionToAdd = { type: ACTION_TYPE.MOVE_LEFT };
-              else if (key === "ArrowRight" || key === "Right")
+              else if (isArrowKey(key, "right"))
                 actionToAdd = { type: ACTION_TYPE.MOVE_RIGHT };
-              else if (key === "ArrowUp" || key === "Up")
+              else if (isArrowKey(key, "up"))
                 actionToAdd = { type: ACTION_TYPE.MOVE_UP };
-              else if (key === "ArrowDown" || key === "Down")
+              else if (isArrowKey(key, "down"))
                 actionToAdd = { type: ACTION_TYPE.MOVE_DOWN };
               else if (key === "Home")
                 actionToAdd = { type: ACTION_TYPE.MOVE_HOME };
@@ -394,6 +471,26 @@ export const useMacroEngine = (
               break;
             case ACTION_TYPE.SELECT_END:
               editor.trigger("macro", MONACO_CMD.CURSOR_END_SELECT, null);
+              break;
+
+            // --- Word-level Playback ---
+            case ACTION_TYPE.MOVE_WORD_LEFT:
+              editor.trigger("macro", MONACO_CMD.CURSOR_WORD_LEFT, null);
+              break;
+            case ACTION_TYPE.MOVE_WORD_RIGHT:
+              editor.trigger("macro", MONACO_CMD.CURSOR_WORD_RIGHT, null);
+              break;
+            case ACTION_TYPE.SELECT_WORD_LEFT:
+              editor.trigger("macro", MONACO_CMD.CURSOR_WORD_LEFT_SELECT, null);
+              break;
+            case ACTION_TYPE.SELECT_WORD_RIGHT:
+              editor.trigger("macro", MONACO_CMD.CURSOR_WORD_RIGHT_SELECT, null);
+              break;
+            case ACTION_TYPE.DELETE_WORD_LEFT:
+              editor.trigger("macro", MONACO_CMD.DELETE_WORD_LEFT, null);
+              break;
+            case ACTION_TYPE.DELETE_WORD_RIGHT:
+              editor.trigger("macro", MONACO_CMD.DELETE_WORD_RIGHT, null);
               break;
 
             case ACTION_TYPE.COPY:
