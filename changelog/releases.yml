@@ -3,9 +3,27 @@ config:
   max_versions: 100  # Maximum number of versions to display
 
 releases:
+  - version: "1.16.0"
+    type: "latest"
+    draft: false
+    date: "2026-01-12"
+    headline: "Macro Recording & Menu Refinement"
+    summary: "New Macro Recording engine with floating toolbar, status bar integration, and refined context menu"
+    description: "Introduces a powerful Macro Recording engine with a floating toolbar for playback controls and a comprehensive cleanup of the tab context menu for better organization."
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**Macro Recording Engine:** Record and replay complex editor interactions including typing, cursors, selection, and deletions with a new engine."
+          - "**Floating Macro Toolbar:** New draggable toolbar for Macro controls (Record, Play, Play to End) that appears automatically when recording starts."
+      - name: "🔧 Improvements"
+        changes:
+          - "**Context Menu Restructure:** significantly reorganized tab context menu for better usability - introducing 'Organize' submenu, top-level 'Share' and 'Duplicate', and clearer grouping."
+          - "**Menu Icons:** Updated icons across the context menu for better visual clarity (Share, Organize, Split, etc.)."
+          - "**Status Bar Refinement:** Cleaned up status bar layout for better information density and visual balance."
+
   - version: "1.15.0"
     type: "release"
-    draft: true
+    draft: false
     date: "2026-01-03"
     headline: "Colour Palette: Canvas-First UX & Smart Tools"
     summary: "Complete rewrite with canvas-first interface, intelligent generation, and slide-over feature panels"
@@ -33,7 +51,7 @@ releases:
           - "**Color Rendering Consistency:** Guaranteed `#` prefix normalization across all colors to prevent rendering failures."
 
   - version: "1.14.0"
-    type: "latest"
+    type: "release"
     draft: false
     date: "2025-12-29"
     headline: "Share Tabs with Privacy-First URLs"
