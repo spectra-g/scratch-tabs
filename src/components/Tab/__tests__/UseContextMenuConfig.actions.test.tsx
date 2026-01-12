@@ -239,4 +239,19 @@ describe('UseContextMenuConfig - Actions and Structure', () => {
     expect(result.current.splitModalProps).not.toBeNull();
     expect(result.current.splitModalProps?.isOpen).toBe(true);
   });
+
+  it('should include Macro Recording menu item after Transformations', () => {
+    const { result } = renderHook(() =>
+      useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
+    );
+
+    const menuItems = result.current.menuItems;
+    const transformationsIndex = menuItems.findIndex(item => item.id === 'transformations');
+    const macroIndex = menuItems.findIndex(item => item.id === 'macroRecording');
+
+    expect(transformationsIndex).not.toBe(-1);
+    expect(macroIndex).not.toBe(-1);
+    expect(macroIndex).toBe(transformationsIndex + 1);
+    expect(menuItems[macroIndex].label).toBe('Macro Recording');
+  });
 });

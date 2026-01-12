@@ -25,6 +25,7 @@ export const FloatingMacroToolbar: React.FC<FloatingMacroToolbarProps> = ({
     handleStopRecording,
     handlePlayRecording,
     handlePlayToEnd,
+    handleRemoveAction,
     canPlay,
     forceVisible,
     executingActionIndex,
@@ -270,13 +271,22 @@ export const FloatingMacroToolbar: React.FC<FloatingMacroToolbarProps> = ({
           {recordedActions.length > 0 && (
             <div className="pt-2 border-t border-base">
               <div className="text-xs text-secondary font-semibold mb-1">Actions Recorded:</div>
-              <div className="max-h-[150px] overflow-y-auto bg-element-hover rounded p-2 space-y-1 custom-scrollbar">
+              <div className="max-h-[150px] overflow-y-auto bg-surface-secondary rounded p-2 space-y-1 custom-scrollbar">
                 {recordedActions.map((action: Action, index: number) => (
                   <div
                     key={index}
-                    className="text-xs font-mono text-main"
+                    className="group flex items-center justify-between text-xs font-mono text-main hover:bg-element-hover rounded px-2 py-1 transition-colors"
                   >
-                    {index + 1}. {formatAction(action)}
+                    <span className={isPlaying && index === executingActionIndex ? 'text-blue-500 font-bold' : ''}>
+                      {index + 1}. {formatAction(action)}
+                    </span>
+                    <button
+                      onClick={() => handleRemoveAction(index)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-red-500/20 rounded text-red-500 ml-2 flex-shrink-0"
+                      title="Remove action"
+                    >
+                      <X size={12} />
+                    </button>
                   </div>
                 ))}
               </div>

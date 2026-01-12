@@ -473,6 +473,14 @@ Add any other context about the problem here.
       action: handleOpenTransformations,
       condition: !!tab && !tab.isTablet && !tab.isRich,
     },
+    // Macro Recording
+    {
+      id: "macroRecording",
+      label: "Macro Recording",
+      icon: Circle,
+      action: handleMacroRecording,
+      condition: !!tab && !tab.isTablet && !tab.isRich,
+    },
     // 8. Split Content
     {
       id: "splitTab",

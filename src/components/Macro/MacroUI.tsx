@@ -2,6 +2,7 @@ import React from "react";
 import * as monaco from "monaco-editor";
 import { Disc, Square, Play, PlayCircle } from "lucide-react";
 import { MacroEngine, Action, ACTION_TYPE } from "./useMacroEngine";
+import { MacroActionsList } from "./MacroActionsList";
 
 // --- Constants ---
 const MAX_DISPLAY_LENGTH = 50;
@@ -47,8 +48,10 @@ export const MacroUI: React.FC<MacroUIProps> = ({ editor, engine }) => {
     handleStopRecording,
     handlePlayRecording,
     handlePlayToEnd,
+    handleRemoveAction,
     canPlay,
     canStop,
+    executingActionIndex,
   } = engine;
 
   // --- UI Helper Functions ---
@@ -94,9 +97,21 @@ export const MacroUI: React.FC<MacroUIProps> = ({ editor, engine }) => {
   const inactiveClass = "text-muted";
   const activeClass = "text-secondary";
 
+  const isPlaying = status === "playingOnce" || status === "playingToEnd";
+
   return (
-    <div className="flex items-center space-x-2 px-2 h-6 bg-transparent text-xs">
-      {/* Record Button */}
+    <div className="relative">
+      {/* Actions List (shown above toolbar) */}
+      <MacroActionsList
+        actions={recordedActions}
+        onRemoveAction={handleRemoveAction}
+        executingActionIndex={executingActionIndex}
+        isPlaying={isPlaying}
+      />
+
+      {/* Toolbar */}
+      <div className="flex items-center space-x-2 px-2 h-6 bg-transparent text-xs">
+        {/* Record Button */}
       <button
         className={`${commonButtonClass} ${status === "recording" ? activeRecordClass : editor ? activeClass : inactiveClass}`}
         onClick={handleStartRecording}
@@ -158,10 +173,11 @@ export const MacroUI: React.FC<MacroUIProps> = ({ editor, engine }) => {
         <PlayCircle size={14} />
       </button>
 
-      {/* Status Display */}
-      <span className="text-muted truncate flex-1 overflow-hidden whitespace-nowrap pl-1">
-        {getStatusText()}
-      </span>
+        {/* Status Display */}
+        <span className="text-muted truncate flex-1 overflow-hidden whitespace-nowrap pl-1">
+          {getStatusText()}
+        </span>
+      </div>
     </div>
   );
 };

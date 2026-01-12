@@ -86,6 +86,7 @@ export interface MacroEngine {
   forceVisible: boolean;
   setForceVisible: (visible: boolean) => void;
   handleClearRecording: () => void;
+  handleRemoveAction: (index: number) => void;
   executingActionIndex: number;
 }
 
@@ -454,6 +455,16 @@ export const useMacroEngine = (
     useMacroStore.getState().setForceShowToolbar(false, null, null);
   }, []);
 
+  const handleRemoveAction = useCallback((index: number) => {
+    setRecordedActions((prev) => {
+      if (index < 0 || index >= prev.length) {
+        console.warn(`Invalid index ${index} for removeAction`);
+        return prev;
+      }
+      return prev.filter((_, i) => i !== index);
+    });
+  }, []);
+
   // Stop recording/playing if toolbar becomes invisible (e.g. tab switch)
   useEffect(() => {
     if (!forceVisible && status !== "idle") {
@@ -598,6 +609,7 @@ export const useMacroEngine = (
       forceVisible,
       setForceVisible: handleSetForceVisible,
       handleClearRecording,
+      handleRemoveAction,
       executingActionIndex,
     }),
     [
@@ -613,6 +625,7 @@ export const useMacroEngine = (
       forceVisible,
       handleSetForceVisible,
       handleClearRecording,
+      handleRemoveAction,
       executingActionIndex,
     ],
   );
