@@ -19,6 +19,13 @@ import {
   Scissors,
   Circle,
   Grid,
+  History,
+  ClipboardPaste,
+  Share2,
+  FileCode,
+  PanelLeftClose,
+  PanelRightClose,
+  Download,
 } from "../Icons";
 import { FormatSelector } from "./FormatSelector";
 import { formatRegistry } from "../../formats";
@@ -28,10 +35,9 @@ import { ContextMenuAction, TabSide } from "../../constants";
 import { modelManager } from "../../services/modelManager";
 import { toolService, ToolItem } from "../../services/toolService";
 import {
-  CompareSubmenu,
-  ShareDownloadSubmenu,
-  CloseSubmenu,
+  SubMenuItem,
   OrganizeSubmenu,
+  CloseSubmenu,
 } from "./ContextMenuSubmenus";
 import { OpenInSubmenu } from "./OpenInSubmenu";
 
@@ -368,42 +374,47 @@ Add any other context about the problem here.
 
   // Tidy up the menu structure - FINAL RESTRUCTURE
   const menuItems: MenuItem[] = [
-    // 1. Rename (Top for quick identity changes)
+    // 1. Share
     {
-      id: "rename",
-      label: "Rename",
-      icon: Edit3,
-      action: handleRename,
-      condition: canRename,
-    },
-    // 2. Copy Content
-    {
-      id: "copyContent",
-      label: "Copy Content",
-      icon: Copy,
-      action: handleCopyContent,
+      id: "share",
+      label: "Share",
+      icon: Share2,
+      action: handleOpenShareModal,
       condition: !!tab && !tab.isTablet && !tab.isRich,
     },
-    // Separator
-    { id: "sep-top-1", isSeparator: true },
-    // 3. Compare ▶
+    // Duplicate
+    {
+      id: "duplicate",
+      label: "Duplicate",
+      icon: Copy,
+      action: () => handleSimpleAction(rootStore.duplicateTab, tabId, isRightSide),
+      condition: !!tab && !tab.isTablet,
+    },
+    // Compare with other side
     {
       id: "compare",
-      label: "Compare",
+      label: "Compare with other side",
       icon: GitCompare,
-      condition: !!(canCompare || canCompareWithPrevious || canCompareFromClipboard),
-      submenu: (
-        <CompareSubmenu
-          canCompare={!!canCompare}
-          canCompareWithPrevious={!!canCompareWithPrevious}
-          canCompareFromClipboard={!!canCompareFromClipboard}
-          onCompare={() => closeContextMenu("compareSides", tabId)}
-          onCompareWithPrevious={handleCompareWithPrevious}
-          onCompareFromClipboard={handleCompareFromClipboard}
-        />
-      ),
+      action: () => closeContextMenu("compareSides", tabId),
+      condition: canCompare,
     },
-    // 4. Split Right
+    // 2. Compare with Previous Tab
+    {
+      id: "compareWithPrevious",
+      label: "Compare with Previous Tab",
+      icon: History,
+      action: handleCompareWithPrevious,
+      condition: !!canCompareWithPrevious,
+    },
+    // 3. Compare with Clipboard
+    {
+      id: "compareClipboard",
+      label: "Compare with Clipboard",
+      icon: ClipboardPaste,
+      action: handleCompareFromClipboard,
+      condition: !!canCompareFromClipboard,
+    },
+    // 4. Split Right / Unsplit
     {
       id: "split-unsplit",
       label: canUnsplit ? "Unsplit" : "Split Right",
@@ -411,38 +422,38 @@ Add any other context about the problem here.
       action: () => handleSimpleAction(canUnsplit ? rootStore.unsplitScreen : rootStore.splitScreen, tabId),
       condition: canUnsplit || canSplit,
     },
+    // Move Right
+    {
+      id: "moveRight",
+      label: "Move to Right",
+      icon: ChevronRight,
+      action: () => handleSimpleAction(rootStore.moveTabToRight, tabId),
+      condition: canMoveRight,
+    },
+    // Move Left
+    {
+      id: "moveLeft",
+      label: "Move to Left",
+      icon: ChevronLeft,
+      action: () => handleSimpleAction(rootStore.moveTabToLeft, tabId),
+      condition: canMoveLeft,
+    },
     // Separator
-    { id: "sep-top-2", isSeparator: true },
-    // 5. Split Tab (Remove 3 dots)
+    { id: "sep-1", isSeparator: true },
+    // 5. From Sample
     {
-      id: "splitTab",
-      label: "Split Tab",
-      icon: Scissors,
-      action: handleOpenSplitModal,
-      condition: !!tab && !tab.isTablet && !tab.isRich,
+      id: "fromSample",
+      label: "From Sample",
+      icon: FileCode,
+      condition: canShowFromSample,
+      submenu: <FormatSelector onSelect={handleLanguageSelect} />,
     },
-    // 6. Transformations (Content mod)
-    {
-      id: "transformations",
-      label: "Transformations",
-      icon: MagicWand,
-      action: handleOpenTransformations,
-      condition: !!tab && !tab.isTablet && !tab.isRich,
-    },
-    // 7. Macro Recording (Content mod)
-    {
-      id: "macroRecording",
-      label: "Macro Recording",
-      icon: Circle,
-      action: handleMacroRecording,
-      condition: !!tab && !tab.isTablet && !tab.isRich,
-    },
-    // 8. Open In... ▶ (As current)
+    // 6. Open In...
     {
       id: "openIn",
       label: "Open in...",
       icon: Grid,
-      condition: !!tab && !tab.isRich,
+      condition: !!tab && !tab.isTablet && !tab.isRich,
       submenu: (
         <OpenInSubmenu
           tab={tab!}
@@ -453,8 +464,34 @@ Add any other context about the problem here.
       ),
     },
     // Separator
-    { id: "sep-mid", isSeparator: true },
-    // 9. Organize ▶ (Pin, Duplicate, Group)
+    { id: "sep-2", isSeparator: true },
+    // 7. Transformations
+    {
+      id: "transformations",
+      label: "Transformations",
+      icon: MagicWand,
+      action: handleOpenTransformations,
+      condition: !!tab && !tab.isTablet && !tab.isRich,
+    },
+    // 8. Split Content
+    {
+      id: "splitTab",
+      label: "Split Content",
+      icon: Scissors,
+      action: handleOpenSplitModal,
+      condition: !!tab && !tab.isTablet && !tab.isRich,
+    },
+    // 9. Copy Content
+    {
+      id: "copyContent",
+      label: "Copy Content",
+      icon: Copy,
+      action: handleCopyContent,
+      condition: !!tab && !tab.isTablet && !tab.isRich,
+    },
+    // Separator
+    { id: "sep-3", isSeparator: true },
+    // 10. Organize
     {
       id: "organize",
       label: "Organize",
@@ -462,56 +499,30 @@ Add any other context about the problem here.
       submenu: (
         <OrganizeSubmenu
           isPinned={isPinned}
-          canDuplicate={true}
           canGroupTypes={true}
+          canRename={canRename}
           onTogglePin={() => handleSimpleAction(rootStore.toggleTabPin, tabId)}
-          onDuplicate={() => handleSimpleAction(rootStore.duplicateTab, tabId, isRightSide)}
           onGroupTypes={() => handleSimpleAction(rootStore.groupTabsByType, isRightSide)}
+          onRename={handleRename}
         />
       ),
     },
-    // 10. Share / Download ▶ (Share, Copy Content, Download Tab, Download All)
+    // 11. Download
     {
-      id: "shareDownload",
-      label: "Share / Download",
-      icon: ExternalLink,
+      id: "download",
+      label: "Download",
+      icon: Download,
+      condition: canDownload,
       submenu: (
-        <ShareDownloadSubmenu
-          canShare={!!tab && !tab.isTablet && !tab.isRich}
-          canDownload={canDownload}
-          onShare={handleOpenShareModal}
-          onCopyContent={handleCopyContent}
-          onDownload={handleDownload}
-          onDownloadAll={handleDownloadAll}
-        />
+        <div className="py-1">
+          <SubMenuItem label="Download Tab" icon={Download} onClick={handleDownload} />
+          <SubMenuItem label="Download All" icon={Download} onClick={handleDownloadAll} />
+        </div>
       ),
-    },
-    // 11. From Sample ▶ (as current)
-    {
-      id: "fromSample",
-      label: "From Sample",
-      icon: Copy,
-      condition: canShowFromSample,
-      submenu: <FormatSelector onSelect={handleLanguageSelect} />,
-    },
-    // Move Right/Left (Keeping them but they will be below From Sample if visible)
-    {
-      id: "moveRight",
-      label: "Move to Right",
-      icon: ChevronRight,
-      action: () => handleSimpleAction(rootStore.moveTabToRight, tabId),
-      condition: canMoveRight,
-    },
-    {
-      id: "moveLeft",
-      label: "Move to Left",
-      icon: ChevronLeft,
-      action: () => handleSimpleAction(rootStore.moveTabToLeft, tabId),
-      condition: canMoveLeft,
     },
     // Separator
-    { id: "sep-bottom", isSeparator: true },
-    // 12. Close ▶ 
+    { id: "sep-4", isSeparator: true },
+    // 12. Close
     {
       id: "close",
       label: "Close",
@@ -521,6 +532,8 @@ Add any other context about the problem here.
           canCloseToLeft={canCloseToLeft}
           canCloseToRight={canCloseToRight}
           canCloseAllExcept={canCloseAllExcept}
+          leftIcon={PanelLeftClose}
+          rightIcon={PanelRightClose}
           onClose={() =>
             handleRequestConfirmation(
               "close",

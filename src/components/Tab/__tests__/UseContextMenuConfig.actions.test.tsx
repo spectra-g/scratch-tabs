@@ -55,7 +55,14 @@ describe('UseContextMenuConfig - Actions and Structure', () => {
         leftTabs: ['test-tab-id'],
         rightTabs: ['tablet-tab-id'],
         isSplit: false,
+        leftTabHistory: ['other-tab-id', 'test-tab-id'], // Correctly mock history here
       },
+    } as any);
+
+    // Mock tabs store
+    mockUseTabsStore.mockReturnValue({
+      tabs: [mockTab, mockTabletTab],
+      activeTabId: 'test-tab-id',
     } as any);
 
     mockUseRootStore.mockReturnValue({
@@ -69,23 +76,33 @@ describe('UseContextMenuConfig - Actions and Structure', () => {
     } as any);
   });
 
-  it('should have Rename as the first item', () => {
+  it('should have Share as the first item', () => {
     const { result } = renderHook(() =>
       useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
     );
 
     const menuItems = result.current.menuItems;
-    expect(menuItems[0].id).toBe('rename');
-    expect(menuItems[0].label).toBe('Rename');
+    expect(menuItems[0].id).toBe('share');
+    expect(menuItems[0].label).toBe('Share');
   });
 
-  it('should have Copy Content as the second item', () => {
+  it('should have Duplicate as the second item', () => {
     const { result } = renderHook(() =>
       useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
     );
 
     const menuItems = result.current.menuItems;
-    expect(menuItems[1].id).toBe('copyContent');
+    expect(menuItems[1].id).toBe('duplicate');
+    expect(menuItems[1].label).toBe('Duplicate');
+  });
+
+  it('should have Compare with Previous Tab as the third item', () => {
+    const { result } = renderHook(() =>
+      useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
+    );
+
+    const menuItems = result.current.menuItems;
+    expect(menuItems[2].id).toBe('compareWithPrevious');
   });
   it('should rename "Split View" to "Split Right"', () => {
     const { result } = renderHook(() =>
@@ -120,17 +137,44 @@ describe('UseContextMenuConfig - Actions and Structure', () => {
     expect(splitItem?.label).toBe('Unsplit');
   });
 
-  it('should include "Open in..." submenu for editor tabs', () => {
+  it('should have Compare with other side as the second item when split', () => {
+    mockUseSplitViewStore.mockReturnValue({
+      splitView: {
+        leftTabs: ['test-tab-id'],
+        rightTabs: ['other-tab-id'],
+        isSplit: true,
+        activeLeftTabId: 'test-tab-id',
+        activeRightTabId: 'other-tab-id',
+      },
+    } as any);
+
     const { result } = renderHook(() =>
       useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
     );
 
     const menuItems = result.current.menuItems;
-    const openInItem = menuItems.find(item => item.id === 'openIn');
+    expect(menuItems[2].id).toBe('compare');
+    expect(menuItems[2].label).toBe('Compare with other side');
+  });
 
-    expect(openInItem).toBeDefined();
-    expect(openInItem?.label).toBe('Open in...');
-    expect(openInItem?.submenu).toBeDefined();
+  it('should have Compare with Previous Tab as the third item when split', () => {
+    mockUseSplitViewStore.mockReturnValue({
+      splitView: {
+        leftTabs: ['test-tab-id'],
+        rightTabs: ['other-tab-id'],
+        isSplit: true,
+        activeLeftTabId: 'test-tab-id',
+        activeRightTabId: 'other-tab-id',
+        leftTabHistory: ['prev-tab-id', 'test-tab-id'],
+      },
+    } as any);
+
+    const { result } = renderHook(() =>
+      useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
+    );
+
+    const menuItems = result.current.menuItems;
+    expect(menuItems[3].id).toBe('compareWithPrevious');
   });
 
   it('should have "Pin" state inside Organize submenu', () => {
@@ -152,6 +196,8 @@ describe('UseContextMenuConfig - Actions and Structure', () => {
     // Check if the submenu component has the correct props
     const submenuProps = (organizeItem?.submenu as React.ReactElement).props;
     expect(submenuProps.isPinned).toBe(true);
+    expect(submenuProps.canRename).toBe(true);
+    expect(submenuProps.onRename).toBeDefined();
   });
 
   it('should handle tabs that do not exist gracefully', () => {
@@ -175,7 +221,7 @@ describe('UseContextMenuConfig - Actions and Structure', () => {
     const splitTabItem = menuItems.find(item => item.id === 'splitTab');
 
     expect(splitTabItem).toBeDefined();
-    expect(splitTabItem?.label).toBe('Split Tab');
+    expect(splitTabItem?.label).toBe('Split Content');
   });
 
   it('should set splitModalProps when split tab action is triggered', () => {

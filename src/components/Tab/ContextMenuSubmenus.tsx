@@ -14,6 +14,7 @@ import {
   Scissors,
   Square,
   ExternalLink,
+  Edit3,
 } from '../Icons';
 
 // Submenu Components for Context Menu Organization
@@ -98,20 +99,20 @@ export const CompareSubmenu: React.FC<CompareSubmenuProps> = ({
 // Organize Submenu
 interface OrganizeSubmenuProps {
   isPinned: boolean;
-  canDuplicate: boolean;
   canGroupTypes: boolean;
+  canRename: boolean;
   onTogglePin: () => void;
-  onDuplicate: () => void;
   onGroupTypes: () => void;
+  onRename: () => void;
 }
 
 export const OrganizeSubmenu: React.FC<OrganizeSubmenuProps> = ({
   isPinned,
-  canDuplicate,
   canGroupTypes,
   onTogglePin,
-  onDuplicate,
   onGroupTypes,
+  onRename,
+  canRename,
 }) => (
   <div className="py-1">
     <SubMenuItem
@@ -119,7 +120,7 @@ export const OrganizeSubmenu: React.FC<OrganizeSubmenuProps> = ({
       icon={Pin}
       onClick={onTogglePin}
     />
-    {canDuplicate && <SubMenuItem label="Duplicate" icon={Copy} onClick={onDuplicate} />}
+    {canRename && <SubMenuItem label="Rename" icon={Edit3} onClick={onRename} />}
     {canGroupTypes && (
       <>
         <div className="border-t border-base my-1"></div>
@@ -169,6 +170,8 @@ interface CloseSubmenuProps {
   onCloseAllExcept: () => void;
   onCloseToLeft: () => void;
   onCloseToRight: () => void;
+  leftIcon?: React.ComponentType<{ size?: number | string; className?: string }>;
+  rightIcon?: React.ComponentType<{ size?: number | string; className?: string }>;
 }
 
 export const CloseSubmenu: React.FC<CloseSubmenuProps> = ({
@@ -179,12 +182,14 @@ export const CloseSubmenu: React.FC<CloseSubmenuProps> = ({
   onCloseAllExcept,
   onCloseToLeft,
   onCloseToRight,
+  leftIcon: LeftIcon = ChevronLeft,
+  rightIcon: RightIcon = ChevronRight,
 }) => (
   <div className="py-1">
     <SubMenuItem label="Close Tab" icon={XCircle} onClick={onClose} />
     {canCloseAllExcept && <SubMenuItem label="Close All Other Tabs" icon={XCircle} onClick={onCloseAllExcept} />}
     {(canCloseToLeft || canCloseToRight) && <div className="border-t border-base my-1"></div>}
-    {canCloseToLeft && <SubMenuItem label="Close Tabs to Left" icon={ChevronLeft} onClick={onCloseToLeft} />}
-    {canCloseToRight && <SubMenuItem label="Close Tabs to Right" icon={ChevronRight} onClick={onCloseToRight} />}
+    {canCloseToLeft && <SubMenuItem label="Close Tabs to Left" icon={LeftIcon} onClick={onCloseToLeft} />}
+    {canCloseToRight && <SubMenuItem label="Close Tabs to Right" icon={RightIcon} onClick={onCloseToRight} />}
   </div>
 );

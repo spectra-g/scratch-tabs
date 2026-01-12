@@ -184,6 +184,9 @@ export {
   Blocks as Extension,
   Split,
   Maximize,
+  Share2,
+  PanelLeftClose,
+  PanelRightClose,
 } from 'lucide-react';
 
 // Export types separately

@@ -1,4 +1,3 @@
-@tab
 Feature: Tab context menu
 
   Background:
@@ -12,11 +11,19 @@ Feature: Tab context menu
     And I select "Transformations" from the context menu
     Then the batch tools modal should appear
 
+  Scenario: Tablet context menu items
+    When I click the icon for "New tablet"
+    And I select "Calculator" from the tablet selector
+    And I right-click the "Calculator" tab
+    Then the context menu should not show "Share" option
+    And the context menu should not show "Open in..." option
+    And the context menu should not show "Transformations" option
+
   Scenario: Rename a tab using context menu
     When I click the icon for "New tab with contents from clipboard"
     Then the "Scratch 1" tab should be active
     When I right-click the "Scratch 1" tab
-    And I select "Rename" from the context menu
+    And I select "Rename" from the "Organize" submenu
     Then the tab rename input should appear
     When I type "My Custom Tab" in the rename input
     And I press Enter to confirm rename
@@ -51,7 +58,7 @@ Feature: Tab context menu
     Then the "Scratch 1" tab should be active
     When I type "Original tab content for duplication test" into the editor
     And I right-click the "Scratch 1" tab
-    And I select "Duplicate" from the "Organize" submenu
+    And I select "Duplicate" from the context menu
     Then the "Scratch 1 (Copy)" tab should be active
     And the active editor content should contain "Original tab content for duplication test"
 
@@ -61,7 +68,7 @@ Feature: Tab context menu
     Then the "Scratch 1" tab should be active
     When I type "Different content from clipboard for comparison" into the editor
     And I right-click the "Scratch 1" tab
-    And I select "Compare with Clipboard" from the "Compare" submenu
+    And I select "Compare with Clipboard" from the context menu
     Then the diff modal should appear
     When I close the diff modal
     Then I should be in split view mode
@@ -97,7 +104,7 @@ Feature: Tab context menu
     When I click the "Scratch 2" tab
     Then the "Scratch 2" tab should be active
     When I right-click the "Scratch 2" tab
-    And I select "Compare with Previous Tab" from the "Compare" submenu
+    And I select "Compare with Previous Tab" from the context menu
     Then the diff modal should appear
     And the diff modal should show comparison between "Scratch 1" and "Scratch 2"
     And the diff modal left side should contain "Original content in first tab"
@@ -120,7 +127,7 @@ Feature: Tab context menu
     Then the "Scratch 4" tab should be active
     When I type "Right side second tab content" into the right editor
     When I right-click the "Scratch 1" tab
-    And I select "Compare with Other Side" from the "Compare" submenu
+    And I select "Compare with other side" from the context menu
     Then the diff modal should appear
     And the diff modal should show comparison between "Scratch 1" and "Scratch 4"
     And the diff modal left side should contain "Left side first tab content"
@@ -129,7 +136,7 @@ Feature: Tab context menu
     When I click the "Scratch 3" tab on the right side
     Then the "Scratch 3" tab should be active
     When I right-click the "Scratch 3" tab
-    And I select "Compare with Other Side" from the "Compare" submenu
+    And I select "Compare with other side" from the context menu
     Then the diff modal should appear
     And the diff modal should show comparison between "Scratch 1" and "Scratch 3"
     And the diff modal left side should contain "Left side first tab content"
@@ -221,7 +228,7 @@ Feature: Tab context menu
     When I select "JSON" from the "From Sample" submenu
     Then the status bar language should be "JSON"
     When I right-click the "Scratch 1" tab
-    And I select "Download Tab" from the "Share / Download" submenu
+    And I select "Download Tab" from the "Download" submenu
     Then a file should be downloaded with the name "Scratch 1.json"
 
   Scenario: Download all tabs using context menu
@@ -240,7 +247,7 @@ Feature: Tab context menu
     When I select "CSV / TSV" from the "From Sample" submenu
     Then the status bar language should be "CSV / TSV"
     When I right-click the "Scratch 1" tab
-    And I select "Download All" from the "Share / Download" submenu
+    And I select "Download All" from the "Download" submenu
     Then the download modal should appear
     When I click "Select All" in the download modal
     And I click "Download 3 Files" in the download modal

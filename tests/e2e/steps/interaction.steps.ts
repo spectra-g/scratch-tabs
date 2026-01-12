@@ -207,14 +207,14 @@ When('I pin the "{string}" tab', async function (tabTitle) {
 });
 
 When('I select {string} from the {string} submenu', async function (subItem, parentItem) {
-  if (parentItem === 'Download' || parentItem === 'Share / Download') {
+  if (subItem.startsWith('Download')) {
     this.download.startDownloadCapture();
   }
   await this.contextMenu.selectFromSubmenu(parentItem, subItem);
 });
 
 When('I select "{string}" from the "{string}" submenu', async function (subItem, parentItem) {
-  if (parentItem === 'Download' || parentItem === 'Share / Download') {
+  if (subItem.startsWith('Download')) {
     this.download.startDownloadCapture();
   }
   await this.contextMenu.selectFromSubmenu(parentItem, subItem);
