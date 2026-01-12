@@ -8,7 +8,7 @@ export class NavigationActions {
     // Wait for the page to load first
     await this.page.waitForLoadState('domcontentloaded');
     // Wait for the app to be visible - look for "Scratch Tabs" text
-    await expect(this.page.getByText('Scratch Tabs')).toBeVisible();
+    await expect(this.page.getByText('SCRATCH_TABS')).toBeVisible();
     await this.waitForPageStabilization();
   }
 

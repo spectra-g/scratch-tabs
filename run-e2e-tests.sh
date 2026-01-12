@@ -20,6 +20,6 @@ find dist/e2e -name '*.cjs' -exec sed -i '' 's/require("\.\/\([^"]*\)\.actions\.
 find dist/e2e -name '*.cjs' -exec sed -i '' 's/require("\.\.\/support\/testIndicator\.utils")/require("..\/support\/testIndicator.utils.cjs")/g' {} \;
 
 echo "🧪 Running E2E tests..."
-node run-cucumber.cjs --tags 'not @wip and not @bug'
+node run-cucumber.cjs "$@" --tags 'not @wip and not @bug'
 
 echo "✅ E2E test run completed" 

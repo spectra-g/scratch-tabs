@@ -7,7 +7,7 @@ Feature: Tab Sharing
     When I click the icon for "New tab"
     And I type "Hello from shared tab" into the editor
     And I right-click the "Scratch 1" tab
-    And I select "Share" from the context menu
+    And I select "Share" from the "Share / Download" submenu
     Then the share modal should appear
     And the share modal should show the tab title "Scratch 1"
 
@@ -15,7 +15,7 @@ Feature: Tab Sharing
     When I click the icon for "New tab"
     And I type "Small content" into the editor
     And I right-click the "Scratch 1" tab
-    And I select "Share" from the context menu
+    And I select "Share" from the "Share / Download" submenu
     Then the share modal should appear
     And the shareable URL input should be visible
     And the shareable URL input should contain "#/s/v1/"
@@ -24,7 +24,7 @@ Feature: Tab Sharing
     When I click the icon for "New tab"
     And I type "Content to share" into the editor
     And I right-click the "Scratch 1" tab
-    And I select "Share" from the context menu
+    And I select "Share" from the "Share / Download" submenu
     Then the share modal should appear
     When I click the "Copy" button in the share modal
     Then the clipboard should contain "#/s/v1/"
@@ -33,7 +33,7 @@ Feature: Tab Sharing
     When I click the icon for "New tab"
     And I type "Test content" into the editor
     And I right-click the "Scratch 1" tab
-    And I select "Share" from the context menu
+    And I select "Share" from the "Share / Download" submenu
     Then the share modal should appear
     When I close the share modal
     Then the share modal should not be visible
@@ -42,7 +42,7 @@ Feature: Tab Sharing
     When I click the icon for "New tab"
     And I type "This is shared content from the original tab" into the editor
     And I right-click the "Scratch 1" tab
-    And I select "Share" from the context menu
+    And I select "Share" from the "Share / Download" submenu
     Then the share modal should appear
     When I copy the share URL from the modal
     And I open the share URL in a new browser instance
@@ -52,7 +52,7 @@ Feature: Tab Sharing
     When I click the icon for "New tab"
     And I type "Content for multi-tab share test" into the editor
     And I right-click the "Scratch 1" tab
-    And I select "Share" from the context menu
+    And I select "Share" from the "Share / Download" submenu
     Then the share modal should appear
     When I copy the share URL from the modal
     And I close the share modal
@@ -70,7 +70,7 @@ Feature: Tab Sharing
       }
       """
     And I right-click the "Scratch 1" tab
-    And I select "Share" from the context menu
+    And I select "Share" from the "Share / Download" submenu
     Then the share modal should appear
     When I copy the share URL from the modal
     And I open the share URL in a new browser instance
@@ -86,7 +86,7 @@ Feature: Tab Sharing
     And I type "My Custom Tab" in the rename input
     And I press Enter to confirm rename
     And I right-click the "My Custom Tab" tab
-    And I select "Share" from the context menu
+    And I select "Share" from the "Share / Download" submenu
     Then the share modal should appear
     And the share modal should show the tab title "My Custom Tab"
 
@@ -106,7 +106,7 @@ Feature: Tab Sharing
       }
       """
     And I right-click the "Scratch 1" tab
-    And I select "Share" from the context menu
+    And I select "Share" from the "Share / Download" submenu
     Then the share modal should appear
     And the JSON trim UI should be visible
     And the JSON key "remove_me" should be "unselected"
@@ -136,7 +136,7 @@ Feature: Tab Sharing
       }
       """
     And I right-click the "Scratch 1" tab
-    And I select "Share" from the context menu
+    And I select "Share" from the "Share / Download" submenu
     Then the share modal should appear
     And the JSON trim UI should not be visible
     And the default trim UI should be visible

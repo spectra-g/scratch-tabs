@@ -69,45 +69,55 @@ describe('UseContextMenuConfig - Actions and Structure', () => {
     } as any);
   });
 
-  it('should have Share as the first item', () => {
+  it('should have Rename as the first item', () => {
     const { result } = renderHook(() =>
       useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
     );
 
     const menuItems = result.current.menuItems;
-    expect(menuItems[0].id).toBe('share');
-    expect(menuItems[0].label).toBe('Share');
+    expect(menuItems[0].id).toBe('rename');
+    expect(menuItems[0].label).toBe('Rename');
   });
 
-  it('should have Compare as the second item', () => {
-    // Mock conditions to ensure Compare shows up
-    mockUseSplitViewStore.mockReturnValue({
-      splitView: {
-        leftTabs: ['test-tab-id'],
-        rightTabs: ['other-tab-id'],
-        isSplit: true,
-        activeRightTabId: 'other-tab-id',
-      },
-    } as any);
-
+  it('should have Copy Content as the second item', () => {
     const { result } = renderHook(() =>
       useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
     );
 
     const menuItems = result.current.menuItems;
-    expect(menuItems[1].id).toBe('compare');
+    expect(menuItems[1].id).toBe('copyContent');
   });
-
   it('should rename "Split View" to "Split Right"', () => {
     const { result } = renderHook(() =>
       useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
     );
 
     const menuItems = result.current.menuItems;
-    const splitItem = menuItems.find(item => item.id === 'split');
+    const splitItem = menuItems.find(item => item.id === 'split-unsplit');
 
     expect(splitItem).toBeDefined();
     expect(splitItem?.label).toBe('Split Right');
+  });
+
+  it('should show "Unsplit" when on the right side in split view', () => {
+    mockUseSplitViewStore.mockReturnValue({
+      splitView: {
+        leftTabs: ['other-tab-id'],
+        rightTabs: ['test-tab-id'],
+        isSplit: true,
+        activeRightTabId: 'test-tab-id',
+      },
+    } as any);
+
+    const { result } = renderHook(() =>
+      useContextMenuConfig('test-tab-id', true, mockCloseContextMenu)
+    );
+
+    const menuItems = result.current.menuItems;
+    const splitItem = menuItems.find(item => item.id === 'split-unsplit');
+
+    expect(splitItem).toBeDefined();
+    expect(splitItem?.label).toBe('Unsplit');
   });
 
   it('should include "Open in..." submenu for editor tabs', () => {
@@ -123,10 +133,10 @@ describe('UseContextMenuConfig - Actions and Structure', () => {
     expect(openInItem?.submenu).toBeDefined();
   });
 
-  it('should use Pin icon (checked by ID/label) and update label when pinned', () => {
+  it('should have "Pin" state inside Organize submenu', () => {
     const pinnedTab = { ...mockTab, isPinned: true };
     mockUseTabsStore.mockReturnValue({
-      tabs: [pinnedTab],
+      tabs: [pinnedTab, mockTabletTab],
     } as any);
 
     const { result } = renderHook(() =>
@@ -134,11 +144,14 @@ describe('UseContextMenuConfig - Actions and Structure', () => {
     );
 
     const menuItems = result.current.menuItems;
-    const pinItem = menuItems.find(item => item.id === 'pin');
+    const organizeItem = menuItems.find(item => item.id === 'organize');
 
-    expect(pinItem).toBeDefined();
-    expect(pinItem?.label).toBe('Unpin');
-    // Note: Pin icon is verified visually or by checking the icon component if needed
+    expect(organizeItem).toBeDefined();
+    expect(organizeItem?.submenu).toBeDefined();
+
+    // Check if the submenu component has the correct props
+    const submenuProps = (organizeItem?.submenu as React.ReactElement).props;
+    expect(submenuProps.isPinned).toBe(true);
   });
 
   it('should handle tabs that do not exist gracefully', () => {
@@ -162,7 +175,7 @@ describe('UseContextMenuConfig - Actions and Structure', () => {
     const splitTabItem = menuItems.find(item => item.id === 'splitTab');
 
     expect(splitTabItem).toBeDefined();
-    expect(splitTabItem?.label).toBe('Split Tab...');
+    expect(splitTabItem?.label).toBe('Split Tab');
   });
 
   it('should set splitModalProps when split tab action is triggered', () => {

@@ -13,6 +13,7 @@ import {
   XCircle,
   Scissors,
   Square,
+  ExternalLink,
 } from '../Icons';
 
 // Submenu Components for Context Menu Organization
@@ -99,48 +100,63 @@ interface OrganizeSubmenuProps {
   isPinned: boolean;
   canDuplicate: boolean;
   canGroupTypes: boolean;
-  canSplit: boolean;
   onTogglePin: () => void;
   onDuplicate: () => void;
   onGroupTypes: () => void;
-  onSplit: () => void;
 }
 
 export const OrganizeSubmenu: React.FC<OrganizeSubmenuProps> = ({
   isPinned,
   canDuplicate,
   canGroupTypes,
-  canSplit,
   onTogglePin,
   onDuplicate,
   onGroupTypes,
-  onSplit,
 }) => (
   <div className="py-1">
     <SubMenuItem
-      label={isPinned ? "Unpin Tab" : "Pin Tab"}
+      label={isPinned ? "Unpin" : "Pin"}
       icon={Pin}
       onClick={onTogglePin}
     />
-    {canDuplicate && <SubMenuItem label="Duplicate Tab" icon={Copy} onClick={onDuplicate} />}
-    {canGroupTypes && <SubMenuItem label="Group Tabs by Type" icon={Layers} onClick={onGroupTypes} />}
-    {canSplit && <SubMenuItem label="Split View" icon={Square} onClick={onSplit} />}
+    {canDuplicate && <SubMenuItem label="Duplicate" icon={Copy} onClick={onDuplicate} />}
+    {canGroupTypes && (
+      <>
+        <div className="border-t border-base my-1"></div>
+        <SubMenuItem label="Group Tabs by Type" icon={Layers} onClick={onGroupTypes} />
+      </>
+    )}
   </div>
 );
 
-// Download Submenu
-interface DownloadSubmenuProps {
+// Share / Download Submenu
+interface ShareDownloadSubmenuProps {
+  canShare: boolean;
+  canDownload: boolean;
+  onShare: () => void;
+  onCopyContent: () => void;
   onDownload: () => void;
   onDownloadAll: () => void;
 }
 
-export const DownloadSubmenu: React.FC<DownloadSubmenuProps> = ({
+export const ShareDownloadSubmenu: React.FC<ShareDownloadSubmenuProps> = ({
+  canShare,
+  canDownload,
+  onShare,
+  onCopyContent,
   onDownload,
   onDownloadAll,
 }) => (
   <div className="py-1">
-    <SubMenuItem label="Download This Tab" icon={Download} onClick={onDownload} />
-    <SubMenuItem label="Download All Tabs" icon={Download} onClick={onDownloadAll} />
+    {canShare && <SubMenuItem label="Share" icon={ExternalLink} onClick={onShare} />}
+    <SubMenuItem label="Copy Content" icon={Copy} onClick={onCopyContent} />
+    {(canShare) && <div className="border-t border-base my-1"></div>}
+    {canDownload && (
+      <>
+        <SubMenuItem label="Download Tab" icon={Download} onClick={onDownload} />
+        <SubMenuItem label="Download All" icon={Download} onClick={onDownloadAll} />
+      </>
+    )}
   </div>
 );
 
@@ -165,7 +181,7 @@ export const CloseSubmenu: React.FC<CloseSubmenuProps> = ({
   onCloseToRight,
 }) => (
   <div className="py-1">
-    <SubMenuItem label="Close This Tab" icon={XCircle} onClick={onClose} />
+    <SubMenuItem label="Close Tab" icon={XCircle} onClick={onClose} />
     {canCloseAllExcept && <SubMenuItem label="Close All Other Tabs" icon={XCircle} onClick={onCloseAllExcept} />}
     {(canCloseToLeft || canCloseToRight) && <div className="border-t border-base my-1"></div>}
     {canCloseToLeft && <SubMenuItem label="Close Tabs to Left" icon={ChevronLeft} onClick={onCloseToLeft} />}

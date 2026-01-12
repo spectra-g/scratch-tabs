@@ -3,22 +3,22 @@ import { useSplitViewStore } from "../../stores/splitViewStore";
 import { useRootStore } from "../../stores/rootStore";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
 import { useMacroStore } from "../../stores/macroStore";
+import { useBatchToolsStore } from "../../stores/batchToolsStore";
 import {
   Copy,
   Edit3,
   GitCompare,
   XCircle,
-  Download,
   ExternalLink,
-  Grid,
-  Scissors,
-  Send,
-  Circle,
-  Pin,
-  Split,
-  Maximize,
   ChevronRight,
   ChevronLeft,
+  MagicWand,
+  Layers,
+  Maximize,
+  Split,
+  Scissors,
+  Circle,
+  Grid,
 } from "../Icons";
 import { FormatSelector } from "./FormatSelector";
 import { formatRegistry } from "../../formats";
@@ -29,8 +29,9 @@ import { modelManager } from "../../services/modelManager";
 import { toolService, ToolItem } from "../../services/toolService";
 import {
   CompareSubmenu,
-  DownloadSubmenu,
+  ShareDownloadSubmenu,
   CloseSubmenu,
+  OrganizeSubmenu,
 } from "./ContextMenuSubmenus";
 import { OpenInSubmenu } from "./OpenInSubmenu";
 
@@ -95,6 +96,7 @@ export const useContextMenuConfig = (
   const [splitModalState, setSplitModalState] = useState<{ tabId: string } | null>(null);
   const [shareModalState, setShareModalState] = useState<{ tabId: string } | null>(null);
   const [tabletModalOpen, setTabletModalOpen] = useState(false);
+  const { openModal: openBatchToolsModal } = useBatchToolsStore();
 
   const tab = tabsStore.tabs.find((t: any) => t.id === tabId);
 
@@ -146,6 +148,13 @@ export const useContextMenuConfig = (
   const handleSimpleAction = (actionFn: (...args: any[]) => void, ...args: any[]) => {
     actionFn(...args);
     closeContextMenu();
+  };
+
+  const handleOpenTransformations = () => {
+    if (tab) {
+      openBatchToolsModal(tab.content || "", "");
+      closeContextMenu();
+    }
   };
 
   const handleRename = () => {
@@ -357,17 +366,27 @@ Add any other context about the problem here.
     closeContextMenu();
   }, [closeContextMenu]);
 
-  // Tidy up the menu structure
+  // Tidy up the menu structure - FINAL RESTRUCTURE
   const menuItems: MenuItem[] = [
-    // 1. Share - Top of the list
+    // 1. Rename (Top for quick identity changes)
     {
-      id: "share",
-      label: "Share",
-      icon: Send,
-      action: handleOpenShareModal,
+      id: "rename",
+      label: "Rename",
+      icon: Edit3,
+      action: handleRename,
+      condition: canRename,
+    },
+    // 2. Copy Content
+    {
+      id: "copyContent",
+      label: "Copy Content",
+      icon: Copy,
+      action: handleCopyContent,
       condition: !!tab && !tab.isTablet && !tab.isRich,
     },
-    // 2. Compare - Second/Third
+    // Separator
+    { id: "sep-top-1", isSeparator: true },
+    // 3. Compare ▶
     {
       id: "compare",
       label: "Compare",
@@ -384,39 +403,41 @@ Add any other context about the problem here.
         />
       ),
     },
-    // 3. Split Right (originally Split View)
+    // 4. Split Right
     {
-      id: "split",
-      label: "Split Right",
-      icon: Split,
-      action: () => handleSimpleAction(rootStore.splitScreen, tabId),
-      condition: canSplit,
-    },
-    // 4. Duplicate
-    {
-      id: "duplicate",
-      label: "Duplicate",
-      icon: Copy,
-      action: () => handleSimpleAction(rootStore.duplicateTab, tabId, isRightSide),
-    },
-    // 5. Pin
-    {
-      id: "pin",
-      label: isPinned ? "Unpin" : "Pin",
-      icon: Pin, // Updated from Circle
-      action: () => handleSimpleAction(rootStore.toggleTabPin, tabId),
-    },
-    // 6. Rename
-    {
-      id: "rename",
-      label: "Rename",
-      icon: Edit3,
-      action: handleRename,
-      condition: canRename,
+      id: "split-unsplit",
+      label: canUnsplit ? "Unsplit" : "Split Right",
+      icon: canUnsplit ? Maximize : Split,
+      action: () => handleSimpleAction(canUnsplit ? rootStore.unsplitScreen : rootStore.splitScreen, tabId),
+      condition: canUnsplit || canSplit,
     },
     // Separator
-    { id: "sep-top", isSeparator: true },
-    // 7. Open In... (restored submenu)
+    { id: "sep-top-2", isSeparator: true },
+    // 5. Split Tab (Remove 3 dots)
+    {
+      id: "splitTab",
+      label: "Split Tab",
+      icon: Scissors,
+      action: handleOpenSplitModal,
+      condition: !!tab && !tab.isTablet && !tab.isRich,
+    },
+    // 6. Transformations (Content mod)
+    {
+      id: "transformations",
+      label: "Transformations",
+      icon: MagicWand,
+      action: handleOpenTransformations,
+      condition: !!tab && !tab.isTablet && !tab.isRich,
+    },
+    // 7. Macro Recording (Content mod)
+    {
+      id: "macroRecording",
+      label: "Macro Recording",
+      icon: Circle,
+      action: handleMacroRecording,
+      condition: !!tab && !tab.isTablet && !tab.isRich,
+    },
+    // 8. Open In... ▶ (As current)
     {
       id: "openIn",
       label: "Open in...",
@@ -431,49 +452,41 @@ Add any other context about the problem here.
         />
       ),
     },
-    // 8. Split Tab (kept as is, but moved down)
-    {
-      id: "splitTab",
-      label: "Split Tab...",
-      icon: Scissors,
-      action: handleOpenSplitModal,
-      condition: !!tab && !tab.isTablet && !tab.isRich,
-    },
-    // Move Right (conditionally shown)
-    {
-      id: "moveRight",
-      label: "Move to Right",
-      icon: ChevronRight,
-      action: () => handleSimpleAction(rootStore.moveTabToRight, tabId),
-      condition: canMoveRight,
-    },
-    // Move Left (conditionally shown)
-    {
-      id: "moveLeft",
-      label: "Move to Left",
-      icon: ChevronLeft,
-      action: () => handleSimpleAction(rootStore.moveTabToLeft, tabId),
-      condition: canMoveLeft,
-    },
-    // Unsplit (conditionally shown)
-    {
-      id: "unsplit",
-      label: "Unsplit",
-      icon: Maximize,
-      action: () => handleSimpleAction(rootStore.unsplitScreen, tabId),
-      condition: canUnsplit,
-    },
     // Separator
-    { id: "sep1", isSeparator: true },
-    // Copy Content
+    { id: "sep-mid", isSeparator: true },
+    // 9. Organize ▶ (Pin, Duplicate, Group)
     {
-      id: "copyContent",
-      label: "Copy Content",
-      icon: Copy,
-      action: handleCopyContent,
-      condition: !!tab && !tab.isTablet && !tab.isRich,
+      id: "organize",
+      label: "Organize",
+      icon: Layers,
+      submenu: (
+        <OrganizeSubmenu
+          isPinned={isPinned}
+          canDuplicate={true}
+          canGroupTypes={true}
+          onTogglePin={() => handleSimpleAction(rootStore.toggleTabPin, tabId)}
+          onDuplicate={() => handleSimpleAction(rootStore.duplicateTab, tabId, isRightSide)}
+          onGroupTypes={() => handleSimpleAction(rootStore.groupTabsByType, isRightSide)}
+        />
+      ),
     },
-    // From Sample
+    // 10. Share / Download ▶ (Share, Copy Content, Download Tab, Download All)
+    {
+      id: "shareDownload",
+      label: "Share / Download",
+      icon: ExternalLink,
+      submenu: (
+        <ShareDownloadSubmenu
+          canShare={!!tab && !tab.isTablet && !tab.isRich}
+          canDownload={canDownload}
+          onShare={handleOpenShareModal}
+          onCopyContent={handleCopyContent}
+          onDownload={handleDownload}
+          onDownloadAll={handleDownloadAll}
+        />
+      ),
+    },
+    // 11. From Sample ▶ (as current)
     {
       id: "fromSample",
       label: "From Sample",
@@ -481,22 +494,24 @@ Add any other context about the problem here.
       condition: canShowFromSample,
       submenu: <FormatSelector onSelect={handleLanguageSelect} />,
     },
-    // Separator
-    { id: "sep2", isSeparator: true },
-    // Download (submenu)
+    // Move Right/Left (Keeping them but they will be below From Sample if visible)
     {
-      id: "download",
-      label: "Download",
-      icon: Download,
-      condition: canDownload,
-      submenu: (
-        <DownloadSubmenu
-          onDownload={handleDownload}
-          onDownloadAll={handleDownloadAll}
-        />
-      ),
+      id: "moveRight",
+      label: "Move to Right",
+      icon: ChevronRight,
+      action: () => handleSimpleAction(rootStore.moveTabToRight, tabId),
+      condition: canMoveRight,
     },
-    // Close (submenu)
+    {
+      id: "moveLeft",
+      label: "Move to Left",
+      icon: ChevronLeft,
+      action: () => handleSimpleAction(rootStore.moveTabToLeft, tabId),
+      condition: canMoveLeft,
+    },
+    // Separator
+    { id: "sep-bottom", isSeparator: true },
+    // 12. Close ▶ 
     {
       id: "close",
       label: "Close",
@@ -537,17 +552,7 @@ Add any other context about the problem here.
         />
       ),
     },
-    // Separator
-    { id: "sep3", isSeparator: true },
-    // Macro Recording
-    {
-      id: "macroRecording",
-      label: "Macro Recording",
-      icon: Circle,
-      action: handleMacroRecording,
-      condition: !!tab && !tab.isTablet && !tab.isRich,
-    },
-    // Report Issue
+    // 13. Report Issue
     {
       id: "reportIssue",
       label: "Report Issue",
