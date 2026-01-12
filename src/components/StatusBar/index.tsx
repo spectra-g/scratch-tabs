@@ -3,15 +3,15 @@ import {
   getFormatStatusItem,
   getFormatOptionsMenu,
 } from "./FormatStatusItems";
-import { Macro } from "../Macro";
 import { tabletRegistry } from "../../tablets";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { Tab } from "../../types";
 import { AIStatusIcon } from "../AI/AIStatusIcon";
 import { useRootStore } from "../../stores";
 import { useSplitViewStore } from "../../stores/splitViewStore";
-import { Search, Coffee } from "../Icons";
+import { Search } from "../Icons";
 import { useSearchStore } from "../../stores/searchStore";
+import { ThemeToggle } from "../ThemeToggle";
 import { formatRegistry } from "../../formats";
 import { getPotentialFormatMatches } from "../../formats";
 import { getTabContentForLanguageDetection } from "../../utils/formatDetectionUtils";
@@ -22,7 +22,6 @@ import { RichTextControls } from "./RichTextControls";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import type { PopupMenuItem } from "./types";
 import { useActiveEditorStore } from "../../stores/activeEditorStore";
-import { ThemeToggle } from "../ThemeToggle";
 
 interface StatusBarProps {
   activeTab: Tab;
@@ -426,35 +425,16 @@ export const StatusBar: React.FC<StatusBarProps> = ({
           </div>
         )}
 
-        {/* Divider 2 - show if Group 2 OR Group 3 has content */}
-        {(showAIIcon || !isMobile) && <div className="w-px h-4 bg-gray-300 dark:bg-gray-600"></div>}
+        {/* Divider 3 */}
+        {showAIIcon && <div className="w-px h-4 bg-gray-300 dark:bg-gray-600"></div>}
 
-        {/* Group 3: Macro controls (Record, Stop, Play, Play to End) + Status */}
-        {!isMobile && (
-          <div className="flex items-center">
-            <Macro editor={editor} />
-          </div>
-        )}
-
-        {/* Divider 3 - only show if both Macro and Group 4 are visible */}
-        {!isMobile && showAIIcon && <div className="w-px h-4 bg-gray-300 dark:bg-gray-600"></div>}
-
-        {/* Group 4: Support & Theme */}
+        {/* Group 3: Theme Toggle */}
         {showAIIcon && (
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center">
             <ThemeToggle />
-            <div className="w-px h-4 bg-gray-300 dark:bg-gray-600"></div>
-            <button
-              onClick={() =>
-                window.open("https://ko-fi.com/scratchtabs", "_blank")
-              }
-              className="p-0.5 bg-themed-hover rounded transition-colors"
-              title="Support on Ko-fi"
-            >
-              <Coffee size={14} />
-            </button>
           </div>
         )}
+
       </div>
     </div>
   );

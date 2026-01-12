@@ -9,8 +9,8 @@ Feature: SVG Smart View
   Scenario: SVG content from sample shows Smart View preview
     When I click the icon for "New tab"
     And I right-click the "Scratch 1" tab
-    And I select "From sample" from the context menu
-    When I select "SVG" from the "From sample" submenu
+    And I select "From Sample" from the context menu
+    When I select "SVG" from the "From Sample" submenu
     Then the status bar language should be "SVG"
     When I click the Smart View button
     Then I should see the SVG Smart View

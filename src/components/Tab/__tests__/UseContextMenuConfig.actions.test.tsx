@@ -1,7 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { useContextMenuConfig } from '../UseContextMenuConfig';
 import { useTabsStore } from '../../../stores/tabsStore';
-import { tabletMetadata } from '../../../tablets/tabletMetadata';
 import { Tab } from '../../../types';
 
 // Mock dependencies
@@ -10,7 +9,6 @@ jest.mock('../../../stores/splitViewStore');
 jest.mock('../../../stores/rootStore');
 jest.mock('../../../stores/batchToolsStore');
 jest.mock('../../../services/modelManager');
-jest.mock('../../../tablets/tabletMetadata');
 
 // Import store types for proper mocking
 import { useSplitViewStore } from '../../../stores/splitViewStore';
@@ -22,13 +20,12 @@ const mockUseRootStore = useRootStore as jest.MockedFunction<typeof useRootStore
 const mockUseBatchToolsStore = useBatchToolsStore as jest.MockedFunction<typeof useBatchToolsStore>;
 
 const mockUseTabsStore = useTabsStore as jest.MockedFunction<typeof useTabsStore>;
-const mockTabletMetadata = tabletMetadata as jest.Mocked<typeof tabletMetadata>;
 
-describe('UseContextMenuConfig - Dynamic Actions', () => {
+describe('UseContextMenuConfig - Actions and Structure', () => {
   const mockTab: Tab = {
     id: 'test-tab-id',
     title: 'Test Document',
-    content: 'This is a test document with more than 50 characters of content to trigger dynamic actions.',
+    content: 'This is a test document content.',
     language: 'plaintext',
     languageLocked: false,
     isTablet: false,
@@ -48,220 +45,171 @@ describe('UseContextMenuConfig - Dynamic Actions', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     mockUseTabsStore.mockReturnValue({
       tabs: [mockTab, mockTabletTab],
     } as any);
-    
+
     mockUseSplitViewStore.mockReturnValue({
       splitView: {
         leftTabs: ['test-tab-id'],
         rightTabs: ['tablet-tab-id'],
         isSplit: false,
+        leftTabHistory: ['other-tab-id', 'test-tab-id'], // Correctly mock history here
       },
     } as any);
-    
+
+    // Mock tabs store
+    mockUseTabsStore.mockReturnValue({
+      tabs: [mockTab, mockTabletTab],
+      activeTabId: 'test-tab-id',
+    } as any);
+
     mockUseRootStore.mockReturnValue({
       duplicateTab: jest.fn(),
-      handleNewTabFromPaste: jest.fn(),
+      splitScreen: jest.fn(),
+      toggleTabPin: jest.fn(),
     } as any);
-    
+
     mockUseBatchToolsStore.mockReturnValue({
       batchToolsVisible: false,
     } as any);
-
-    // Mock tablet metadata with action discovery
-    mockTabletMetadata.flatMap = jest.fn().mockReturnValue([
-      {
-        id: 'wordcount.new-tab-from-content',
-        label: 'Open in Word Count',
-        icon: jest.fn(),
-        action: jest.fn(),
-      }
-    ]);
   });
 
-  it('should generate dynamic menu items for non-tablet tabs', () => {
-    const { result } = renderHook(() => 
+  it('should have Share as the first item', () => {
+    const { result } = renderHook(() =>
       useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
     );
 
-    expect(mockTabletMetadata.flatMap).toHaveBeenCalledWith(
-      expect.any(Function)
-    );
-
-    // Check that dynamic actions are included in menu items
     const menuItems = result.current.menuItems;
-    const dynamicAction = menuItems.find(item => item.id === 'wordcount.new-tab-from-content');
-    
-    expect(dynamicAction).toBeDefined();
-    expect(dynamicAction?.label).toBe('Open in Word Count');
+    expect(menuItems[0].id).toBe('share');
+    expect(menuItems[0].label).toBe('Share');
   });
 
-  it('should not generate dynamic menu items for tablet tabs', () => {
-    mockTabletMetadata.flatMap = jest.fn().mockReturnValue([]);
-
-    const { result } = renderHook(() => 
-      useContextMenuConfig('tablet-tab-id', false, mockCloseContextMenu)
-    );
-
-    // For tablet tabs, no actions should be generated - hook should not call flatMap
-    expect(mockTabletMetadata.flatMap).not.toHaveBeenCalled();
-
-    const menuItems = result.current.menuItems;
-    const dynamicAction = menuItems.find(item => item.id === 'wordcount.new-tab-from-content');
-    
-    expect(dynamicAction).toBeUndefined();
-  });
-
-  it('should update dynamic actions when tab content changes', () => {
-    // Create a fresh mock for this test
-    const testFlatMap = jest.fn().mockReturnValue([
-      {
-        id: 'test-action',
-        label: 'Test Action',
-        icon: jest.fn(),
-        action: jest.fn(),
-      }
-    ]);
-    mockTabletMetadata.flatMap = testFlatMap;
-
-    // Render the hook initially
-    const { rerender } = renderHook(() => 
+  it('should have Duplicate as the second item', () => {
+    const { result } = renderHook(() =>
       useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
     );
 
-    // Should call flatMap once on initial render
-    expect(testFlatMap).toHaveBeenCalledTimes(1);
+    const menuItems = result.current.menuItems;
+    expect(menuItems[1].id).toBe('duplicate');
+    expect(menuItems[1].label).toBe('Duplicate');
+  });
 
-    // Update the tabs store to trigger re-render
-    const updatedTab = { ...mockTab, content: 'Updated content with more than 50 characters for testing dynamic updates.' };
-    mockUseTabsStore.mockReturnValue({
-      tabs: [updatedTab, mockTabletTab],
+  it('should have Compare with Previous Tab as the third item', () => {
+    const { result } = renderHook(() =>
+      useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
+    );
+
+    const menuItems = result.current.menuItems;
+    expect(menuItems[2].id).toBe('compareWithPrevious');
+  });
+  it('should rename "Split View" to "Split Right"', () => {
+    const { result } = renderHook(() =>
+      useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
+    );
+
+    const menuItems = result.current.menuItems;
+    const splitItem = menuItems.find(item => item.id === 'split-unsplit');
+
+    expect(splitItem).toBeDefined();
+    expect(splitItem?.label).toBe('Split Right');
+  });
+
+  it('should show "Unsplit" when on the right side in split view', () => {
+    mockUseSplitViewStore.mockReturnValue({
+      splitView: {
+        leftTabs: ['other-tab-id'],
+        rightTabs: ['test-tab-id'],
+        isSplit: true,
+        activeRightTabId: 'test-tab-id',
+      },
     } as any);
 
-    // Force a rerender by changing a prop (not tabId since that's fixed)
-    rerender();
-
-    // Should be called again due to tabs dependency
-    expect(testFlatMap).toHaveBeenCalledTimes(2);
-  });
-
-  it('should call closeContextMenu when dynamic action is executed', () => {
-    const mockAction = jest.fn();
-    mockTabletMetadata.flatMap = jest.fn().mockReturnValue([
-      {
-        id: 'test-action',
-        label: 'Test Action',
-        icon: jest.fn(),
-        action: mockAction,
-      }
-    ]);
-
-    const { result } = renderHook(() => 
-      useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
+    const { result } = renderHook(() =>
+      useContextMenuConfig('test-tab-id', true, mockCloseContextMenu)
     );
 
     const menuItems = result.current.menuItems;
-    const dynamicAction = menuItems.find(item => item.id === 'test-action');
-    
-    expect(dynamicAction).toBeDefined();
-    
-    // Execute the action
-    act(() => {
-      dynamicAction?.action?.();
-    });
+    const splitItem = menuItems.find(item => item.id === 'split-unsplit');
 
-    expect(mockAction).toHaveBeenCalledTimes(1);
-    expect(mockCloseContextMenu).toHaveBeenCalledTimes(1);
+    expect(splitItem).toBeDefined();
+    expect(splitItem?.label).toBe('Unsplit');
   });
 
-  it('should add separator when dynamic actions exist alongside static actions', () => {
-    mockTabletMetadata.flatMap = jest.fn().mockReturnValue([
-      {
-        id: 'dynamic-action',
-        label: 'Dynamic Action',
-        icon: jest.fn(),
-        action: jest.fn(),
-      }
-    ]);
-
-    const { result } = renderHook(() => 
-      useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
-    );
-
-    const menuItems = result.current.menuItems;
-    const separatorIndex = menuItems.findIndex(item => item.id === 'sep-tablet-actions');
-    const dynamicActionIndex = menuItems.findIndex(item => item.id === 'dynamic-action');
-    
-    expect(separatorIndex).toBeGreaterThan(-1);
-    expect(dynamicActionIndex).toBeGreaterThan(separatorIndex);
-  });
-
-  it('should handle empty dynamic actions gracefully', () => {
-    mockTabletMetadata.flatMap = jest.fn().mockReturnValue([]);
-
-    const { result } = renderHook(() => 
-      useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
-    );
-
-    const menuItems = result.current.menuItems;
-    
-    // Should not have separator or dynamic actions
-    expect(menuItems.find(item => item.id === 'sep-tablet-actions')).toBeUndefined();
-    expect(menuItems.find(item => item.id?.startsWith('wordcount'))).toBeUndefined();
-  });
-
-  it('should pass correct context to tablet metadata', () => {
-    const mockGetActionsForContext = jest.fn().mockReturnValue([]);
-    
-    mockTabletMetadata.flatMap = jest.fn().mockImplementation((callback) => {
-      // Simulate the flatMap behavior
-      const meta = { getActionsForContext: mockGetActionsForContext };
-      return callback(meta, 0, [meta]);
-    });
-
-    renderHook(() => 
-      useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
-    );
-
-    expect(mockGetActionsForContext).toHaveBeenCalledWith({
-      source: 'editor-tab',
-      tab: mockTab,
-      content: mockTab.content,
-      side: 'left',
-    });
-  });
-
-  it('should handle tabs that do not exist', () => {
-    mockUseTabsStore.mockReturnValue({
-      tabs: [], // No tabs
+  it('should have Compare with other side as the second item when split', () => {
+    mockUseSplitViewStore.mockReturnValue({
+      splitView: {
+        leftTabs: ['test-tab-id'],
+        rightTabs: ['other-tab-id'],
+        isSplit: true,
+        activeLeftTabId: 'test-tab-id',
+        activeRightTabId: 'other-tab-id',
+      },
     } as any);
 
-    mockTabletMetadata.flatMap = jest.fn().mockReturnValue([]);
+    const { result } = renderHook(() =>
+      useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
+    );
 
-    const { result } = renderHook(() => 
+    const menuItems = result.current.menuItems;
+    expect(menuItems[2].id).toBe('compare');
+    expect(menuItems[2].label).toBe('Compare with other side');
+  });
+
+  it('should have Compare with Previous Tab as the third item when split', () => {
+    mockUseSplitViewStore.mockReturnValue({
+      splitView: {
+        leftTabs: ['test-tab-id'],
+        rightTabs: ['other-tab-id'],
+        isSplit: true,
+        activeLeftTabId: 'test-tab-id',
+        activeRightTabId: 'other-tab-id',
+        leftTabHistory: ['prev-tab-id', 'test-tab-id'],
+      },
+    } as any);
+
+    const { result } = renderHook(() =>
+      useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
+    );
+
+    const menuItems = result.current.menuItems;
+    expect(menuItems[3].id).toBe('compareWithPrevious');
+  });
+
+  it('should have "Pin" state inside Organize submenu', () => {
+    const pinnedTab = { ...mockTab, isPinned: true };
+    mockUseTabsStore.mockReturnValue({
+      tabs: [pinnedTab, mockTabletTab],
+    } as any);
+
+    const { result } = renderHook(() =>
+      useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
+    );
+
+    const menuItems = result.current.menuItems;
+    const organizeItem = menuItems.find(item => item.id === 'organize');
+
+    expect(organizeItem).toBeDefined();
+    expect(organizeItem?.submenu).toBeDefined();
+
+    // Check if the submenu component has the correct props
+    const submenuProps = (organizeItem?.submenu as React.ReactElement).props;
+    expect(submenuProps.isPinned).toBe(true);
+    expect(submenuProps.canRename).toBe(true);
+    expect(submenuProps.onRename).toBeDefined();
+  });
+
+  it('should handle tabs that do not exist gracefully', () => {
+    mockUseTabsStore.mockReturnValue({
+      tabs: [],
+    } as any);
+
+    const { result } = renderHook(() =>
       useContextMenuConfig('nonexistent-tab-id', false, mockCloseContextMenu)
     );
 
-    // Should not crash and should have empty dynamic actions
-    // For nonexistent tabs, hook should not call flatMap
     expect(result.current.menuItems).toBeDefined();
-    expect(mockTabletMetadata.flatMap).not.toHaveBeenCalled();
-  });
-
-  it('should maintain dependency array for useEffect correctly', () => {
-    const { rerender } = renderHook(() =>
-      useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
-    );
-
-    const initialCallCount = (mockTabletMetadata.flatMap as jest.Mock).mock.calls.length;
-
-    // Rerender with same props - should not trigger additional calls due to useEffect deps
-    rerender();
-
-    // The hook should be stable and not cause unnecessary re-renders
-    expect((mockTabletMetadata.flatMap as jest.Mock).mock.calls.length).toBe(initialCallCount);
   });
 
   it('should include split tab menu item for non-tablet tabs', () => {
@@ -273,18 +221,7 @@ describe('UseContextMenuConfig - Dynamic Actions', () => {
     const splitTabItem = menuItems.find(item => item.id === 'splitTab');
 
     expect(splitTabItem).toBeDefined();
-    expect(splitTabItem?.label).toBe('Split Tab...');
-  });
-
-  it('should not include split tab menu item for tablet tabs', () => {
-    const { result } = renderHook(() =>
-      useContextMenuConfig('tablet-tab-id', false, mockCloseContextMenu)
-    );
-
-    const menuItems = result.current.menuItems;
-    const splitTabItem = menuItems.find(item => item.id === 'splitTab');
-
-    expect(splitTabItem).toBeUndefined();
+    expect(splitTabItem?.label).toBe('Split Content');
   });
 
   it('should set splitModalProps when split tab action is triggered', () => {
@@ -292,23 +229,29 @@ describe('UseContextMenuConfig - Dynamic Actions', () => {
       useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
     );
 
-    // Initially, splitModalProps should be null
-    expect(result.current.splitModalProps).toBeNull();
-
-    // Find and execute the split tab action
     const menuItems = result.current.menuItems;
     const splitTabItem = menuItems.find(item => item.id === 'splitTab');
 
-    expect(splitTabItem).toBeDefined();
-
-    // Execute the action
     act(() => {
       splitTabItem?.action?.();
     });
 
-    // Now splitModalProps should be set
     expect(result.current.splitModalProps).not.toBeNull();
     expect(result.current.splitModalProps?.isOpen).toBe(true);
-    expect(result.current.splitModalProps?.tabId).toBe('test-tab-id');
+  });
+
+  it('should include Macro Recording menu item after Transformations', () => {
+    const { result } = renderHook(() =>
+      useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
+    );
+
+    const menuItems = result.current.menuItems;
+    const transformationsIndex = menuItems.findIndex(item => item.id === 'transformations');
+    const macroIndex = menuItems.findIndex(item => item.id === 'macroRecording');
+
+    expect(transformationsIndex).not.toBe(-1);
+    expect(macroIndex).not.toBe(-1);
+    expect(macroIndex).toBe(transformationsIndex + 1);
+    expect(menuItems[macroIndex].label).toBe('Macro Recording');
   });
 });

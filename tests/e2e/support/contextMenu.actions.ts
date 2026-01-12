@@ -23,13 +23,12 @@ export class ContextMenuActions {
 
   async selectFromSubmenu(parentItem: string, subItem: string) {
     // First, find and hover over the parent menu item to open submenu
-    const parentMenuSelector = `button:has-text("${parentItem}")`;
-    const parentElement = this.page.locator(parentMenuSelector);
+    const parentElement = this.page.getByRole('button', { name: parentItem, exact: true });
 
     await expect(parentElement).toBeVisible();
     await parentElement.hover();
 
-    // Wait for the specific submenu item to appear instead of relying on CSS classes
+    // Wait for the specific submenu item to appear
     const subMenuElement = this.page.getByRole('button', { name: subItem, exact: true });
     await expect(subMenuElement).toBeVisible();
 
@@ -66,7 +65,7 @@ export class ContextMenuActions {
     // Wait for submenu items to appear by looking for a known submenu item
     // This is more robust than relying on CSS classes
     // For "From sample" submenu, we expect to see "JSON" as a menu item
-    if (submenuName === "From sample") {
+    if (submenuName === "From Sample") {
       const jsonMenuItem = this.page.getByRole('button', { name: 'JSON' });
       await expect(jsonMenuItem).toBeVisible();
     } else {

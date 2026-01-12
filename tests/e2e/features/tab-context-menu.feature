@@ -11,11 +11,19 @@ Feature: Tab context menu
     And I select "Transformations" from the context menu
     Then the batch tools modal should appear
 
+  Scenario: Tablet context menu items
+    When I click the icon for "New tablet"
+    And I select "Calculator" from the tablet selector
+    And I right-click the "Calculator" tab
+    Then the context menu should not show "Share" option
+    And the context menu should not show "Open in..." option
+    And the context menu should not show "Transformations" option
+
   Scenario: Rename a tab using context menu
     When I click the icon for "New tab with contents from clipboard"
     Then the "Scratch 1" tab should be active
     When I right-click the "Scratch 1" tab
-    And I select "Rename" from the context menu
+    And I select "Rename" from the "Organize" submenu
     Then the tab rename input should appear
     When I type "My Custom Tab" in the rename input
     And I press Enter to confirm rename
@@ -26,7 +34,7 @@ Feature: Tab context menu
     Then the "Scratch 1" tab should be active
     When I type "Hello World! This is my test content." into the editor
     And I right-click the "Scratch 1" tab
-    And I select "Copy content" from the context menu
+    And I select "Copy Content" from the context menu
     When I click the icon for "New tab with contents from clipboard"
     Then the "Scratch 2" tab should be active
     And the active editor content should contain "Hello World! This is my test content."
@@ -35,13 +43,13 @@ Feature: Tab context menu
     When I click the icon for "New tab"
     Then the "Scratch 1" tab should be active
     When I right-click the "Scratch 1" tab
-    And I select "From sample" from the context menu
-    When I select "JSON" from the "From sample" submenu
+    And I select "From Sample" from the context menu
+    When I select "JSON" from the "From Sample" submenu
     Then the first 10 lines of the editor should contain JSON content
     And the status bar language should be "JSON"
     When I right-click the "Scratch 1" tab
-    And I select "From sample" from the context menu
-    When I select "Markdown" from the "From sample" submenu
+    And I select "From Sample" from the context menu
+    When I select "Markdown" from the "From Sample" submenu
     Then the active editor content should contain "#"
     And the status bar language should be "Markdown"
 
@@ -50,7 +58,7 @@ Feature: Tab context menu
     Then the "Scratch 1" tab should be active
     When I type "Original tab content for duplication test" into the editor
     And I right-click the "Scratch 1" tab
-    And I select "Duplicate tab" from the context menu
+    And I select "Duplicate" from the context menu
     Then the "Scratch 1 (Copy)" tab should be active
     And the active editor content should contain "Original tab content for duplication test"
 
@@ -60,7 +68,7 @@ Feature: Tab context menu
     Then the "Scratch 1" tab should be active
     When I type "Different content from clipboard for comparison" into the editor
     And I right-click the "Scratch 1" tab
-    And I select "Compare with clipboard" from the context menu
+    And I select "Compare with Clipboard" from the context menu
     Then the diff modal should appear
     When I close the diff modal
     Then I should be in split view mode
@@ -78,7 +86,7 @@ Feature: Tab context menu
     When I click the "Scratch 1" tab
     Then the "Scratch 1" tab should be active
     When I right-click the "Scratch 1" tab
-    And I select "Split" from the context menu
+    And I select "Split Right" from the context menu
     Then I should be in split view mode
 
   Scenario: Compare with previous tab using context menu
@@ -96,7 +104,7 @@ Feature: Tab context menu
     When I click the "Scratch 2" tab
     Then the "Scratch 2" tab should be active
     When I right-click the "Scratch 2" tab
-    And I select "Compare with previous tab" from the context menu
+    And I select "Compare with Previous Tab" from the context menu
     Then the diff modal should appear
     And the diff modal should show comparison between "Scratch 1" and "Scratch 2"
     And the diff modal left side should contain "Original content in first tab"
@@ -110,7 +118,7 @@ Feature: Tab context menu
     Then the "Scratch 2" tab should be active
     When I type "Left side second tab content" into the left editor
     When I right-click the "Scratch 2" tab
-    And I select "Split" from the context menu
+    And I select "Split Right" from the context menu
     Then I should be in split view mode
     When I click the icon for "New tab" on the "right" side
     Then the "Scratch 3" tab should be active
@@ -138,29 +146,29 @@ Feature: Tab context menu
     When I click the icon for "New tab"
     Then the "Scratch 1" tab should be active
     When I right-click the "Scratch 1" tab
-    And I select "From sample" from the context menu
-    When I select "JSON" from the "From sample" submenu
+    And I select "From Sample" from the context menu
+    When I select "JSON" from the "From Sample" submenu
     Then the status bar language should be "JSON"
     When I click the icon for "New tab"
     Then the "Scratch 2" tab should be active
     When I right-click the "Scratch 2" tab
-    And I select "From sample" from the context menu
-    When I select "CSV / TSV" from the "From sample" submenu
+    And I select "From Sample" from the context menu
+    When I select "CSV / TSV" from the "From Sample" submenu
     Then the status bar language should be "CSV / TSV"
     When I click the icon for "New tab"
     Then the "Scratch 3" tab should be active
     When I right-click the "Scratch 3" tab
-    And I select "From sample" from the context menu
-    When I select "JSON" from the "From sample" submenu
+    And I select "From Sample" from the context menu
+    When I select "JSON" from the "From Sample" submenu
     Then the status bar language should be "JSON"
     When I click the icon for "New tab"
     Then the "Scratch 4" tab should be active
     When I right-click the "Scratch 4" tab
-    And I select "From sample" from the context menu
-    When I select "CSV / TSV" from the "From sample" submenu
+    And I select "From Sample" from the context menu
+    When I select "CSV / TSV" from the "From Sample" submenu
     Then the status bar language should be "CSV / TSV"
     When I right-click the "Scratch 1" tab
-    And I select "Group tabs by type" from the context menu
+    And I select "Group Tabs by Type" from the "Organize" submenu
     Then the tabs should be ordered as "Welcome, Scratch 1, Scratch 3, Scratch 2, Scratch 4"
 
   Scenario: Move tab right using context menu
@@ -174,7 +182,7 @@ Feature: Tab context menu
     Then the "Scratch 3" tab should be active
     When I type "Left tab 3 content" into the editor
     When I right-click the "Scratch 2" tab
-    And I select "Split" from the context menu
+    And I select "Split Right" from the context menu
     Then I should be in split view mode
     When I click the icon for "New tab" on the "right" side
     Then the "Scratch 4" tab should be active
@@ -183,7 +191,7 @@ Feature: Tab context menu
     Then the "Scratch 5" tab should be active
     When I type "Right tab 2 content" into the right editor
     When I right-click the "Scratch 1" tab
-    And I select "Move right" from the context menu
+    And I select "Move to Right" from the context menu
     Then the left panel should contain tabs "Welcome, Scratch 3"
     And the right panel should contain tabs "Scratch 2, Scratch 4, Scratch 5, Scratch 1"
 
@@ -195,7 +203,7 @@ Feature: Tab context menu
     Then the "Scratch 2" tab should be active
     When I type "Left tab 2 content" into the editor
     When I right-click the "Scratch 1" tab
-    And I select "Split" from the context menu
+    And I select "Split Right" from the context menu
     Then I should be in split view mode
     When I click the icon for "New tab" on the "right" side
     Then the "Scratch 3" tab should be active
@@ -207,7 +215,7 @@ Feature: Tab context menu
     Then the "Scratch 5" tab should be active
     When I type "Right tab 3 content" into the right editor
     When I right-click the "Scratch 4" tab
-    And I select "Move left" from the context menu
+    And I select "Move to Left" from the context menu
     Then the left panel should contain tabs "Welcome, Scratch 2, Scratch 4"
     And the right panel should contain tabs "Scratch 1, Scratch 3, Scratch 5"
 
@@ -216,11 +224,11 @@ Feature: Tab context menu
     Then the "Scratch 1" tab should be active
     When I type "Hello World!\nThis is test content for download." into the editor
     When I right-click the "Scratch 1" tab
-    And I select "From sample" from the context menu
-    When I select "JSON" from the "From sample" submenu
+    And I select "From Sample" from the context menu
+    When I select "JSON" from the "From Sample" submenu
     Then the status bar language should be "JSON"
     When I right-click the "Scratch 1" tab
-    And I select "Download" from the context menu
+    And I select "Download Tab" from the "Download" submenu
     Then a file should be downloaded with the name "Scratch 1.json"
 
   Scenario: Download all tabs using context menu
@@ -228,18 +236,18 @@ Feature: Tab context menu
     Then the "Scratch 1" tab should be active
     When I type "First tab content" into the editor
     When I right-click the "Scratch 1" tab
-    And I select "From sample" from the context menu
-    When I select "JSON" from the "From sample" submenu
+    And I select "From Sample" from the context menu
+    When I select "JSON" from the "From Sample" submenu
     Then the status bar language should be "JSON"
     When I click the icon for "New tab"
     Then the "Scratch 2" tab should be active
     When I type "Second tab content" into the editor
     When I right-click the "Scratch 2" tab
-    And I select "From sample" from the context menu
-    When I select "CSV / TSV" from the "From sample" submenu
+    And I select "From Sample" from the context menu
+    When I select "CSV / TSV" from the "From Sample" submenu
     Then the status bar language should be "CSV / TSV"
     When I right-click the "Scratch 1" tab
-    And I select "Download all tabs" from the context menu
+    And I select "Download All" from the "Download" submenu
     Then the download modal should appear
     When I click "Select All" in the download modal
     And I click "Download 3 Files" in the download modal
@@ -253,7 +261,7 @@ Feature: Tab context menu
     When I click the icon for "New tab"
     Then the "Scratch 3" tab should be active
     When I right-click the "Scratch 3" tab
-    And I select "Close tabs to the left" from the context menu
+    And I select "Close Tabs to Left" from the "Close" submenu
     Then a confirmation dialog should appear with message "This will close all tabs to the left of the current tab. This action cannot be undone."
     When I click "Close Left Tabs" in the confirmation dialog
     Then the tabs should be ordered as "Scratch 3"
@@ -267,7 +275,7 @@ Feature: Tab context menu
     When I click the icon for "New tab"
     Then the "Scratch 3" tab should be active
     When I right-click the "Scratch 1" tab
-    And I select "Close tabs to the right" from the context menu
+    And I select "Close Tabs to Right" from the "Close" submenu
     Then a confirmation dialog should appear with message "This will close all tabs to the right of the current tab. This action cannot be undone."
     When I click "Close Right Tabs" in the confirmation dialog
     Then the tabs should be ordered as "Welcome, Scratch 1"
@@ -279,7 +287,7 @@ Feature: Tab context menu
     When I click the icon for "New tab"
     Then the "Scratch 2" tab should be active
     When I right-click the "Scratch 2" tab
-    And I select "Close all other tabs" from the context menu
+    And I select "Close All Other Tabs" from the "Close" submenu
     Then a confirmation dialog should appear with message "This will close all tabs except the current one. This action cannot be undone."
     When I click "Close Others" in the confirmation dialog
     Then the tabs should be ordered as "Scratch 2"
@@ -291,7 +299,7 @@ Feature: Tab context menu
     When I click the icon for "New tab"
     Then the "Scratch 2" tab should be active
     When I right-click the "Scratch 2" tab
-    And I select "Close" from the context menu
+    And I select "Close Tab" from the "Close" submenu
     Then a confirmation dialog should appear with message "Close tab \"Scratch 2\"? This action cannot be undone."
     When I click "Close Tab" in the confirmation dialog
     Then the tabs should be ordered as "Welcome, Scratch 1"
@@ -307,7 +315,7 @@ Feature: Tab context menu
     When I pin the "Welcome" tab
     When I pin the "Scratch 1" tab
     When I right-click the "Scratch 3" tab
-    And I select "Close all other tabs" from the context menu
+    And I select "Close All Other Tabs" from the "Close" submenu
     Then a confirmation dialog should appear with message "This will close all tabs except the current one. This action cannot be undone."
     When I click "Close Others" in the confirmation dialog
     Then the tabs should be ordered as "Welcome, Scratch 1, Scratch 3"
