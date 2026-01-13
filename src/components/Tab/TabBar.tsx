@@ -142,130 +142,74 @@ export const TabBar: React.FC<TabBarProps> = ({
     .map((tab) => getTabLineCount(tab.content));
   const maxLineCount = Math.max(...tabLineCounts, 1);
 
+  const calculateTabWidths = useCallback(() => {
+    if (!tabsContainerRef.current) return;
 
-  // Handle initial tab rendering and width calculations
+    const container = tabsContainerRef.current;
+    // We use getElementsByClassName to get the *live* list of tabs currently in the DOM.
+    // This ensures that our math is always based on what is rendered,
+    // avoiding stale closures regarding `visibleTabs.length`.
+    const tabElements = container.getElementsByClassName("tab-item");
+    const count = tabElements.length;
+
+    if (count === 0) return;
+
+    // 1. Reset: Force all tabs to natural width to perform accurate measurement
+    Array.from(tabElements).forEach((tab) => {
+      const el = tab as HTMLElement;
+      el.style.width = "";
+      el.style.minWidth = "";
+      el.style.maxWidth = "";
+      el.style.flex = "0 0 auto"; // Allow natural growth
+    });
+
+    // 2. Measure: Check if the natural content overflows the container
+    const containerWidth = container.clientWidth;
+    const contentWidth = container.scrollWidth;
+
+    // 3. Apply: If overflowing, force equal distribution
+    if (contentWidth > containerWidth) {
+      // Calculate exact width per tab to fit perfectly
+      const availableWidth = containerWidth;
+      // We set minWidth to 0 to ensure they can shrink infinitely if needed
+      // to meet the "No scrollbar" requirement
+      const newWidth = availableWidth / count;
+
+      Array.from(tabElements).forEach((tab) => {
+        const el = tab as HTMLElement;
+        el.style.width = `${newWidth}px`;
+        el.style.maxWidth = `${newWidth}px`;
+        el.style.minWidth = "0px"; // Crucial for very small tabs
+        el.style.flex = "1 1 0px"; // Ignore natural width, use strict sizing
+      });
+    }
+    // Else: Leave them as natural width (reset state)
+  }, []);
+
+  // Use ResizeObserver to handle both Window resize AND Split View resize
   useLayoutEffect(() => {
     if (!tabsContainerRef.current) return;
 
-    const container = tabsContainerRef.current;
-
-    // Set up mutation observer to detect when tabs are added
-    if (!observerRef.current) {
-      observerRef.current = new MutationObserver((mutations) => {
-        const hasTabChanges = mutations.some(
-          (mutation) =>
-            mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0,
-        );
-
-        if (hasTabChanges) {
-          hasInitializedWidths.current = false;
-          calculateTabWidths();
-        }
-      });
-
-      observerRef.current.observe(container, {
-        childList: true,
-        subtree: true,
-      });
-    }
-
-    // Initial width calculation
+    // Calculate immediately on render/update
     calculateTabWidths();
+
+    // Create observer for container resize events
+    const observer = new ResizeObserver(() => {
+      // Wrap in requestAnimationFrame to prevent "ResizeObserver loop limit exceeded"
+      // which can happen if setting widths triggers another resize immediately
+      requestAnimationFrame(() => {
+        calculateTabWidths();
+      });
+    });
+
+    observer.observe(tabsContainerRef.current);
 
     return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-        observerRef.current = null;
-      }
+      observer.disconnect();
     };
-  }, [visibleTabs.length, splitView.splitRatio, tabIds.join("-")]);
-
-  const calculateTabWidths = () => {
-    if (!tabsContainerRef.current) return;
-
-    const container = tabsContainerRef.current;
-    const containerWidth = container.offsetWidth;
-    containerWidthRef.current = containerWidth;
-
-    const tabs = container.getElementsByClassName("tab-item");
-    if (tabs.length === 0) return;
-
-    let totalNaturalWidth = 0;
-
-    // Temporarily set all tabs to natural width for measurement
-    Array.from(tabs).forEach((tab: Element) => {
-      const tabElement = tab as HTMLElement;
-      tabElement.style.width = "";
-      tabElement.style.minWidth = "";
-      tabElement.style.maxWidth = "";
-    });
-
-    // Force a reflow to ensure measurements are accurate
-    container.offsetHeight;
-
-    // Measure natural widths
-    Array.from(tabs).forEach((tab: Element) => {
-      const tabElement = tab as HTMLElement;
-      const naturalWidth = tabElement.offsetWidth;
-      initialWidths.current[tabElement.id] = naturalWidth;
-      totalNaturalWidth += naturalWidth;
-    });
-
-    // Check if we need to enter shrink mode
-    const needsShrinkMode = totalNaturalWidth > containerWidth;
-
-    if (needsShrinkMode) {
-      const actionButtonsWidth = 0;
-      const availableWidth = containerWidth - actionButtonsWidth;
-      const minTabWidth = 5;
-      let tabWidth = availableWidth / visibleTabs.length;
-      tabWidth = Math.max(tabWidth, minTabWidth);
-
-      Array.from(tabs).forEach((tab: Element) => {
-        const tabElement = tab as HTMLElement;
-        tabElement.style.width = `${tabWidth}px`;
-        tabElement.style.minWidth = `${minTabWidth}px`;
-        tabElement.style.maxWidth = `${tabWidth}px`;
-      });
-    } else {
-      // Reset to natural widths
-      Array.from(tabs).forEach((tab: Element) => {
-        const tabElement = tab as HTMLElement;
-        tabElement.style.width = "";
-        tabElement.style.minWidth = "";
-        tabElement.style.maxWidth = "";
-      });
-    }
-
-    hasInitializedWidths.current = true;
-  };
-
-  // Ensure widths are recalculated on any tab property changes
-  useEffect(() => {
-    // Reset initialization flag to force recalculation
-    // (e.g., when a tab is pinned or unpinned)
-    hasInitializedWidths.current = false;
-    calculateTabWidths();
-  }, [visibleTabs.map((tab) => tab.isPinned).join("-")]);
-
-  // Handle resize events
-  useEffect(() => {
-    const handleResize = () => {
-      if (!tabsContainerRef.current) return;
-      const newWidth = tabsContainerRef.current.offsetWidth;
-      if (newWidth !== containerWidthRef.current) {
-        containerWidthRef.current = newWidth;
-        hasInitializedWidths.current = false;
-        calculateTabWidths();
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [calculateTabWidths, visibleTabs.length]); // Re-run setup if tab count changes
 
   const [showToolSelector, setShowToolSelector] = useState(false);
-
 
   useEffect(() => {
     if (editingTabId && inputRef.current) {
