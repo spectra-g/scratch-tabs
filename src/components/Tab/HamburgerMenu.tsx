@@ -59,7 +59,7 @@ export const HamburgerMenu: React.FC = () => {
         >
           <button
             onClick={handleKofiClick}
-            className="w-full px-3 py-2 text-left text-xs hover:bg-themed-hover flex items-center space-x-2"
+            className="w-full px-3 py-2 text-left text-xs text-main hover:bg-themed-hover flex items-center space-x-2"
           >
             <Coffee size={14} />
             <span>Support on Ko-fi</span>
@@ -67,7 +67,7 @@ export const HamburgerMenu: React.FC = () => {
           <div className="border-t border-base my-1"></div>
           <button
             onClick={handleFeedbackClick}
-            className="w-full px-3 py-2 text-left text-xs hover:bg-themed-hover flex items-center space-x-2"
+            className="w-full px-3 py-2 text-left text-xs text-main hover:bg-themed-hover flex items-center space-x-2"
           >
             <ExternalLink size={14} />
             <span>Report Issue</span>
