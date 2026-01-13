@@ -51,7 +51,8 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
   }, [tab.tabletState, tab.isTablet]);
 
   // Count tablet usage (production only, privacy-respecting)
-  useTabletCounting(tabletType || '');
+  // Pass tab.id as uniqueKey to ensure tracking fires for each new tab instance
+  useTabletCounting(tabletType || '', tab.id);
 
   // Parse state only when needed for rendering
   const state = useMemo(() => {

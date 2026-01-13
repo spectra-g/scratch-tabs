@@ -3,7 +3,6 @@ import React, {
   useRef,
   useEffect,
   useCallback,
-  useLayoutEffect,
 } from "react";
 import { useRootStore } from "../../stores";
 import { useTabsStore } from "../../stores/tabsStore";
@@ -23,6 +22,7 @@ import {
   DragEndEvent,
   DragStartEvent,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -76,10 +76,6 @@ export const TabBar: React.FC<TabBarProps> = ({
     x: number;
     y: number;
   } | null>(null);
-  const hasInitializedWidths = useRef(false);
-  const initialWidths = useRef<{ [key: string]: number }>({});
-  const containerWidthRef = useRef<number>(0);
-  const observerRef = useRef<MutationObserver | null>(null);
 
   const [tooltipVisible, setTooltipVisible] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState<{
@@ -95,6 +91,8 @@ export const TabBar: React.FC<TabBarProps> = ({
   const [tooltipContent, setTooltipContent] = useState<TooltipContent | null>(
     null,
   );
+  const [showLeftGradient, setShowLeftGradient] = useState(false);
+  const [showRightGradient, setShowRightGradient] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const tabBarRef = useRef<HTMLDivElement>(null);
@@ -105,14 +103,24 @@ export const TabBar: React.FC<TabBarProps> = ({
 
   // Setup DnD sensors
   const sensors = useSensors(
+    // 1. Mouse/Pen: Drag after moving 5px (prevents accidental clicks becoming drags)
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 5, // Only activate after dragging 5px to prevent accidental drags
+        distance: 5,
       },
     }),
+    // 2. Keyboard: Standard keyboard controls
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
+    // 3. Touch: Require a 250ms hold to start dragging. 
+    // This allows immediate swipes to trigger native scrolling instead.
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5, // If they move finger >5px during the 250ms delay, cancel drag (allow scroll)
+      },
+    })
   );
 
   const isRightSide = side === "right";
@@ -142,130 +150,37 @@ export const TabBar: React.FC<TabBarProps> = ({
     .map((tab) => getTabLineCount(tab.content));
   const maxLineCount = Math.max(...tabLineCounts, 1);
 
-
-  // Handle initial tab rendering and width calculations
-  useLayoutEffect(() => {
+  // Check scroll position and update gradient visibility
+  const updateScrollGradients = useCallback(() => {
     if (!tabsContainerRef.current) return;
 
     const container = tabsContainerRef.current;
+    const scrollLeft = container.scrollLeft;
+    const scrollWidth = container.scrollWidth;
+    const clientWidth = container.clientWidth;
 
-    // Set up mutation observer to detect when tabs are added
-    if (!observerRef.current) {
-      observerRef.current = new MutationObserver((mutations) => {
-        const hasTabChanges = mutations.some(
-          (mutation) =>
-            mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0,
-        );
+    // Show left gradient if we've scrolled away from the start (with 1px threshold)
+    setShowLeftGradient(scrollLeft > 1);
 
-        if (hasTabChanges) {
-          hasInitializedWidths.current = false;
-          calculateTabWidths();
-        }
-      });
-
-      observerRef.current.observe(container, {
-        childList: true,
-        subtree: true,
-      });
-    }
-
-    // Initial width calculation
-    calculateTabWidths();
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-        observerRef.current = null;
-      }
-    };
-  }, [visibleTabs.length, splitView.splitRatio, tabIds.join("-")]);
-
-  const calculateTabWidths = () => {
-    if (!tabsContainerRef.current) return;
-
-    const container = tabsContainerRef.current;
-    const containerWidth = container.offsetWidth;
-    containerWidthRef.current = containerWidth;
-
-    const tabs = container.getElementsByClassName("tab-item");
-    if (tabs.length === 0) return;
-
-    let totalNaturalWidth = 0;
-
-    // Temporarily set all tabs to natural width for measurement
-    Array.from(tabs).forEach((tab: Element) => {
-      const tabElement = tab as HTMLElement;
-      tabElement.style.width = "";
-      tabElement.style.minWidth = "";
-      tabElement.style.maxWidth = "";
-    });
-
-    // Force a reflow to ensure measurements are accurate
-    container.offsetHeight;
-
-    // Measure natural widths
-    Array.from(tabs).forEach((tab: Element) => {
-      const tabElement = tab as HTMLElement;
-      const naturalWidth = tabElement.offsetWidth;
-      initialWidths.current[tabElement.id] = naturalWidth;
-      totalNaturalWidth += naturalWidth;
-    });
-
-    // Check if we need to enter shrink mode
-    const needsShrinkMode = totalNaturalWidth > containerWidth;
-
-    if (needsShrinkMode) {
-      const actionButtonsWidth = 0;
-      const availableWidth = containerWidth - actionButtonsWidth;
-      const minTabWidth = 5;
-      let tabWidth = availableWidth / visibleTabs.length;
-      tabWidth = Math.max(tabWidth, minTabWidth);
-
-      Array.from(tabs).forEach((tab: Element) => {
-        const tabElement = tab as HTMLElement;
-        tabElement.style.width = `${tabWidth}px`;
-        tabElement.style.minWidth = `${minTabWidth}px`;
-        tabElement.style.maxWidth = `${tabWidth}px`;
-      });
-    } else {
-      // Reset to natural widths
-      Array.from(tabs).forEach((tab: Element) => {
-        const tabElement = tab as HTMLElement;
-        tabElement.style.width = "";
-        tabElement.style.minWidth = "";
-        tabElement.style.maxWidth = "";
-      });
-    }
-
-    hasInitializedWidths.current = true;
-  };
-
-  // Ensure widths are recalculated on any tab property changes
-  useEffect(() => {
-    // Reset initialization flag to force recalculation
-    // (e.g., when a tab is pinned or unpinned)
-    hasInitializedWidths.current = false;
-    calculateTabWidths();
-  }, [visibleTabs.map((tab) => tab.isPinned).join("-")]);
-
-  // Handle resize events
-  useEffect(() => {
-    const handleResize = () => {
-      if (!tabsContainerRef.current) return;
-      const newWidth = tabsContainerRef.current.offsetWidth;
-      if (newWidth !== containerWidthRef.current) {
-        containerWidthRef.current = newWidth;
-        hasInitializedWidths.current = false;
-        calculateTabWidths();
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    // Show right gradient if there's more content to scroll to (with 1px threshold)
+    setShowRightGradient(scrollLeft + clientWidth < scrollWidth - 1);
   }, []);
 
-  const [showToolSelector, setShowToolSelector] = useState(false);
+  // Handle horizontal scrolling via mouse wheel
+  const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
+    if (!tabsContainerRef.current) return;
 
+    // Only handle vertical scroll wheel events (deltaY)
+    if (e.deltaY !== 0) {
+      e.preventDefault();
+      // Apply vertical scroll delta to horizontal scroll position
+      tabsContainerRef.current.scrollLeft += e.deltaY;
+      // Update gradients after scroll
+      updateScrollGradients();
+    }
+  }, [updateScrollGradients]);
+
+  const [showToolSelector, setShowToolSelector] = useState(false);
 
   useEffect(() => {
     if (editingTabId && inputRef.current) {
@@ -284,6 +199,34 @@ export const TabBar: React.FC<TabBarProps> = ({
       }
     };
   }, []);
+
+  // Set up scroll and resize listeners to update gradients
+  useEffect(() => {
+    const container = tabsContainerRef.current;
+    if (!container) return;
+
+    // Update gradients initially
+    updateScrollGradients();
+
+    // Listen to scroll events
+    const handleScroll = () => {
+      updateScrollGradients();
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+
+    // Listen to resize events
+    const resizeObserver = new ResizeObserver(() => {
+      updateScrollGradients();
+    });
+
+    resizeObserver.observe(container);
+
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      resizeObserver.disconnect();
+    };
+  }, [updateScrollGradients, visibleTabs.length]); // Re-run when tabs change
 
   const clearTooltipTimers = () => {
     if (initialDelayTimerRef.current) {
@@ -580,18 +523,19 @@ export const TabBar: React.FC<TabBarProps> = ({
     <>
       <div
         ref={tabBarRef}
-        className="flex bg-surface-tab-bar text-main w-full h-8 overflow-hidden"
+        className="flex bg-surface-tab-bar text-main w-full h-8 overflow-hidden relative"
         onMouseEnter={handleTabBarMouseEnter}
         onMouseLeave={handleTabBarMouseLeave}
         key={tabsKey}
       >
         <div
           ref={tabsContainerRef}
-          className="flex-1 flex min-w-0 overflow-hidden"
+          className="flex-1 flex min-w-0 overflow-x-auto overflow-y-hidden no-scrollbar"
           onDoubleClick={handleEmptyAreaDoubleClick}
+          onWheel={handleWheel}
           data-testid="tab-bar-empty-area"
         >
-          <div ref={tabsWrapperRef} className="flex">
+          <div ref={tabsWrapperRef} className="flex h-full">
             <DndContext
               sensors={sensors}
               modifiers={[restrictToHorizontalAxis]}
@@ -648,7 +592,40 @@ export const TabBar: React.FC<TabBarProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center space-x-1">
+        {/* Left gradient indicator - fixed to left edge */}
+        {showLeftGradient && (
+          <div
+            className="absolute left-0 top-0 bottom-0 w-16 pointer-events-none z-10 bg-gradient-to-r from-surface-tab-bar to-transparent"
+            style={{
+              // Fallback for custom property opacity issues if needed, or precise control
+              background: 'linear-gradient(to right, rgb(var(--color-surface-tab-bar)) 20%, transparent 100%)',
+            }}
+            aria-hidden="true"
+            data-testid="tab-bar-left-gradient"
+          />
+        )}
+
+        {/* Right gradient indicator - fixed to right edge (before actions) */}
+        {showRightGradient && (
+          <div
+            className="absolute top-0 bottom-0 w-16 pointer-events-none z-10 bg-gradient-to-l from-surface-tab-bar to-transparent"
+            style={{
+              right: isRightSide
+                ? splitView.isSplit
+                  ? '160px'  // Right side in split view
+                  : '152px'  // Right side not split: WorkspaceSwitcher + HamburgerMenu + TabActions
+                : splitView.isSplit
+                  ? '96px'   // Left side in split
+                  : '160px', // Left side not split: WorkspaceSwitcher + HamburgerMenu + TabActions
+              background: 'linear-gradient(to left, rgb(var(--color-surface-tab-bar)) 20%, transparent 100%)',
+            }}
+            aria-hidden="true"
+            data-testid="tab-bar-right-gradient"
+          />
+        )}
+
+
+        <div className="flex items-center space-x-1 pr-2">
           <TabActions
             side={side}
             onShowTabletSelector={() => setShowToolSelector(!showToolSelector)}

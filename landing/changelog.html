@@ -117,7 +117,7 @@
         documented here.
       </p>
       <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button text-lg px-8 py-4">
-        <span class="text-gray-500 mr-2">$</span> launch_latest_v1.16.0
+        <span class="text-gray-500 mr-2">$</span> launch_latest_v1.17.0
       </a>
     </div>
   </section>
@@ -127,31 +127,46 @@
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
 
-        <!-- Version 1.16.0 -->
+        <!-- Version 1.17.0 -->
         <div class="changelog-entry latest">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-white">V1.16.0</h2>
+              <h2 class="text-2xl font-bold text-white">V1.17.0</h2>
               <span class="badge latest">LATEST</span>
             </div>
-            <span class="text-gray-500 text-xs font-mono">01/12/2026</span>
+            <span class="text-gray-500 text-xs font-mono">01/13/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">MACRO RECORDING & MENU REFINEMENT</h3>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">BROWSER-STYLE SCROLLABLE TABS</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">Introduces a powerful Macro Recording engine with a floating toolbar for playback controls and a comprehensive cleanup of the tab context menu for better organization.</p>
+            <p class="mb-4">Complete tab bar navigation overhaul with browser-style scrolling behavior, eliminating tab squashing and adding clear visual indicators for hidden content plus native touch gesture support.</p>
 
             <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
             <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Macro Recording Engine:</strong> Record and replay complex editor interactions including typing, cursors, selection, and deletions with a new engine.</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Floating Macro Toolbar:</strong> New draggable toolbar for Macro controls (Record, Play, Play to End) that appears automatically when recording starts.</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Horizontal Tab Scrolling:</strong> Tabs now maintain minimum readable width (80px) with variable widths and scroll horizontally when they overflow, preventing tab squashing</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Gradient Scroll Indicators:</strong> Visual masking gradients fade from tab bar background to transparent at edges, clearly indicating when tabs are hidden off-screen and scrollable in both light and dark modes</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Mouse Wheel Scrolling:</strong> Scroll through tabs using vertical mouse wheel gestures over the tab bar for intuitive navigation</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Touch Gesture Support:</strong> Swipe horizontally to scroll through tabs, or long-press (250ms) to drag and reorder tabs - properly distinguishing between scrolling and dragging on touch devices</span></li>
             </ul>
 
             <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># improvements</h4>
             <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Context Menu Restructure:</strong> significantly reorganized tab context menu for better usability - introducing 'Organize' submenu, top-level 'Share' and 'Duplicate', and clearer grouping.</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Menu Icons:</strong> Updated icons across the context menu for better visual clarity (Share, Organize, Split, etc.).</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Status Bar Refinement:</strong> Cleaned up status bar layout for better information density and visual balance.</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Performance Optimization:</strong> Native browser scrolling eliminates expensive resize calculations and render cycles</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Theme-Aware Gradients:</strong> Gradients use CSS variables to match tab bar background color, ensuring visibility in all themes</span></li>
             </ul>
+          </div>
+        </div>
+        <!-- Version 1.16.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.16.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">01/12/2026</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">MACRO RECORDING & MENU REFINEMENT</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p>New Macro Recording engine with floating toolbar, status bar integration, and refined context menu</p>
           </div>
         </div>
         <!-- Version 1.15.0 -->
@@ -479,7 +494,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.16.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.17.0</span>
         </div>
 
         <div class="flex space-x-8">

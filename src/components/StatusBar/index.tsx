@@ -365,7 +365,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
               </span>
             )}
             {!activeTab.isTablet && !activeTab.isRich && (
-              <div className="w-px h-4 bg-gray-300 dark:bg-gray-600"></div>
+              <div className="h-4 border-l border-gray-400 dark:border-gray-600"></div>
             )}
             {/* Only show language/format info when NOT in rich text mode */}
             {!activeTab.isRich && (
@@ -409,7 +409,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         </div>
 
         {/* Divider 1 - only show if Group 2 has content */}
-        {showAIIcon && <div className="w-px h-4 bg-gray-300 dark:bg-gray-600"></div>}
+        {showAIIcon && <div className="h-4 border-l border-gray-400 dark:border-gray-600"></div>}
 
         {/* Group 2: Search and Init AI */}
         {showAIIcon && (
@@ -426,7 +426,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         )}
 
         {/* Divider 3 */}
-        {showAIIcon && <div className="w-px h-4 bg-gray-300 dark:bg-gray-600"></div>}
+        {showAIIcon && <div className="h-4 border-l border-gray-400 dark:border-gray-600"></div>}
 
         {/* Group 3: Theme Toggle */}
         {showAIIcon && (

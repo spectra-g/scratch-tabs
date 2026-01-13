@@ -397,6 +397,19 @@ select::-webkit-scrollbar-thumb:hover {
     background: rgb(var(--scrollbar-thumb-hover));
     background-clip: content-box;
   }
+
+  /* Hide scrollbar but maintain scrolling functionality */
+  .no-scrollbar {
+    /* Firefox */
+    scrollbar-width: none;
+    /* IE and Edge */
+    -ms-overflow-style: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    /* Chrome, Safari, and Opera */
+    display: none;
+  }
 }
 
 @layer components {
