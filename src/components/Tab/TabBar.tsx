@@ -22,6 +22,7 @@ import {
   DragEndEvent,
   DragStartEvent,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -102,14 +103,24 @@ export const TabBar: React.FC<TabBarProps> = ({
 
   // Setup DnD sensors
   const sensors = useSensors(
+    // 1. Mouse/Pen: Drag after moving 5px (prevents accidental clicks becoming drags)
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 5, // Only activate after dragging 5px to prevent accidental drags
+        distance: 5,
       },
     }),
+    // 2. Keyboard: Standard keyboard controls
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
+    // 3. Touch: Require a 250ms hold to start dragging. 
+    // This allows immediate swipes to trigger native scrolling instead.
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5, // If they move finger >5px during the 250ms delay, cancel drag (allow scroll)
+      },
+    })
   );
 
   const isRightSide = side === "right";
@@ -584,10 +595,10 @@ export const TabBar: React.FC<TabBarProps> = ({
         {/* Left gradient indicator - fixed to left edge */}
         {showLeftGradient && (
           <div
-            className="absolute left-0 top-0 bottom-0 w-24 pointer-events-none z-10"
+            className="absolute left-0 top-0 bottom-0 w-16 pointer-events-none z-10 bg-gradient-to-r from-surface-tab-bar to-transparent"
             style={{
-              background: 'linear-gradient(to right, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.18) 25%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.04) 75%, transparent 100%)',
-              boxShadow: 'inset 1px 0 0 rgba(0, 0, 0, 0.1)',
+              // Fallback for custom property opacity issues if needed, or precise control
+              background: 'linear-gradient(to right, rgb(var(--color-surface-tab-bar)) 20%, transparent 100%)',
             }}
             aria-hidden="true"
             data-testid="tab-bar-left-gradient"
@@ -597,24 +608,24 @@ export const TabBar: React.FC<TabBarProps> = ({
         {/* Right gradient indicator - fixed to right edge (before actions) */}
         {showRightGradient && (
           <div
-            className="absolute top-0 bottom-0 w-24 pointer-events-none z-10"
+            className="absolute top-0 bottom-0 w-16 pointer-events-none z-10 bg-gradient-to-l from-surface-tab-bar to-transparent"
             style={{
               right: isRightSide
                 ? splitView.isSplit
                   ? '160px'  // Right side in split view
                   : '152px'  // Right side not split: WorkspaceSwitcher + HamburgerMenu + TabActions
                 : splitView.isSplit
-                ? '96px'   // Left side in split
-                : '160px', // Left side not split: WorkspaceSwitcher + HamburgerMenu + TabActions
-              background: 'linear-gradient(to left, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.18) 25%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.04) 75%, transparent 100%)',
-              boxShadow: 'inset -1px 0 0 rgba(0, 0, 0, 0.1)',
+                  ? '96px'   // Left side in split
+                  : '160px', // Left side not split: WorkspaceSwitcher + HamburgerMenu + TabActions
+              background: 'linear-gradient(to left, rgb(var(--color-surface-tab-bar)) 20%, transparent 100%)',
             }}
             aria-hidden="true"
             data-testid="tab-bar-right-gradient"
           />
         )}
 
-        <div className="flex items-center space-x-1">
+
+        <div className="flex items-center space-x-1 pr-2">
           <TabActions
             side={side}
             onShowTabletSelector={() => setShowToolSelector(!showToolSelector)}

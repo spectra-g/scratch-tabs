@@ -82,7 +82,7 @@ Feature: Tab Sharing
     When I click the icon for "New tab"
     And I type "Test" into the editor
     And I right-click the "Scratch 1" tab
-    And I select "Rename" from the context menu
+    And I select "Rename" from the "Organize" submenu
     And I type "My Custom Tab" in the rename input
     And I press Enter to confirm rename
     And I right-click the "My Custom Tab" tab

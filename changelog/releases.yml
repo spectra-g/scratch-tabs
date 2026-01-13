@@ -3,8 +3,22 @@ config:
   max_versions: 100  # Maximum number of versions to display
 
 releases:
-  - version: "1.16.0"
+  - version: "1.17.0"
     type: "latest"
+    draft: false
+    date: "2026-01-13"
+    headline: "Browser-Style Scrollable Tabs"
+    summary: "Native horizontal scrolling for tabs with visual gradient indicators"
+    description: "Complete tab bar navigation overhaul with browser-style scrolling behavior, eliminating tab squashing and adding clear visual indicators for hidden content."
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**Horizontal Tab Scrolling:** Tabs now maintain minimum readable width (120px) and scroll horizontally when they overflow, preventing tab squashing"
+          - "**Gradient Scroll Indicators:** Visual gradient overlays appear at edges to clearly indicate when tabs are hidden off-screen and scrollable"
+          - "**Mouse Wheel Scrolling:** Scroll through tabs using vertical mouse wheel gestures over the tab bar for intuitive navigation"
+
+  - version: "1.16.0"
+    type: "release"
     draft: false
     date: "2026-01-12"
     headline: "Macro Recording & Menu Refinement"

@@ -84,7 +84,7 @@ describe('SortableTab Width Constraints', () => {
     expect(tabElement).toBeTruthy();
 
     const style = tabElement.style;
-    expect(style.width).toBe('160px');
+    expect(style.width).toBe('auto');
   });
 
   test('regular tab should have minimum width of 120px', () => {
@@ -98,7 +98,7 @@ describe('SortableTab Width Constraints', () => {
     expect(tabElement).toBeTruthy();
 
     const style = tabElement.style;
-    expect(style.minWidth).toBe('120px');
+    expect(style.minWidth).toBe('80px');
   });
 
   test('regular tab should have maximum width of 200px', () => {
@@ -203,8 +203,8 @@ describe('SortableTab Width Constraints', () => {
 
     const style = tabElement.style;
     expect(style.flexShrink).toBe('0');
-    expect(style.width).toBe('160px');
-    expect(style.minWidth).toBe('120px');
+    expect(style.width).toBe('auto');
+    expect(style.minWidth).toBe('80px');
     expect(style.maxWidth).toBe('200px');
   });
 
@@ -232,8 +232,8 @@ describe('SortableTab Width Constraints', () => {
 
     const style = tabElement.style;
     expect(style.flexShrink).toBe('0');
-    expect(style.width).toBe('160px');
-    expect(style.minWidth).toBe('120px');
+    expect(style.width).toBe('auto');
+    expect(style.minWidth).toBe('80px');
     expect(style.maxWidth).toBe('200px');
   });
 
@@ -255,8 +255,8 @@ describe('SortableTab Width Constraints', () => {
 
     const style = tabElement.style;
     expect(style.flexShrink).toBe('0');
-    expect(style.width).toBe('160px');
-    expect(style.minWidth).toBe('120px');
+    expect(style.width).toBe('auto');
+    expect(style.minWidth).toBe('80px');
     expect(style.maxWidth).toBe('200px');
   });
 
@@ -279,8 +279,8 @@ describe('SortableTab Width Constraints', () => {
     tabElements.forEach((tabElement) => {
       const style = (tabElement as HTMLElement).style;
       expect(style.flexShrink).toBe('0');
-      expect(style.width).toBe('160px');
-      expect(style.minWidth).toBe('120px');
+      expect(style.width).toBe('auto');
+      expect(style.minWidth).toBe('80px');
       expect(style.maxWidth).toBe('200px');
     });
   });
@@ -301,8 +301,8 @@ describe('SortableTab Width Constraints', () => {
 
     // Regular tab
     const regularStyle = (tabElements[0] as HTMLElement).style;
-    expect(regularStyle.width).toBe('160px');
-    expect(regularStyle.minWidth).toBe('120px');
+    expect(regularStyle.width).toBe('auto');
+    expect(regularStyle.minWidth).toBe('80px');
     expect(regularStyle.maxWidth).toBe('200px');
 
     // Pinned tab
@@ -347,6 +347,6 @@ describe('SortableTab Width Constraints', () => {
     expect(tabElement).toBeTruthy();
 
     const style = tabElement.style;
-    expect(style.minWidth).toBe('120px');
+    expect(style.minWidth).toBe('80px');
   });
 });

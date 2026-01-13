@@ -80,8 +80,8 @@ export const SortableTab: React.FC<SortableTabProps> = ({
     // Prevent flexbox from shrinking tabs
     flexShrink: 0,
     // Set width constraints
-    width: tab.isPinned ? "auto" : "160px",
-    minWidth: tab.isPinned ? "40px" : "120px",
+    width: "auto",
+    minWidth: tab.isPinned ? "40px" : "80px",
     maxWidth: tab.isPinned ? "auto" : "200px",
   };
 
