@@ -3,7 +3,6 @@ import React, {
   useRef,
   useEffect,
   useCallback,
-  useLayoutEffect,
 } from "react";
 import { useRootStore } from "../../stores";
 import { useTabsStore } from "../../stores/tabsStore";
@@ -76,10 +75,6 @@ export const TabBar: React.FC<TabBarProps> = ({
     x: number;
     y: number;
   } | null>(null);
-  const hasInitializedWidths = useRef(false);
-  const initialWidths = useRef<{ [key: string]: number }>({});
-  const containerWidthRef = useRef<number>(0);
-  const observerRef = useRef<MutationObserver | null>(null);
 
   const [tooltipVisible, setTooltipVisible] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState<{
@@ -95,6 +90,8 @@ export const TabBar: React.FC<TabBarProps> = ({
   const [tooltipContent, setTooltipContent] = useState<TooltipContent | null>(
     null,
   );
+  const [showLeftGradient, setShowLeftGradient] = useState(false);
+  const [showRightGradient, setShowRightGradient] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const tabBarRef = useRef<HTMLDivElement>(null);
@@ -142,72 +139,35 @@ export const TabBar: React.FC<TabBarProps> = ({
     .map((tab) => getTabLineCount(tab.content));
   const maxLineCount = Math.max(...tabLineCounts, 1);
 
-  const calculateTabWidths = useCallback(() => {
+  // Check scroll position and update gradient visibility
+  const updateScrollGradients = useCallback(() => {
     if (!tabsContainerRef.current) return;
 
     const container = tabsContainerRef.current;
-    // We use getElementsByClassName to get the *live* list of tabs currently in the DOM.
-    // This ensures that our math is always based on what is rendered,
-    // avoiding stale closures regarding `visibleTabs.length`.
-    const tabElements = container.getElementsByClassName("tab-item");
-    const count = tabElements.length;
+    const scrollLeft = container.scrollLeft;
+    const scrollWidth = container.scrollWidth;
+    const clientWidth = container.clientWidth;
 
-    if (count === 0) return;
+    // Show left gradient if we've scrolled away from the start (with 1px threshold)
+    setShowLeftGradient(scrollLeft > 1);
 
-    // 1. Reset: Force all tabs to natural width to perform accurate measurement
-    Array.from(tabElements).forEach((tab) => {
-      const el = tab as HTMLElement;
-      el.style.width = "";
-      el.style.minWidth = "";
-      el.style.maxWidth = "";
-      el.style.flex = "0 0 auto"; // Allow natural growth
-    });
-
-    // 2. Measure: Check if the natural content overflows the container
-    const containerWidth = container.clientWidth;
-    const contentWidth = container.scrollWidth;
-
-    // 3. Apply: If overflowing, force equal distribution
-    if (contentWidth > containerWidth) {
-      // Calculate exact width per tab to fit perfectly
-      const availableWidth = containerWidth;
-      // We set minWidth to 0 to ensure they can shrink infinitely if needed
-      // to meet the "No scrollbar" requirement
-      const newWidth = availableWidth / count;
-
-      Array.from(tabElements).forEach((tab) => {
-        const el = tab as HTMLElement;
-        el.style.width = `${newWidth}px`;
-        el.style.maxWidth = `${newWidth}px`;
-        el.style.minWidth = "0px"; // Crucial for very small tabs
-        el.style.flex = "1 1 0px"; // Ignore natural width, use strict sizing
-      });
-    }
-    // Else: Leave them as natural width (reset state)
+    // Show right gradient if there's more content to scroll to (with 1px threshold)
+    setShowRightGradient(scrollLeft + clientWidth < scrollWidth - 1);
   }, []);
 
-  // Use ResizeObserver to handle both Window resize AND Split View resize
-  useLayoutEffect(() => {
+  // Handle horizontal scrolling via mouse wheel
+  const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
     if (!tabsContainerRef.current) return;
 
-    // Calculate immediately on render/update
-    calculateTabWidths();
-
-    // Create observer for container resize events
-    const observer = new ResizeObserver(() => {
-      // Wrap in requestAnimationFrame to prevent "ResizeObserver loop limit exceeded"
-      // which can happen if setting widths triggers another resize immediately
-      requestAnimationFrame(() => {
-        calculateTabWidths();
-      });
-    });
-
-    observer.observe(tabsContainerRef.current);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [calculateTabWidths, visibleTabs.length]); // Re-run setup if tab count changes
+    // Only handle vertical scroll wheel events (deltaY)
+    if (e.deltaY !== 0) {
+      e.preventDefault();
+      // Apply vertical scroll delta to horizontal scroll position
+      tabsContainerRef.current.scrollLeft += e.deltaY;
+      // Update gradients after scroll
+      updateScrollGradients();
+    }
+  }, [updateScrollGradients]);
 
   const [showToolSelector, setShowToolSelector] = useState(false);
 
@@ -228,6 +188,34 @@ export const TabBar: React.FC<TabBarProps> = ({
       }
     };
   }, []);
+
+  // Set up scroll and resize listeners to update gradients
+  useEffect(() => {
+    const container = tabsContainerRef.current;
+    if (!container) return;
+
+    // Update gradients initially
+    updateScrollGradients();
+
+    // Listen to scroll events
+    const handleScroll = () => {
+      updateScrollGradients();
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+
+    // Listen to resize events
+    const resizeObserver = new ResizeObserver(() => {
+      updateScrollGradients();
+    });
+
+    resizeObserver.observe(container);
+
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      resizeObserver.disconnect();
+    };
+  }, [updateScrollGradients, visibleTabs.length]); // Re-run when tabs change
 
   const clearTooltipTimers = () => {
     if (initialDelayTimerRef.current) {
@@ -524,18 +512,19 @@ export const TabBar: React.FC<TabBarProps> = ({
     <>
       <div
         ref={tabBarRef}
-        className="flex bg-surface-tab-bar text-main w-full h-8 overflow-hidden"
+        className="flex bg-surface-tab-bar text-main w-full h-8 overflow-hidden relative"
         onMouseEnter={handleTabBarMouseEnter}
         onMouseLeave={handleTabBarMouseLeave}
         key={tabsKey}
       >
         <div
           ref={tabsContainerRef}
-          className="flex-1 flex min-w-0 overflow-hidden"
+          className="flex-1 flex min-w-0 overflow-x-auto overflow-y-hidden no-scrollbar"
           onDoubleClick={handleEmptyAreaDoubleClick}
+          onWheel={handleWheel}
           data-testid="tab-bar-empty-area"
         >
-          <div ref={tabsWrapperRef} className="flex">
+          <div ref={tabsWrapperRef} className="flex h-full">
             <DndContext
               sensors={sensors}
               modifiers={[restrictToHorizontalAxis]}
@@ -591,6 +580,39 @@ export const TabBar: React.FC<TabBarProps> = ({
             </DndContext>
           </div>
         </div>
+
+        {/* Left gradient indicator - fixed to left edge */}
+        {showLeftGradient && (
+          <div
+            className="absolute left-0 top-0 bottom-0 w-24 pointer-events-none z-10"
+            style={{
+              background: 'linear-gradient(to right, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.18) 25%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.04) 75%, transparent 100%)',
+              boxShadow: 'inset 1px 0 0 rgba(0, 0, 0, 0.1)',
+            }}
+            aria-hidden="true"
+            data-testid="tab-bar-left-gradient"
+          />
+        )}
+
+        {/* Right gradient indicator - fixed to right edge (before actions) */}
+        {showRightGradient && (
+          <div
+            className="absolute top-0 bottom-0 w-24 pointer-events-none z-10"
+            style={{
+              right: isRightSide
+                ? splitView.isSplit
+                  ? '160px'  // Right side in split view
+                  : '152px'  // Right side not split: WorkspaceSwitcher + HamburgerMenu + TabActions
+                : splitView.isSplit
+                ? '96px'   // Left side in split
+                : '160px', // Left side not split: WorkspaceSwitcher + HamburgerMenu + TabActions
+              background: 'linear-gradient(to left, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.18) 25%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.04) 75%, transparent 100%)',
+              boxShadow: 'inset -1px 0 0 rgba(0, 0, 0, 0.1)',
+            }}
+            aria-hidden="true"
+            data-testid="tab-bar-right-gradient"
+          />
+        )}
 
         <div className="flex items-center space-x-1">
           <TabActions

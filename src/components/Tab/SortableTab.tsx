@@ -77,6 +77,12 @@ export const SortableTab: React.FC<SortableTabProps> = ({
     overflow: isEditing ? "visible" : "hidden",
     position: isEditing ? ("relative" as const) : undefined,
     zIndex: isEditing ? 1000 : undefined, // High z-index for the entire tab when editing
+    // Prevent flexbox from shrinking tabs
+    flexShrink: 0,
+    // Set width constraints
+    width: tab.isPinned ? "auto" : "160px",
+    minWidth: tab.isPinned ? "40px" : "120px",
+    maxWidth: tab.isPinned ? "auto" : "200px",
   };
 
   // Set up both refs - the sortable ref and our local one for measurements
