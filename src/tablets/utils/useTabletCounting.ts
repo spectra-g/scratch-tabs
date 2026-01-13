@@ -1,4 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
+
+// Module-level Set to count which tablet instances have been counted
+// This persists across component remounts but resets on page refresh
+const countedInstances = new Set<string>();
 
 /**
  * Privacy-respecting tablet usage counting hook
@@ -10,17 +14,16 @@ import { useEffect, useRef } from 'react';
  * Development mode: No counting (respects local development workflow)
  * Production mode: Loads pixel from https://scratchtabs.b-cdn.net/t/{tabletId}.png
  *
+ * Counting behavior:
+ * - Each unique tab instance (tab.id) is counted once per session
+ * - Resets on page refresh
+ * - Switching away and back to the same tab won't re-count
+ *
  * @param tabletId - The unique identifier for the tablet (e.g., 'calculator', 'regex')
+ * @param uniqueKey - A unique key for this specific instance (e.g., tab.id) to ensure counting fires for each new instance
  */
-export function useTabletCounting(tabletId: string): void {
-  const hasCounted = useRef(false);
-
+export function useTabletCounting(tabletId: string, uniqueKey?: string): void {
   useEffect(() => {
-    // Only count once per tablet mount
-    if (hasCounted.current) {
-      return;
-    }
-
     // Only count in production builds
     if (!import.meta.env.PROD) {
       return;
@@ -28,6 +31,14 @@ export function useTabletCounting(tabletId: string): void {
 
     // Validate tablet ID (basic sanitation)
     if (!tabletId || typeof tabletId !== 'string' || !/^[a-z0-9-]+$/.test(tabletId)) {
+      return;
+    }
+
+    // Create a composite key to count this specific instance
+    const instanceKey = uniqueKey ? `${tabletId}-${uniqueKey}` : tabletId;
+
+    // If we've already counted this specific instance, skip
+    if (countedInstances.has(instanceKey)) {
       return;
     }
 
@@ -39,10 +50,10 @@ export function useTabletCounting(tabletId: string): void {
       const img = new Image();
       img.src = countingUrl;
 
-      // Silent success/failure - no logging needed in production
-      hasCounted.current = true;
+      // Mark this instance as counted (persists for the session)
+      countedInstances.add(instanceKey);
     } catch (error) {
       // Silent failure - don't disrupt user experience
     }
-  }, [tabletId]);
+  }, [tabletId, uniqueKey]);
 }
