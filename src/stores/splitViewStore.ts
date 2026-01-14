@@ -18,6 +18,8 @@ interface SplitViewStore {
   setActiveRightTab: (id: string) => void;
   setActiveSide: (side: "left" | "right") => void;
   setSplitRatio: (ratio: number) => void;
+  setLeftScrollPosition: (position: number) => void;
+  setRightScrollPosition: (position: number) => void;
   addTabToSide: (
     tabId: string,
     toRightSide: boolean,
@@ -271,6 +273,16 @@ export const useSplitViewStore = create<SplitViewStore>((set, get) => ({
   setSplitRatio: (ratio) =>
     set((state) => ({
       splitView: { ...state.splitView, splitRatio: ratio },
+    })),
+
+  setLeftScrollPosition: (position) =>
+    set((state) => ({
+      splitView: { ...state.splitView, leftScrollPosition: position },
+    })),
+
+  setRightScrollPosition: (position) =>
+    set((state) => ({
+      splitView: { ...state.splitView, rightScrollPosition: position },
     })),
 
   addTabToSide: (tabId, toRightSide, activeTabIdFromCaller) =>

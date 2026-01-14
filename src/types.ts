@@ -53,6 +53,8 @@ export interface SplitViewRecord {
   lastModified: number;
   leftTabHistory: string[];
   rightTabHistory: string[];
+  leftScrollPosition?: number;
+  rightScrollPosition?: number;
 }
 
 export interface SplitViewState {
@@ -67,6 +69,8 @@ export interface SplitViewState {
   leftTabHistory: string[];
   rightTabHistory: string[];
   workspaceId: string;
+  leftScrollPosition?: number;
+  rightScrollPosition?: number;
 }
 
 export interface WorkspaceLink {

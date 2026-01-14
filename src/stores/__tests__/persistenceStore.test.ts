@@ -118,6 +118,8 @@ interface SplitViewStore {
   getAllExcept: (tabId: string, isRightSide: boolean) => string[];
   createDefaultSplitViewState: (workspaceId?: string) => SplitViewState;
   clearSplitViewForWorkspace: (workspaceId: string) => void;
+  setLeftScrollPosition: (position: number) => void;
+  setRightScrollPosition: (position: number) => void;
 }
 
 const mockWorkspaceStore = useWorkspaceStore as jest.Mocked<
@@ -221,6 +223,8 @@ const mockSplitViewState: SplitViewStore = {
     rightTabHistory: [],
   })),
   clearSplitViewForWorkspace: jest.fn(),
+  setLeftScrollPosition: jest.fn(),
+  setRightScrollPosition: jest.fn(),
 };
 
 describe("PersistenceStore", () => {

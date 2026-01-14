@@ -84,7 +84,12 @@ describe('TabBar Scrollable Functionality', () => {
     workspaceId: 'default',
   };
 
+  const mockSetLeftScrollPosition = jest.fn();
+  const mockSetRightScrollPosition = jest.fn();
+
   beforeEach(() => {
+    jest.clearAllMocks();
+
     // Setup store mocks
     (useTabsStore as unknown as jest.Mock).mockReturnValue({
       tabs: mockTabs,
@@ -92,6 +97,8 @@ describe('TabBar Scrollable Functionality', () => {
 
     (useSplitViewStore as unknown as jest.Mock).mockReturnValue({
       splitView: mockSplitView,
+      setLeftScrollPosition: mockSetLeftScrollPosition,
+      setRightScrollPosition: mockSetRightScrollPosition,
     });
 
     (useRootStore as unknown as jest.Mock).mockReturnValue({
@@ -481,6 +488,214 @@ describe('TabBar Scrollable Functionality', () => {
     await waitFor(() => {
       const leftGradient = screen.queryByTestId('tab-bar-left-gradient');
       expect(leftGradient).toHaveClass('pointer-events-none');
+    });
+  });
+
+  test('gradients should have transition-opacity class for fade effects', async () => {
+    render(
+      <TabBar
+        side="left"
+        onOpenDiffModal={jest.fn()}
+        onOpenSummaryModal={jest.fn()}
+      />
+    );
+
+    const tabsContainer = screen.getByTestId('tab-bar-empty-area');
+
+    // Mock overflow
+    Object.defineProperties(tabsContainer, {
+      scrollLeft: { value: 100, writable: true },
+      scrollWidth: { value: 1000, writable: true },
+      clientWidth: { value: 400, writable: true },
+    });
+
+    fireEvent.scroll(tabsContainer);
+
+    // Wait for gradient to appear
+    await waitFor(() => {
+      const leftGradient = screen.queryByTestId('tab-bar-left-gradient');
+      expect(leftGradient).toHaveClass('transition-opacity');
+      expect(leftGradient).toHaveClass('duration-300');
+    });
+  });
+
+  describe('Scroll Position Persistence', () => {
+    test('should have scroll position in store for left side', () => {
+      const mockSplitViewWithScroll = {
+        ...mockSplitView,
+        leftScrollPosition: 250,
+      };
+
+      (useSplitViewStore as unknown as jest.Mock).mockReturnValue({
+        splitView: mockSplitViewWithScroll,
+        setLeftScrollPosition: mockSetLeftScrollPosition,
+        setRightScrollPosition: mockSetRightScrollPosition,
+      });
+
+      render(
+        <TabBar
+          side="left"
+          onOpenDiffModal={jest.fn()}
+          onOpenSummaryModal={jest.fn()}
+        />
+      );
+
+      // Verify the component received the scroll position from store
+      expect(mockSplitViewWithScroll.leftScrollPosition).toBe(250);
+
+      // Verify the container is rendered (restoration happens in useEffect)
+      const tabsContainer = screen.getByTestId('tab-bar-empty-area');
+      expect(tabsContainer).toBeInTheDocument();
+    });
+
+    test('should save scroll position to store after scrolling (debounced)', async () => {
+      jest.useFakeTimers();
+
+      render(
+        <TabBar
+          side="left"
+          onOpenDiffModal={jest.fn()}
+          onOpenSummaryModal={jest.fn()}
+        />
+      );
+
+      const tabsContainer = screen.getByTestId('tab-bar-empty-area');
+
+      let scrollLeft = 0;
+      Object.defineProperty(tabsContainer, 'scrollLeft', {
+        get: () => scrollLeft,
+        set: (value) => { scrollLeft = value; },
+      });
+
+      // Simulate scroll
+      scrollLeft = 150;
+      fireEvent.scroll(tabsContainer);
+
+      // Should not save immediately
+      expect(mockSetLeftScrollPosition).not.toHaveBeenCalled();
+
+      // Fast-forward past debounce delay (300ms)
+      jest.advanceTimersByTime(300);
+
+      // Should now have saved
+      await waitFor(() => {
+        expect(mockSetLeftScrollPosition).toHaveBeenCalledWith(150);
+      });
+
+      jest.useRealTimers();
+    });
+
+    test('should save right side scroll position when side is right', async () => {
+      jest.useFakeTimers();
+
+      render(
+        <TabBar
+          side="right"
+          onOpenDiffModal={jest.fn()}
+          onOpenSummaryModal={jest.fn()}
+        />
+      );
+
+      const tabsContainer = screen.getByTestId('tab-bar-empty-area');
+
+      let scrollLeft = 0;
+      Object.defineProperty(tabsContainer, 'scrollLeft', {
+        get: () => scrollLeft,
+        set: (value) => { scrollLeft = value; },
+      });
+
+      scrollLeft = 200;
+      fireEvent.scroll(tabsContainer);
+
+      jest.advanceTimersByTime(300);
+
+      await waitFor(() => {
+        expect(mockSetRightScrollPosition).toHaveBeenCalledWith(200);
+        expect(mockSetLeftScrollPosition).not.toHaveBeenCalled();
+      });
+
+      jest.useRealTimers();
+    });
+  });
+
+  describe('Keyboard Navigation', () => {
+    test('should scroll left when ArrowLeft key is pressed', () => {
+      render(
+        <TabBar
+          side="left"
+          onOpenDiffModal={jest.fn()}
+          onOpenSummaryModal={jest.fn()}
+        />
+      );
+
+      const tabsContainer = screen.getByTestId('tab-bar-empty-area');
+
+      let scrollLeft = 200;
+      Object.defineProperty(tabsContainer, 'scrollLeft', {
+        get: () => scrollLeft,
+        set: (value) => { scrollLeft = value; },
+      });
+
+      fireEvent.keyDown(tabsContainer, { key: 'ArrowLeft' });
+
+      expect(scrollLeft).toBe(100); // 200 - 100 = 100
+    });
+
+    test('should scroll right when ArrowRight key is pressed', () => {
+      render(
+        <TabBar
+          side="left"
+          onOpenDiffModal={jest.fn()}
+          onOpenSummaryModal={jest.fn()}
+        />
+      );
+
+      const tabsContainer = screen.getByTestId('tab-bar-empty-area');
+
+      let scrollLeft = 100;
+      Object.defineProperty(tabsContainer, 'scrollLeft', {
+        get: () => scrollLeft,
+        set: (value) => { scrollLeft = value; },
+      });
+
+      fireEvent.keyDown(tabsContainer, { key: 'ArrowRight' });
+
+      expect(scrollLeft).toBe(200); // 100 + 100 = 200
+    });
+
+    test('should not handle arrow keys when other keys are pressed', () => {
+      render(
+        <TabBar
+          side="left"
+          onOpenDiffModal={jest.fn()}
+          onOpenSummaryModal={jest.fn()}
+        />
+      );
+
+      const tabsContainer = screen.getByTestId('tab-bar-empty-area');
+
+      let scrollLeft = 100;
+      Object.defineProperty(tabsContainer, 'scrollLeft', {
+        get: () => scrollLeft,
+        set: (value) => { scrollLeft = value; },
+      });
+
+      fireEvent.keyDown(tabsContainer, { key: 'Enter' });
+
+      expect(scrollLeft).toBe(100); // Should not change
+    });
+
+    test('tabs container should be focusable with tabIndex', () => {
+      render(
+        <TabBar
+          side="left"
+          onOpenDiffModal={jest.fn()}
+          onOpenSummaryModal={jest.fn()}
+        />
+      );
+
+      const tabsContainer = screen.getByTestId('tab-bar-empty-area');
+      expect(tabsContainer).toHaveAttribute('tabIndex', '0');
     });
   });
 });

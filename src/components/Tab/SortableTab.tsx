@@ -6,6 +6,9 @@ import { CSS } from "@dnd-kit/utilities";
 import { ConfirmationDialog } from "./ConfirmationDialog";
 import { RichTextService } from "../RichText/services/RichTextService";
 
+// Touch activation delay matches the TouchSensor configuration in TabBar
+const TOUCH_ACTIVATION_DELAY_MS = 250;
+
 interface SortableTabProps {
   tab: Tab;
   isActive: boolean;
@@ -56,6 +59,8 @@ export const SortableTab: React.FC<SortableTabProps> = ({
   const [confirmationPositionType, setConfirmationPositionType] = useState<
     "above" | "below"
   >("above");
+  const [isTouchActivating, setIsTouchActivating] = useState(false);
+  const touchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const {
     attributes,
@@ -143,6 +148,35 @@ export const SortableTab: React.FC<SortableTabProps> = ({
     // Prevent event propagation for all keys to ensure spaces work
     e.stopPropagation();
   };
+
+  const handleTouchStart = () => {
+    if (tab.isPinned) return;
+
+    if (touchTimeoutRef.current) {
+      clearTimeout(touchTimeoutRef.current);
+    }
+
+    setIsTouchActivating(true);
+
+    touchTimeoutRef.current = setTimeout(() => {
+      setIsTouchActivating(false);
+    }, TOUCH_ACTIVATION_DELAY_MS);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchTimeoutRef.current) {
+      clearTimeout(touchTimeoutRef.current);
+    }
+    setIsTouchActivating(false);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (touchTimeoutRef.current) {
+        clearTimeout(touchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleCloseClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
@@ -290,12 +324,14 @@ export const SortableTab: React.FC<SortableTabProps> = ({
     <>
       <div
         ref={setRefs}
+        id={`tab-${tab.id}`}
         className={`tab-item group relative flex items-center flex-shrink-0 px-3 py-1.5 cursor-pointer text-xs transition-all duration-150 ease-in-out
                     ${isActive
             ? "bg-element-tab-active text-main shadow-sm border-t-2 border-transparent"
             : "bg-transparent text-secondary hover:text-main hover:bg-element-hover border-t-2 border-transparent"
           }
                     ${isDragging && !tab.isPinned ? "bg-primary/90 text-white shadow-md scale-105" : ""}
+                    ${isTouchActivating ? "bg-primary/30 scale-[1.02]" : ""}
                     border-r border-base backdrop-blur-sm`}
         style={style}
         data-testid={`tab-${tab.title}`}
@@ -307,6 +343,9 @@ export const SortableTab: React.FC<SortableTabProps> = ({
         onDoubleClick={(e) => !isEditing && onDoubleClick(e)}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
         title=""
         {...attributes}
         {...listeners}
