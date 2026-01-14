@@ -151,20 +151,20 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 border border-gray-700 rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
+      <div className="bg-surface border border-base rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-base">
           <div>
-            <h2 className="text-xl font-semibold text-gray-100">
+            <h2 className="text-xl font-semibold text-main">
               Import Items
             </h2>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-secondary mt-1">
               Import data from various sources into your vault
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-800 rounded-md transition-colors"
+            className="p-2 text-secondary hover:text-main hover:bg-element-hover rounded-md transition-colors"
           >
             <X size={20} />
           </button>
@@ -176,7 +176,7 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
             <div className="space-y-6">
               {/* Source Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-main mb-2">
                   Import Source
                 </label>
                 <select
@@ -184,20 +184,20 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
                   onChange={(e) =>
                     setSelectedSource(e.target.value as ImportSource)
                   }
-                  className="w-full bg-gray-800 border border-gray-600 rounded-md px-3 py-2 text-gray-200 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-element border border-base rounded-md px-3 py-2 text-main focus:outline-none focus:border-blue-500"
                 >
                   <option value="terminal-history">Terminal History</option>
                   <option value="vscode-snippets">VS Code Snippets</option>
                   <option value="markdown-notes">Markdown Notes</option>
                 </select>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-secondary mt-1">
                   {sourceInfo.description}
                 </p>
               </div>
 
               {/* File Upload or Text Input */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-main mb-2">
                   {sourceInfo.acceptsFiles
                     ? "Upload File or Paste Content"
                     : "Paste Content"}
@@ -205,13 +205,13 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
 
                 {sourceInfo.acceptsFiles && (
                   <div className="mb-3">
-                    <label className="flex items-center justify-center w-full h-20 border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:border-gray-500 transition-colors">
+                    <label className="flex items-center justify-center w-full h-20 border-2 border-dashed border-base rounded-lg cursor-pointer hover:border-base transition-colors bg-canvas">
                       <div className="flex flex-col items-center">
-                        <Upload size={24} className="text-gray-400 mb-1" />
-                        <span className="text-sm text-gray-400">
+                        <Upload size={24} className="text-secondary mb-1" />
+                        <span className="text-sm text-secondary">
                           Click to upload or drag and drop
                         </span>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-secondary">
                           {sourceInfo.fileExtensions?.join(", ")}
                         </span>
                       </div>
@@ -231,7 +231,7 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
                   value={rawContent}
                   onChange={(e) => setRawContent(e.target.value)}
                   placeholder={sourceInfo.placeholder}
-                  className="w-full h-64 bg-gray-800 border border-gray-600 rounded-md px-3 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-none"
+                  className="w-full h-64 bg-canvas border border-base rounded-md px-3 py-2 text-main placeholder-secondary focus:outline-none focus:border-blue-500 resize-none"
                 />
               </div>
 
@@ -256,10 +256,10 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
             {/* Right Column - Preview */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-gray-200">Preview</h3>
+                <h3 className="text-lg font-medium text-main">Preview</h3>
                 <button
                   onClick={() => setShowPreview(!showPreview)}
-                  className="flex items-center text-sm text-gray-400 hover:text-gray-200"
+                  className="flex items-center text-sm text-secondary hover:text-main"
                 >
                   {showPreview ? (
                     <ChevronUp size={16} />
@@ -274,23 +274,23 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
                 <div className="space-y-4">
                   {/* Summary Stats */}
                   <div className="grid grid-cols-3 gap-3 text-sm">
-                    <div className="bg-gray-800 rounded-md p-3 text-center">
+                    <div className="bg-element rounded-md p-3 text-center">
                       <div className="text-lg font-semibold text-blue-400">
                         {previewItems.length}
                       </div>
-                      <div className="text-gray-400">Total Items</div>
+                      <div className="text-secondary">Total Items</div>
                     </div>
-                    <div className="bg-gray-800 rounded-md p-3 text-center">
+                    <div className="bg-element rounded-md p-3 text-center">
                       <div className="text-lg font-semibold text-green-400">
                         {uniqueItems.length}
                       </div>
-                      <div className="text-gray-400">New Items</div>
+                      <div className="text-secondary">New Items</div>
                     </div>
-                    <div className="bg-gray-800 rounded-md p-3 text-center">
+                    <div className="bg-element rounded-md p-3 text-center">
                       <div className="text-lg font-semibold text-yellow-400">
                         {duplicateItems.length}
                       </div>
-                      <div className="text-gray-400">Duplicates</div>
+                      <div className="text-secondary">Duplicates</div>
                     </div>
                   </div>
 
@@ -328,29 +328,29 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
                           key={index}
                           className={`p-3 rounded-md border ${
                             isDuplicate
-                              ? "bg-gray-800/50 border-gray-600 text-gray-500"
-                              : "bg-gray-800 border-gray-700 text-gray-200"
+                              ? "bg-element/50 border-base opacity-50"
+                              : "bg-element border-base text-main"
                           }`}
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center space-x-2 mb-1">
-                                <FileText size={14} className="text-gray-400" />
+                                <FileText size={14} className="text-secondary" />
                                 <span className="font-medium truncate">
                                   {item.title}
                                 </span>
                                 {isDuplicate && (
-                                  <span className="text-xs bg-gray-600 text-gray-300 px-1.5 py-0.5 rounded">
+                                  <span className="text-xs bg-warning-subtle text-warning px-1.5 py-0.5 rounded">
                                     {duplicateCount > 1
                                       ? `Duplicate (${duplicateCount})`
                                       : "Duplicate"}
                                   </span>
                                 )}
                               </div>
-                              <div className="text-xs text-gray-400 mb-1">
+                              <div className="text-xs text-secondary mb-1">
                                 {item.contentType} • {item.labels.join(", ")}
                               </div>
-                              <div className="text-xs text-gray-500 truncate">
+                              <div className="text-xs text-secondary truncate">
                                 {item.content.substring(0, 100)}
                                 {item.content.length > 100 && "..."}
                               </div>
@@ -367,8 +367,8 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-gray-700">
-          <div className="text-sm text-gray-400">
+        <div className="flex items-center justify-between p-6 border-t border-base">
+          <div className="text-sm text-secondary">
             {uniqueItems.length > 0 ? (
               <span className="flex items-center">
                 <CheckCircle size={16} className="text-green-400 mr-2" />
@@ -381,14 +381,14 @@ export const VaultImportModal: React.FC<VaultImportModalProps> = ({
           <div className="flex items-center space-x-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-gray-400 hover:text-gray-200 hover:bg-gray-800 rounded-md transition-colors"
+              className="px-4 py-2 text-secondary hover:text-main hover:bg-element-hover rounded-md transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleImport}
               disabled={uniqueItems.length === 0 || isProcessing}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-element disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
             >
               {isProcessing ? (
                 <>
