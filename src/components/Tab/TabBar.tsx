@@ -32,6 +32,12 @@ import { KeyboardSensor } from "@dnd-kit/core";
 import { SortableTabList } from "./SortableTabList";
 import { NEW_TAB_PREFIX } from "../../constants";
 
+// Constants for scroll behavior
+const SCROLL_SAVE_DEBOUNCE_MS = 300;
+const AUTO_SCROLL_DELAY_MS = 50;
+const DRAG_SCROLL_DELAY_MS = 100;
+const KEYBOARD_SCROLL_AMOUNT_PX = 100;
+
 interface TabBarProps {
   side?: "left" | "right";
   onOpenDiffModal: (
@@ -56,7 +62,7 @@ export const TabBar: React.FC<TabBarProps> = ({
   onOpenSummaryModal,
 }) => {
   const { tabs } = useTabsStore();
-  const { splitView } = useSplitViewStore();
+  const { splitView, setLeftScrollPosition, setRightScrollPosition } = useSplitViewStore();
   const {
     removeTab,
     updateTabTitle,
@@ -180,6 +186,20 @@ export const TabBar: React.FC<TabBarProps> = ({
     }
   }, [updateScrollGradients]);
 
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!tabsContainerRef.current || editingTabId) return;
+
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      tabsContainerRef.current.scrollLeft -= KEYBOARD_SCROLL_AMOUNT_PX;
+      updateScrollGradients();
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      tabsContainerRef.current.scrollLeft += KEYBOARD_SCROLL_AMOUNT_PX;
+      updateScrollGradients();
+    }
+  }, [editingTabId, updateScrollGradients]);
+
   const [showToolSelector, setShowToolSelector] = useState(false);
 
   useEffect(() => {
@@ -200,7 +220,56 @@ export const TabBar: React.FC<TabBarProps> = ({
     };
   }, []);
 
-  // Set up scroll and resize listeners to update gradients
+  // Restore scroll position on mount
+  useEffect(() => {
+    const container = tabsContainerRef.current;
+    if (!container) return;
+
+    const savedPosition = isRightSide
+      ? splitView.rightScrollPosition
+      : splitView.leftScrollPosition;
+
+    if (savedPosition !== undefined) {
+      container.scrollLeft = savedPosition;
+    }
+  }, []); // Run once on mount
+
+  // Auto-scroll to active tab when it changes
+  useEffect(() => {
+    if (!activeSideTabId || !tabsContainerRef.current) return;
+
+    const timeoutId = setTimeout(() => {
+      const activeTabElement = document.getElementById(`tab-${activeSideTabId}`);
+      if (activeTabElement) {
+        activeTabElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'center',
+        });
+      }
+    }, AUTO_SCROLL_DELAY_MS);
+
+    return () => clearTimeout(timeoutId);
+  }, [activeSideTabId]);
+
+  // Adjust scroll position when tabs are removed
+  useEffect(() => {
+    const container = tabsContainerRef.current;
+    if (!container) return;
+
+    // Check if we're scrolled past the end of content
+    const scrollLeft = container.scrollLeft;
+    const scrollWidth = container.scrollWidth;
+    const clientWidth = container.clientWidth;
+
+    // If scrolled past the end, adjust to show the rightmost content
+    if (scrollLeft + clientWidth > scrollWidth) {
+      const newScrollLeft = Math.max(0, scrollWidth - clientWidth);
+      container.scrollLeft = newScrollLeft;
+    }
+  }, [visibleTabs.length]); // Run when number of tabs changes
+
+  // Set up scroll and resize listeners to update gradients and save scroll position
   useEffect(() => {
     const container = tabsContainerRef.current;
     if (!container) return;
@@ -208,9 +277,22 @@ export const TabBar: React.FC<TabBarProps> = ({
     // Update gradients initially
     updateScrollGradients();
 
-    // Listen to scroll events
+    let scrollSaveTimeout: NodeJS.Timeout | null = null;
+
     const handleScroll = () => {
       updateScrollGradients();
+
+      if (scrollSaveTimeout) {
+        clearTimeout(scrollSaveTimeout);
+      }
+      scrollSaveTimeout = setTimeout(() => {
+        const scrollLeft = container.scrollLeft;
+        if (isRightSide) {
+          setRightScrollPosition(scrollLeft);
+        } else {
+          setLeftScrollPosition(scrollLeft);
+        }
+      }, SCROLL_SAVE_DEBOUNCE_MS);
     };
 
     container.addEventListener('scroll', handleScroll, { passive: true });
@@ -223,10 +305,13 @@ export const TabBar: React.FC<TabBarProps> = ({
     resizeObserver.observe(container);
 
     return () => {
+      if (scrollSaveTimeout) {
+        clearTimeout(scrollSaveTimeout);
+      }
       container.removeEventListener('scroll', handleScroll);
       resizeObserver.disconnect();
     };
-  }, [updateScrollGradients, visibleTabs.length]); // Re-run when tabs change
+  }, [updateScrollGradients, visibleTabs.length, isRightSide, setLeftScrollPosition, setRightScrollPosition]); // Re-run when tabs change
 
   const clearTooltipTimers = () => {
     if (initialDelayTimerRef.current) {
@@ -371,9 +456,19 @@ export const TabBar: React.FC<TabBarProps> = ({
       }
     }
 
-    // Create the new order and call reorderTabs
     const newTabIds = arrayMove(tabIds, oldIndex, newIndex);
     reorderTabs(side, newTabIds);
+
+    setTimeout(() => {
+      const draggedTabElement = document.getElementById(`tab-${active.id}`);
+      if (draggedTabElement) {
+        draggedTabElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'center',
+        });
+      }
+    }, DRAG_SCROLL_DELAY_MS);
 
     clearCommonTooltipState();
   };
@@ -533,6 +628,8 @@ export const TabBar: React.FC<TabBarProps> = ({
           className="flex-1 flex min-w-0 overflow-x-auto overflow-y-hidden no-scrollbar"
           onDoubleClick={handleEmptyAreaDoubleClick}
           onWheel={handleWheel}
+          onKeyDown={handleKeyDown}
+          tabIndex={0}
           data-testid="tab-bar-empty-area"
         >
           <div ref={tabsWrapperRef} className="flex h-full">
@@ -595,7 +692,7 @@ export const TabBar: React.FC<TabBarProps> = ({
         {/* Left gradient indicator - fixed to left edge */}
         {showLeftGradient && (
           <div
-            className="absolute left-0 top-0 bottom-0 w-16 pointer-events-none z-10 bg-gradient-to-r from-surface-tab-bar to-transparent"
+            className="absolute left-0 top-0 bottom-0 w-16 pointer-events-none z-10 bg-gradient-to-r from-surface-tab-bar to-transparent transition-opacity duration-300"
             style={{
               // Fallback for custom property opacity issues if needed, or precise control
               background: 'linear-gradient(to right, rgb(var(--color-surface-tab-bar)) 20%, transparent 100%)',
@@ -608,7 +705,7 @@ export const TabBar: React.FC<TabBarProps> = ({
         {/* Right gradient indicator - fixed to right edge (before actions) */}
         {showRightGradient && (
           <div
-            className="absolute top-0 bottom-0 w-16 pointer-events-none z-10 bg-gradient-to-l from-surface-tab-bar to-transparent"
+            className="absolute top-0 bottom-0 w-16 pointer-events-none z-10 bg-gradient-to-l from-surface-tab-bar to-transparent transition-opacity duration-300"
             style={{
               right: isRightSide
                 ? splitView.isSplit
