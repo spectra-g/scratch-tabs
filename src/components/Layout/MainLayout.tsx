@@ -22,6 +22,7 @@ import { SearchModal } from "../Search/SearchModal";
 import { AIModelManagementModal } from "../AI/AIModelManagementModal";
 import { ConfirmationDialog } from "../Tab/ConfirmationDialog";
 import { TestFields } from "../TestFields/TestFields";
+import { MilestoneToast, MilestoneModal } from "../MilestoneCelebration";
 import { updateSaveIndicator } from "../../utils/testIndicators";
 import { useAIStore } from "../../stores/aiStore";
 import { useStoreWithEqualityFn } from "zustand/traditional";
@@ -534,6 +535,10 @@ const MainLayout: React.FC = () => {
       )}
 
       <TestFields />
+
+      {/* Milestone Celebration Components */}
+      <MilestoneToast />
+      <MilestoneModal />
     </div>
   );
 };
