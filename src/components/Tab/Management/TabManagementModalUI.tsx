@@ -1,5 +1,5 @@
 import React from "react";
-import { DndContext } from "@dnd-kit/core";
+import { DndContext, pointerWithin } from "@dnd-kit/core";
 import { FolderPlus } from "lucide-react";
 import { BaseModal } from "../../../formats/json/components/modals/BaseModal";
 import { ConfirmationDialog } from "./ConfirmationDialog";
@@ -56,6 +56,7 @@ export const TabManagementModalUI: React.FC<TabManagementModalUIProps> = ({
       >
         <DndContext
           sensors={sensors}
+          collisionDetection={pointerWithin}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
