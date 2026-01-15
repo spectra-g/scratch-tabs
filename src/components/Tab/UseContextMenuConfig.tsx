@@ -6,7 +6,6 @@ import { useMacroStore } from "../../stores/macroStore";
 import { useBatchToolsStore } from "../../stores/batchToolsStore";
 import {
   Copy,
-  Edit3,
   GitCompare,
   XCircle,
   ExternalLink,
@@ -283,6 +282,8 @@ Add any other context about the problem here.
   };
 
   const handleMacroRecording = () => {
+    // Activate the tab first so the floating toolbar is visible
+    rootStore.setActiveTab(tabId);
     // Show the floating macro toolbar for THIS tab specifically
     setForceShowToolbar(true, tabId, isRightSide ? 'right' : 'left');
     closeContextMenu();
