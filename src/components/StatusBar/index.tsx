@@ -7,14 +7,9 @@ import { useSplitViewStore } from "../../stores/splitViewStore";
 import { Search } from "../Icons";
 import { useSearchStore } from "../../stores/searchStore";
 import { ThemeToggle } from "../ThemeToggle";
-import { formatRegistry } from "../../formats";
-import { getPotentialFormatMatches } from "../../formats";
-import { getTabContentForLanguageDetection } from "../../utils/formatDetectionUtils";
 import { FormatSelectionPopup } from "./FormatSelectionPopup";
 import { FontSizeControls } from "./FontSizeControls";
 import { RichTextControls } from "./RichTextControls";
-import { useIsMobile } from "../../hooks/useIsMobile";
-import type { PopupMenuItem } from "./types";
 import { useActiveEditorStore } from "../../stores/activeEditorStore";
 import { useCursorPosition, useStatusBarLogic } from "./useStatusBarLogic";
 
@@ -38,15 +33,21 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   const realTimeCursorPosition = useCursorPosition(editor);
 
   // Get computed data from the status bar logic hook
-  const { tabletLabel, contentSample, statusBarItems, languageForOptions } =
-    useStatusBarLogic({ activeTab });
+  const {
+    tabletLabel,
+    contentSample,
+    statusBarItems,
+    languageForOptions,
+    displayLabel,
+    showDotIndicator,
+    getPopupLanguages,
+  } = useStatusBarLogic({ activeTab });
 
   const { splitView } = useSplitViewStore();
   const { updateTabLanguage } = useRootStore();
   const { toggleSearch } = useSearchStore();
   const [showLanguagePopup, setShowLanguagePopup] = useState(false);
   const languageLabelRef = useRef<HTMLDivElement>(null);
-  const isMobile = useIsMobile();
 
   const showAIIcon =
     (!splitView.isSplit && side === "left") ||
@@ -56,93 +57,6 @@ export const StatusBar: React.FC<StatusBarProps> = ({
     activeTab && !activeTab.isTablet && !activeTab.isRich
       ? getFormatOptionsMenu(languageForOptions || 'plaintext', editor)
       : null;
-
-  // Get languages to display in the popup with the new ordering rules
-  const getPopupLanguages = (): PopupMenuItem[] => {
-    if (!activeTab || activeTab.isTablet || activeTab.isRich) return [];
-
-    const allLangs = formatRegistry
-      .getAll()
-      .map((lang) => ({
-        id: lang.id,
-        name: lang.name,
-        isSeparator: false,
-      }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-
-    // Only get potential matches when popup is open to avoid redundant detection calls
-    const potentialMatches = showLanguagePopup
-      ? getPotentialFormatMatches(getTabContentForLanguageDetection(activeTab))
-      : [];
-    const isLocked = activeTab.languageLocked;
-    const currentLanguageId = activeTab.language;
-    const popupList: PopupMenuItem[] = [];
-
-    // Manually ensure plaintext is always available (it might not be in the registry)
-    const plaintextEntry = allLangs.find((l) => l.id === "plaintext") || {
-      id: "plaintext",
-      name: "Plaintext",
-      isSeparator: false,
-    };
-    const isCurrentlyPlaintext = currentLanguageId === "plaintext";
-
-    // Scenario A: Locked, empty, or no real suggestions (just plaintext)
-    if (
-      isLocked ||
-      !contentSample?.trim() ||
-      potentialMatches.length === 0 ||
-      (potentialMatches.length === 1 && potentialMatches[0].id === "plaintext")
-    ) {
-      // Add plaintext first if it's not the current language
-      if (plaintextEntry && !isCurrentlyPlaintext) {
-        popupList.push(plaintextEntry);
-      }
-
-      // Add all other languages except plaintext and current language
-      const otherLangs = allLangs.filter(
-        (l) => l.id !== "plaintext" && l.id !== currentLanguageId,
-      );
-      popupList.push(...otherLangs);
-
-      return popupList;
-    }
-
-    // Scenario B: Suggestions found, not locked
-    const topSuggestionInStatusBar = potentialMatches[0]; // This is already displayed
-    const otherSuggestions = potentialMatches
-      .slice(1)
-      .filter((s) => s.id !== topSuggestionInStatusBar.id);
-
-    // 1. Suggested languages group at the TOP
-    // Second-best suggestion first, then third-best, etc.
-    const suggestionItems = otherSuggestions.map((s) => ({
-      id: s.id,
-      name: s.name,
-      isSeparator: false,
-    }));
-    popupList.push(...suggestionItems);
-
-    // Add Plaintext at the bottom of the suggestions group if it's not current language
-    if (plaintextEntry && !isCurrentlyPlaintext) {
-      popupList.push(plaintextEntry);
-    }
-
-    // 2. Separator line
-    popupList.push({ id: "sep1", name: "-", isSeparator: true });
-
-    // 3. All other non-suggested languages (alphabetical)
-    // Exclude plaintext, topSuggestion, otherSuggestions, and current language
-    const nonSuggestedLangs = allLangs.filter(
-      (lang) =>
-        lang.id !== "plaintext" &&
-        lang.id !== topSuggestionInStatusBar.id &&
-        lang.id !== currentLanguageId &&
-        !otherSuggestions.some((s) => s.id === lang.id),
-    );
-    popupList.push(...nonSuggestedLangs);
-
-    return popupList;
-  };
 
   // Handle opening the language popup
   const handleOpenLanguagePopup = () => {
@@ -165,7 +79,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
     setShowLanguagePopup(false);
   };
 
-  // Render the language section with new simplified logic
+  // Render the language section - logic extracted to useStatusBarLogic hook
   const renderLanguageSection = () => {
     if (!activeTab) return null;
 
@@ -177,52 +91,11 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       return <span className="capitalize">Rich Text</span>;
     }
 
-    // Language Info
-    const currentLanguageId = activeTab.language;
-    const currentLanguageObject = formatRegistry.getById(currentLanguageId);
-    const currentLanguageName =
-      currentLanguageObject?.name || currentLanguageId;
-    const isLocked = activeTab.languageLocked;
-
-    // Get potential matches only when we need them for the popup
-    const potentialMatches = activeTab && !activeTab.isTablet && !activeTab.isRich
-      ? getPotentialFormatMatches(getTabContentForLanguageDetection(activeTab))
-      : [];
-
-    let displayLabel = "Plaintext";
-    let showDotIndicator = false;
-
-    if (isLocked) {
-      displayLabel = currentLanguageName;
-
-      // For locked languages, show alternatives if content is ambiguous or different
-      const hasAlternatives =
-        potentialMatches.length > 0 &&
-        potentialMatches.some((lang) => lang.id !== currentLanguageId);
-      if (hasAlternatives) {
-        showDotIndicator = true; // Show a dot if alternatives exist even when locked
-      }
-    } else if (!contentSample?.trim()) {
-      displayLabel = "Plaintext"; // Already default
-    } else if (
-      potentialMatches.length === 0 ||
-      (potentialMatches.length === 1 && potentialMatches[0].id === "plaintext")
-    ) {
-      displayLabel = "Plaintext";
-    } else {
-      const topSuggestion = potentialMatches[0];
-      displayLabel = topSuggestion.name;
-
-      if (potentialMatches.length > 1 && topSuggestion.id !== "plaintext") {
-        showDotIndicator = true;
-      }
-    }
-
     return (
       <div className="relative">
         <div
           ref={languageLabelRef}
-          onClick={handleOpenLanguagePopup} // Always open popup on click
+          onClick={handleOpenLanguagePopup}
           className="flex items-center cursor-pointer bg-themed-hover px-1.5 py-0.5 rounded transition-colors"
           title="Change language"
         >
@@ -235,7 +108,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         {/* Format Selection Popup */}
         {showLanguagePopup && (
           <FormatSelectionPopup
-            formats={getPopupLanguages()}
+            formats={getPopupLanguages(showLanguagePopup)}
             onSelectFormat={handleSelectLanguage}
             onClose={() => setShowLanguagePopup(false)}
             title={

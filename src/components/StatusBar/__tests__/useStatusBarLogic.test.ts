@@ -10,11 +10,18 @@ jest.mock('../../../tablets', () => ({
   },
 }));
 
-// Mock the format registry
+// Mock the format registry and getPotentialFormatMatches
 jest.mock('../../../formats', () => ({
   formatRegistry: {
     getById: jest.fn(),
+    getAll: jest.fn(() => [
+      { id: 'javascript', name: 'JavaScript' },
+      { id: 'typescript', name: 'TypeScript' },
+      { id: 'python', name: 'Python' },
+      { id: 'plaintext', name: 'Plaintext' },
+    ]),
   },
+  getPotentialFormatMatches: jest.fn(() => []),
 }));
 
 // Mock format detection utils

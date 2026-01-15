@@ -9,6 +9,8 @@ import { useEditorScrollManager } from "../../hooks/useEditorScrollManager";
 import { useToolSelector } from "../../hooks/useToolSelector";
 import { useEditorActions } from "../../hooks/useEditorActions";
 import { useEditorAI } from "../../hooks/useEditorAI";
+import { useImagePasteHandler } from "../../hooks/useImagePasteHandler";
+import { useAutoFormatOnLoad } from "../../hooks/useAutoFormatOnLoad";
 import { ToolSelectorModal } from "../ToolSelector";
 import { toolService, ToolItem } from "../../services/toolService";
 import { useAIStore } from "../../stores/aiStore";
@@ -46,6 +48,8 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
   const currentTabIdRef = useRef<string>(activeTabId);
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  // State to track mounted editor for hooks that need to react to editor availability
+  const [mountedEditor, setMountedEditor] = useState<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const { setActiveEditor } = useActiveEditorStore();
   const { setPendingImageData, setPendingImageCursorPosition } = useClipboardStore();
 
@@ -151,6 +155,12 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
     isCodegenGenerating,
     activeCodegenTabId,
     codegenResult,
+  });
+
+  // Auto-format hook - formats newly created tabs from paste/import
+  useAutoFormatOnLoad({
+    editor: mountedEditor,
+    activeTab: activeTabWithoutCursor,
   });
 
   // Guard against the tab being removed while a render is queued
@@ -277,58 +287,19 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
   }, [side, activeTabId, activeEditorSide]);
 
 
-  useEffect(() => {
-    const container = editorContainerRef.current;
-    if (!container || !activeTab || activeTab.isRich) return;
-
-    const handlePaste = (event: ClipboardEvent) => {
-      const items = event.clipboardData?.items;
-      if (!items) {
-        return;
+  // Image paste handler - extracted to custom hook
+  useImagePasteHandler({
+    containerRef: editorContainerRef,
+    editorRef,
+    activeTab,
+    setPendingImageData,
+    setPendingImageCursorPosition,
+    onShowUpgradeModal: () => {
+      if (onUpgradeToRich) {
+        setShowUpgradeModal(true);
       }
-
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        if (item.type.startsWith('image/')) {
-          event.preventDefault();
-          event.stopPropagation();
-
-          // Capture cursor position at the time of paste
-          let cursorPosition = null;
-          if (editorRef.current) {
-            cursorPosition = editorRef.current.getPosition();
-          }
-
-          const file = item.getAsFile();
-          if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-              const dataUrl = e.target?.result as string;
-              setPendingImageData(dataUrl);
-
-              // Store cursor position along with image data
-              if (cursorPosition) {
-                setPendingImageCursorPosition(cursorPosition);
-              }
-
-              if (onUpgradeToRich) {
-                setShowUpgradeModal(true);
-              }
-            };
-            reader.readAsDataURL(file);
-          }
-
-          return;
-        }
-      }
-    };
-
-    container.addEventListener('paste', handlePaste, true);
-
-    return () => {
-      container.removeEventListener('paste', handlePaste, true);
-    };
-  }, [activeTab, onUpgradeToRich, setPendingImageData]);
+    },
+  });
 
   // Smart View Callout Widget Effect
   useEffect(() => {
@@ -492,40 +463,8 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
 
       restoreScrollPosition(activeTabId);
 
-      // Auto-format tabs that were likely created from paste or file import
-      const now = Date.now();
-      if (activeTab && now - activeTab.dateCreated < 500) {
-        const content = activeTab.content || "";
-        const hasSubstantialContent = content.trim().length > 50;
-        const isFormattableLanguage = activeTab.language !== "plaintext";
-        const isNotTablet = !activeTab.isTablet;
-        const isNotLikelyDuplicate =
-          !activeTab.title.includes("(copy)") &&
-          !activeTab.title.includes("Copy of");
-
-        if (
-          hasSubstantialContent &&
-          isFormattableLanguage &&
-          isNotTablet &&
-          isNotLikelyDuplicate
-        ) {
-          setTimeout(() => {
-            try {
-              const formatAction = editor.getAction(
-                "editor.action.formatDocument",
-              );
-              if (formatAction) {
-                formatAction.run();
-              }
-            } catch (error) {
-              console.warn(
-                "[EditorInstance] Failed to auto-format document:",
-                error,
-              );
-            }
-          }, 100);
-        }
-      }
+      // Signal to useAutoFormatOnLoad hook that editor is ready
+      setMountedEditor(editor);
 
       // Cursor Position Listener - NOW MANAGED BY MODELMANAGER
       if (activeTab) {
