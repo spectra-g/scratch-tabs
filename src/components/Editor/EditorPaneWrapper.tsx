@@ -1,9 +1,8 @@
-import React, { Suspense, lazy, useMemo, useCallback, useRef, useEffect } from "react";
+import React, { Suspense, useMemo, useCallback, useRef, useEffect } from "react";
 import { useRootStore } from "../../stores";
 import { useTabsStore } from "../../stores/tabsStore";
 import { useSplitViewStore } from "../../stores/splitViewStore";
-import { EditorInstance } from "./EditorInstance";
-import { TabletView } from "../Tab/TabletView";
+import { TabContentRenderer } from "./TabContentRenderer";
 import { smartViewRegistry } from "../../views/registry";
 import { StatusBar } from "../StatusBar";
 import { useMarkdownPreviewResizer } from "../../hooks/useMarkdownPreviewResizer";
@@ -20,23 +19,12 @@ import { FloatingMacroToolbar } from "../Macro/FloatingMacroToolbar";
 import { useMacroEngine } from "../Macro/useMacroEngine";
 import { useMacroStore } from "../../stores/macroStore";
 
-// Lazy load the RichTextEditor component
-const RichTextEditor = lazy(() => import("../RichText/RichTextEditor").then(module => ({ default: module.RichTextEditor })));
-
 interface EditorPaneWrapperProps {
   side: "left" | "right";
 }
 
 const PreviewLoadingFallback = () => (
   <div className="text-muted p-4 animate-pulse">Loading Preview...</div>
-);
-
-const RichTextLoadingFallback = () => (
-  <div className="h-full flex items-center justify-center text-muted">
-    <div className="text-center">
-      <div className="animate-pulse">Loading Editor...</div>
-    </div>
-  </div>
 );
 
 // Full content accessor for preview components (removing large content guard)
@@ -207,47 +195,19 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
       >
         {/* Main Content Area */}
         <div className="flex-1 min-h-0">
-          {activeTab && activeTabId ? (
-            shouldShowReplacementView ? (
-              // Render replacement view (like CSV table editor)
-              <extendedView.component
-                content={previewContent}
-                onContentChange={(newContent) => {
-                  updateTabState(activeTab.id, { content: newContent });
-                  // Invalidate the cached model so it gets recreated with fresh content
-                  modelManager.invalidateModel(activeTab.id);
-                }}
-                tabId={activeTab.id}
-                isActive={true}
-                side={side}
-              />
-            ) : activeTab.isRich ? (
-              // Render rich text editor with lazy loading
-              <Suspense fallback={<RichTextLoadingFallback />}>
-                <RichTextEditor
-                  key={activeTab.id}
-                  tab={activeTab}
-                  onContentChange={handleRichContentChange}
-                  onUpgradeToRich={handleUpgradeToRich}
-                />
-              </Suspense>
-            ) : activeTab.isTablet ? (
-              <TabletView tab={activeTab} onChange={handleTabletStateChange} />
-            ) : (
-              // Pass only the ID to EditorInstance
-              <EditorInstance
-                key={activeTab.id}
-                side={side}
-                activeTabId={activeTabId}
-                onUpgradeToRich={handleUpgradeToRich}
-                onEditorReady={handleEditorReady}
-              />
-            )
-          ) : (
-            <div className="h-full flex items-center justify-center text-muted">
-              <p>No tab selected</p>
-            </div>
-          )}
+          <TabContentRenderer
+            activeTab={activeTab}
+            activeTabId={activeTabId}
+            side={side}
+            previewContent={previewContent}
+            shouldShowReplacementView={!!shouldShowReplacementView}
+            extendedView={extendedView}
+            updateTabState={updateTabState}
+            onTabletStateChange={handleTabletStateChange}
+            onRichContentChange={handleRichContentChange}
+            onUpgradeToRich={handleUpgradeToRich}
+            onEditorReady={handleEditorReady}
+          />
         </div>
 
         {/* Status Bar - Always visible */}

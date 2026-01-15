@@ -3,6 +3,7 @@ import { useTabsStore } from "./tabsStore";
 import { useSplitViewStore } from "./splitViewStore";
 import { useEditorStore } from "./editorStore";
 import { useWorkspaceStore } from "./workspaceStore";
+import { useMilestoneCelebrationStore } from "./milestoneCelebrationStore";
 import { Tab } from "../types";
 import { formatRegistry } from "../formats/registry";
 import { incrementSetting } from "../db";
@@ -187,9 +188,13 @@ export const useRootStore = create<RootStore>((set, get) => {
         },
       );
 
-      incrementSetting("tabs.created.total").catch((err) =>
-        console.error("Failed to increment tab counter:", err),
-      );
+      incrementSetting("tabs.created.total")
+        .then((newTotal) => {
+          useMilestoneCelebrationStore.getState().checkMilestone(newTotal);
+        })
+        .catch((err) =>
+          console.error("Failed to increment tab counter:", err),
+        );
     },
 
     addBackgroundTab: (tab, toRightSide = false) => {
