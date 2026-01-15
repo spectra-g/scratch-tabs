@@ -240,7 +240,7 @@ export const ToolSelectorModal: React.FC<ToolSelectorModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] pb-10">
+        <div className="fixed inset-0 z-command flex items-start justify-center pt-[10vh] pb-10">
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300"

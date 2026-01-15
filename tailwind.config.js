@@ -4,6 +4,17 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      // Semantic Z-Index Scale - prevents magic number z-index values
+      zIndex: {
+        'dropdown': '40',      // Dropdown menus within components
+        'modal': '50',         // Regular modals, popovers
+        'context-menu': '60',  // Context menus, confirmation dialogs
+        'command': '100',      // Command palette (highest priority)
+      },
+      // Semantic Width Values - consistent modal sizing
+      width: {
+        'modal-lg': '95vw',    // Large modal width
+      },
       colors: {
         gray: {
           850: "#1a202c", // Between gray-800 (#1f2937) and gray-900 (#111827)

@@ -23,7 +23,7 @@ interface UseGlobalHotkeysParams {
  * Hook that handles global keyboard shortcuts:
  * - Ctrl+Shift+F: Open global search (with selected text)
  * - Ctrl+W: Close active tab (with confirmation if has content)
- * - Ctrl+S / Cmd+S: Save state
+ * - Ctrl+S / Cmd+S: Save state and download active tab as file
  */
 export function useGlobalHotkeys({
   onKeyboardCloseConfirmation,
@@ -104,46 +104,17 @@ export function useGlobalHotkeys({
       // --- Save Shortcut (Ctrl+S / Cmd+S) ---
       if ((event.ctrlKey || event.metaKey) && event.key === "s") {
         event.preventDefault();
+        event.stopPropagation();
         saveState();
 
-        // Determine which editor pane is focused and save its tab
-        const editorTextAreas = document.querySelectorAll<HTMLElement>(
-          ".monaco-editor textarea",
-        );
-        let focusedEditorSide: "left" | "right" | null = null;
-        let focusedElement: HTMLElement | null = null;
+        // Determine which side is active
+        const activeSide = splitView?.activeSide || 'left';
+        const tabIdToSave = activeSide === "left" ? activeLeftTabId : activeRightTabId;
 
-        if (
-          document.activeElement &&
-          document.activeElement.tagName === "TEXTAREA"
-        ) {
-          for (const textArea of editorTextAreas) {
-            if (document.activeElement === textArea) {
-              focusedElement = textArea;
-              break;
-            }
-          }
-        }
-
-        if (focusedElement) {
-          const parentPane = focusedElement.closest<HTMLElement>(
-            "[data-editor-pane-side]",
-          );
-          if (parentPane) {
-            const sideAttr = parentPane.getAttribute("data-editor-pane-side");
-            if (sideAttr === "left" || sideAttr === "right") {
-              focusedEditorSide = sideAttr;
-            }
-          }
-        }
-
-        if (focusedEditorSide) {
-          const tabIdToSave =
-            focusedEditorSide === "left" ? activeLeftTabId : activeRightTabId;
-
-          if (tabIdToSave) {
-            saveTabDataById(tabIdToSave);
-          }
+        if (tabIdToSave) {
+          // Save tab data to persistence and download the file
+          // Note: saveTabDataById already handles the download
+          saveTabDataById(tabIdToSave);
         }
       }
     };

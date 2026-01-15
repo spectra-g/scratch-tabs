@@ -8,16 +8,19 @@ jest.mock('../../../stores/tabsStore');
 jest.mock('../../../stores/splitViewStore');
 jest.mock('../../../stores/rootStore');
 jest.mock('../../../stores/batchToolsStore');
+jest.mock('../../../stores/macroStore');
 jest.mock('../../../services/modelManager');
 
 // Import store types for proper mocking
 import { useSplitViewStore } from '../../../stores/splitViewStore';
 import { useRootStore } from '../../../stores/rootStore';
 import { useBatchToolsStore } from '../../../stores/batchToolsStore';
+import { useMacroStore } from '../../../stores/macroStore';
 
 const mockUseSplitViewStore = useSplitViewStore as jest.MockedFunction<typeof useSplitViewStore>;
 const mockUseRootStore = useRootStore as jest.MockedFunction<typeof useRootStore>;
 const mockUseBatchToolsStore = useBatchToolsStore as jest.MockedFunction<typeof useBatchToolsStore>;
+const mockUseMacroStore = useMacroStore as jest.MockedFunction<typeof useMacroStore>;
 
 const mockUseTabsStore = useTabsStore as jest.MockedFunction<typeof useTabsStore>;
 
@@ -73,6 +76,10 @@ describe('UseContextMenuConfig - Actions and Structure', () => {
 
     mockUseBatchToolsStore.mockReturnValue({
       batchToolsVisible: false,
+    } as any);
+
+    mockUseMacroStore.mockReturnValue({
+      setForceShowToolbar: jest.fn(),
     } as any);
   });
 
@@ -253,5 +260,44 @@ describe('UseContextMenuConfig - Actions and Structure', () => {
     expect(macroIndex).not.toBe(-1);
     expect(macroIndex).toBe(transformationsIndex + 1);
     expect(menuItems[macroIndex].label).toBe('Macro Recording');
+  });
+
+  it('should activate tab before showing macro toolbar when Macro Recording is triggered', () => {
+    const mockSetActiveTab = jest.fn();
+    const mockSetForceShowToolbar = jest.fn();
+
+    mockUseRootStore.mockReturnValue({
+      duplicateTab: jest.fn(),
+      splitScreen: jest.fn(),
+      toggleTabPin: jest.fn(),
+      setActiveTab: mockSetActiveTab,
+    } as any);
+
+    mockUseMacroStore.mockReturnValue({
+      setForceShowToolbar: mockSetForceShowToolbar,
+    } as any);
+
+    const { result } = renderHook(() =>
+      useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
+    );
+
+    const menuItems = result.current.menuItems;
+    const macroItem = menuItems.find(item => item.id === 'macroRecording');
+
+    expect(macroItem).toBeDefined();
+
+    // Trigger the macro recording action
+    act(() => {
+      macroItem?.action?.();
+    });
+
+    // Verify that setActiveTab was called first with the correct tab ID
+    expect(mockSetActiveTab).toHaveBeenCalledWith('test-tab-id');
+
+    // Verify that setForceShowToolbar was called with correct parameters
+    expect(mockSetForceShowToolbar).toHaveBeenCalledWith(true, 'test-tab-id', 'left');
+
+    // Verify that context menu was closed
+    expect(mockCloseContextMenu).toHaveBeenCalled();
   });
 });

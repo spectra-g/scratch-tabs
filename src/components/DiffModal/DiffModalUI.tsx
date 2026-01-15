@@ -28,7 +28,7 @@ export const DiffModalUI: React.FC<DiffModalUIProps> = ({
 
   return (
     <div
-      className="bg-surface border border-base rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden w-[95vw] max-w-[1800px] h-full max-h-[90vh] mx-4"
+      className="bg-surface border border-base rounded-lg shadow-2xl z-modal flex flex-col overflow-hidden w-modal-lg max-w-[1800px] h-full max-h-[90vh] mx-4"
       data-testid="diff-modal"
       onClick={(e) => e.stopPropagation()}
     >

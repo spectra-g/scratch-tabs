@@ -6,7 +6,6 @@ import { useMacroStore } from "../../stores/macroStore";
 import { useBatchToolsStore } from "../../stores/batchToolsStore";
 import {
   Copy,
-  Edit3,
   GitCompare,
   XCircle,
   ExternalLink,
@@ -29,6 +28,7 @@ import {
 } from "../Icons";
 import { FormatSelector } from "./FormatSelector";
 import { formatRegistry } from "../../formats";
+import { downloadTab } from "../../utils/downloadTab";
 import { MenuItem } from "./types";
 import { useState, useCallback } from "react";
 import { ContextMenuAction, TabSide } from "../../constants";
@@ -210,21 +210,9 @@ export const useContextMenuConfig = (
   };
 
   const handleDownload = () => {
-    if (!tab || tab.isTablet) {
-      closeContextMenu();
-      return;
+    if (tab) {
+      downloadTab(tab);
     }
-    const detector = formatRegistry.getById(tab.language);
-    const extension = detector?.getFileExtension() || "txt";
-    const blob = new Blob([tab.content || ""], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${tab.title}.${extension}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
     closeContextMenu();
   };
 
@@ -283,6 +271,8 @@ Add any other context about the problem here.
   };
 
   const handleMacroRecording = () => {
+    // Activate the tab first so the floating toolbar is visible
+    rootStore.setActiveTab(tabId);
     // Show the floating macro toolbar for THIS tab specifically
     setForceShowToolbar(true, tabId, isRightSide ? 'right' : 'left');
     closeContextMenu();

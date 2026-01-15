@@ -257,6 +257,64 @@ describe('useGlobalHotkeys', () => {
 
       expect(mockSaveState).toHaveBeenCalled();
     });
+
+    it('should call saveTabDataById to download the active tab', () => {
+      renderUseGlobalHotkeys();
+
+      const event = new KeyboardEvent('keydown', {
+        key: 's',
+        ctrlKey: true,
+        bubbles: true,
+      });
+
+      window.dispatchEvent(event);
+
+      expect(mockSaveTabDataById).toHaveBeenCalledWith('tab-1');
+    });
+
+    it('should download the right side tab when activeSide is right', () => {
+      (useSplitViewStore as any).getState = () => ({
+        splitView: {
+          activeSide: 'right',
+          activeLeftTabId: 'tab-1',
+          activeRightTabId: 'tab-2',
+        },
+      });
+
+      renderUseGlobalHotkeys();
+
+      const event = new KeyboardEvent('keydown', {
+        key: 's',
+        ctrlKey: true,
+        bubbles: true,
+      });
+
+      window.dispatchEvent(event);
+
+      expect(mockSaveTabDataById).toHaveBeenCalledWith('tab-2');
+    });
+
+    it('should default to left side when activeSide is not set', () => {
+      (useSplitViewStore as any).getState = () => ({
+        splitView: {
+          activeSide: null,
+          activeLeftTabId: 'tab-1',
+          activeRightTabId: 'tab-2',
+        },
+      });
+
+      renderUseGlobalHotkeys();
+
+      const event = new KeyboardEvent('keydown', {
+        key: 's',
+        ctrlKey: true,
+        bubbles: true,
+      });
+
+      window.dispatchEvent(event);
+
+      expect(mockSaveTabDataById).toHaveBeenCalledWith('tab-1');
+    });
   });
 
   describe('cleanup', () => {
