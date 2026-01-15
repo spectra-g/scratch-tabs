@@ -116,7 +116,7 @@ export const ContextMenuItem: React.FC<ContextMenuItemProps> = ({ item }) => {
       {item.submenu && isSubmenuVisible && (
         <div
           ref={submenuRef}
-          className="absolute left-full ml-1 bg-surface border border-base rounded shadow-lg z-[60] py-1 min-w-[150px] max-h-[300px] overflow-y-auto custom-scrollbar"
+          className="absolute left-full ml-1 bg-surface border border-base rounded shadow-lg z-context-menu py-1 min-w-[150px] max-h-[300px] overflow-y-auto custom-scrollbar"
           style={{ top: submenuPosition.top, left: submenuPosition.left }}
           onMouseEnter={handleSubmenuMouseEnter}
           onMouseLeave={handleMouseLeave}

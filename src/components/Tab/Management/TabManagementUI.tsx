@@ -532,3 +532,122 @@ export const DragOverlayUI: React.FC<DragOverlayUIProps> = ({
     )}
   </DragOverlay>
 );
+
+// =============================================================================
+// CONNECTED COMPONENTS (Context-consuming versions)
+// These components consume state from TabManagementContext and pass to
+// the underlying pure components. This eliminates prop drilling.
+// =============================================================================
+
+import { useTabManagementContext } from "./TabManagementContext";
+
+/**
+ * Connected TabManagementToolbar - consumes from context
+ */
+export const ConnectedTabManagementToolbar: React.FC = () => {
+  const ctx = useTabManagementContext();
+
+  return (
+    <TabManagementToolbar
+      searchQuery={ctx.searchQuery}
+      setSearchQuery={ctx.setSearchQuery}
+      availableLanguages={ctx.availableLanguages}
+      languageFilter={ctx.languageFilter}
+      setLanguageFilter={ctx.setLanguageFilter}
+      sortOption={ctx.sortOption}
+      setSortOption={ctx.setSortOption}
+      groupOption={ctx.groupOption}
+      setGroupOption={ctx.setGroupOption}
+      selectedTabIds={ctx.selectedTabIds}
+      filteredTabs={ctx.filteredTabs}
+      handleDeselectAll={ctx.handleDeselectAll}
+      handleSelectAll={ctx.handleSelectAll}
+      handleApplyCurrentOrder={ctx.handleModifiedApplyCurrentOrder}
+      handleTogglePinSelectedTabs={ctx.handleTogglePinSelectedTabs}
+      handleDuplicateTabs={ctx.handleDuplicateTabs}
+      showRenameOptions={ctx.showRenameOptions}
+      setShowRenameOptions={ctx.setShowRenameOptions}
+      renameBasePattern={ctx.renameBasePattern}
+      setRenameBasePattern={ctx.setRenameBasePattern}
+      renameSuffixPattern={ctx.renameSuffixPattern}
+      setRenameSuffixPattern={ctx.setRenameSuffixPattern}
+      handleBulkRename={ctx.handleBulkRename}
+      showMergeOptions={ctx.showMergeOptions}
+      setShowMergeOptions={ctx.setShowMergeOptions}
+      mergeDelimiter={ctx.mergeDelimiter}
+      setMergeDelimiter={ctx.setMergeDelimiter}
+      handleMergeTabs={ctx.handleMergeTabs}
+      handleCloseTabs={ctx.handleCloseTabs}
+      activeWorkspaceTabs={ctx.activeWorkspaceTabs}
+      activeWorkspaceId={ctx.activeWorkspaceId}
+    />
+  );
+};
+
+/**
+ * Connected TabsContent - consumes from context
+ */
+export const ConnectedTabsContent: React.FC = () => {
+  const ctx = useTabManagementContext();
+
+  return (
+    <TabsContent
+      duplicateTabs={ctx.duplicateTabs}
+      handleRemoveDuplicates={ctx.handleRemoveDuplicates}
+      emptyTabs={ctx.emptyTabs}
+      handleRemoveEmptyTabs={ctx.handleRemoveEmptyTabs}
+      filteredTabs={ctx.filteredTabs}
+      groupedTabs={ctx.groupedTabs}
+      activeWorkspaceId={ctx.activeWorkspaceId}
+      selectedTabIds={ctx.selectedTabIds}
+      handleSelectTab={ctx.handleSelectTab}
+      handleDoubleClickTab={ctx.handleDoubleClickTab}
+      editingTabIdForModal={ctx.editingTabIdForModal}
+      handleStartEditingTab={ctx.handleStartEditingTab}
+      handleSaveTabTitle={ctx.handleSaveTabTitle}
+      handleCancelEditingTab={ctx.handleCancelEditingTab}
+    />
+  );
+};
+
+/**
+ * Connected DragOverlayUI - consumes from context
+ */
+export const ConnectedDragOverlayUI: React.FC = () => {
+  const ctx = useTabManagementContext();
+
+  return (
+    <DragOverlayUI
+      activeDragId={ctx.activeDragId}
+      activeDragItemData={ctx.activeDragItemData}
+      draggedTabIds={ctx.draggedTabIds}
+    />
+  );
+};
+
+interface ConnectedWorkspaceFormProps {
+  isCreating: boolean;
+  onCancel: () => void;
+}
+
+/**
+ * Connected WorkspaceForm - consumes from context
+ * Still requires isCreating and onCancel as they vary by usage location
+ */
+export const ConnectedWorkspaceForm: React.FC<ConnectedWorkspaceFormProps> = ({
+  isCreating,
+  onCancel,
+}) => {
+  const ctx = useTabManagementContext();
+
+  return (
+    <WorkspaceForm
+      isCreating={isCreating}
+      workspaceName={isCreating ? ctx.newWorkspaceName : ctx.editingWorkspaceName}
+      setWorkspaceName={isCreating ? ctx.setNewWorkspaceName : ctx.setEditingWorkspaceName}
+      handleCreate={isCreating ? ctx.handleCreateWorkspace : undefined}
+      handleRename={!isCreating ? ctx.handleRenameWorkspace : undefined}
+      onCancel={onCancel}
+    />
+  );
+};

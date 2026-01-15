@@ -28,7 +28,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[60]">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-context-menu">
       <div className="bg-surface rounded-lg shadow-xl max-w-md w-full p-6 border border-base" data-testid="confirmation-dialog">
         <h3 className="font-semibold text-red-300 mb-1 flex items-center">
           <AlertTriangle size={18} className="mr-2" />

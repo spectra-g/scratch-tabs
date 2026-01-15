@@ -50,7 +50,7 @@ export const HamburgerMenu: React.FC = () => {
       {isOpen && createPortal(
         <div
           ref={menuRef}
-          className="fixed bg-surface border border-base rounded shadow-lg z-[60] py-1"
+          className="fixed bg-surface border border-base rounded shadow-lg z-context-menu py-1"
           style={{
             top: `${menuPosition.top}px`,
             left: `${menuPosition.left}px`,

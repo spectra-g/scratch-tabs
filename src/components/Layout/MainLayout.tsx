@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { useEffect, useState, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { useRootStore } from "../../stores/rootStore";
 import { useTabsStore } from "../../stores/tabsStore";
 import { useSplitViewStore } from "../../stores/splitViewStore";
@@ -10,7 +10,8 @@ import {
   useUrlTabHandler,
   handleInitialUrl,
 } from "../../hooks/useUrlTabHandler";
-import { useGlobalHotkeys } from "../../hooks/useGlobalHotkeys";
+import { useAutoSave } from "../../hooks/useAutoSave";
+import { useAppHotkeys } from "../../hooks/useAppHotkeys";
 import { useSearchStore } from "../../stores/searchStore";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
 import { WelcomeScreen } from "../Welcome/WelcomeScreen";
@@ -24,7 +25,6 @@ import { AIModelManagementModal } from "../AI/AIModelManagementModal";
 import { ConfirmationDialog } from "../Tab/ConfirmationDialog";
 import { TestFields } from "../TestFields/TestFields";
 import { MilestoneToast, MilestoneModal } from "../MilestoneCelebration";
-import { updateSaveIndicator } from "../../utils/testIndicators";
 import { useAIStore } from "../../stores/aiStore";
 import { useStoreWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
@@ -35,7 +35,6 @@ const MainLayout: React.FC = () => {
   useDocumentTitle();
 
   const location = useLocation();
-  const navigate = useNavigate();
   const hasHandledPendingShare = useRef(false);
 
   // FIX: Use selective subscription for tab count only
@@ -49,11 +48,10 @@ const MainLayout: React.FC = () => {
   );
 
   // FIX: Use useStoreWithEqualityFn for root store actions
-  const { setSplitRatio, removeTab, handleNewPopulatedTab } = useStoreWithEqualityFn(
+  const { setSplitRatio, handleNewPopulatedTab } = useStoreWithEqualityFn(
     useRootStore,
     (state) => ({
       setSplitRatio: state.setSplitRatio,
-      removeTab: state.removeTab,
       handleNewPopulatedTab: state.handleNewPopulatedTab,
     }),
     shallow,
@@ -78,12 +76,15 @@ const MainLayout: React.FC = () => {
 
   const [isAppInitialized, setIsAppInitialized] = useState(false);
 
-  // State for keyboard shortcut confirmation dialog
-  const [keyboardCloseConfirmation, setKeyboardCloseConfirmation] = useState<{
-    isOpen: boolean;
-    tabId: string;
-    tabTitle: string;
-  } | null>(null);
+  // Set up periodic auto-save (extracted to hook)
+  useAutoSave();
+
+  // Set up keyboard shortcuts with close confirmation (extracted to hook)
+  const {
+    keyboardCloseConfirmation,
+    handleKeyboardCloseConfirm,
+    handleKeyboardCloseCancel,
+  } = useAppHotkeys();
 
   // FIX: Use useStoreWithEqualityFn for AI store
   const { setSummaryModalCallback } = useStoreWithEqualityFn(
@@ -175,21 +176,6 @@ const MainLayout: React.FC = () => {
     };
   }, [setSummaryModalCallback]);
 
-  // Set up periodic save interval
-  useEffect(() => {
-    const saveInterval = setInterval(async () => {
-      // Use getState to ensure we always get the latest version of the saveState function
-      // and prevent issues with stale closures.
-      await usePersistenceStore.getState().saveState();
-
-      // Update test indicator after save completes
-      updateSaveIndicator();
-    }, 2500); // Save every 2.5 seconds
-
-    return () => {
-      clearInterval(saveInterval); // Cleanup interval on unmount
-    };
-  }, []); // Empty dependency array ensures this runs only once on mount
 
   const [diffModal, setDiffModal] = React.useState<{
     leftTabId: string | null;
@@ -315,37 +301,7 @@ const MainLayout: React.FC = () => {
     setSummarizeModal(null);
   };
 
-  // Tab close handler for keyboard shortcut
-  const handleTabClose = useCallback((tabId: string) => {
-    removeTab(tabId);
-  }, [removeTab]);
-
-  // Keyboard close confirmation callback for useGlobalHotkeys
-  const handleKeyboardCloseConfirmation = useCallback((tabId: string, tabTitle: string) => {
-    setKeyboardCloseConfirmation({
-      isOpen: true,
-      tabId,
-      tabTitle,
-    });
-  }, []);
-
-  const handleKeyboardCloseConfirm = () => {
-    if (keyboardCloseConfirmation) {
-      handleTabClose(keyboardCloseConfirmation.tabId);
-      setKeyboardCloseConfirmation(null);
-    }
-  };
-
-  const handleKeyboardCloseCancel = () => {
-    setKeyboardCloseConfirmation(null);
-  };
-
-  // Global keyboard shortcuts (Ctrl+Shift+F, Ctrl+W, Ctrl+S)
-  useGlobalHotkeys({
-    onKeyboardCloseConfirmation: handleKeyboardCloseConfirmation,
-    onTabClose: handleTabClose,
-  });
-
+  // URL tab handler
   useUrlTabHandler();
 
   if (!isAppInitialized) {
