@@ -28,6 +28,7 @@ import {
 } from "../Icons";
 import { FormatSelector } from "./FormatSelector";
 import { formatRegistry } from "../../formats";
+import { downloadTab } from "../../utils/downloadTab";
 import { MenuItem } from "./types";
 import { useState, useCallback } from "react";
 import { ContextMenuAction, TabSide } from "../../constants";
@@ -209,21 +210,9 @@ export const useContextMenuConfig = (
   };
 
   const handleDownload = () => {
-    if (!tab || tab.isTablet) {
-      closeContextMenu();
-      return;
+    if (tab) {
+      downloadTab(tab);
     }
-    const detector = formatRegistry.getById(tab.language);
-    const extension = detector?.getFileExtension() || "txt";
-    const blob = new Blob([tab.content || ""], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${tab.title}.${extension}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
     closeContextMenu();
   };
 
