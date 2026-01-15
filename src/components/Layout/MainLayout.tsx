@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useRootStore } from "../../stores/rootStore";
 import { useTabsStore } from "../../stores/tabsStore";
@@ -10,6 +10,7 @@ import {
   useUrlTabHandler,
   handleInitialUrl,
 } from "../../hooks/useUrlTabHandler";
+import { useGlobalHotkeys } from "../../hooks/useGlobalHotkeys";
 import { useSearchStore } from "../../stores/searchStore";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
 import { WelcomeScreen } from "../Welcome/WelcomeScreen";
@@ -41,22 +42,16 @@ const MainLayout: React.FC = () => {
   const tabCount = useTabsStore((state) => state.tabs.length);
 
   // FIX: Use useStoreWithEqualityFn for split view with shallow comparison
-  const { splitView, activeLeftTabId, activeRightTabId } =
-    useStoreWithEqualityFn(
-      useSplitViewStore,
-      (state) => ({
-        splitView: state.splitView,
-        activeLeftTabId: state.splitView?.activeLeftTabId,
-        activeRightTabId: state.splitView?.activeRightTabId,
-      }),
-      shallow,
-    );
+  const { splitView } = useStoreWithEqualityFn(
+    useSplitViewStore,
+    (state) => ({ splitView: state.splitView }),
+    shallow,
+  );
 
   // FIX: Use useStoreWithEqualityFn for root store actions
-  const { saveTabDataById, setSplitRatio, removeTab, handleNewPopulatedTab } = useStoreWithEqualityFn(
+  const { setSplitRatio, removeTab, handleNewPopulatedTab } = useStoreWithEqualityFn(
     useRootStore,
     (state) => ({
-      saveTabDataById: state.saveTabDataById,
       setSplitRatio: state.setSplitRatio,
       removeTab: state.removeTab,
       handleNewPopulatedTab: state.handleNewPopulatedTab,
@@ -220,7 +215,7 @@ const MainLayout: React.FC = () => {
     setSplitRatio,
   );
 
-  const { isOpen: isSearchOpen, toggleSearch } = useSearchStore();
+  const { isOpen: isSearchOpen } = useSearchStore();
 
   const handleOpenDiffModal = (
     fromHistory?: boolean,
@@ -320,10 +315,19 @@ const MainLayout: React.FC = () => {
     setSummarizeModal(null);
   };
 
-  // Tab close handlers for keyboard shortcut
-  const handleTabClose = (tabId: string) => {
+  // Tab close handler for keyboard shortcut
+  const handleTabClose = useCallback((tabId: string) => {
     removeTab(tabId);
-  };
+  }, [removeTab]);
+
+  // Keyboard close confirmation callback for useGlobalHotkeys
+  const handleKeyboardCloseConfirmation = useCallback((tabId: string, tabTitle: string) => {
+    setKeyboardCloseConfirmation({
+      isOpen: true,
+      tabId,
+      tabTitle,
+    });
+  }, []);
 
   const handleKeyboardCloseConfirm = () => {
     if (keyboardCloseConfirmation) {
@@ -336,108 +340,11 @@ const MainLayout: React.FC = () => {
     setKeyboardCloseConfirmation(null);
   };
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // --- Search Shortcut ---
-      if (
-        (event.ctrlKey || event.metaKey) &&
-        event.shiftKey &&
-        event.key === "F"
-      ) {
-        event.preventDefault();
-        const selectedText = window.getSelection()?.toString() || "";
-        toggleSearch(selectedText); // Pass selected text to pre-populate
-      }
-
-      // --- Tab Close Shortcut (CTRL+W) ---
-      if (event.ctrlKey && !event.metaKey && event.key === 'w') {
-        event.preventDefault();
-        event.stopPropagation();
-
-        // Determine which tab should be closed based on active side
-        const targetTabId = splitView?.activeSide === 'left'
-          ? splitView?.activeLeftTabId
-          : splitView?.activeRightTabId;
-
-        if (targetTabId) {
-          // Get tabs data only when needed, without subscribing
-          const tabs = useTabsStore.getState().tabs;
-          const activeTab = tabs.find(tab => tab.id === targetTabId);
-
-          if (activeTab) {
-            // Check if confirmation is needed (same logic as SortableTab)
-            const needsConfirmation = (activeTab.content && activeTab.content.trim() !== "") || activeTab.isTablet;
-
-            if (needsConfirmation) {
-              setKeyboardCloseConfirmation({
-                isOpen: true,
-                tabId: targetTabId,
-                tabTitle: activeTab.title,
-              });
-            } else {
-              handleTabClose(targetTabId);
-            }
-          }
-        }
-      }
-
-      if ((event.ctrlKey || event.metaKey) && event.key === "s") {
-        event.preventDefault();
-        saveState(); // Call the centralized save function
-
-        const editorTextAreas = document.querySelectorAll<HTMLElement>(
-          ".monaco-editor textarea",
-        );
-        let focusedEditorSide: "left" | "right" | null = null;
-        let focusedElement: HTMLElement | null = null;
-
-        if (
-          document.activeElement &&
-          document.activeElement.tagName === "TEXTAREA"
-        ) {
-          for (const textArea of editorTextAreas) {
-            if (document.activeElement === textArea) {
-              focusedElement = textArea;
-              break;
-            }
-          }
-        }
-
-        if (focusedElement) {
-          const parentPane = focusedElement.closest<HTMLElement>(
-            "[data-editor-pane-side]",
-          );
-          if (parentPane) {
-            const sideAttr = parentPane.getAttribute("data-editor-pane-side");
-            if (sideAttr === "left" || sideAttr === "right") {
-              focusedEditorSide = sideAttr;
-            }
-          }
-        }
-        if (focusedEditorSide) {
-          const tabIdToSave =
-            focusedEditorSide === "left" ? activeLeftTabId : activeRightTabId;
-
-          if (tabIdToSave) {
-            saveTabDataById(tabIdToSave);
-          }
-        }
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [
-    saveState,
-    toggleSearch,
-    activeLeftTabId,
-    activeRightTabId,
-    saveTabDataById,
-    splitView?.activeSide,
-    splitView?.activeLeftTabId,
-    splitView?.activeRightTabId,
-    handleTabClose,
-  ]);
+  // Global keyboard shortcuts (Ctrl+Shift+F, Ctrl+W, Ctrl+S)
+  useGlobalHotkeys({
+    onKeyboardCloseConfirmation: handleKeyboardCloseConfirmation,
+    onTabClose: handleTabClose,
+  });
 
   useUrlTabHandler();
 

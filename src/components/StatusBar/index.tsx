@@ -1,10 +1,5 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
-import {
-  getFormatStatusItem,
-  getFormatOptionsMenu,
-} from "./FormatStatusItems";
-import { tabletRegistry } from "../../tablets";
-import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
+import React, { useState, useRef } from "react";
+import { getFormatOptionsMenu } from "./FormatStatusItems";
 import { Tab } from "../../types";
 import { AIStatusIcon } from "../AI/AIStatusIcon";
 import { useRootStore } from "../../stores";
@@ -16,59 +11,18 @@ import { formatRegistry } from "../../formats";
 import { getPotentialFormatMatches } from "../../formats";
 import { getTabContentForLanguageDetection } from "../../utils/formatDetectionUtils";
 import { FormatSelectionPopup } from "./FormatSelectionPopup";
-import { SmartViewButtons } from "./SmartViewButtons";
 import { FontSizeControls } from "./FontSizeControls";
 import { RichTextControls } from "./RichTextControls";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import type { PopupMenuItem } from "./types";
 import { useActiveEditorStore } from "../../stores/activeEditorStore";
+import { useCursorPosition, useStatusBarLogic } from "./useStatusBarLogic";
 
 interface StatusBarProps {
   activeTab: Tab;
   side: "left" | "right";
   isInSmartView?: boolean;
 }
-
-// Custom hook to get real-time cursor position from Monaco editor
-const useCursorPosition = (
-  editor: monaco.editor.IStandaloneCodeEditor | null,
-) => {
-  const [cursorPosition, setCursorPosition] = useState({
-    lineNumber: 1,
-    column: 1,
-  });
-  const listenerRef = useRef<monaco.IDisposable | null>(null);
-
-  useEffect(() => {
-    if (!editor) {
-      setCursorPosition({ lineNumber: 1, column: 1 });
-      return;
-    }
-
-    // Get initial cursor position
-    const position = editor.getPosition();
-    if (position) {
-      setCursorPosition({
-        lineNumber: position.lineNumber,
-        column: position.column,
-      });
-    }
-
-    // Set up cursor position listener
-    listenerRef.current = editor.onDidChangeCursorPosition((e) => {
-      setCursorPosition({
-        lineNumber: e.position.lineNumber,
-        column: e.position.column,
-      });
-    });
-
-    return () => {
-      listenerRef.current?.dispose();
-    };
-  }, [editor]);
-
-  return cursorPosition;
-};
 
 export const StatusBar: React.FC<StatusBarProps> = ({
   activeTab,
@@ -83,77 +37,20 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   // Get real-time cursor position from editor
   const realTimeCursorPosition = useCursorPosition(editor);
 
+  // Get computed data from the status bar logic hook
+  const { tabletLabel, contentSample, statusBarItems, languageForOptions } =
+    useStatusBarLogic({ activeTab });
+
   const { splitView } = useSplitViewStore();
   const { updateTabLanguage } = useRootStore();
   const { toggleSearch } = useSearchStore();
   const [showLanguagePopup, setShowLanguagePopup] = useState(false);
-  const [tabletLabel, setTabletLabel] = useState("");
   const languageLabelRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
   const showAIIcon =
     (!splitView.isSplit && side === "left") ||
     (splitView.isSplit && side === "right");
-
-  // Get the tablet if this is a tablet tab
-  useEffect(() => {
-    const getTabletLabel = async () => {
-      if (activeTab?.isTablet && activeTab.tabletState) {
-        try {
-          const state = JSON.parse(activeTab.tabletState);
-          const tablet = await tabletRegistry.getById(state.type);
-          if (tablet) {
-            setTabletLabel(tablet.label);
-          } else {
-            setTabletLabel("");
-          }
-        } catch (e) {
-          console.error("Error parsing tablet state:", e);
-          setTabletLabel("");
-        }
-      } else {
-        setTabletLabel("");
-      }
-    };
-
-    getTabletLabel();
-  }, [activeTab]);
-
-  // Memoize content sample for status bar items
-  const contentSample = useMemo(() => {
-    if (!activeTab || activeTab.isTablet || activeTab.isRich) {
-      return "";
-    }
-    return getTabContentForLanguageDetection(activeTab);
-  }, [activeTab?.id, activeTab?.content, activeTab?.isTablet, activeTab?.isRich]);
-
-  const statusBarItems = useMemo(() => {
-    if (!activeTab || activeTab.isTablet || activeTab.isRich) {
-      return [];
-    }
-
-    const module = formatRegistry.getById(activeTab.language);
-    if (!module) {
-      return [];
-    }
-
-    if (module.getStatusBarItems) {
-      return module.getStatusBarItems().sort((a, b) => a.priority - b.priority);
-    }
-
-    // Legacy fallback for formats not yet updated
-    const LegacyStatusItem = getFormatStatusItem(activeTab.language);
-    if (LegacyStatusItem) {
-      return [{ id: 'legacy-status', component: LegacyStatusItem, priority: 10 }];
-    }
-
-    return [];
-  }, [activeTab?.language, activeTab?.id]);
-
-  const languageForOptions = useMemo(() => {
-    if (!activeTab || activeTab.isTablet || activeTab.isRich) return null;
-    return activeTab.language;
-  }, [activeTab?.language, activeTab?.isTablet, activeTab?.isRich]);
 
   const FormatOptionsMenu =
     activeTab && !activeTab.isTablet && !activeTab.isRich
