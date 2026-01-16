@@ -1,16 +1,19 @@
-import React, { Suspense, lazy } from "react";
+import React, { Suspense } from "react";
 import { EditorInstance } from "./EditorInstance";
 import { TabletView } from "../Tab/TabletView";
 import { modelManager } from "../../services/modelManager";
+import { lazyWithReload } from "../../utils/chunkLoadUtils";
 import type { Tab } from "../../types";
 import type { SmartView } from "../../views/registry";
 import type * as Monaco from "monaco-editor";
 
-// Lazy load the RichTextEditor component
-const RichTextEditor = lazy(() =>
-  import("../RichText/RichTextEditor").then((module) => ({
-    default: module.RichTextEditor,
-  }))
+// Lazy load the RichTextEditor component with auto-reload on chunk errors
+const RichTextEditor = lazyWithReload(
+  () =>
+    import("../RichText/RichTextEditor").then((module) => ({
+      default: module.RichTextEditor,
+    })),
+  "RichTextEditor"
 );
 
 const RichTextLoadingFallback = () => (

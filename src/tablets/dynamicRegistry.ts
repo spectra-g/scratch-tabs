@@ -1,5 +1,6 @@
 import { Tablet, TabletRegistry, TabletState } from "./types";
 import { tabletMetadata, TabletMetadata } from "./tabletMetadata";
+import { isChunkLoadError, handleChunkLoadError } from "../utils/chunkLoadUtils";
 
 // Type for lazy-loaded tablet modules. Can have default or named exports.
 type LazyTabletModule = () => Promise<{ default?: Tablet; [key: string]: any }>;
@@ -90,6 +91,17 @@ class DynamicTabletRegistryImpl implements TabletRegistry {
       }
     } catch (error) {
       console.error(`❌ DynamicRegistry: Error loading tablet '${id}':`, error);
+
+      // Check if this is a chunk load error (stale deployment/dev server restart)
+      if (isChunkLoadError(error)) {
+        // Attempt to reload the page to fetch new chunks
+        // handleChunkLoadError returns false if we've already tried reloading
+        if (handleChunkLoadError(`tablet-${id}`)) {
+          // Reload in progress, return a never-resolving promise to halt execution
+          return new Promise(() => {});
+        }
+      }
+
       return undefined;
     }
   }

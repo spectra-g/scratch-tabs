@@ -12,6 +12,7 @@ import { TabletErrorBoundary } from "../Tablet/TabletErrorBoundary";
 import { useRootStore } from "../../stores";
 import { useTabletCounting } from "../../tablets/utils/useTabletCounting";
 import { TabletContextProvider } from "../../tablets/bridge/context";
+import { isChunkLoadError, handleChunkLoadError } from "../../utils/chunkLoadUtils";
 
 
 interface TabletViewProps {
@@ -171,6 +172,16 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
       } catch (err) {
         if (isMounted) {
           console.error(`TabletView: Error loading tablet ${tabletType}:`, err);
+
+          // Check if this is a chunk load error (stale deployment/dev server restart)
+          if (isChunkLoadError(err)) {
+            // Attempt to reload the page to fetch new chunks
+            // handleChunkLoadError returns false if we've already tried reloading
+            if (handleChunkLoadError(`tablet-${tabletType}`)) {
+              return; // Reload in progress, don't set error state
+            }
+          }
+
           setError(
             err instanceof Error ? err.message : "Failed to load tablet",
           );

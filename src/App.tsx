@@ -5,12 +5,17 @@ import { broadcastManager } from "./stores/broadcastStore";
 import { useThemeStore } from "./stores/themeStore";
 import { ShareURLHandler } from "./components/Share/ShareURLHandler";
 import DragDropOverlay from "./components/DragDropOverlay";
+import { lazyWithReload } from "./utils/chunkLoadUtils";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 
 // Initialize language providers once when the app loads
 initializeFormatProviders();
 
-const MainLayout = React.lazy(() => import("./components/Layout/MainLayout"));
+// Lazy load MainLayout with auto-reload on chunk errors (stale deployment recovery)
+const MainLayout = lazyWithReload(
+  () => import("./components/Layout/MainLayout"),
+  "MainLayout"
+);
 // const OGWelcomeScreen = React.lazy(() => import('./components/Welcome/OGWelcomeScreen').then(module => ({ default: module.OGWelcomeScreen })));
 
 const AppLoadingFallback = () => (
