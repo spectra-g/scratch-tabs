@@ -1,5 +1,3 @@
-// src/tablets/calculator/CalculatorTablet.tsx
-
 import React from "react";
 import { Tablet, TabletState } from "../types";
 import {
