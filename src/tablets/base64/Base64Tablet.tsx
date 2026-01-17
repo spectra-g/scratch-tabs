@@ -680,3 +680,6 @@ export const Base64Tablet: Tablet = {
     return <Base64TabletWrapper state={state} onChange={onChange} />;
   },
 };
+
+// Register pipeline operations (self-registration on import)
+import "./pipelineOperations";

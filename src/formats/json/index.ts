@@ -100,4 +100,7 @@ jsonModule.getSmartViews()?.forEach(view => {
 // Export for backward compatibility
 export const registerJsonProvider = (monaco: any) => {
   jsonModule.registerProvider(monaco);
-}; 
+};
+
+// Register pipeline operations (self-registration on import)
+import "./pipelineOperations"; 
