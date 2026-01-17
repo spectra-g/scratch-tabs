@@ -14,10 +14,16 @@ import { Pipeline, PipelineResult } from "./types";
 import { executePipeline, executeSingleOperation } from "./pipelineExecutor";
 
 // Import and register all operations in the worker context
+// 1. Register categories and core operations
 import "./categories";
-import "../../formats/json/pipelineOperations";
-import "../../tablets/base64/pipelineOperations";
-import "../../components/BatchTools/pipelineOperations";
+import "./operations/coreOperations";
+
+// 2. Auto-discover Format & Tablet Operations via Glob Import
+// This tells Vite: "Find every file named 'pipelineOperations.ts' anywhere inside
+// src/formats or src/tablets and bundle it here."
+// The 'eager: true' ensures they are executed immediately, triggering self-registration.
+import.meta.glob('../../formats/**/pipelineOperations.ts', { eager: true });
+import.meta.glob('../../tablets/**/pipelineOperations.ts', { eager: true });
 
 /**
  * Message types for worker communication

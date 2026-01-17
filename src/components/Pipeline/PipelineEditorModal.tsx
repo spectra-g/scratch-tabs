@@ -13,12 +13,13 @@ import { X, Save, FolderOpen, RotateCcw, Play, Loader2 } from "../Icons";
 import { OperationPalette } from "./OperationPalette";
 import { PipelineCanvas } from "./PipelineCanvas";
 import { PipelinePreview } from "./PipelinePreview";
-import { PipelineToolbar } from "./PipelineToolbar";
+// import { PipelineToolbar } from "./PipelineToolbar";
 import {
   Pipeline,
   PipelineStep,
   PipelineResult,
   OperationDefinition,
+  SavedPipeline,
 } from "../../services/pipeline/types";
 import {
   operationRegistry,
@@ -30,11 +31,11 @@ import {
   getAllPipelines,
   deletePipeline,
   toPipeline,
-  SavedPipeline,
 } from "../../services/pipeline/pipelineStorage";
 
-// Ensure operations are loaded
-import "../../services/pipeline/loadOperations";
+// Note: Core operations are registered via src/services/pipeline/init.ts
+// which is imported in main.tsx. Format and tablet operations self-register
+// when their respective modules are loaded.
 
 interface PipelineEditorModalProps {
   initialContent: string;
@@ -474,10 +475,9 @@ export const PipelineEditorModal: React.FC<PipelineEditorModalProps> = ({
               disabled={!hasChanges || isRunning}
               className={`
                 flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors
-                ${
-                  !hasChanges || isRunning
-                    ? "bg-surface-highlight text-muted cursor-not-allowed"
-                    : "bg-primary text-white hover:bg-primary/90"
+                ${!hasChanges || isRunning
+                  ? "bg-surface-highlight text-muted cursor-not-allowed"
+                  : "bg-primary text-white hover:bg-primary/90"
                 }
                 focus:outline-none focus:ring-2 focus:border-focus
               `}
