@@ -35,11 +35,23 @@ interface SettingsRecord {
   value: string;
 }
 
+interface PipelineRecord {
+  id: string;
+  name: string | null;
+  description?: string;
+  steps: string; // JSON serialized PipelineStep[]
+  createdAt: number;
+  lastModified: number;
+  lastUsedAt: number;
+  isFavorite: boolean;
+}
+
 export class ScratchTabsDB extends Dexie {
   tabs!: Dexie.Table<TabRecord>;
   splitView!: Dexie.Table<SplitViewRecord>;
   workspaces!: Dexie.Table<WorkspaceRecord>;
   settings!: Dexie.Table<SettingsRecord>;
+  pipelines!: Dexie.Table<PipelineRecord>;
 
   constructor() {
     super("ScratchTabsDB");
@@ -62,6 +74,15 @@ export class ScratchTabsDB extends Dexie {
       splitView: "id, workspaceId, lastModified",
       workspaces: "id, lastAccessed",
       settings: "key",
+    });
+
+    // Version 4: Add pipelines table for saved transformation pipelines
+    this.version(4).stores({
+      tabs: "id, workspaceId, lastModified",
+      splitView: "id, workspaceId, lastModified",
+      workspaces: "id, lastAccessed",
+      settings: "key",
+      pipelines: "id, name, lastUsedAt, lastModified, isFavorite",
     });
   }
 

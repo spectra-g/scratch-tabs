@@ -4,6 +4,7 @@ import { useRootStore } from "../../stores/rootStore";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
 import { useMacroStore } from "../../stores/macroStore";
 import { useBatchToolsStore } from "../../stores/batchToolsStore";
+import { usePipelineStore } from "../../stores/pipelineStore";
 import {
   Copy,
   GitCompare,
@@ -25,6 +26,7 @@ import {
   PanelLeftClose,
   PanelRightClose,
   Download,
+  Play,
 } from "../Icons";
 import { FormatSelector } from "./FormatSelector";
 import { formatRegistry } from "../../formats";
@@ -103,6 +105,7 @@ export const useContextMenuConfig = (
   const [shareModalState, setShareModalState] = useState<{ tabId: string } | null>(null);
   const [tabletModalOpen, setTabletModalOpen] = useState(false);
   const { openModal: openBatchToolsModal } = useBatchToolsStore();
+  const { openModal: openPipelineModal } = usePipelineStore();
 
   const tab = tabsStore.tabs.find((t: any) => t.id === tabId);
 
@@ -159,6 +162,13 @@ export const useContextMenuConfig = (
   const handleOpenTransformations = () => {
     if (tab) {
       openBatchToolsModal(tab.content || "", "");
+      closeContextMenu();
+    }
+  };
+
+  const handleOpenPipeline = () => {
+    if (tab) {
+      openPipelineModal(tab.content || "");
       closeContextMenu();
     }
   };
@@ -461,6 +471,14 @@ Add any other context about the problem here.
       label: "Transformations",
       icon: MagicWand,
       action: handleOpenTransformations,
+      condition: !!tab && !tab.isTablet && !tab.isRich,
+    },
+    // Pipeline
+    {
+      id: "pipeline",
+      label: "Pipeline",
+      icon: Play,
+      action: handleOpenPipeline,
       condition: !!tab && !tab.isTablet && !tab.isRich,
     },
     // Macro Recording

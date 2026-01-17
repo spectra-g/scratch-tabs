@@ -87,6 +87,7 @@ export {
 
   // UI Elements
   Grid,
+  GripVertical,
   List,
   ListOrdered,
   Menu,

@@ -21,6 +21,18 @@ export const coreCategories: OperationCategory[] = [
     order: 10,
   },
   {
+    id: "case",
+    name: "Case Conversion",
+    icon: "CaseSensitive",
+    order: 15,
+  },
+  {
+    id: "cleanup",
+    name: "Cleanup",
+    icon: "Eraser",
+    order: 18,
+  },
+  {
     id: "lines",
     name: "Line Operations",
     icon: "List",
@@ -31,6 +43,12 @@ export const coreCategories: OperationCategory[] = [
     name: "Sorting",
     icon: "ArrowDownAZ",
     order: 30,
+  },
+  {
+    id: "search",
+    name: "Search & Replace",
+    icon: "Search",
+    order: 35,
   },
   {
     id: "formatting",
