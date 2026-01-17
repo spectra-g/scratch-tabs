@@ -22,8 +22,8 @@ import "./operations/coreOperations";
 // This tells Vite: "Find every file named 'pipelineOperations.ts' anywhere inside
 // src/formats or src/tablets and bundle it here."
 // The 'eager: true' ensures they are executed immediately, triggering self-registration.
-import.meta.glob('../../formats/**/pipelineOperations.ts', { eager: true });
-import.meta.glob('../../tablets/**/pipelineOperations.ts', { eager: true });
+import "./init";
+import "./operations/discovery";
 
 /**
  * Message types for worker communication

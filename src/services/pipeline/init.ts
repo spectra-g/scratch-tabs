@@ -18,12 +18,8 @@ registerCoreCategories();
 // 2. Register core text operations (formerly BatchTools)
 import "./operations/coreOperations";
 
-// 3. Auto-discover Format & Tablet Operations via Glob Import
-// This ensures all operations are registered on the main thread even if
-// the format/tablet module hasn't been lazily loaded yet.
-// The 'eager: true' ensures they are executed immediately.
-import.meta.glob('../../formats/**/pipelineOperations.ts', { eager: true });
-import.meta.glob('../../tablets/**/pipelineOperations.ts', { eager: true });
-
+// Auto-discovery for formats/tablets is now handled in `./operations/discovery.ts`
+// which should be imported in the main application entry point (main.tsx)
+// and the web worker (pipelineWorker.ts).
 // Note: Individual modules can still import their own operations
 // locally, as the registry handles duplicate registrations gracefully.

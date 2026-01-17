@@ -495,10 +495,10 @@ Output: "private static final String HELLO WORLD = "hello_world";"
 **Goal:** Migrate remaining operations, integrate with editor.
 
 **Completed tasks:**
-- ✅ Add "Pipeline" to editor context menu (right-click → Tools → Pipeline)
-- ✅ `usePipelineStore` hook for opening pipeline editor
-
-- ⏳ Extract operations from remaining tablets (checksum, jwt, uuid, datetime)
+- ✅ Add "Pipeline" to editor conte- [x] Phase 2: Migrate generic BatchTools operations (37 operations)
+- [/] Phase 4: Extract operations from specific tablets (Checksum completed)
+- [ ] Phase 5: Extract operations from format modules
+- [x] Phase 6: UX Refinements (Drag-and-drop fix, multi-line inputs)
 - ⏳ Add "Run Last Pipeline" quick action
 - ⏳ Move operations from `BatchTools/pipelineOperations.ts` to `services/pipeline/operations/`
 - ⏳ Delete `src/components/BatchTools/` folder (after full migration)
