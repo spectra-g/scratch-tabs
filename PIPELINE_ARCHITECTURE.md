@@ -12,13 +12,11 @@
 | Phase | Status | Description |
 |-------|--------|-------------|
 | Phase 1 | ✅ Complete | Core engine, registry, runner, Web Worker support |
-| Phase 2 | 🔄 Partial (15/30) | 15 operations migrated, unit tested |
+| Phase 2 | ✅ Complete (30/30+) | All 37 operations migrated, unit tested |
 | Phase 3 | ✅ Complete | 3-panel UI, IndexedDB persistence, save/load |
-| Phase 4 | 🔄 Started | Context menu entry added, more operations needed |
+| Phase 4 | 🔄 In Progress | Context menu, tablet extraction started |
 | Phase 5 | ⏳ Future | Variable interpolation (types designed, not implemented) |
 
-**Outstanding Work:**
-- Migrate remaining ~15 BatchTools operations (see Section 9)
 - Extract operations from tablets (checksum, jwt, uuid, datetime)
 - Add "Run Last Pipeline" quick action
 - Delete legacy BatchTools folder after full migration
@@ -429,17 +427,35 @@ Output: "private static final String HELLO WORLD = "hello_world";"
 | Add Suffix | `batch.add-suffix` | ✅ |
 | Find and Replace | `batch.find-replace` | ✅ |
 | Wrap Lines | `batch.wrap-lines` | ✅ |
+| Sentence Case | `text.sentence-case` | ✅ |
+| camelCase | `text.camel-case` | ✅ |
+| PascalCase | `text.pascal-case` | ✅ |
+| kebab-case | `text.kebab-case` | ✅ |
+| snake_case | `text.snake-case` | ✅ |
+| SCREAMING_SNAKE | `text.screaming-snake-case` | ✅ |
+| Invert Case | `text.invert-case` | ✅ |
+| Alternating Case | `text.alternating-case` | ✅ |
+| Remove Extra Whitespace | `text.remove-extra-whitespace` | ✅ |
+| Shuffle Lines | `text.shuffle-lines` | ✅ |
+| Add Line Numbers | `text.add-line-numbers` | ✅ |
+| Wrap Lines | `text.wrap-lines` | ✅ |
+| Filter by Regex | `text.filter-regex` | ✅ |
+| Filter by Keyword | `text.filter-keyword` | ✅ |
+| Keep First N | `text.keep-first-n` | ✅ |
+| Keep Last N | `text.keep-last-n` | ✅ |
+| Pad Lines | `text.pad-lines` | ✅ |
+| Change Indentation | `text.change-indentation` | ✅ |
+| Convert Tabs/Spaces | `text.convert-tabs-spaces` | ✅ |
+| Normalize Line Endings | `text.normalize-line-endings` | ✅ |
+| Redaction | `text.apply-redaction` | ✅ |
+| JavaScript Snippet | `text.javascript-snippet` | ✅ |
+| Duplicate Lines | `text.duplicate-lines` | ✅ |
 
-**Remaining operations (~15):**
-- Sentence Case, camelCase, PascalCase, kebab-case, snake_case, SCREAMING_SNAKE
-- Shuffle Lines, Join Lines, Split Lines
-- Filter by Regex, Filter by Keyword, Keep First N, Keep Last N
-- Pad Lines, Change Indentation, Convert Tabs/Spaces
-- Normalize Line Endings, Redaction, JavaScript Snippet
+**Remaining operations: 0**
 
 **Unit tests:** ✅ `src/components/BatchTools/__tests__/pipelineOperations.test.ts` (39 tests)
 
-**Status:** 🔄 Partial (15 of ~30 operations)
+**Status:** ✅ Complete
 
 ---
 
@@ -482,9 +498,7 @@ Output: "private static final String HELLO WORLD = "hello_world";"
 - ✅ Add "Pipeline" to editor context menu (right-click → Tools → Pipeline)
 - ✅ `usePipelineStore` hook for opening pipeline editor
 
-**Remaining tasks:**
 - ⏳ Extract operations from remaining tablets (checksum, jwt, uuid, datetime)
-- ⏳ Migrate remaining ~15 BatchTools operations (see Phase 2)
 - ⏳ Add "Run Last Pipeline" quick action
 - ⏳ Move operations from `BatchTools/pipelineOperations.ts` to `services/pipeline/operations/`
 - ⏳ Delete `src/components/BatchTools/` folder (after full migration)

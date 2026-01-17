@@ -2,6 +2,24 @@ import { OperationDefinition } from "../types";
 import { operationRegistry } from "../OperationRegistry";
 
 /**
+ * Redacts a value based on its type
+ */
+function getRedactedValue(type: string, value: string): string {
+    if (type === "email") {
+        const [user, domain] = value.split("@");
+        if (!domain) return "[REDACTED]";
+        return `${user[0]}${"*".repeat(3)}${user[user.length - 1] || ""}@${domain[0]}${"*".repeat(3)}${domain[domain.length - 1] || ""}`;
+    }
+    if (type === "ipv4") {
+        return value.split(".").map((part, i) => (i < 2 ? part : "***")).join(".");
+    }
+    if (type === "cc") {
+        return `${value.slice(0, 4)}-****-****-${value.slice(-4)}`;
+    }
+    return "[REDACTED]";
+}
+
+/**
  * Core Pipeline Operations
  * 
  * Generic text transformations available to all formats and tablets.
@@ -63,6 +81,34 @@ const coreOperations: OperationDefinition[] = [
         keywords: ["blank", "empty", "collapse", "consecutive"],
         source: "core",
     },
+    {
+        id: "text.remove-extra-whitespace",
+        name: "Remove Extra Whitespace",
+        description: "Collapse multiple spaces or remove all whitespace",
+        categories: ["text", "cleanup"],
+        parameters: [
+            {
+                name: "mode",
+                label: "Mode",
+                type: "select",
+                default: "preserve-single",
+                options: [
+                    { value: "preserve-single", label: "Preserve Single Space" },
+                    { value: "remove-all", label: "Remove All Whitespace" },
+                ],
+            },
+        ],
+        execute: (input, params) => {
+            const mode = (params.mode as string) ?? "preserve-single";
+            if (mode === "preserve-single") {
+                return input.split("\n").map(line => line.replace(/\s+/g, " ")).join("\n");
+            } else {
+                return input.split("\n").map(line => line.replace(/\s+/g, "")).join("\n");
+            }
+        },
+        keywords: ["whitespace", "space", "collapse", "clean"],
+        source: "core",
+    },
 
     // === CASE CONVERSION ===
     {
@@ -98,6 +144,123 @@ const coreOperations: OperationDefinition[] = [
             );
         },
         keywords: ["title", "capitalize", "case"],
+        source: "core",
+    },
+    {
+        id: "text.sentence-case",
+        name: "Sentence Case",
+        description: "Capitalize the first letter of the text",
+        categories: ["text", "case"],
+        parameters: [],
+        execute: (input) => {
+            if (!input) return "";
+            return input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
+        },
+        keywords: ["sentence", "capitalize", "case"],
+        source: "core",
+    },
+    {
+        id: "text.camel-case",
+        name: "camelCase",
+        description: "Convert text to camelCase",
+        categories: ["text", "case"],
+        parameters: [],
+        execute: (input) => {
+            return input
+                .replace(/(?:^\w|[A-Z]|\b\w)/g, (word, index) =>
+                    index === 0 ? word.toLowerCase() : word.toUpperCase(),
+                )
+                .replace(/\s+/g, "");
+        },
+        keywords: ["camel", "case", "programming"],
+        source: "core",
+    },
+    {
+        id: "text.pascal-case",
+        name: "PascalCase",
+        description: "Convert text to PascalCase",
+        categories: ["text", "case"],
+        parameters: [],
+        execute: (input) => {
+            return input
+                .replace(/(?:^\w|[A-Z]|\b\w)/g, (word) => word.toUpperCase())
+                .replace(/\s+/g, "");
+        },
+        keywords: ["pascal", "case", "programming"],
+        source: "core",
+    },
+    {
+        id: "text.kebab-case",
+        name: "kebab-case",
+        description: "Convert text to kebab-case",
+        categories: ["text", "case"],
+        parameters: [],
+        execute: (input) => {
+            return input.toLowerCase().replace(/\s+/g, "-");
+        },
+        keywords: ["kebab", "case", "dash"],
+        source: "core",
+    },
+    {
+        id: "text.snake-case",
+        name: "snake_case",
+        description: "Convert text to snake_case",
+        categories: ["text", "case"],
+        parameters: [],
+        execute: (input) => {
+            return input.toLowerCase().replace(/\s+/g, "_");
+        },
+        keywords: ["snake", "case", "underscore"],
+        source: "core",
+    },
+    {
+        id: "text.screaming-snake-case",
+        name: "SCREAMING_SNAKE_CASE",
+        description: "Convert text to SCREAMING_SNAKE_CASE",
+        categories: ["text", "case"],
+        parameters: [],
+        execute: (input) => {
+            return input
+                .replace(/([a-z])([A-Z])/g, "$1_$2")
+                .toUpperCase()
+                .replace(/[^A-Z0-9]+/g, "_")
+                .replace(/^_+|_+$/g, "");
+        },
+        keywords: ["screaming", "snake", "case", "constant"],
+        source: "core",
+    },
+    {
+        id: "text.invert-case",
+        name: "Invert Case",
+        description: "Flip the case of each character",
+        categories: ["text", "case"],
+        parameters: [],
+        execute: (input) => {
+            return input
+                .split("")
+                .map((char) =>
+                    char === char.toUpperCase() ? char.toLowerCase() : char.toUpperCase(),
+                )
+                .join("");
+        },
+        keywords: ["invert", "flip", "swap", "case"],
+        source: "core",
+    },
+    {
+        id: "text.alternating-case",
+        name: "Alternating Case",
+        description: "aLtErNaTiNg CaSe",
+        categories: ["text", "case"],
+        parameters: [],
+        execute: (input) => {
+            return input
+                .split("")
+                .map((char, index) =>
+                    index % 2 === 0 ? char.toLowerCase() : char.toUpperCase(),
+                )
+                .join("");
+        },
+        keywords: ["alternating", "sarcasm", "case"],
         source: "core",
     },
 
@@ -160,6 +323,390 @@ const coreOperations: OperationDefinition[] = [
             return input.split("\n").reverse().join("\n");
         },
         keywords: ["reverse", "flip", "order"],
+        source: "core",
+    },
+    {
+        id: "text.shuffle-lines",
+        name: "Shuffle Lines",
+        description: "Randomly reorder all lines",
+        categories: ["text", "sorting"],
+        parameters: [],
+        execute: (input) => {
+            const lines = input.split("\n");
+            for (let i = lines.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [lines[i], lines[j]] = [lines[j], lines[i]];
+            }
+            return lines.join("\n");
+        },
+        keywords: ["shuffle", "random", "reorder", "lines"],
+        source: "core",
+    },
+
+    // === FILTERING & SELECTION ===
+    {
+        id: "text.filter-regex",
+        name: "Filter by Regex",
+        description: "Keep or remove lines that match a regular expression",
+        categories: ["text", "filtering"],
+        parameters: [
+            {
+                name: "pattern",
+                label: "Regex Pattern",
+                type: "string",
+                default: "",
+                description: "Regular expression to match",
+            },
+            {
+                name: "action",
+                label: "Action",
+                type: "select",
+                default: "keep",
+                options: [
+                    { value: "keep", label: "Keep matching lines" },
+                    { value: "remove", label: "Remove matching lines" },
+                ],
+            },
+            {
+                name: "caseSensitive",
+                label: "Case Sensitive",
+                type: "boolean",
+                default: false,
+            },
+        ],
+        execute: (input, params) => {
+            const pattern = params.pattern as string;
+            if (!pattern) return input;
+            const action = (params.action as string) ?? "keep";
+            const caseSensitive = params.caseSensitive as boolean;
+
+            try {
+                const regex = new RegExp(pattern, caseSensitive ? "" : "i");
+                return input
+                    .split("\n")
+                    .filter((line) => {
+                        const matches = regex.test(line);
+                        return action === "keep" ? matches : !matches;
+                    })
+                    .join("\n");
+            } catch (e) {
+                return input;
+            }
+        },
+        keywords: ["filter", "regex", "search", "match"],
+        source: "core",
+    },
+    {
+        id: "text.filter-keyword",
+        name: "Filter by Keyword",
+        description: "Keep or remove lines containing a keyword",
+        categories: ["text", "filtering"],
+        parameters: [
+            {
+                name: "keyword",
+                label: "Keyword",
+                type: "string",
+                default: "",
+            },
+            {
+                name: "action",
+                label: "Action",
+                type: "select",
+                default: "keep",
+                options: [
+                    { value: "keep", label: "Keep matching lines" },
+                    { value: "remove", label: "Remove matching lines" },
+                ],
+            },
+            {
+                name: "position",
+                label: "Position",
+                type: "select",
+                default: "contains",
+                options: [
+                    { value: "contains", label: "Contains" },
+                    { value: "starts", label: "Starts with" },
+                    { value: "ends", label: "Ends with" },
+                ],
+            },
+        ],
+        execute: (input, params) => {
+            const keyword = (params.keyword as string ?? "").toLowerCase();
+            if (!keyword) return input;
+            const action = (params.action as string) ?? "keep";
+            const position = (params.position as string) ?? "contains";
+
+            return input
+                .split("\n")
+                .filter((line) => {
+                    const lowerLine = line.toLowerCase();
+                    let matches = false;
+                    if (position === "contains") matches = lowerLine.includes(keyword);
+                    else if (position === "starts") matches = lowerLine.startsWith(keyword);
+                    else if (position === "ends") matches = lowerLine.endsWith(keyword);
+
+                    return action === "keep" ? matches : !matches;
+                })
+                .join("\n");
+        },
+        keywords: ["filter", "keyword", "search", "match"],
+        source: "core",
+    },
+    {
+        id: "text.keep-first-n",
+        name: "Keep First N Lines",
+        description: "Keep only the first N lines of text",
+        categories: ["text", "filtering"],
+        parameters: [
+            {
+                name: "n",
+                label: "Number of lines",
+                type: "number",
+                default: 10,
+            },
+        ],
+        execute: (input, params) => {
+            const n = (params.n as number) ?? 10;
+            return input.split("\n").slice(0, n).join("\n");
+        },
+        keywords: ["head", "first", "limit", "filter"],
+        source: "core",
+    },
+    {
+        id: "text.keep-last-n",
+        name: "Keep Last N Lines",
+        description: "Keep only the last N lines of text",
+        categories: ["text", "filtering"],
+        parameters: [
+            {
+                name: "n",
+                label: "Number of lines",
+                type: "number",
+                default: 10,
+            },
+        ],
+        execute: (input, params) => {
+            const n = (params.n as number) ?? 10;
+            return input.split("\n").slice(-n).join("\n");
+        },
+        keywords: ["tail", "last", "limit", "filter"],
+        source: "core",
+    },
+    {
+        id: "text.add-line-numbers",
+        name: "Add Line Numbers",
+        description: "Add a number to the start of each line",
+        categories: ["text", "formatting"],
+        parameters: [
+            {
+                name: "style",
+                label: "Style",
+                type: "select",
+                default: "numeric",
+                options: [
+                    { value: "numeric", label: "1, 2, 3..." },
+                    { value: "roman", label: "I, II, III..." },
+                    { value: "alpha", label: "A, B, C..." },
+                ],
+            },
+        ],
+        execute: (input, params) => {
+            const style = (params.style as string) ?? "numeric";
+            return input
+                .split("\n")
+                .map((line, index) => {
+                    let prefix: string;
+                    switch (style) {
+                        case "numeric":
+                            prefix = `${index + 1}. `;
+                            break;
+                        case "roman":
+                            prefix = `${toRoman(index + 1)}. `;
+                            break;
+                        case "alpha":
+                            prefix = `${toAlpha(index + 1)}. `;
+                            break;
+                        default:
+                            prefix = `${index + 1}. `;
+                    }
+                    return prefix + line;
+                })
+                .join("\n");
+        },
+        keywords: ["number", "index", "list"],
+        source: "core",
+    },
+    {
+        id: "text.wrap-lines",
+        name: "Wrap Lines",
+        description: "Wrap long lines to a specific width",
+        categories: ["text", "formatting"],
+        parameters: [
+            {
+                name: "width",
+                label: "Width",
+                type: "number",
+                default: 80,
+                description: "Maximum line width",
+            },
+        ],
+        execute: (input, params) => {
+            const width = (params.width as number) ?? 80;
+            return wrapText(input, width);
+        },
+        keywords: ["wrap", "length", "format"],
+        source: "core",
+    },
+    {
+        id: "text.pad-lines",
+        name: "Pad Lines",
+        description: "Pad lines to a specific length",
+        categories: ["text", "formatting"],
+        parameters: [
+            {
+                name: "length",
+                label: "Desired Length",
+                type: "number",
+                default: 20,
+            },
+            {
+                name: "align",
+                label: "Alignment",
+                type: "select",
+                default: "left",
+                options: [
+                    { value: "left", label: "Left (Pad right)" },
+                    { value: "right", label: "Right (Pad left)" },
+                    { value: "center", label: "Center" },
+                ],
+            },
+            {
+                name: "char",
+                label: "Padding Character",
+                type: "string",
+                default: " ",
+            },
+        ],
+        execute: (input, params) => {
+            const length = (params.length as number) ?? 20;
+            const align = (params.align as string) ?? "left";
+            const char = (params.char as string) ?? " ";
+
+            return input
+                .split("\n")
+                .map((line) => {
+                    if (line.length >= length) return line;
+                    const padding = char.repeat(length - line.length);
+                    if (align === "left") return line + padding;
+                    if (align === "right") return padding + line;
+                    const leftPadLen = Math.floor(padding.length / 2);
+                    return char.repeat(leftPadLen) + line + char.repeat(padding.length - leftPadLen);
+                })
+                .join("\n");
+        },
+        keywords: ["pad", "align", "formatting"],
+        source: "core",
+    },
+    {
+        id: "text.change-indentation",
+        name: "Change Indentation",
+        description: "Add or remove leading tabs or spaces",
+        categories: ["text", "formatting"],
+        parameters: [
+            {
+                name: "action",
+                label: "Action",
+                type: "select",
+                default: "add",
+                options: [
+                    { value: "add", label: "Add" },
+                    { value: "remove", label: "Remove" },
+                ],
+            },
+            {
+                name: "type",
+                label: "Type",
+                type: "select",
+                default: "spaces",
+                options: [
+                    { value: "spaces", label: "Spaces" },
+                    { value: "tabs", label: "Tabs" },
+                ],
+            },
+            {
+                name: "amount",
+                label: "Amount",
+                type: "number",
+                default: 2,
+            },
+        ],
+        execute: (input, params) => {
+            const action = (params.action as string) ?? "add";
+            const type = (params.type as string) ?? "spaces";
+            const amount = (params.amount as number) ?? 2;
+            const indentStr = type === "spaces" ? " ".repeat(amount) : "\t".repeat(amount);
+
+            return input
+                .split("\n")
+                .map((line) => {
+                    if (action === "add") return indentStr + line;
+                    if (line.startsWith(indentStr)) return line.slice(indentStr.length);
+                    return line;
+                })
+                .join("\n");
+        },
+        keywords: ["indent", "formatting", "spaces", "tabs"],
+        source: "core",
+    },
+    {
+        id: "text.convert-tabs-spaces",
+        name: "Convert Tabs/Spaces",
+        description: "Convert tabs to spaces or vice versa",
+        categories: ["text", "formatting"],
+        parameters: [
+            {
+                name: "mode",
+                label: "Mode",
+                type: "select",
+                default: "tabs-to-spaces",
+                options: [
+                    { value: "tabs-to-spaces", label: "Tabs to Spaces (4)" },
+                    { value: "spaces-to-tabs", label: "Spaces (4) to Tabs" },
+                ],
+            },
+        ],
+        execute: (input, params) => {
+            const mode = (params.mode as string) ?? "tabs-to-spaces";
+            if (mode === "tabs-to-spaces") return input.replace(/\t/g, "    ");
+            return input.replace(/ {4}/g, "\t");
+        },
+        keywords: ["tabs", "spaces", "convert", "formatting"],
+        source: "core",
+    },
+    {
+        id: "text.normalize-line-endings",
+        name: "Normalize Line Endings",
+        description: "Convert line endings to LF or CRLF",
+        categories: ["text", "formatting"],
+        parameters: [
+            {
+                name: "mode",
+                label: "Mode",
+                type: "select",
+                default: "lf",
+                options: [
+                    { value: "lf", label: "LF (Unix)" },
+                    { value: "crlf", label: "CRLF (Windows)" },
+                ],
+            },
+        ],
+        execute: (input, params) => {
+            const mode = (params.mode as string) ?? "lf";
+            const normalized = input.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+            if (mode === "lf") return normalized;
+            return normalized.replace(/\n/g, "\r\n");
+        },
+        keywords: ["newline", "crlf", "lf", "normalize", "formatting"],
         source: "core",
     },
 
@@ -261,6 +808,29 @@ const coreOperations: OperationDefinition[] = [
 
     // === FIND/REPLACE ===
     {
+        id: "text.duplicate-lines",
+        name: "Duplicate Lines",
+        description: "Repeat each line N times",
+        categories: ["text", "lines"],
+        parameters: [
+            {
+                name: "count",
+                label: "Count",
+                type: "number",
+                default: 2,
+            },
+        ],
+        execute: (input, params) => {
+            const count = (params.count as number) ?? 2;
+            return input
+                .split("\n")
+                .map((line) => line + ("\n" + line).repeat(count - 1))
+                .join("\n");
+        },
+        keywords: ["duplicate", "repeat", "lines"],
+        source: "core",
+    },
+    {
         id: "text.find-replace-regex",
         name: "Find & Replace (Regex)",
         description: "Find and replace using regular expressions",
@@ -304,10 +874,178 @@ const coreOperations: OperationDefinition[] = [
                 return input;
             }
         },
-        keywords: ["find", "replace", "regex", "search", "substitute"],
+        keywords: ["find", "replace", "regex", "regex"],
+        source: "core",
+    },
+
+    // === ADVANCED & REDACTION ===
+    {
+        id: "text.apply-redaction",
+        name: "Redact Sensitive Data",
+        description: "Mask sensitive patterns like emails, IP addresses, and credit cards",
+        categories: ["advanced", "redaction"],
+        parameters: [
+            {
+                name: "types",
+                label: "Patterns to Redact",
+                type: "multiselect",
+                default: ["email", "ipv4", "cc"],
+                options: [
+                    { value: "email", label: "Email Addresses" },
+                    { value: "ipv4", label: "IPv4 Addresses" },
+                    { value: "cc", label: "Credit Cards" },
+                    { value: "ssn", label: "SSN (US)" },
+                    { value: "phone", label: "Phone Numbers" },
+                    { value: "guid", label: "GUID/UUID" },
+                ],
+            },
+            {
+                name: "mode",
+                label: "Redaction Mode",
+                type: "select",
+                default: "mask",
+                options: [
+                    { value: "mask", label: "Mask (e.g., [REDACTED])" },
+                    { value: "obfuscate", label: "Obfuscate (e.g., e***l@h***.com)" },
+                ],
+            },
+            {
+                name: "customPatterns",
+                label: "Custom Regex Patterns",
+                type: "textarea",
+                default: "",
+                description: "One regex per line",
+                placeholder: "pattern1\npattern2",
+            },
+        ],
+        execute: (input, params) => {
+            const types = (params.types as string[]) ?? ["email", "ipv4", "cc"];
+            const mode = (params.mode as string) ?? "mask";
+            const customPatternsStr = (params.customPatterns as string) ?? "";
+
+            let result = input;
+
+            // Standard patterns
+            const patterns: Record<string, RegExp> = {
+                email: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+                ipv4: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g,
+                cc: /\b(?:\d{4}-?){3}\d{4}\b|\b\d{13,16}\b/g,
+                ssn: /\b\d{3}-\d{2}-\d{4}\b/g,
+                phone: /\b(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/g,
+                guid: /\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b/g,
+            };
+
+            const redactionMask = mode === "mask" ? "[REDACTED]" : null;
+
+            types.forEach(type => {
+                const regex = patterns[type];
+                if (regex) {
+                    result = result.replace(regex, (match) => redactionMask ?? getRedactedValue(type, match));
+                }
+            });
+
+            // Custom patterns
+            if (customPatternsStr) {
+                customPatternsStr.split("\n").forEach(p => {
+                    if (p.trim()) {
+                        try {
+                            const regex = new RegExp(p, "g");
+                            result = result.replace(regex, redactionMask ?? "[REDACTED]");
+                        } catch (e) { }
+                    }
+                });
+            }
+
+            return result;
+        },
+        keywords: ["redact", "mask", "privacy", "security", "pii"],
+        source: "core",
+    },
+    {
+        id: "text.javascript-snippet",
+        name: "JavaScript Snippet",
+        description: "Run custom JavaScript to transform text",
+        categories: ["advanced"],
+        parameters: [
+            {
+                name: "code",
+                label: "JavaScript Code",
+                type: "textarea",
+                default: "return input.split('\\n').map(line => line.toUpperCase()).join('\\n');",
+                description: "Variables available: input, params, context",
+            },
+        ],
+        execute: async (input, params, context) => {
+            const code = (params.code as string) ?? "";
+            if (!code) return input;
+
+            try {
+                // Use AsyncFunction to support await in scripts
+                const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
+                const fn = new AsyncFunction("input", "params", "context", code);
+                const result = await fn(input, params, context);
+                return typeof result === "string" ? result : String(result);
+            } catch (e: any) {
+                return `Error in script: ${e.message}`;
+            }
+        },
+        keywords: ["javascript", "js", "script", "code", "custom"],
         source: "core",
     },
 ];
 
 // Self-register
 coreOperations.forEach((op) => operationRegistry.register(op));
+
+// === HELPERS ===
+
+function toRoman(num: number): string {
+    const values = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+    const symbols = [
+        "M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I",
+    ];
+    let result = "";
+
+    for (let i = 0; i < values.length; i++) {
+        while (num >= values[i]) {
+            result += symbols[i];
+            num -= values[i];
+        }
+    }
+    return result;
+}
+
+function toAlpha(num: number): string {
+    let result = "";
+    while (num > 0) {
+        num--;
+        result = String.fromCharCode(65 + (num % 26)) + result;
+        num = Math.floor(num / 26);
+    }
+    return result;
+}
+
+function wrapText(text: string, width: number): string {
+    return text
+        .split("\n")
+        .map((line) => {
+            if (line.length <= width) return line;
+
+            const words = line.split(" ");
+            const wrapped: string[] = [];
+            let currentLine = "";
+
+            for (const word of words) {
+                if (currentLine.length + word.length + 1 <= width) {
+                    currentLine += (currentLine ? " " : "") + word;
+                } else {
+                    if (currentLine) wrapped.push(currentLine);
+                    currentLine = word;
+                }
+            }
+
+            if (currentLine) wrapped.push(currentLine);
+            return wrapped.join("\n");
+        })
+        .join("\n");
+}

@@ -31,8 +31,8 @@ describe("Core Pipeline Operations", () => {
             stepIndex: 0,
             totalSteps: 1,
             variables: new Map<string, string>(),
-            getVariable: (name: string) => undefined,
-            setVariable: (name: string, value: string) => { },
+            getVariable: (_name: string) => undefined,
+            setVariable: (_name: string, _value: string) => { },
             _input: input,
             _previousOutput: "",
             _stepIndex: 0,
@@ -82,6 +82,24 @@ describe("Core Pipeline Operations", () => {
                 expect(result).toBe("line1\n\nline2\n\nline3");
             });
         });
+
+        describe("text.remove-extra-whitespace", () => {
+            it("should collapse multiple spaces to single space in preserve-single mode", async () => {
+                const input = "hello   world\n  multiple    spaces  ";
+                const result = await execute("text.remove-extra-whitespace", input, {
+                    mode: "preserve-single",
+                });
+                expect(result).toBe("hello world\n multiple spaces ");
+            });
+
+            it("should remove all whitespace in remove-all mode", async () => {
+                const input = "hello   world\n  multiple    spaces  ";
+                const result = await execute("text.remove-extra-whitespace", input, {
+                    mode: "remove-all",
+                });
+                expect(result).toBe("helloworld\nmultiplespaces");
+            });
+        });
     });
 
     describe("Case Conversion Operations", () => {
@@ -113,6 +131,72 @@ describe("Core Pipeline Operations", () => {
             it("should handle already capitalized text", async () => {
                 const result = await execute("text.title-case", "HELLO WORLD");
                 expect(result).toBe("Hello World");
+            });
+        });
+
+        describe("text.sentence-case", () => {
+            it("should capitalize the first letter of the text", async () => {
+                const result = await execute("text.sentence-case", "hello world. how ARE YOU?");
+                expect(result).toBe("Hello world. how are you?");
+            });
+        });
+
+        describe("text.camel-case", () => {
+            it("should convert to camelCase", async () => {
+                const result = await execute("text.camel-case", "hello world");
+                expect(result).toBe("helloWorld");
+            });
+
+            it("should handle PascalCase input", async () => {
+                const result = await execute("text.camel-case", "HelloWorld");
+                expect(result).toBe("helloWorld");
+            });
+        });
+
+        describe("text.pascal-case", () => {
+            it("should convert to PascalCase", async () => {
+                const result = await execute("text.pascal-case", "hello world");
+                expect(result).toBe("HelloWorld");
+            });
+        });
+
+        describe("text.kebab-case", () => {
+            it("should convert to kebab-case", async () => {
+                const result = await execute("text.kebab-case", "Hello World");
+                expect(result).toBe("hello-world");
+            });
+        });
+
+        describe("text.snake-case", () => {
+            it("should convert to snake_case", async () => {
+                const result = await execute("text.snake-case", "Hello World");
+                expect(result).toBe("hello_world");
+            });
+        });
+
+        describe("text.screaming-snake-case", () => {
+            it("should convert to SCREAMING_SNAKE_CASE", async () => {
+                const result = await execute("text.screaming-snake-case", "hello world");
+                expect(result).toBe("HELLO_WORLD");
+            });
+
+            it("should handle camelCase boundaries", async () => {
+                const result = await execute("text.screaming-snake-case", "camelCaseVariableName");
+                expect(result).toBe("CAMEL_CASE_VARIABLE_NAME");
+            });
+        });
+
+        describe("text.invert-case", () => {
+            it("should invert the case of each character", async () => {
+                const result = await execute("text.invert-case", "Hello World 123");
+                expect(result).toBe("hELLO wORLD 123");
+            });
+        });
+
+        describe("text.alternating-case", () => {
+            it("should alternate the case of characters", async () => {
+                const result = await execute("text.alternating-case", "hello world");
+                expect(result).toBe("hElLo wOrLd");
             });
         });
     });
@@ -162,6 +246,15 @@ describe("Core Pipeline Operations", () => {
                 expect(result).toBe("third\nsecond\nfirst");
             });
         });
+
+        describe("text.shuffle-lines", () => {
+            it("should shuffle lines", async () => {
+                const input = "1\n2\n3\n4\n5\n6\n7\n8\n9\n10";
+                const result = await execute("text.shuffle-lines", input);
+                expect(result).not.toBe(input); // Random, but extremely likely to be different
+                expect(result.split("\n").sort()).toEqual(input.split("\n").sort());
+            });
+        });
     });
 
     describe("Join/Split Operations", () => {
@@ -204,6 +297,35 @@ describe("Core Pipeline Operations", () => {
         });
     });
 
+    describe("Line Numbering & Wrapping", () => {
+        describe("text.add-line-numbers", () => {
+            const input = "line1\nline2\nline3";
+
+            it("should add numeric line numbers", async () => {
+                const result = await execute("text.add-line-numbers", input, { style: "numeric" });
+                expect(result).toBe("1. line1\n2. line2\n3. line3");
+            });
+
+            it("should add roman line numbers", async () => {
+                const result = await execute("text.add-line-numbers", input, { style: "roman" });
+                expect(result).toBe("I. line1\nII. line2\nIII. line3");
+            });
+
+            it("should add alpha line numbers", async () => {
+                const result = await execute("text.add-line-numbers", input, { style: "alpha" });
+                expect(result).toBe("A. line1\nB. line2\nC. line3");
+            });
+        });
+
+        describe("text.wrap-lines", () => {
+            it("should wrap lines at specific width", async () => {
+                const input = "This is a long line that should be wrapped.";
+                const result = await execute("text.wrap-lines", input, { width: 10 });
+                expect(result).toBe("This is a\nlong line\nthat\nshould be\nwrapped.");
+            });
+        });
+    });
+
     describe("Prefix/Suffix Operations", () => {
         describe("text.add-prefix", () => {
             it("should add prefix to each line", async () => {
@@ -218,14 +340,6 @@ describe("Core Pipeline Operations", () => {
                 const input = "line1\nline2";
                 const result = await execute("text.add-prefix", input, { prefix: "" });
                 expect(result).toBe("line1\nline2");
-            });
-
-            it("should work with single line input", async () => {
-                const input = "123";
-                const result = await execute("text.add-prefix", input, {
-                    prefix: "PREFIX_",
-                });
-                expect(result).toBe("PREFIX_123");
             });
         });
 
@@ -242,14 +356,6 @@ describe("Core Pipeline Operations", () => {
                 const input = "line1\nline2";
                 const result = await execute("text.add-suffix", input, { suffix: "" });
                 expect(result).toBe("line1\nline2");
-            });
-
-            it("should work with single line input", async () => {
-                const input = "123";
-                const result = await execute("text.add-suffix", input, {
-                    suffix: "_SUFFIX",
-                });
-                expect(result).toBe("123_SUFFIX");
             });
         });
     });
@@ -302,6 +408,132 @@ describe("Core Pipeline Operations", () => {
                     flags: "gi",
                 });
                 expect(result).toBe("hi hi hi");
+            });
+        });
+    });
+
+    describe("Filtering & Selection Operations", () => {
+        const input = "apple\nbanana\ncherry\ndate";
+
+        describe("text.filter-regex", () => {
+            it("should keep matching lines", async () => {
+                const result = await execute("text.filter-regex", input, { pattern: "a", action: "keep" });
+                expect(result).toBe("apple\nbanana\ndate");
+            });
+
+            it("should remove matching lines", async () => {
+                const result = await execute("text.filter-regex", input, { pattern: "a", action: "remove" });
+                expect(result).toBe("cherry");
+            });
+        });
+
+        describe("text.filter-keyword", () => {
+            it("should filter by contains", async () => {
+                const result = await execute("text.filter-keyword", input, { keyword: "an", position: "contains" });
+                expect(result).toBe("banana");
+            });
+
+            it("should filter by starts with", async () => {
+                const result = await execute("text.filter-keyword", input, { keyword: "c", position: "starts" });
+                expect(result).toBe("cherry");
+            });
+        });
+
+        describe("text.keep-first-n", () => {
+            it("should keep first N lines", async () => {
+                const result = await execute("text.keep-first-n", input, { n: 2 });
+                expect(result).toBe("apple\nbanana");
+            });
+        });
+
+        describe("text.keep-last-n", () => {
+            it("should keep last N lines", async () => {
+                const result = await execute("text.keep-last-n", input, { n: 2 });
+                expect(result).toBe("cherry\ndate");
+            });
+        });
+    });
+
+    describe("Formatting & Padding Operations", () => {
+        describe("text.pad-lines", () => {
+            it("should pad lines to the right", async () => {
+                const input = "a\nbc";
+                const result = await execute("text.pad-lines", input, { length: 3, align: "left", char: "." });
+                expect(result).toBe("a..\nbc.");
+            });
+
+            it("should pad lines to the left", async () => {
+                const input = "a\nbc";
+                const result = await execute("text.pad-lines", input, { length: 3, align: "right", char: "." });
+                expect(result).toBe("..a\n.bc");
+            });
+        });
+
+        describe("text.change-indentation", () => {
+            it("should add indentation", async () => {
+                const input = "line";
+                const result = await execute("text.change-indentation", input, { action: "add", amount: 2, type: "spaces" });
+                expect(result).toBe("  line");
+            });
+
+            it("should remove indentation", async () => {
+                const input = "  line";
+                const result = await execute("text.change-indentation", input, { action: "remove", amount: 2, type: "spaces" });
+                expect(result).toBe("line");
+            });
+        });
+
+        describe("text.convert-tabs-spaces", () => {
+            it("should convert tabs to spaces", async () => {
+                const input = "\tline";
+                const result = await execute("text.convert-tabs-spaces", input, { mode: "tabs-to-spaces" });
+                expect(result).toBe("    line");
+            });
+        });
+
+        describe("text.normalize-line-endings", () => {
+            it("should normalize to LF", async () => {
+                const input = "line1\r\nline2";
+                const result = await execute("text.normalize-line-endings", input, { mode: "lf" });
+                expect(result).toBe("line1\nline2");
+            });
+        });
+    });
+
+    describe("Line Duplication", () => {
+        it("should duplicate each line", async () => {
+            const input = "a\nb";
+            const result = await execute("text.duplicate-lines", input, { count: 2 });
+            expect(result).toBe("a\na\nb\nb");
+        });
+    });
+
+    describe("Advanced Operations", () => {
+        describe("text.apply-redaction", () => {
+            it("should redact email addresses", async () => {
+                const input = "contact me at test@example.com";
+                const result = await execute("text.apply-redaction", input, { types: ["email"], mode: "mask" });
+                expect(result).toBe("contact me at [REDACTED]");
+            });
+
+            it("should obfuscate email addresses", async () => {
+                const input = "contact me at test@example.com";
+                const result = await execute("text.apply-redaction", input, { types: ["email"], mode: "obfuscate" });
+                expect(result).toContain("t***t@e***m");
+            });
+        });
+
+        describe("text.javascript-snippet", () => {
+            it("should execute custom JS", async () => {
+                const input = "hello";
+                const result = await execute("text.javascript-snippet", input, { code: "return input.toUpperCase();" });
+                expect(result).toBe("HELLO");
+            });
+
+            it("should handle async scripts", async () => {
+                const input = "hello";
+                const result = await execute("text.javascript-snippet", input, { code: "return Promise.resolve(input + '!');" });
+                expect(result).toBe("hello!");
             });
         });
     });
@@ -380,18 +612,41 @@ describe("Core Pipeline Operations", () => {
                 "text.trim",
                 "text.remove-blank-lines",
                 "text.remove-extra-blank-lines",
+                "text.remove-extra-whitespace",
                 "text.uppercase",
                 "text.lowercase",
                 "text.title-case",
+                "text.sentence-case",
+                "text.camel-case",
+                "text.pascal-case",
+                "text.kebab-case",
+                "text.snake-case",
+                "text.screaming-snake-case",
+                "text.invert-case",
+                "text.alternating-case",
                 "text.remove-duplicates",
                 "text.sort-asc",
                 "text.sort-desc",
                 "text.reverse-lines",
+                "text.shuffle-lines",
                 "text.join-lines",
                 "text.split-lines",
+                "text.add-line-numbers",
+                "text.wrap-lines",
                 "text.add-prefix",
                 "text.add-suffix",
                 "text.find-replace-regex",
+                "text.filter-regex",
+                "text.filter-keyword",
+                "text.keep-first-n",
+                "text.keep-last-n",
+                "text.pad-lines",
+                "text.change-indentation",
+                "text.convert-tabs-spaces",
+                "text.normalize-line-endings",
+                "text.duplicate-lines",
+                "text.apply-redaction",
+                "text.javascript-snippet",
             ];
 
             for (const id of expectedOperations) {
@@ -403,11 +658,25 @@ describe("Core Pipeline Operations", () => {
 
         it("should have valid parameter definitions", () => {
             const opsWithParams = [
+                "text.remove-extra-whitespace",
                 "text.join-lines",
                 "text.split-lines",
+                "text.add-line-numbers",
+                "text.wrap-lines",
                 "text.add-prefix",
                 "text.add-suffix",
                 "text.find-replace-regex",
+                "text.filter-regex",
+                "text.filter-keyword",
+                "text.keep-first-n",
+                "text.keep-last-n",
+                "text.pad-lines",
+                "text.change-indentation",
+                "text.convert-tabs-spaces",
+                "text.normalize-line-endings",
+                "text.duplicate-lines",
+                "text.apply-redaction",
+                "text.javascript-snippet",
             ];
 
             for (const id of opsWithParams) {

@@ -246,6 +246,8 @@ export const PipelineCanvas: React.FC<PipelineCanvasProps> = ({
                               },
                             })
                           }
+                          onDragStart={(e) => e.stopPropagation()}
+                          draggable="false"
                           className="rounded border-base"
                         />
                         <span className="text-sm text-main">
@@ -267,6 +269,8 @@ export const PipelineCanvas: React.FC<PipelineCanvasProps> = ({
                             },
                           })
                         }
+                        onDragStart={(e) => e.stopPropagation()}
+                        draggable="false"
                         className="w-full px-2 py-1 text-sm bg-element border border-base rounded focus:outline-none focus:border-focus text-main"
                       >
                         {param.options?.map((opt) => (
@@ -293,6 +297,8 @@ export const PipelineCanvas: React.FC<PipelineCanvasProps> = ({
                             },
                           })
                         }
+                        onDragStart={(e) => e.stopPropagation()}
+                        draggable="false"
                         className="w-full px-2 py-1 text-sm bg-element border border-base rounded focus:outline-none focus:border-focus text-main"
                       />
                     ) : param.type === "textarea" ? (
@@ -311,8 +317,10 @@ export const PipelineCanvas: React.FC<PipelineCanvasProps> = ({
                             },
                           })
                         }
-                        className="w-full px-2 py-1 text-sm bg-element border border-base rounded focus:outline-none focus:border-focus text-main resize-none"
-                        rows={3}
+                        onDragStart={(e) => e.stopPropagation()}
+                        draggable="false"
+                        className="w-full px-2 py-1 text-sm bg-element border border-base rounded focus:outline-none focus:border-focus text-main font-mono"
+                        rows={6}
                       />
                     ) : (
                       <input
@@ -331,6 +339,8 @@ export const PipelineCanvas: React.FC<PipelineCanvasProps> = ({
                             },
                           })
                         }
+                        onDragStart={(e) => e.stopPropagation()}
+                        draggable="false"
                         className="w-full px-2 py-1 text-sm bg-element border border-base rounded focus:outline-none focus:border-focus text-main"
                       />
                     )}
