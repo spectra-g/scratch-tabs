@@ -306,6 +306,74 @@ describe("BatchTools Pipeline Operations", () => {
     });
   });
 
+  describe("Integration with PipelineRunner", () => {
+    // Test the full flow through createStep and runPipeline
+    it("should work with prefix through createStep and runPipeline", async () => {
+      const { createStep, runPipeline, createPipeline } = await import(
+        "../../../services/pipeline"
+      );
+
+      const step = createStep("text.add-prefix", { prefix: ">> " });
+      const pipeline = createPipeline();
+      pipeline.steps.push(step);
+
+      const result = await runPipeline("line1\nline2\nline3", pipeline);
+
+      expect(result.success).toBe(true);
+      expect(result.output).toBe(">> line1\n>> line2\n>> line3");
+    });
+
+    it("should work with suffix through createStep and runPipeline", async () => {
+      const { createStep, runPipeline, createPipeline } = await import(
+        "../../../services/pipeline"
+      );
+
+      const step = createStep("text.add-suffix", { suffix: " <<" });
+      const pipeline = createPipeline();
+      pipeline.steps.push(step);
+
+      const result = await runPipeline("line1\nline2\nline3", pipeline);
+
+      expect(result.success).toBe(true);
+      expect(result.output).toBe("line1 <<\nline2 <<\nline3 <<");
+    });
+
+    it("should work with find-replace through createStep and runPipeline", async () => {
+      const { createStep, runPipeline, createPipeline } = await import(
+        "../../../services/pipeline"
+      );
+
+      const step = createStep("text.find-replace-regex", {
+        find: "\\d+",
+        replace: "NUM",
+        flags: "g",
+      });
+      const pipeline = createPipeline();
+      pipeline.steps.push(step);
+
+      const result = await runPipeline("test 123 hello 456", pipeline);
+
+      expect(result.success).toBe(true);
+      expect(result.output).toBe("test NUM hello NUM");
+    });
+
+    it("should chain multiple operations", async () => {
+      const { createStep, runPipeline, createPipeline } = await import(
+        "../../../services/pipeline"
+      );
+
+      const pipeline = createPipeline();
+      pipeline.steps.push(createStep("text.trim"));
+      pipeline.steps.push(createStep("text.uppercase"));
+      pipeline.steps.push(createStep("text.add-prefix", { prefix: "> " }));
+
+      const result = await runPipeline("  hello world  ", pipeline);
+
+      expect(result.success).toBe(true);
+      expect(result.output).toBe("> HELLO WORLD");
+    });
+  });
+
   describe("Operation Registration", () => {
     it("should register all batch tools operations", () => {
       const expectedOperations = [

@@ -41,14 +41,30 @@ export type {
 // Registry
 export { operationRegistry } from "./OperationRegistry";
 
-// Runner
+// Runner (main thread API)
 export {
   runPipeline,
   runSingleOperation,
   validatePipeline,
   createStep,
   createPipeline,
+  // Web Worker support
+  runPipelineAsync,
+  runSingleOperationAsync,
+  isWorkerExecutionAvailable,
 } from "./PipelineRunner";
+
+export type { WorkerExecutionConfig } from "./PipelineRunner";
+
+// Executor (low-level API for advanced use cases)
+export {
+  createExecutionContext,
+  executeStep,
+  executePipeline,
+  executeSingleOperation,
+} from "./pipelineExecutor";
+
+export type { ProgressCallback } from "./pipelineExecutor";
 
 // Categories
 export {

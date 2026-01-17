@@ -5,7 +5,7 @@
  * Supports drag-and-drop reordering, enable/disable, and parameter editing.
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   GripVertical,
   X,
@@ -36,6 +36,32 @@ export const PipelineCanvas: React.FC<PipelineCanvasProps> = ({
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  // Track which step IDs we've seen to detect newly added steps
+  const seenStepIds = useRef<Set<string>>(new Set());
+
+  // Auto-expand newly added steps that have parameters
+  useEffect(() => {
+    const newSteps = steps.filter((step) => !seenStepIds.current.has(step.id));
+
+    if (newSteps.length > 0) {
+      const stepsWithParams = newSteps.filter((step) => {
+        const operation = operationRegistry.getById(step.operationId);
+        return operation && operation.parameters.length > 0;
+      });
+
+      if (stepsWithParams.length > 0) {
+        setExpandedSteps((prev) => {
+          const next = new Set(prev);
+          stepsWithParams.forEach((step) => next.add(step.id));
+          return next;
+        });
+      }
+
+      // Mark all current steps as seen
+      steps.forEach((step) => seenStepIds.current.add(step.id));
+    }
+  }, [steps]);
 
   // Toggle step expansion
   const toggleExpanded = (stepId: string) => {

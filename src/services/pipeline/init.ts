@@ -14,8 +14,3 @@ import { registerCoreCategories } from "./categories";
 
 // Register core categories on module load
 registerCoreCategories();
-
-// Log initialization in development
-if (import.meta.env.DEV) {
-  console.log("[Pipeline] Core categories registered");
-}

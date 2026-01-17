@@ -27,10 +27,7 @@ import "../../components/BatchTools/pipelineOperations";
 
 // Log registration status in development
 if (import.meta.env.DEV) {
-  import("./OperationRegistry").then(({ operationRegistry }) => {
-    const info = operationRegistry.getDebugInfo();
-    console.log("[Pipeline] Operations loaded:", info);
-  });
+  import("./OperationRegistry").then(({ operationRegistry }) => {});
 }
 
 export {};

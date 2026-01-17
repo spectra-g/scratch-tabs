@@ -352,7 +352,3 @@ const batchToolsOperations: OperationDefinition[] = [
 
 // Register all operations
 batchToolsOperations.forEach((op) => operationRegistry.register(op));
-
-console.log(
-  `[Pipeline] Registered ${batchToolsOperations.length} batch tools operations`,
-);

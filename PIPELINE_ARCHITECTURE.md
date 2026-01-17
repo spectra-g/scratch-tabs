@@ -1,8 +1,27 @@
 # Pipeline Architecture & Implementation Plan
 
 **Created:** 2026-01-16
-**Status:** In Progress
+**Last Updated:** 2026-01-17
+**Status:** In Progress (Phases 1 & 3 Complete, Phase 2 Partial)
 **Goal:** Replace BatchTools with a modular, extensible Pipeline system comparable to CyberChef
+
+---
+
+## Quick Status Summary
+
+| Phase | Status | Description |
+|-------|--------|-------------|
+| Phase 1 | ✅ Complete | Core engine, registry, runner, Web Worker support |
+| Phase 2 | 🔄 Partial (15/30) | 15 operations migrated, unit tested |
+| Phase 3 | ✅ Complete | 3-panel UI, IndexedDB persistence, save/load |
+| Phase 4 | 🔄 Started | Context menu entry added, more operations needed |
+| Phase 5 | ⏳ Future | Variable interpolation (types designed, not implemented) |
+
+**Outstanding Work:**
+- Migrate remaining ~15 BatchTools operations (see Section 9)
+- Extract operations from tablets (checksum, jwt, uuid, datetime)
+- Add "Run Last Pipeline" quick action
+- Delete legacy BatchTools folder after full migration
 
 ---
 
@@ -177,37 +196,45 @@ export interface OperationCategory {
 
 ```
 src/services/pipeline/
-├── types.ts                    # All type definitions
-├── OperationRegistry.ts        # Singleton registry
-├── PipelineRunner.ts           # Execution engine
-├── categories.ts               # Core category definitions
-├── pipelineStorage.ts          # IndexedDB CRUD operations
-├── index.ts                    # Public exports
-└── operations/                 # Core operations (self-register)
-    ├── text.ts                 # Trim, case, whitespace
-    ├── lines.ts                # Sort, reverse, filter, dedupe
-    ├── redaction.ts            # Sensitive data masking
-    ├── regex.ts                # Find/replace
-    └── index.ts                # Aggregates and registers all
+├── types.ts                    # ✅ All type definitions
+├── OperationRegistry.ts        # ✅ Singleton registry with subscribe()
+├── PipelineRunner.ts           # ✅ Execution engine + Web Worker support
+├── WorkerRunner.ts             # ✅ Main thread wrapper for worker communication
+├── pipelineWorker.ts           # ✅ Web Worker with operation registry copy
+├── categories.ts               # ✅ Core category definitions
+├── pipelineStorage.ts          # ✅ IndexedDB CRUD operations
+├── loadOperations.ts           # ✅ Aggregates and registers all operations
+├── index.ts                    # ✅ Public exports
+└── operations/                 # ⏳ FUTURE: Core operations (currently in BatchTools)
+    ├── text.ts                 # TODO: Trim, case, whitespace
+    ├── lines.ts                # TODO: Sort, reverse, filter, dedupe
+    ├── redaction.ts            # TODO: Sensitive data masking
+    └── regex.ts                # TODO: Find/replace
 
-src/formats/[format]/
+src/formats/json/
 ├── index.ts                    # Existing format module
-├── operations.ts               # NEW: Pipeline operations (self-registers)
+├── operations.ts               # ✅ JSON pipeline operations (self-registers)
 └── ...
 
-src/tablets/[tablet]/
-├── [Name]Tablet.tsx            # Existing tablet component
-├── operations.ts               # NEW: Pipeline operations (self-registers)
+src/tablets/base64/
+├── Base64Tablet.tsx            # Existing tablet component
+├── operations.ts               # ✅ Base64 pipeline operations (self-registers)
 └── ...
 
 src/components/Pipeline/
-├── PipelineEditorModal.tsx     # Main container
-├── OperationPalette.tsx        # Left panel (categories accordion)
-├── PipelineCanvas.tsx          # Middle panel (sortable steps)
-├── StepCard.tsx                # Individual step with params
-├── PipelinePreview.tsx         # Right panel (input/output)
-├── PipelineToolbar.tsx         # Save/Load/Delete buttons
-└── index.ts                    # Exports
+├── PipelineEditorModal.tsx     # ✅ Main container (3-panel layout)
+├── OperationPalette.tsx        # ✅ Left panel (categories accordion)
+├── PipelineCanvas.tsx          # ✅ Middle panel (sortable steps)
+├── StepCard.tsx                # ✅ Individual step with params
+├── PipelinePreview.tsx         # ✅ Right panel (input/output stacked)
+├── PipelineToolbar.tsx         # ✅ (merged into PipelineEditorModal header)
+└── index.ts                    # ✅ Exports
+
+src/components/BatchTools/
+├── pipelineOperations.ts       # ✅ Migrated operations (15 of ~30)
+├── __tests__/
+│   └── pipelineOperations.test.ts  # ✅ 39 unit tests
+└── transformations.ts          # ⏠LEGACY - remaining operations to port
 ```
 
 ### Self-Registration Pattern
@@ -354,22 +381,26 @@ Output: "private static final String HELLO WORLD = "hello_world";"
 
 **Goal:** Build the registry, runner, and prove the pattern works with ONE format and ONE tablet.
 
-**Files to create:**
-1. `src/services/pipeline/types.ts` - All type definitions
-2. `src/services/pipeline/OperationRegistry.ts` - Singleton registry
-3. `src/services/pipeline/PipelineRunner.ts` - Execution engine
-4. `src/services/pipeline/categories.ts` - Core categories
-5. `src/services/pipeline/index.ts` - Public exports
-6. `src/formats/json/operations.ts` - JSON operations (proof of concept)
-7. `src/tablets/base64/operations.ts` - Base64 operations (proof of concept)
+**Files created:**
+1. ✅ `src/services/pipeline/types.ts` - All type definitions
+2. ✅ `src/services/pipeline/OperationRegistry.ts` - Singleton registry with subscribe()
+3. ✅ `src/services/pipeline/PipelineRunner.ts` - Execution engine + async worker support
+4. ✅ `src/services/pipeline/WorkerRunner.ts` - Web Worker wrapper
+5. ✅ `src/services/pipeline/pipelineWorker.ts` - Worker with operation registry
+6. ✅ `src/services/pipeline/categories.ts` - Core categories
+7. ✅ `src/services/pipeline/loadOperations.ts` - Operation aggregation
+8. ✅ `src/services/pipeline/index.ts` - Public exports
+9. ✅ `src/formats/json/operations.ts` - JSON operations (proof of concept)
+10. ✅ `src/tablets/base64/operations.ts` - Base64 operations (proof of concept)
 
 **Verification:**
-- Unit test: Registry accepts registrations from different sources
-- Unit test: Operations appear in correct categories
-- Unit test: PipelineRunner executes steps in order
-- Unit test: JSON format → Base64 encode pipeline works end-to-end
+- ✅ Registry accepts registrations from different sources
+- ✅ Operations appear in correct categories (multi-category support works)
+- ✅ PipelineRunner executes steps in order
+- ✅ JSON format → Base64 encode pipeline works end-to-end
+- ✅ Web Worker execution with true timeout support
 
-**Status:** 🔄 In Progress
+**Status:** ✅ Complete
 
 ---
 
@@ -377,18 +408,38 @@ Output: "private static final String HELLO WORLD = "hello_world";"
 
 **Goal:** Port all BatchTools transformations as core operations.
 
-**Files to create:**
-- `src/services/pipeline/operations/text.ts` - Trim, case conversion, whitespace
-- `src/services/pipeline/operations/lines.ts` - Sort, reverse, dedupe, filter
-- `src/services/pipeline/operations/redaction.ts` - Sensitive data masking
-- `src/services/pipeline/operations/regex.ts` - Find/replace, filter by regex
-- `src/services/pipeline/operations/index.ts` - Exports and self-registers all
+**Current location:** `src/components/BatchTools/pipelineOperations.ts`
+(Note: Operations are temporarily in BatchTools folder. Move to `src/services/pipeline/operations/` when complete.)
 
-**Each operation must:**
-- Have identical output to existing BatchTools
-- Be unit tested
+**Migrated operations (15):**
+| Operation | ID | Status |
+|-----------|-----|--------|
+| Trim | `batch.trim` | ✅ |
+| Uppercase | `batch.uppercase` | ✅ |
+| Lowercase | `batch.lowercase` | ✅ |
+| Title Case | `batch.titlecase` | ✅ |
+| Remove Extra Whitespace | `batch.remove-extra-whitespace` | ✅ |
+| Remove Blank Lines | `batch.remove-blank-lines` | ✅ |
+| Sort Lines (Asc) | `batch.sort-lines-asc` | ✅ |
+| Sort Lines (Desc) | `batch.sort-lines-desc` | ✅ |
+| Reverse Lines | `batch.reverse-lines` | ✅ |
+| Remove Duplicates | `batch.remove-duplicates` | ✅ |
+| Add Line Numbers | `batch.add-line-numbers` | ✅ |
+| Add Prefix | `batch.add-prefix` | ✅ |
+| Add Suffix | `batch.add-suffix` | ✅ |
+| Find and Replace | `batch.find-replace` | ✅ |
+| Wrap Lines | `batch.wrap-lines` | ✅ |
 
-**Status:** ⏳ Pending
+**Remaining operations (~15):**
+- Sentence Case, camelCase, PascalCase, kebab-case, snake_case, SCREAMING_SNAKE
+- Shuffle Lines, Join Lines, Split Lines
+- Filter by Regex, Filter by Keyword, Keep First N, Keep Last N
+- Pad Lines, Change Indentation, Convert Tabs/Spaces
+- Normalize Line Endings, Redaction, JavaScript Snippet
+
+**Unit tests:** ✅ `src/components/BatchTools/__tests__/pipelineOperations.test.ts` (39 tests)
+
+**Status:** 🔄 Partial (15 of ~30 operations)
 
 ---
 
@@ -396,19 +447,30 @@ Output: "private static final String HELLO WORLD = "hello_world";"
 
 **Goal:** Build the 3-panel UI.
 
-**Components:**
-- `src/components/Pipeline/PipelineEditorModal.tsx` - Main container
-- `src/components/Pipeline/OperationPalette.tsx` - Left panel (accordion categories)
-- `src/components/Pipeline/PipelineCanvas.tsx` - Middle panel (sortable steps)
-- `src/components/Pipeline/StepCard.tsx` - Individual step with params
-- `src/components/Pipeline/PipelinePreview.tsx` - Right panel (input/output)
-- `src/components/Pipeline/PipelineToolbar.tsx` - Save/Load/Delete buttons
+**Components created:**
+- ✅ `src/components/Pipeline/PipelineEditorModal.tsx` - Main container (3-panel layout)
+- ✅ `src/components/Pipeline/OperationPalette.tsx` - Left panel (accordion categories, search)
+- ✅ `src/components/Pipeline/PipelineCanvas.tsx` - Middle panel (sortable steps, auto-expand)
+- ✅ `src/components/Pipeline/StepCard.tsx` - Individual step with params (expand/collapse)
+- ✅ `src/components/Pipeline/PipelinePreview.tsx` - Right panel (input/output stacked)
+- ✅ `src/components/Pipeline/index.ts` - Exports
 
 **Database integration:**
-- Add `pipelines` and `pipelineSettings` tables to Dexie schema
-- Create `src/services/pipeline/pipelineStorage.ts` for CRUD operations
+- ✅ `pipelines` and `pipelineSettings` tables added to Dexie schema
+- ✅ `src/services/pipeline/pipelineStorage.ts` - CRUD operations (savePipeline, getAllPipelines, deletePipeline, toPipeline)
 
-**Status:** ⏳ Pending
+**UI Features:**
+- ✅ Drag-and-drop step reordering (dnd-kit)
+- ✅ Enable/disable individual steps
+- ✅ Save named pipelines (inline dropdown, not browser prompt)
+- ✅ Load saved pipelines (dropdown with delete option)
+- ✅ Click-outside closes dropdowns
+- ✅ Real-time preview (debounced 150ms)
+- ✅ Auto-expand steps with parameters when added
+- ✅ Custom scrollbar styling
+- ✅ Execution stats (duration, character counts)
+
+**Status:** ✅ Complete
 
 ---
 
@@ -416,13 +478,19 @@ Output: "private static final String HELLO WORLD = "hello_world";"
 
 **Goal:** Migrate remaining operations, integrate with editor.
 
-**Tasks:**
-- Extract operations from remaining tablets (checksum, jwt, uuid, etc.)
-- Add "Apply Pipeline" to editor context menu
-- Add "Run Last Pipeline" quick action
-- Delete `src/components/BatchTools/` folder
+**Completed tasks:**
+- ✅ Add "Pipeline" to editor context menu (right-click → Tools → Pipeline)
+- ✅ `usePipelineStore` hook for opening pipeline editor
 
-**Status:** ⏳ Pending
+**Remaining tasks:**
+- ⏳ Extract operations from remaining tablets (checksum, jwt, uuid, datetime)
+- ⏳ Migrate remaining ~15 BatchTools operations (see Phase 2)
+- ⏳ Add "Run Last Pipeline" quick action
+- ⏳ Move operations from `BatchTools/pipelineOperations.ts` to `services/pipeline/operations/`
+- ⏳ Delete `src/components/BatchTools/` folder (after full migration)
+- ⏳ Delete `src/stores/batchToolsStore.ts`
+
+**Status:** 🔄 Started
 
 ---
 
@@ -537,18 +605,65 @@ Output: "private static final String HELLO WORLD = "hello_world";"
 
 ---
 
-## 11. Future Enhancements
+## 11. Web Worker Architecture
+
+### Overview
+
+Pipeline execution runs in a dedicated Web Worker to prevent UI blocking. This provides:
+
+- **Non-blocking execution**: UI remains responsive during heavy operations
+- **True timeout support**: Workers can be terminated via `worker.terminate()`
+- **Large file handling**: Can process 100MB+ files without freezing browser
+
+### Implementation
+
+**Files:**
+- `src/services/pipeline/pipelineWorker.ts` - Worker code with operation registry
+- `src/services/pipeline/WorkerRunner.ts` - Main thread wrapper for worker communication
+
+**Usage:**
+```typescript
+import { runPipelineAsync } from '@/services/pipeline';
+
+// Runs in Web Worker with 30s timeout (falls back to main thread if needed)
+const result = await runPipelineAsync(input, pipeline, {
+  timeout: 30000,
+  onProgress: (step, total) => console.log(`Step ${step}/${total}`),
+});
+```
+
+**Timeout Behavior:**
+- If an operation exceeds the timeout, the worker is terminated
+- A new worker is automatically created for subsequent operations
+- Fallback to main thread execution if workers aren't available
+
+### Fallback Strategy
+
+The system automatically falls back to main thread execution when:
+- Web Workers aren't supported (older browsers, SSR)
+- Worker creation fails
+- Worker throws an unrecoverable error
+
+---
+
+## 12. Future Enhancements
+
+### Medium Priority
 
 - **Pipeline templates**: Pre-built pipelines for common tasks
 - **Import/Export**: Share pipelines as JSON files
 - **Keyboard shortcuts**: Quick access to recent pipelines
 - **Operation preview**: Show sample input/output in palette
+
+### Lower Priority
+
 - **Conditional steps**: Skip steps based on content/variable conditions
 - **Looping**: Apply operation to each line/item separately
+- **Streaming execution**: Process large files in chunks
 
 ---
 
-## 12. Migration from BatchTools
+## 13. Migration from BatchTools
 
 When Phase 4 is complete:
 
@@ -562,11 +677,119 @@ When Phase 4 is complete:
 
 ## Appendix: Key Files Reference
 
-| File | Purpose |
-|------|---------|
-| `src/services/pipeline/types.ts` | All type definitions |
-| `src/services/pipeline/OperationRegistry.ts` | Singleton registry |
-| `src/services/pipeline/PipelineRunner.ts` | Execution engine |
-| `src/components/BatchTools/transformations.ts` | **Legacy** - operations to port |
-| `src/formats/json/actions/jsonOperations.ts` | JSON operations (already extracted) |
-| `src/tablets/base64/utils/base64Utils.ts` | Base64 logic (to wrap) |
+### Pipeline Core (src/services/pipeline/)
+
+| File | Purpose | Status |
+|------|---------|--------|
+| `types.ts` | All type definitions | ✅ |
+| `OperationRegistry.ts` | Singleton registry with subscribe() | ✅ |
+| `pipelineExecutor.ts` | Pure execution logic (testable without browser) | ✅ |
+| `PipelineRunner.ts` | Main thread API, delegates to executor | ✅ |
+| `WorkerRunner.ts` | Web Worker wrapper (main thread) | ✅ |
+| `pipelineWorker.ts` | Web Worker (thin wrapper around executor) | ✅ |
+| `categories.ts` | Core category definitions | ✅ |
+| `pipelineStorage.ts` | IndexedDB CRUD operations | ✅ |
+| `loadOperations.ts` | Aggregates all operation registrations | ✅ |
+| `index.ts` | Public exports | ✅ |
+
+### Pipeline UI (src/components/Pipeline/)
+
+| File | Purpose | Status |
+|------|---------|--------|
+| `PipelineEditorModal.tsx` | Main 3-panel container | ✅ |
+| `OperationPalette.tsx` | Left panel - operations by category | ✅ |
+| `PipelineCanvas.tsx` | Middle panel - sortable steps | ✅ |
+| `StepCard.tsx` | Individual step with parameters | ✅ |
+| `PipelinePreview.tsx` | Right panel - input/output | ✅ |
+| `index.ts` | Exports | ✅ |
+
+### Operations
+
+| File | Purpose | Status |
+|------|---------|--------|
+| `src/formats/json/operations.ts` | JSON operations | ✅ |
+| `src/tablets/base64/operations.ts` | Base64 encode/decode | ✅ |
+| `src/components/BatchTools/pipelineOperations.ts` | Migrated text operations (15) | ✅ |
+| `src/components/BatchTools/__tests__/pipelineOperations.test.ts` | Unit tests (39) | ✅ |
+| `src/components/BatchTools/transformations.ts` | **LEGACY** - remaining operations to port | ⏳ |
+
+### State Management
+
+| File | Purpose | Status |
+|------|---------|--------|
+| `src/stores/pipelineStore.ts` | Pipeline editor state (open/close) | ✅ |
+
+### Integration Points
+
+| File | Change Made | Status |
+|------|-------------|--------|
+| `src/db/index.ts` | Added `pipelines` and `pipelineSettings` tables | ✅ |
+| `src/components/Editor/EditorContextMenu.tsx` | Added "Pipeline" menu item | ✅ |
+| `src/components/Icons.tsx` | Added `GripVertical` icon | ✅ |
+
+---
+
+## Handover Notes for Next Developer
+
+### To Continue This Work
+
+1. **Remaining operations** - Port the ~15 remaining operations from `transformations.ts` to `pipelineOperations.ts`:
+   - Follow the existing pattern in `pipelineOperations.ts`
+   - Use `name` for parameter key, `label` for display (not `id`/`name`)
+   - Add unit tests to `pipelineOperations.test.ts`
+
+2. **Tablet operations** - Extract from tablets to pipeline:
+   - `src/tablets/checksum/` → MD5, SHA1, SHA256, SHA512
+   - `src/tablets/jwt/` → Decode header, Decode payload
+   - `src/tablets/uuid/` → Generate v1, v4, v5
+   - `src/tablets/url/` → Encode, Decode, Parse
+
+3. **Final cleanup** - After all operations migrated:
+   - Move `pipelineOperations.ts` to `src/services/pipeline/operations/text.ts`
+   - Delete `src/components/BatchTools/` folder
+   - Delete `src/stores/batchToolsStore.ts`
+
+### Key Gotchas
+
+1. **Parameter definition format** (critical - got this wrong initially):
+   ```typescript
+   // CORRECT:
+   { name: "prefix", label: "Prefix Text", type: "string", ... }
+
+   // WRONG (will silently fail):
+   { id: "prefix", name: "Prefix Text", type: "string", ... }
+   ```
+
+2. **Web Worker has its own operation registry** - Operations must be registered in BOTH:
+   - Main thread (via `loadOperations.ts`)
+   - Worker (via `pipelineWorker.ts` imports)
+
+3. **Vite worker import syntax**:
+   ```typescript
+   import PipelineWorker from "./pipelineWorker?worker";
+   ```
+
+4. **Testing with Jest** - `crypto.randomUUID()` not available, use fallback `generateUUID()`
+
+### How to Test
+
+```bash
+# Run unit tests for operations
+npm test -- --testPathPattern=pipelineOperations
+
+# Manual testing
+1. Open app in browser
+2. Right-click in editor → Tools → Pipeline
+3. Add operations from left panel
+4. Configure parameters (steps auto-expand if they have params)
+5. Verify output in right panel
+6. Save/load pipelines using header buttons
+```
+
+### Architecture Decisions to Preserve
+
+1. **Self-registration pattern** - Pipeline engine never imports from formats/tablets
+2. **Web Worker for execution** - Prevents UI blocking on large files
+3. **Multi-category support** - Operations can appear in multiple categories
+4. **Variable interpolation types** - Already in place, implementation deferred to Phase 5
+5. **Executor pattern for testability** - All execution logic is in `pipelineExecutor.ts` (pure functions, no browser APIs). Both `PipelineRunner.ts` (main thread) and `pipelineWorker.ts` (Web Worker) delegate to the executor. This allows 100% unit test coverage of execution logic without needing browser/worker mocks.

@@ -22,7 +22,7 @@ import {
 } from "../../services/pipeline/types";
 import {
   operationRegistry,
-  runPipeline,
+  runPipelineAsync,
   createStep,
 } from "../../services/pipeline";
 import {
@@ -129,7 +129,7 @@ export const PipelineEditorModal: React.FC<PipelineEditorModalProps> = ({
     const timeoutId = setTimeout(async () => {
       setIsRunning(true);
       try {
-        const pipelineResult = await runPipeline(input, pipeline);
+        const pipelineResult = await runPipelineAsync(input, pipeline);
         setResult(pipelineResult);
       } catch (error) {
         setResult({
