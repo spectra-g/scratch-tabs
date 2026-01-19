@@ -10,7 +10,7 @@ const checksumOperations: OperationDefinition[] = [
     {
         id: "checksum.calculate",
         name: "Calculate Checksum",
-        description: "Calculate hash (MD5, SHA, etc.) for each line or the entire text",
+        description: "Calculate hash (MD5, SHA, etc.)",
         categories: ["hashing"],
         parameters: [
             {
@@ -27,35 +27,15 @@ const checksumOperations: OperationDefinition[] = [
                     { value: "CRC32", label: "CRC32" },
                 ],
             },
-            {
-                name: "mode",
-                label: "Process Mode",
-                type: "select",
-                default: "entire-text",
-                options: [
-                    { value: "entire-text", label: "Entire Text" },
-                    { value: "line-by-line", label: "Line by Line" },
-                ],
-            },
         ],
+        processingMode: "configurable",
         execute: async (input, params) => {
-            const algorithm = (params.algorithm as HashAlgorithm) || "SHA-256";
-            const mode = (params.mode as string) || "entire-text";
-
-            if (mode === "line-by-line") {
-                const lines = input.split("\n");
-                const results = await Promise.all(
-                    lines.map(async (line) => {
-                        if (!line.trim()) return "";
-                        const hashes = await hashText(line, [algorithm]);
-                        return hashes[algorithm];
-                    })
-                );
-                return results.join("\n");
-            } else {
-                const hashes = await hashText(input, [algorithm]);
-                return hashes[algorithm];
+            if (!input.trim()) {
+                return "";
             }
+            const algorithm = (params.algorithm as HashAlgorithm) || "SHA-256";
+            const hashes = await hashText(input, [algorithm]);
+            return hashes[algorithm];
         },
         keywords: ["hash", "checksum", "md5", "sha", "crc32"],
         source: "tablet",

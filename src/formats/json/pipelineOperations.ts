@@ -11,7 +11,6 @@
 import { operationRegistry } from "../../services/pipeline/OperationRegistry";
 import { OperationDefinition } from "../../services/pipeline/types";
 import {
-  formatJson,
   minifyJson,
   sortJsonKeys,
   flattenJson,
@@ -42,6 +41,7 @@ const jsonOperations: OperationDefinition[] = [
         description: "Number of spaces for indentation",
       },
     ],
+    processingMode: "entire",
     execute: (input, params) => {
       const indent = (params.indent as number) ?? 2;
       const json = JSON.parse(input);
@@ -57,6 +57,7 @@ const jsonOperations: OperationDefinition[] = [
     description: "Remove all whitespace from JSON",
     categories: ["json", "formatting"],
     parameters: [],
+    processingMode: "entire",
     execute: (input) => minifyJson(input),
     keywords: ["compress", "compact", "minimize"],
     icon: "Minimize2",
@@ -68,6 +69,7 @@ const jsonOperations: OperationDefinition[] = [
     description: "Alphabetically sort all object keys recursively",
     categories: ["json", "sorting"],
     parameters: [],
+    processingMode: "entire",
     execute: (input) => sortJsonKeys(input),
     keywords: ["alphabetize", "order", "organize"],
     icon: "ArrowDownAZ",
@@ -79,6 +81,7 @@ const jsonOperations: OperationDefinition[] = [
     description: "Convert nested objects to dot-notation keys (e.g., {a:{b:1}} → {\"a.b\":1})",
     categories: ["json"],
     parameters: [],
+    processingMode: "entire",
     execute: (input) => flattenJson(input),
     keywords: ["flat", "denormalize", "dot notation"],
     icon: "Minus",
@@ -90,6 +93,7 @@ const jsonOperations: OperationDefinition[] = [
     description: "Convert dot-notation keys back to nested objects",
     categories: ["json"],
     parameters: [],
+    processingMode: "entire",
     execute: (input) => unflattenJson(input),
     keywords: ["nest", "normalize", "expand"],
     icon: "Plus",
@@ -101,6 +105,7 @@ const jsonOperations: OperationDefinition[] = [
     description: "Remove null, undefined, empty strings, and empty objects/arrays",
     categories: ["json", "filtering"],
     parameters: [],
+    processingMode: "entire",
     execute: (input) => removeEmptyValues(input),
     keywords: ["clean", "strip", "null", "empty"],
     icon: "Eraser",
@@ -112,6 +117,7 @@ const jsonOperations: OperationDefinition[] = [
     description: "Remove // and /* */ style comments from JSON-like content",
     categories: ["json"],
     parameters: [],
+    processingMode: "entire",
     execute: (input) => removeComments(input),
     keywords: ["clean", "strip", "comments", "jsonc"],
     icon: "MessageSquareOff",
@@ -123,6 +129,7 @@ const jsonOperations: OperationDefinition[] = [
     description: "Wrap JSON in quotes as an escaped string",
     categories: ["json", "encoding"],
     parameters: [],
+    processingMode: "entire",
     execute: (input) => stringifyJson(input),
     keywords: ["escape", "quote", "string"],
     icon: "Quote",
@@ -134,6 +141,7 @@ const jsonOperations: OperationDefinition[] = [
     description: "Unwrap a stringified JSON back to normal JSON",
     categories: ["json", "encoding"],
     parameters: [],
+    processingMode: "entire",
     execute: (input) => unstringifyJsonContent(input),
     keywords: ["unescape", "unquote", "parse"],
     icon: "Ungroup",

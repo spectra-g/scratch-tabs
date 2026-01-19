@@ -218,8 +218,32 @@ export const PipelineCanvas: React.FC<PipelineCanvasProps> = ({
             </div>
 
             {/* Step Parameters (Expanded) */}
-            {isExpanded && operation && operation.parameters.length > 0 && (
+            {isExpanded && operation && (operation.parameters.length > 0 || operation.processingMode === "configurable") && (
               <div className="px-3 pb-3 pt-1 border-t border-base space-y-2">
+                {/* Configurable Processing Mode Toggle */}
+                {operation.processingMode === "configurable" && (
+                  <div className="pb-2 mb-2 border-b border-base/50">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={step.applyPerLine || false}
+                        onChange={(e) =>
+                          onUpdateStep(step.id, {
+                            applyPerLine: e.target.checked,
+                          })
+                        }
+                        onDragStart={(e) => e.stopPropagation()}
+                        draggable="false"
+                        className="rounded border-base text-primary focus:ring-primary"
+                      />
+                      <span className="text-xs font-medium text-main">Apply per line</span>
+                    </label>
+                    <p className="text-[10px] text-muted ml-6">
+                      Split input by newlines and process each line independently
+                    </p>
+                  </div>
+                )}
+
                 {operation.parameters.map((param) => (
                   <div key={param.name}>
                     <label className="block text-xs text-muted mb-1">

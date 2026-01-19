@@ -57,6 +57,7 @@ const base64Operations: OperationDefinition[] = [
         description: "Character encoding of the input text",
       },
     ],
+    processingMode: "configurable",
     execute: (input, params) => {
       const format = (params.format as string) ?? "standard";
       const encoding = (params.encoding as string) ?? "utf8";
@@ -89,6 +90,7 @@ const base64Operations: OperationDefinition[] = [
         description: "Character encoding for the output text",
       },
     ],
+    processingMode: "configurable",
     execute: (input, params) => {
       const format = (params.format as string) ?? "standard";
       const encoding = (params.encoding as string) ?? "utf8";

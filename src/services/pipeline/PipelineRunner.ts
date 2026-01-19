@@ -52,8 +52,9 @@ export async function runSingleOperation(
   operationId: string,
   input: string,
   params: Record<string, unknown> = {},
+  applyPerLine?: boolean,
 ): Promise<{ success: boolean; output: string; error?: string }> {
-  return executeSingleOperation(operationId, input, params);
+  return executeSingleOperation(operationId, input, params, applyPerLine);
 }
 
 /**

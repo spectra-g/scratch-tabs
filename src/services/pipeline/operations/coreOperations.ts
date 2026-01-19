@@ -33,12 +33,8 @@ const coreOperations: OperationDefinition[] = [
         description: "Remove leading and trailing whitespace from each line",
         categories: ["text", "cleanup"],
         parameters: [],
-        execute: (input) => {
-            return input
-                .split("\n")
-                .map((line) => line.trim())
-                .join("\n");
-        },
+        processingMode: "line",
+        execute: (input) => input.trim(),
         keywords: ["trim", "whitespace", "strip"],
         source: "core",
     },
@@ -98,12 +94,13 @@ const coreOperations: OperationDefinition[] = [
                 ],
             },
         ],
+        processingMode: "configurable",
         execute: (input, params) => {
             const mode = (params.mode as string) ?? "preserve-single";
             if (mode === "preserve-single") {
-                return input.split("\n").map(line => line.replace(/\s+/g, " ")).join("\n");
+                return input.replace(/\s+/g, " ");
             } else {
-                return input.split("\n").map(line => line.replace(/\s+/g, "")).join("\n");
+                return input.replace(/\s+/g, "");
             }
         },
         keywords: ["whitespace", "space", "collapse", "clean"],
@@ -117,6 +114,7 @@ const coreOperations: OperationDefinition[] = [
         description: "Convert all text to uppercase",
         categories: ["text", "case"],
         parameters: [],
+        processingMode: "entire",
         execute: (input) => input.toUpperCase(),
         keywords: ["upper", "capitalize", "case"],
         source: "core",
@@ -127,6 +125,7 @@ const coreOperations: OperationDefinition[] = [
         description: "Convert all text to lowercase",
         categories: ["text", "case"],
         parameters: [],
+        processingMode: "entire",
         execute: (input) => input.toLowerCase(),
         keywords: ["lower", "case"],
         source: "core",
@@ -137,6 +136,7 @@ const coreOperations: OperationDefinition[] = [
         description: "Capitalize the first letter of each word",
         categories: ["text", "case"],
         parameters: [],
+        processingMode: "entire",
         execute: (input) => {
             return input.replace(
                 /\w\S*/g,
@@ -152,9 +152,15 @@ const coreOperations: OperationDefinition[] = [
         description: "Capitalize the first letter of the text",
         categories: ["text", "case"],
         parameters: [],
+        processingMode: "configurable",
         execute: (input) => {
-            if (!input) return "";
-            return input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
+            return input
+                .split("\n")
+                .map((line) => {
+                    if (!line) return "";
+                    return line.charAt(0).toUpperCase() + line.slice(1).toLowerCase();
+                })
+                .join("\n");
         },
         keywords: ["sentence", "capitalize", "case"],
         source: "core",
@@ -165,12 +171,18 @@ const coreOperations: OperationDefinition[] = [
         description: "Convert text to camelCase",
         categories: ["text", "case"],
         parameters: [],
+        processingMode: "entire",
         execute: (input) => {
             return input
-                .replace(/(?:^\w|[A-Z]|\b\w)/g, (word, index) =>
-                    index === 0 ? word.toLowerCase() : word.toUpperCase(),
-                )
-                .replace(/\s+/g, "");
+                .split("\n")
+                .map((line) => {
+                    return line
+                        .replace(/(?:^\w|[A-Z]|\b\w)/g, (word, index) =>
+                            index === 0 ? word.toLowerCase() : word.toUpperCase(),
+                        )
+                        .replace(/[ \t]+/g, "");
+                })
+                .join("\n");
         },
         keywords: ["camel", "case", "programming"],
         source: "core",
@@ -181,10 +193,16 @@ const coreOperations: OperationDefinition[] = [
         description: "Convert text to PascalCase",
         categories: ["text", "case"],
         parameters: [],
+        processingMode: "entire",
         execute: (input) => {
             return input
-                .replace(/(?:^\w|[A-Z]|\b\w)/g, (word) => word.toUpperCase())
-                .replace(/\s+/g, "");
+                .split("\n")
+                .map((line) => {
+                    return line
+                        .replace(/(?:^\w|[A-Z]|\b\w)/g, (word) => word.toUpperCase())
+                        .replace(/[ \t]+/g, "");
+                })
+                .join("\n");
         },
         keywords: ["pascal", "case", "programming"],
         source: "core",
@@ -195,8 +213,12 @@ const coreOperations: OperationDefinition[] = [
         description: "Convert text to kebab-case",
         categories: ["text", "case"],
         parameters: [],
+        processingMode: "entire",
         execute: (input) => {
-            return input.toLowerCase().replace(/\s+/g, "-");
+            return input
+                .split("\n")
+                .map((line) => line.toLowerCase().replace(/[ \t]+/g, "-"))
+                .join("\n");
         },
         keywords: ["kebab", "case", "dash"],
         source: "core",
@@ -207,8 +229,12 @@ const coreOperations: OperationDefinition[] = [
         description: "Convert text to snake_case",
         categories: ["text", "case"],
         parameters: [],
+        processingMode: "entire",
         execute: (input) => {
-            return input.toLowerCase().replace(/\s+/g, "_");
+            return input
+                .split("\n")
+                .map((line) => line.toLowerCase().replace(/[ \t]+/g, "_"))
+                .join("\n");
         },
         keywords: ["snake", "case", "underscore"],
         source: "core",
@@ -219,12 +245,18 @@ const coreOperations: OperationDefinition[] = [
         description: "Convert text to SCREAMING_SNAKE_CASE",
         categories: ["text", "case"],
         parameters: [],
+        processingMode: "entire",
         execute: (input) => {
             return input
-                .replace(/([a-z])([A-Z])/g, "$1_$2")
-                .toUpperCase()
-                .replace(/[^A-Z0-9]+/g, "_")
-                .replace(/^_+|_+$/g, "");
+                .split("\n")
+                .map((line) => {
+                    return line
+                        .replace(/([a-z])([A-Z])/g, "$1_$2")
+                        .toUpperCase()
+                        .replace(/[^A-Z0-9]+/g, "_")
+                        .replace(/^_+|_+$/g, "");
+                })
+                .join("\n");
         },
         keywords: ["screaming", "snake", "case", "constant"],
         source: "core",
@@ -235,6 +267,7 @@ const coreOperations: OperationDefinition[] = [
         description: "Flip the case of each character",
         categories: ["text", "case"],
         parameters: [],
+        processingMode: "entire",
         execute: (input) => {
             return input
                 .split("")
@@ -252,6 +285,7 @@ const coreOperations: OperationDefinition[] = [
         description: "aLtErNaTiNg CaSe",
         categories: ["text", "case"],
         parameters: [],
+        processingMode: "entire",
         execute: (input) => {
             return input
                 .split("")
@@ -260,7 +294,7 @@ const coreOperations: OperationDefinition[] = [
                 )
                 .join("");
         },
-        keywords: ["alternating", "sarcasm", "case"],
+        keywords: ["alternating", "swirl", "case", "meme"],
         source: "core",
     },
 
@@ -510,28 +544,25 @@ const coreOperations: OperationDefinition[] = [
                 ],
             },
         ],
-        execute: (input, params) => {
+        processingMode: "line",
+        execute: (input, params, context) => {
             const style = (params.style as string) ?? "numeric";
-            return input
-                .split("\n")
-                .map((line, index) => {
-                    let prefix: string;
-                    switch (style) {
-                        case "numeric":
-                            prefix = `${index + 1}. `;
-                            break;
-                        case "roman":
-                            prefix = `${toRoman(index + 1)}. `;
-                            break;
-                        case "alpha":
-                            prefix = `${toAlpha(index + 1)}. `;
-                            break;
-                        default:
-                            prefix = `${index + 1}. `;
-                    }
-                    return prefix + line;
-                })
-                .join("\n");
+            const index = context.lineIndex ?? 0;
+            let prefix: string;
+            switch (style) {
+                case "numeric":
+                    prefix = `${index + 1}. `;
+                    break;
+                case "roman":
+                    prefix = `${toRoman(index + 1)}. `;
+                    break;
+                case "alpha":
+                    prefix = `${toAlpha(index + 1)}. `;
+                    break;
+                default:
+                    prefix = `${index + 1}. `;
+            }
+            return prefix + input;
         },
         keywords: ["number", "index", "list"],
         source: "core",
@@ -584,25 +615,29 @@ const coreOperations: OperationDefinition[] = [
                 name: "char",
                 label: "Padding Character",
                 type: "string",
-                default: " ",
+                default: "",
             },
         ],
+        processingMode: "line",
         execute: (input, params) => {
             const length = (params.length as number) ?? 20;
             const align = (params.align as string) ?? "left";
-            const char = (params.char as string) ?? " ";
+            const char = (params.char as string) || " ";
 
-            return input
-                .split("\n")
-                .map((line) => {
-                    if (line.length >= length) return line;
-                    const padding = char.repeat(length - line.length);
-                    if (align === "left") return line + padding;
-                    if (align === "right") return padding + line;
-                    const leftPadLen = Math.floor(padding.length / 2);
-                    return char.repeat(leftPadLen) + line + char.repeat(padding.length - leftPadLen);
-                })
-                .join("\n");
+            if (input.length >= length) return input;
+
+            if (align === "left") {
+                return input.padEnd(length, char);
+            }
+            if (align === "right") {
+                return input.padStart(length, char);
+            }
+
+            // Center padding
+            const totalPadding = length - input.length;
+            const leftPadLen = Math.floor(totalPadding / 2);
+            const leftPart = "".padStart(leftPadLen, char);
+            return (leftPart + input).padEnd(length, char);
         },
         keywords: ["pad", "align", "formatting"],
         source: "core",
@@ -640,20 +675,16 @@ const coreOperations: OperationDefinition[] = [
                 default: 2,
             },
         ],
+        processingMode: "line",
         execute: (input, params) => {
             const action = (params.action as string) ?? "add";
             const type = (params.type as string) ?? "spaces";
             const amount = (params.amount as number) ?? 2;
             const indentStr = type === "spaces" ? " ".repeat(amount) : "\t".repeat(amount);
 
-            return input
-                .split("\n")
-                .map((line) => {
-                    if (action === "add") return indentStr + line;
-                    if (line.startsWith(indentStr)) return line.slice(indentStr.length);
-                    return line;
-                })
-                .join("\n");
+            if (action === "add") return indentStr + input;
+            if (input.startsWith(indentStr)) return input.slice(indentStr.length);
+            return input;
         },
         keywords: ["indent", "formatting", "spaces", "tabs"],
         source: "core",
@@ -770,12 +801,10 @@ const coreOperations: OperationDefinition[] = [
                 placeholder: "Enter prefix text...",
             },
         ],
+        processingMode: "configurable",
         execute: (input, params) => {
             const prefix = (params.prefix as string) ?? "";
-            return input
-                .split("\n")
-                .map((line) => prefix + line)
-                .join("\n");
+            return prefix + input;
         },
         keywords: ["prefix", "prepend", "start"],
         source: "core",
@@ -795,12 +824,10 @@ const coreOperations: OperationDefinition[] = [
                 placeholder: "Enter suffix text...",
             },
         ],
+        processingMode: "configurable",
         execute: (input, params) => {
             const suffix = (params.suffix as string) ?? "";
-            return input
-                .split("\n")
-                .map((line) => line + suffix)
-                .join("\n");
+            return input + suffix;
         },
         keywords: ["suffix", "append", "end"],
         source: "core",

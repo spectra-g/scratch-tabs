@@ -4,41 +4,25 @@
  * Tests each operation's execute function independently.
  */
 
-import { OperationDefinition } from "../types";
+import { executeSingleOperation } from "../pipelineExecutor";
 
 // Import the operations file to register them
 import "../operations/coreOperations";
 import { operationRegistry } from "../OperationRegistry";
 
 describe("Core Pipeline Operations", () => {
-    // Helper to get an operation by ID
-    const getOperation = (id: string): OperationDefinition => {
-        const op = operationRegistry.getById(id);
-        if (!op) {
-            throw new Error(`Operation ${id} not found`);
-        }
-        return op;
-    };
 
-    // Helper to execute an operation
     const execute = async (
         id: string,
         input: string,
         params: Record<string, unknown> = {},
+        applyPerLine?: boolean,
     ): Promise<string> => {
-        const op = getOperation(id);
-        const context = {
-            stepIndex: 0,
-            totalSteps: 1,
-            variables: new Map<string, string>(),
-            getVariable: (_name: string) => undefined,
-            setVariable: (_name: string, _value: string) => { },
-            _input: input,
-            _previousOutput: "",
-            _stepIndex: 0,
-        };
-        const result = await op.execute(input, params, context);
-        return result;
+        const result = await executeSingleOperation(id, input, params, applyPerLine);
+        if (!result.success) {
+            throw new Error(result.error);
+        }
+        return result.output;
     };
 
     describe("Whitespace & Cleanup Operations", () => {
@@ -88,7 +72,7 @@ describe("Core Pipeline Operations", () => {
                 const input = "hello   world\n  multiple    spaces  ";
                 const result = await execute("text.remove-extra-whitespace", input, {
                     mode: "preserve-single",
-                });
+                }, true);
                 expect(result).toBe("hello world\n multiple spaces ");
             });
 
@@ -96,7 +80,7 @@ describe("Core Pipeline Operations", () => {
                 const input = "hello   world\n  multiple    spaces  ";
                 const result = await execute("text.remove-extra-whitespace", input, {
                     mode: "remove-all",
-                });
+                }, true);
                 expect(result).toBe("helloworld\nmultiplespaces");
             });
         });
@@ -150,6 +134,11 @@ describe("Core Pipeline Operations", () => {
             it("should handle PascalCase input", async () => {
                 const result = await execute("text.camel-case", "HelloWorld");
                 expect(result).toBe("helloWorld");
+            });
+
+            it("should preserve newlines", async () => {
+                const result = await execute("text.camel-case", "hello world\nfoo bar");
+                expect(result).toBe("helloWorld\nfooBar");
             });
         });
 
@@ -332,7 +321,7 @@ describe("Core Pipeline Operations", () => {
                 const input = "line1\nline2\nline3";
                 const result = await execute("text.add-prefix", input, {
                     prefix: ">> ",
-                });
+                }, true);
                 expect(result).toBe(">> line1\n>> line2\n>> line3");
             });
 
@@ -348,7 +337,7 @@ describe("Core Pipeline Operations", () => {
                 const input = "line1\nline2\nline3";
                 const result = await execute("text.add-suffix", input, {
                     suffix: " <<",
-                });
+                }, true);
                 expect(result).toBe("line1 <<\nline2 <<\nline3 <<");
             });
 
@@ -467,6 +456,23 @@ describe("Core Pipeline Operations", () => {
                 const result = await execute("text.pad-lines", input, { length: 3, align: "right", char: "." });
                 expect(result).toBe("..a\n.bc");
             });
+
+            it("should handle multi-character padding and truncate to length", async () => {
+                const input = "abc";
+                const result = await execute("text.pad-lines", input, { length: 10, align: "left", char: "- " });
+                expect(result).toBe("abc- - - -");
+                expect(result.length).toBe(10);
+            });
+
+            it("should handle multi-character center padding", async () => {
+                const input = "abc";
+                const result = await execute("text.pad-lines", input, { length: 10, align: "center", char: "- " });
+                // total 7 pad chars. left = 3, right = 4.
+                // left: "- -" (truncate - - to 3) -> "- -"
+                // total: "- -abc- - -" (length 10)
+                expect(result).toBe("- -abc- - ");
+                expect(result.length).toBe(10);
+            });
         });
 
         describe("text.change-indentation", () => {
@@ -546,6 +552,7 @@ describe("Core Pipeline Operations", () => {
             );
 
             const step = createStep("text.add-prefix", { prefix: ">> " });
+            step.applyPerLine = true;
             const pipeline = createPipeline();
             pipeline.steps.push(step);
 
@@ -561,6 +568,7 @@ describe("Core Pipeline Operations", () => {
             );
 
             const step = createStep("text.add-suffix", { suffix: " <<" });
+            step.applyPerLine = true;
             const pipeline = createPipeline();
             pipeline.steps.push(step);
 
@@ -597,7 +605,9 @@ describe("Core Pipeline Operations", () => {
             const pipeline = createPipeline();
             pipeline.steps.push(createStep("text.trim"));
             pipeline.steps.push(createStep("text.uppercase"));
-            pipeline.steps.push(createStep("text.add-prefix", { prefix: "> " }));
+            const prefixStep = createStep("text.add-prefix", { prefix: "> " });
+            prefixStep.applyPerLine = true;
+            pipeline.steps.push(prefixStep);
 
             const result = await runPipeline("  hello world  ", pipeline);
 

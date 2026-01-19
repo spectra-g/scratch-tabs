@@ -24,7 +24,7 @@ const DEFAULT_OPTIONS: Required<PipelineExecutionOptions> = {
   totalTimeout: 30000,
   maxSteps: 50,
   maxInputSize: 10 * 1024 * 1024, // 10MB
-  onStepComplete: () => {},
+  onStepComplete: () => { },
 };
 
 /**
@@ -91,9 +91,39 @@ export async function executeStep(
   }
 
   try {
-    const output = await operation.execute(input, step.params, context);
-    const stringOutput =
-      typeof output === "string" ? output : String(output ?? "");
+    // Determine effective processing mode
+    let mode = operation.processingMode || "entire";
+    if (mode === "configurable") {
+      mode = step.applyPerLine ? "line" : "entire";
+    }
+
+    let stringOutput: string;
+
+    if (mode === "line") {
+      const lines = input.split("\n");
+      const processedLines = await Promise.all(
+        lines.map(async (line, idx) => {
+          // Add line info to context for this specific line execution
+          const lineContext: ExecutionContext = {
+            ...context,
+            lineIndex: idx,
+            totalLines: lines.length,
+          };
+          const lineResult = await operation.execute(
+            line,
+            step.params,
+            lineContext,
+          );
+          return typeof lineResult === "string"
+            ? lineResult
+            : String(lineResult ?? "");
+        }),
+      );
+      stringOutput = processedLines.join("\n");
+    } else {
+      const output = await operation.execute(input, step.params, context);
+      stringOutput = typeof output === "string" ? output : String(output ?? "");
+    }
 
     return {
       stepId: step.id,
@@ -236,6 +266,7 @@ export async function executeSingleOperation(
   operationId: string,
   input: string,
   params: Record<string, unknown> = {},
+  applyPerLine?: boolean,
 ): Promise<{ success: boolean; output: string; error?: string }> {
   const operation = operationRegistry.getById(operationId);
 
@@ -243,17 +274,45 @@ export async function executeSingleOperation(
     return {
       success: false,
       output: input,
-      error: `Operation '${operationId}' not found`,
+      error: `Operation '${operationId}' not found in registry`,
     };
   }
 
   const context = createExecutionContext(input, 0, 1, input);
 
   try {
-    const output = await operation.execute(input, params, context);
+    // Determine effective processing mode
+    let mode = operation.processingMode || "entire";
+    if (mode === "configurable") {
+      mode = applyPerLine ? "line" : "entire";
+    }
+
+    let finalOutput: string;
+
+    if (mode === "line") {
+      const lines = input.split("\n");
+      const processedLines = await Promise.all(
+        lines.map(async (line, idx) => {
+          const lineContext: ExecutionContext = {
+            ...context,
+            lineIndex: idx,
+            totalLines: lines.length,
+          };
+          const lineResult = await operation.execute(line, params, lineContext);
+          return typeof lineResult === "string"
+            ? lineResult
+            : String(lineResult ?? "");
+        }),
+      );
+      finalOutput = processedLines.join("\n");
+    } else {
+      const output = await operation.execute(input, params, context);
+      finalOutput = typeof output === "string" ? output : String(output ?? "");
+    }
+
     return {
       success: true,
-      output: typeof output === "string" ? output : String(output ?? ""),
+      output: finalOutput,
     };
   } catch (error) {
     return {

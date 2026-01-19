@@ -51,8 +51,8 @@ describe("Checksum Pipeline Operations", () => {
         it("should calculate MD5 line by line", async () => {
             const step = createStep("checksum.calculate", {
                 algorithm: "MD5",
-                mode: "line-by-line"
             });
+            step.applyPerLine = true;
             const pipeline = createPipeline();
             pipeline.steps = [step];
 
@@ -83,8 +83,8 @@ describe("Checksum Pipeline Operations", () => {
         it("should skip empty lines in line-by-line mode", async () => {
             const step = createStep("checksum.calculate", {
                 algorithm: "MD5",
-                mode: "line-by-line"
             });
+            step.applyPerLine = true;
             const pipeline = createPipeline();
             pipeline.steps = [step];
 

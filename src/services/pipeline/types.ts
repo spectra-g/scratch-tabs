@@ -98,6 +98,14 @@ export interface OperationDefinition {
 
   /** Source of the operation */
   source?: "core" | "format" | "tablet";
+
+  /**
+   * Processing mode for the operation.
+   * - 'entire': Passes the full string input (default).
+   * - 'line': Automatically splits input by \n and applies to each line.
+   * - 'configurable': User can toggle between 'entire' and 'line' via UI.
+   */
+  processingMode?: "entire" | "line" | "configurable";
 }
 
 /**
@@ -132,6 +140,12 @@ export interface ExecutionContext {
 
   /** Current step index (alias for stepIndex) */
   _stepIndex: number;
+
+  /** Current line index (0-based) when in 'line' processing mode */
+  lineIndex?: number;
+
+  /** Total number of lines when in 'line' processing mode */
+  totalLines?: number;
 }
 
 /**
@@ -155,6 +169,12 @@ export interface PipelineStep {
    * Reserved for future variable interpolation implementation
    */
   assignTo?: string;
+
+  /**
+   * Whether to apply the operation per-line.
+   * Only applicable if operation.processingMode is 'configurable'.
+   */
+  applyPerLine?: boolean;
 }
 
 /**
