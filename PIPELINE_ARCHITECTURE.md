@@ -496,7 +496,7 @@ Output: "private static final String HELLO WORLD = "hello_world";"
 
 **Completed tasks:**
 - ✅ Add "Pipeline" to editor conte- [x] Phase 2: Migrate generic BatchTools operations (37 operations)
-- [/] Phase 4: Extract operations from specific tablets (Checksum completed)
+- [/] Phase 4: Extract operations from specific tablets (Checksum, URL completed)
 - [ ] Phase 5: Extract operations from format modules
 - [x] Phase 6: UX Refinements (Drag-and-drop fix, multi-line inputs)
 - ⏳ Add "Run Last Pipeline" quick action
@@ -595,14 +595,14 @@ Output: "private static final String HELLO WORLD = "hello_world";"
 
 ### From Tablets
 
-| Tablet | Operations | Category |
-|--------|------------|----------|
-| Base64 | Encode, Decode | Encoding |
-| Checksum | MD5, SHA1, SHA256, SHA512 | Encoding |
-| JWT | Decode Header, Decode Payload | Encoding |
-| UUID | Generate v1, v4, v5 | Utilities |
-| URL | Encode, Decode, Parse | Encoding |
-| DateTime | Parse, Format, Convert TZ | Utilities |
+| Tablet | Operations | Category | Status |
+|--------|------------|----------|--------|
+| Base64 | Encode, Decode | Encoding | ✅ |
+| Checksum | MD5, SHA1, SHA256, SHA512 | Hashing | ✅ |
+| URL | Encode, Decode, Parse, Extract Host/Path/Query, To cURL, Compose | Encoding, Parsing | ✅ |
+| JWT | Decode Header, Decode Payload | Encoding | ⏳ |
+| UUID | Generate v1, v4, v5 | Utilities | ⏳ |
+| DateTime | Parse, Format, Convert TZ | Utilities | ⏳ |
 
 ---
 
@@ -722,9 +722,12 @@ When Phase 4 is complete:
 | File | Purpose | Status |
 |------|---------|--------|
 | `src/formats/json/operations.ts` | JSON operations | ✅ |
-| `src/tablets/base64/operations.ts` | Base64 encode/decode | ✅ |
+| `src/tablets/base64/pipelineOperations.ts` | Base64 encode/decode | ✅ |
+| `src/tablets/checksum/pipelineOperations.ts` | Checksum operations (MD5, SHA, CRC32) | ✅ |
+| `src/tablets/urlparser/pipelineOperations.ts` | URL operations (8 ops, 44 tests) | ✅ |
 | `src/components/BatchTools/pipelineOperations.ts` | Migrated text operations (15) | ✅ |
 | `src/components/BatchTools/__tests__/pipelineOperations.test.ts` | Unit tests (39) | ✅ |
+| `src/services/pipeline/__tests__/urlParserOperations.test.ts` | URL operations tests (44) | ✅ |
 | `src/components/BatchTools/transformations.ts` | **LEGACY** - remaining operations to port | ⏳ |
 
 ### State Management
@@ -753,10 +756,10 @@ When Phase 4 is complete:
    - Add unit tests to `pipelineOperations.test.ts`
 
 2. **Tablet operations** - Extract from tablets to pipeline:
-   - `src/tablets/checksum/` → MD5, SHA1, SHA256, SHA512
-   - `src/tablets/jwt/` → Decode header, Decode payload
-   - `src/tablets/uuid/` → Generate v1, v4, v5
-   - `src/tablets/url/` → Encode, Decode, Parse
+   - ✅ `src/tablets/checksum/` → MD5, SHA1, SHA256, SHA512, CRC32
+   - ✅ `src/tablets/urlparser/` → Encode, Decode, Parse, Extract, cURL, Compose (8 ops)
+   - ⏳ `src/tablets/jwt/` → Decode header, Decode payload
+   - ⏳ `src/tablets/uuid/` → Generate v1, v4, v5
 
 3. **Final cleanup** - After all operations migrated:
    - Move `pipelineOperations.ts` to `src/services/pipeline/operations/text.ts`
