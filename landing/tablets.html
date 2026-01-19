@@ -168,7 +168,7 @@
           </div>
 
           <!-- REST Client -->
-          <div class="card-sharp p-5 lg:row-span-2 flex flex-col">
+          <div class="card-sharp p-5 lg:col-span-2 flex flex-col">
             <div class="flex justify-between items-start mb-3">
               <h3 class="text-emerald-500 font-mono text-xs">// API Testing</h3>
               <span class="text-gray-700 font-mono text-xs">rest_client</span>
@@ -181,7 +181,7 @@
               <span class="keyword-badge">headers</span>
               <span class="keyword-badge">cURL import</span>
             </div>
-            <img src="https://scratchtabs.b-cdn.net/layer-02-rest.png" alt="REST Client interface" class="w-full h-auto border border-gray-800 cursor-pointer hover:border-emerald-500 transition-colors flex-grow object-cover mt-auto" onclick="openModal(this.src)">
+            <img src="https://scratchtabs.b-cdn.net/layer-02-rest.png" alt="REST Client interface" class="w-full h-auto max-h-48 border border-gray-800 cursor-pointer hover:border-emerald-500 transition-colors object-cover mt-auto" onclick="openModal(this.src)">
           </div>
 
           <!-- Quick Access Cards -->
@@ -217,13 +217,6 @@
             <div>
               <span class="text-white text-sm font-mono">URL Parser</span>
               <p class="text-gray-600 text-xs">Deconstruct any URL</p>
-            </div>
-            <span class="text-emerald-500 text-xs">-></span>
-          </div>
-          <div class="card-sharp p-4 flex items-center justify-between">
-            <div>
-              <span class="text-white text-sm font-mono">Cron Builder</span>
-              <p class="text-gray-600 text-xs">Natural language cron</p>
             </div>
             <span class="text-emerald-500 text-xs">-></span>
           </div>
@@ -487,21 +480,21 @@
         </p>
       </div>
       <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-        <a href="index.html" class="card-sharp p-8 block group">
-          <div class="flex justify-between items-start mb-4">
-            <h3 class="text-emerald-500 font-mono text-sm">// THE_PITCH</h3>
-            <span class="text-gray-600 group-hover:text-emerald-500 transition-colors">-></span>
-          </div>
-          <h4 class="text-white font-bold text-xl mb-2">Why Scratch Tabs?</h4>
-          <p class="text-gray-400 text-sm">See how Transformation Pipelines and local-first architecture replace your scattered browser tabs.</p>
-        </a>
         <a href="features.html" class="card-sharp p-8 block group">
           <div class="flex justify-between items-start mb-4">
+            <span class="text-gray-600 group-hover:text-emerald-500 transition-colors">&lt;-</span>
             <h3 class="text-emerald-500 font-mono text-sm">// THE_WORKBENCH</h3>
-            <span class="text-gray-600 group-hover:text-emerald-500 transition-colors">-></span>
           </div>
           <h4 class="text-white font-bold text-xl mb-2">The Intelligent Workbench</h4>
           <p class="text-gray-400 text-sm">Monaco editor, Smart Views for JSON/CSV/Markdown, Split View, Diff Engine, and workspace management.</p>
+        </a>
+        <a href="changelog.html" class="card-sharp p-8 block group">
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-emerald-500 font-mono text-sm">// THE_CHANGELOG</h3>
+            <span class="text-gray-600 group-hover:text-emerald-500 transition-colors">-></span>
+          </div>
+          <h4 class="text-white font-bold text-xl mb-2">Updates & Evolution</h4>
+          <p class="text-gray-400 text-sm">See what's new, what's improved, and what's coming next in Scratch Tabs.</p>
         </a>
       </div>
     </div>
@@ -537,9 +530,6 @@
             class="text-gray-500 hover:text-emerald-500 font-mono text-xs">KO-FI</a>
         </div>
 
-        <div class="text-gray-600 font-mono text-xs">
-          Built for developers, by developers.
-        </div>
       </div>
       <div class="mt-8 text-center text-gray-700 text-[10px] font-mono">
         &copy; <span id="currentYear"></span> SCRATCH_TABS. NO_TRACKING. NO_ACCOUNTS. 100%_CLIENT_SIDE.
