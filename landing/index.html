@@ -247,31 +247,79 @@
             <div class="h-8 bg-[#1a1a1a] border-b border-gray-800 flex items-center px-3 space-x-2 mb-1">
               <div class="w-3 h-3 rounded-full bg-red-500/20"></div>
               <div class="w-3 h-3 rounded-full bg-yellow-500/20"></div>
-              <span class="text-[10px] text-gray-500 font-mono ml-2">pipeline_editor.tsx</span>
+              <span class="text-[10px] text-gray-500 font-mono ml-2">extract_emails.pipeline</span>
             </div>
-            <div class="bg-[#050505] p-6 relative min-h-[300px] flex flex-col gap-4">
-              <div class="p-3 bg-[#111] border border-gray-700 rounded flex justify-between items-center shadow-lg relative z-10">
-                <span class="text-emerald-500 font-mono text-xs">INPUT</span>
-                <span class="text-gray-400 text-xs truncate max-w-[150px]">eyJhbGciOiJIUzI1NiJ9...</span>
+            <div class="bg-[#050505] p-4 md:p-6 relative flex flex-col gap-3">
+              <!-- INPUT -->
+              <div class="p-3 bg-[#111] border border-gray-700 rounded shadow-lg">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-emerald-500 font-mono text-xs">INPUT</span>
+                  <span class="text-gray-600 text-[10px]">api.log</span>
+                </div>
+                <div class="font-mono text-[10px] text-gray-500 truncate">2024-01-15 INFO {"data":"{\"users\":[{\"email\":\"alice@...</div>
               </div>
-              <div class="h-6 w-0.5 bg-gray-700 mx-auto"></div>
-              <div class="p-3 bg-[#1a1a1a] border border-emerald-500/50 rounded flex justify-between items-center shadow-lg relative z-10">
+
+              <div class="h-4 w-0.5 bg-gradient-to-b from-gray-700 to-emerald-500/50 mx-auto"></div>
+
+              <!-- Step 1 -->
+              <div class="p-2 px-3 bg-[#1a1a1a] border border-emerald-500/30 rounded flex justify-between items-center shadow-lg">
                 <div class="flex items-center gap-2">
                   <span class="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center text-[10px]">1</span>
-                  <span class="text-white font-mono text-sm">Base64 Decode</span>
+                  <span class="text-white font-mono text-xs">Regex Extract</span>
+                  <span class="text-gray-600 text-[10px] hidden sm:inline">\{.*\}</span>
                 </div>
-                <span class="text-gray-500 text-[10px]">SUCCESS</span>
+                <span class="text-emerald-500/70 text-[10px]">✓</span>
               </div>
-              <div class="h-6 w-0.5 bg-gray-700 mx-auto"></div>
-              <div class="p-3 bg-[#1a1a1a] border border-emerald-500/50 rounded flex justify-between items-center shadow-lg relative z-10">
+
+              <div class="h-4 w-0.5 bg-emerald-500/30 mx-auto"></div>
+
+              <!-- Step 2 -->
+              <div class="p-2 px-3 bg-[#1a1a1a] border border-emerald-500/30 rounded flex justify-between items-center shadow-lg">
                 <div class="flex items-center gap-2">
                   <span class="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center text-[10px]">2</span>
-                  <span class="text-white font-mono text-sm">JSON Prettify</span>
+                  <span class="text-white font-mono text-xs">Unescape Strings</span>
                 </div>
-                <span class="text-gray-500 text-[10px]">SUCCESS</span>
+                <span class="text-emerald-500/70 text-[10px]">✓</span>
               </div>
-              <div class="mt-4 p-3 bg-[#111] border border-gray-700 rounded border-l-2 border-l-emerald-500 font-mono text-xs text-gray-300">
-                {<br/>&nbsp;&nbsp;"alg": "HS256",<br/>&nbsp;&nbsp;"typ": "JWT"<br/>}
+
+              <div class="h-4 w-0.5 bg-emerald-500/30 mx-auto"></div>
+
+              <!-- Step 3 -->
+              <div class="p-2 px-3 bg-[#1a1a1a] border border-emerald-500/30 rounded flex justify-between items-center shadow-lg">
+                <div class="flex items-center gap-2">
+                  <span class="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center text-[10px]">3</span>
+                  <span class="text-white font-mono text-xs">Parse JSON</span>
+                </div>
+                <span class="text-emerald-500/70 text-[10px]">✓</span>
+              </div>
+
+              <div class="h-4 w-0.5 bg-emerald-500/30 mx-auto"></div>
+
+              <!-- Step 4 -->
+              <div class="p-2 px-3 bg-[#1a1a1a] border border-emerald-500/50 rounded flex justify-between items-center shadow-lg">
+                <div class="flex items-center gap-2">
+                  <span class="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center text-[10px]">4</span>
+                  <span class="text-white font-mono text-xs">JMESPath</span>
+                  <span class="text-gray-600 text-[10px] hidden sm:inline">data.users[*].email</span>
+                </div>
+                <span class="text-emerald-500/70 text-[10px]">✓</span>
+              </div>
+
+              <div class="h-4 w-0.5 bg-gradient-to-b from-emerald-500/50 to-emerald-500 mx-auto"></div>
+
+              <!-- OUTPUT -->
+              <div class="p-3 bg-[#111] border border-gray-700 rounded border-l-2 border-l-emerald-500 shadow-lg">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-emerald-500 font-mono text-xs">OUTPUT</span>
+                  <span class="text-emerald-500/50 text-[10px]">3 results</span>
+                </div>
+                <div class="font-mono text-xs text-gray-300">
+                  [<br/>
+                  <span class="text-emerald-400">&nbsp;&nbsp;"alice@acme.io"</span>,<br/>
+                  <span class="text-emerald-400">&nbsp;&nbsp;"bob@acme.io"</span>,<br/>
+                  <span class="text-emerald-400">&nbsp;&nbsp;"carol@acme.io"</span><br/>
+                  ]
+                </div>
               </div>
             </div>
           </div>
