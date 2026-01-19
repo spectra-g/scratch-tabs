@@ -144,23 +144,8 @@
               <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Transformation Pipeline Editor:</strong> 3-panel interface with operations palette, pipeline canvas, and live preview - chain operations like Trim → Uppercase → Base64 Encode → JSON Format</span></li>
               <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>37+ Pipeline Operations:</strong> Text processing (case conversion, trim, whitespace), line operations (sort, reverse, dedupe, shuffle), filtering (regex, keyword, keep first/last N), encoding (Base64, URL), checksums, and redaction</span></li>
               <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Drag-and-Drop Reordering:</strong> Rearrange pipeline steps with smooth drag-and-drop - each step can be enabled/disabled individually</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Persistent Pipelines:</strong> Save named pipelines to IndexedDB and load them across sessions with favorites support</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Persistent Pipelines:</strong> Save named pipelines and load them across sessions</span></li>
               <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Real-Time Preview:</strong> Live output preview with execution stats (duration, character counts) as you build your pipeline</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Web Worker Execution:</strong> Heavy operations run in a background worker to keep the UI responsive, with automatic timeout handling</span></li>
-            </ul>
-
-            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># improvements</h4>
-            <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Editor Context Menu Integration:</strong> Access Pipeline directly from the editor's right-click menu under Tools</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Auto-Expanding Parameters:</strong> Steps with configurable parameters automatically expand when added to the canvas</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Multi-Category Operations:</strong> Operations can appear in multiple categories for easier discovery (e.g., JSON Format appears in both JSON and Formatting)</span></li>
-            </ul>
-
-            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># technical_highlights</h4>
-            <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span>Modular operation registry with self-registration pattern - formats and tablets register their own operations</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span>Testable executor pattern with 39+ unit tests for core operations</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span>True timeout support via Web Worker termination for runaway operations</span></li>
             </ul>
           </div>
         </div>

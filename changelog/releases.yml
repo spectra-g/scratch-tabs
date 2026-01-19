@@ -16,19 +16,8 @@ releases:
           - "**Transformation Pipeline Editor:** 3-panel interface with operations palette, pipeline canvas, and live preview - chain operations like Trim → Uppercase → Base64 Encode → JSON Format"
           - "**37+ Pipeline Operations:** Text processing (case conversion, trim, whitespace), line operations (sort, reverse, dedupe, shuffle), filtering (regex, keyword, keep first/last N), encoding (Base64, URL), checksums, and redaction"
           - "**Drag-and-Drop Reordering:** Rearrange pipeline steps with smooth drag-and-drop - each step can be enabled/disabled individually"
-          - "**Persistent Pipelines:** Save named pipelines to IndexedDB and load them across sessions with favorites support"
+          - "**Persistent Pipelines:** Save named pipelines and load them across sessions"
           - "**Real-Time Preview:** Live output preview with execution stats (duration, character counts) as you build your pipeline"
-          - "**Web Worker Execution:** Heavy operations run in a background worker to keep the UI responsive, with automatic timeout handling"
-      - name: "🔧 Improvements"
-        changes:
-          - "**Editor Context Menu Integration:** Access Pipeline directly from the editor's right-click menu under Tools"
-          - "**Auto-Expanding Parameters:** Steps with configurable parameters automatically expand when added to the canvas"
-          - "**Multi-Category Operations:** Operations can appear in multiple categories for easier discovery (e.g., JSON Format appears in both JSON and Formatting)"
-      - name: "🔧 Technical Highlights"
-        changes:
-          - "Modular operation registry with self-registration pattern - formats and tablets register their own operations"
-          - "Testable executor pattern with 39+ unit tests for core operations"
-          - "True timeout support via Web Worker termination for runaway operations"
 
   - version: "1.17.0"
     type: "release"
