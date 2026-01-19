@@ -258,9 +258,9 @@ const urlParserOperations: OperationDefinition[] = [
     description: "Convert a URL to a cURL command",
     categories: ["conversion"],
     parameters: [],
-    processingMode: "entire",
+    processingMode: "configurable",
     execute: (input) => {
-      if (!input.trim()) return "curl";
+      if (!input.trim()) return "";
       return toCurl(input.trim());
     },
     keywords: ["url", "curl", "command", "http", "request"],

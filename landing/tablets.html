@@ -8,51 +8,48 @@
   ███████║╚██████╗██║  ██║██║  ██║   ██║   ╚██████╗██║  ██║       ██║   ██║  ██║██████╔╝███████║
   ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝       ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚══════╝
 
-  👋 Hey developer! You found the source. Nice.
+  A privacy-first developer toolkit that runs 100% in your browser.
+  No servers. No tracking. No accounts. Just pure client-side power.
 
-  📝 What is this?
-     A privacy-first developer toolkit that runs 100% in your browser.
-     No servers. No tracking. No accounts. Just pure client-side power.
+  Privacy Philosophy:
+    - Your data never leaves your device
+    - Zero analytics, zero cookies
+    - All processing happens locally via IndexedDB
+    - Even our CDN only serves static assets
 
-  🔒 Privacy Philosophy:
-     • Your data never leaves your device
-     • Zero analytics, zero cookies
-     • All processing happens locally via IndexedDB
-     • Even our CDN only serves static assets
+  Tech Stack:
+    React 18 - TypeScript - Monaco Editor - Zustand - IndexedDB
+    Built with care for developers who care about privacy.
 
-  🛠️ Tech Stack:
-     React 18 • TypeScript • Monaco Editor • Zustand • IndexedDB
-     Built with care for developers who care about privacy.
+  Contribute:
+    github.com/spectra-g/scratch-tabs-feedback
 
-  💡 Contribute:
-     github.com/spectra-g/scratch-tabs-feedback
-
-  ⚡ Made with code and coffee by developers, for developers.
+  Made with code and coffee by developers, for developers.
 -->
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Complete Developer Toolkit & Tablets (JWT, JSON, Base64) | Scratch Tabs</title>
+  <title>The Utility Belt - 25+ Developer Tools | Scratch Tabs</title>
   <meta name="description"
-    content="Explore the complete arsenal of 25+ specialized developer tools (Tablets) in Scratch Tabs, from a JWT Toolkit and REST Client to a JSON Mapper and Diagram Editor." />
+    content="25+ standalone developer utilities: JWT Toolkit, REST Client, Regex Tester, Password Generator, UUID Generator, and more. All offline, no accounts required." />
   <meta name="keywords"
-    content="tablets, developer tools, jwt toolkit, rest client, json mapper, data converters, regex tester, password generator, scratch tabs" />
+    content="developer tools, jwt toolkit, rest client, regex tester, password generator, uuid generator, base64 converter, cron builder, scratch tabs" />
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://scratchtabs.com/tablets.html" />
-  <meta property="og:title" content="The Complete Tablet Ecosystem - Scratch Tabs" />
+  <meta property="og:title" content="The Utility Belt - 25+ Developer Tools | Scratch Tabs" />
   <meta property="og:description"
-    content="Explore the complete arsenal of 25+ specialized developer tools (Tablets) in Scratch Tabs, from a JWT Toolkit and REST Client to a JSON Mapper and Diagram Editor." />
+    content="25+ standalone developer utilities: JWT Toolkit, REST Client, Regex Tester, Password Generator, and more. All offline, no accounts required." />
   <meta property="og:image" content="https://scratchtabs.b-cdn.net/og-image.png" />
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image" />
   <meta property="twitter:url" content="https://scratchtabs.com/tablets.html" />
-  <meta property="twitter:title" content="The Complete Tablet Ecosystem - Scratch Tabs" />
+  <meta property="twitter:title" content="The Utility Belt - 25+ Developer Tools | Scratch Tabs" />
   <meta property="twitter:description"
-    content="Explore the complete arsenal of 25+ specialized developer tools (Tablets) in Scratch Tabs, from a JWT Toolkit and REST Client to a JSON Mapper and Diagram Editor." />
+    content="25+ standalone developer utilities: JWT Toolkit, REST Client, Regex Tester, Password Generator, and more. All offline, no accounts required." />
   <meta property="twitter:image" content="https://scratchtabs.b-cdn.net/og-image.png" />
 
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
@@ -107,84 +104,142 @@
     </div>
   </header>
 
-  <!-- Section 1: Hero Section -->
-  <section class="py-16 md:py-24 border-b border-gray-800">
+  <!-- HERO -->
+  <section class="pt-16 pb-12 md:pt-24 md:pb-16 border-b border-gray-800">
     <div class="container mx-auto px-6 text-center">
+      <div class="inline-flex items-center space-x-2 px-2 py-1 border border-gray-800 bg-gray-900 mb-6">
+        <span class="text-emerald-500 font-mono text-xs">// THE_UTILITY_BELT</span>
+      </div>
       <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight mb-6">
-        Stop Opening <span class="text-emerald-500">12 Browser Tabs</span> for Basic Dev Tasks.
+        Standalone Tools. <span class="text-emerald-500">Zero Context-Switching.</span>
       </h1>
       <p class="text-lg md:text-xl text-gray-400 mb-4 max-w-3xl mx-auto leading-relaxed">
-        Every developer has a dozen bookmarked tools: a JWT decoder here, a regex tester there, a Base64 converter somewhere else.
+        Unlike <a href="features.html" class="text-emerald-500 hover:underline">Smart Views</a> that transform your pasted content, Tablets are purpose-built utilities for generating, calculating, and testing. No data intake required - just pure, offline utility.
       </p>
-      <p class="text-lg md:text-xl text-gray-400 mb-6 max-w-3xl mx-auto leading-relaxed">
-        Scratch Tabs consolidates them all. 25+ specialized utilities called <span class="text-white font-mono">Tablets</span>, always available, 100% offline. No accounts, no tracking, no third-party dependencies.
-      </p>
-      <p class="text-base md:text-lg text-emerald-500 font-mono">
-        One workspace. Every tool. Zero context-switching.
+      <p class="text-base text-gray-500 max-w-2xl mx-auto">
+        JWT decode here, regex test there, password generate somewhere else? Not anymore.
       </p>
     </div>
   </section>
 
-  <!-- Section 2: The Tablet Catalog -->
+  <!-- THE TABLET CATALOG -->
   <section class="py-16">
-    <div class="container mx-auto px-6 space-y-16">
+    <div class="container mx-auto px-6">
 
-      <!-- Category: API & Web Development -->
-      <div>
-        <div class="section-tag">
-          <span>[CATEGORY_01] // API_WEB_DEVELOPMENT</span>
+      <!-- BENTO GRID: Featured Tablets -->
+      <div class="mb-16">
+        <div class="section-tag mb-6">
+          <span>[FEATURED] // MOST_USED_TABLETS</span>
         </div>
-        <p class="text-gray-400 max-w-4xl mb-8 text-lg">Essential tools for building, testing, and debugging modern web services
-          and applications.</p>
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div class="card-sharp p-6 flex flex-col">
-            <h3 class="text-xl font-bold text-white mb-2">JWT Toolkit</h3>
-            <p class="text-gray-400 text-sm mb-4">A complete suite for JSON Web Tokens. Decode, verify signatures with
-              public keys or secrets, and sign new tokens—all securely within your browser.</p>
-            <div class="mt-auto pt-4 flex flex-wrap gap-2">
-              <span class="keyword-badge">jwt</span>
-              <span class="keyword-badge">token</span>
-              <span class="keyword-badge">auth</span>
+        <div class="bento-grid">
+          <!-- JWT Toolkit - Large Card -->
+          <div class="card-sharp p-5 lg:col-span-2 flex flex-col">
+            <div class="flex justify-between items-start mb-3">
+              <h3 class="text-emerald-500 font-mono text-xs">// Security & Auth</h3>
+              <span class="text-gray-700 font-mono text-xs">jwt_toolkit</span>
+            </div>
+            <h4 class="text-white font-bold text-xl mb-2">JWT Toolkit</h4>
+            <p class="text-gray-400 text-sm mb-4">Decode, verify signatures with public keys or secrets, and sign new tokens - all securely within your browser. No tokens ever leave your machine.</p>
+            <div class="flex flex-wrap gap-2 mb-4">
               <span class="keyword-badge">decode</span>
+              <span class="keyword-badge">verify</span>
+              <span class="keyword-badge">sign</span>
+              <span class="keyword-badge">HS256</span>
+              <span class="keyword-badge">RS256</span>
             </div>
+            <img src="https://scratchtabs.b-cdn.net/tablet-jwt.png" alt="JWT Toolkit interface" class="w-full h-auto max-h-48 border border-gray-800 cursor-pointer hover:border-emerald-500 transition-colors object-cover mt-auto" onclick="openModal(this.src)">
           </div>
-          <div class="card-sharp p-6 flex flex-col">
-            <h3 class="text-xl font-bold text-white mb-2">REST Client</h3>
-            <p class="text-gray-400 text-sm mb-4">A convenient client for making quick HTTP requests. Perfect for
-              testing CORS-enabled APIs, webhook endpoints, or local development servers.</p>
-            <div class="mt-auto pt-4 flex flex-wrap gap-2">
-              <span class="keyword-badge">rest</span>
-              <span class="keyword-badge">api</span>
-              <span class="keyword-badge">http</span>
-              <span class="keyword-badge">curl</span>
+
+          <!-- Regex Tester - Large Card -->
+          <div class="card-sharp p-5 lg:col-span-2 flex flex-col">
+            <div class="flex justify-between items-start mb-3">
+              <h3 class="text-emerald-500 font-mono text-xs">// Pattern Testing</h3>
+              <span class="text-gray-700 font-mono text-xs">regex_tester</span>
             </div>
+            <h4 class="text-white font-bold text-xl mb-2">Regex Tester</h4>
+            <p class="text-gray-400 text-sm mb-4">Live pattern matching with detailed match explanations, capture group visualization, and flag toggles. Stop guessing if your regex works.</p>
+            <div class="flex flex-wrap gap-2 mb-4">
+              <span class="keyword-badge">live highlight</span>
+              <span class="keyword-badge">capture groups</span>
+              <span class="keyword-badge">flags</span>
+              <span class="keyword-badge">explain</span>
+            </div>
+            <img src="https://scratchtabs.b-cdn.net/tablet-regex.png" alt="Regex tester with live highlighting" class="w-full h-auto max-h-48 border border-gray-800 cursor-pointer hover:border-emerald-500 transition-colors object-cover mt-auto" onclick="openModal(this.src)">
           </div>
-          <div class="card-sharp p-6 flex flex-col">
-            <h3 class="text-xl font-bold text-white mb-2">URL Parser</h3>
-            <p class="text-gray-400 text-sm mb-4">Deconstruct and analyze any URL. Instantly break down schemes, hosts,
-              query parameters, and fragments, while identifying security issues.</p>
-            <div class="mt-auto pt-4 flex flex-wrap gap-2">
-              <span class="keyword-badge">url</span>
-              <span class="keyword-badge">parser</span>
-              <span class="keyword-badge">query</span>
-              <span class="keyword-badge">security</span>
+
+          <!-- REST Client -->
+          <div class="card-sharp p-5 lg:row-span-2 flex flex-col">
+            <div class="flex justify-between items-start mb-3">
+              <h3 class="text-emerald-500 font-mono text-xs">// API Testing</h3>
+              <span class="text-gray-700 font-mono text-xs">rest_client</span>
             </div>
+            <h4 class="text-white font-bold text-xl mb-2">REST Client</h4>
+            <p class="text-gray-400 text-sm mb-4">Make HTTP requests directly from your browser. Perfect for testing CORS-enabled APIs, webhooks, or local dev servers.</p>
+            <div class="flex flex-wrap gap-2 mb-4">
+              <span class="keyword-badge">GET</span>
+              <span class="keyword-badge">POST</span>
+              <span class="keyword-badge">headers</span>
+              <span class="keyword-badge">cURL import</span>
+            </div>
+            <img src="https://scratchtabs.b-cdn.net/layer-02-rest.png" alt="REST Client interface" class="w-full h-auto border border-gray-800 cursor-pointer hover:border-emerald-500 transition-colors flex-grow object-cover mt-auto" onclick="openModal(this.src)">
+          </div>
+
+          <!-- Quick Access Cards -->
+          <div class="card-sharp p-4 flex items-center justify-between">
+            <div>
+              <span class="text-white text-sm font-mono">Password Gen</span>
+              <p class="text-gray-600 text-xs">Secure random passwords</p>
+            </div>
+            <span class="text-emerald-500 text-xs">-></span>
+          </div>
+          <div class="card-sharp p-4 flex items-center justify-between">
+            <div>
+              <span class="text-white text-sm font-mono">UUID Gen</span>
+              <p class="text-gray-600 text-xs">v1 and v4 UUIDs</p>
+            </div>
+            <span class="text-emerald-500 text-xs">-></span>
+          </div>
+          <div class="card-sharp p-4 flex items-center justify-between">
+            <div>
+              <span class="text-white text-sm font-mono">Base64</span>
+              <p class="text-gray-600 text-xs">Encode/decode data</p>
+            </div>
+            <span class="text-emerald-500 text-xs">-></span>
+          </div>
+          <div class="card-sharp p-4 flex items-center justify-between">
+            <div>
+              <span class="text-white text-sm font-mono">Checksum</span>
+              <p class="text-gray-600 text-xs">MD5, SHA-256, SHA-512</p>
+            </div>
+            <span class="text-emerald-500 text-xs">-></span>
+          </div>
+          <div class="card-sharp p-4 flex items-center justify-between">
+            <div>
+              <span class="text-white text-sm font-mono">URL Parser</span>
+              <p class="text-gray-600 text-xs">Deconstruct any URL</p>
+            </div>
+            <span class="text-emerald-500 text-xs">-></span>
+          </div>
+          <div class="card-sharp p-4 flex items-center justify-between">
+            <div>
+              <span class="text-white text-sm font-mono">Cron Builder</span>
+              <p class="text-gray-600 text-xs">Natural language cron</p>
+            </div>
+            <span class="text-emerald-500 text-xs">-></span>
           </div>
         </div>
       </div>
 
-      <!-- Category: Data Transformation & Analysis -->
-      <div>
-        <div class="section-tag">
-          <span>[CATEGORY_02] // DATA_TRANSFORMATION_ANALYSIS</span>
+      <!-- CATEGORY: Data Transformation -->
+      <div class="mb-16">
+        <div class="section-tag mb-6">
+          <span>[CATEGORY] // DATA_TRANSFORMATION</span>
         </div>
-        <p class="text-gray-400 max-w-4xl mb-8 text-lg">Powerful utilities to parse, convert, verify, and visualize your data in
-          any format.</p>
+        <p class="text-gray-400 max-w-4xl mb-8 text-lg">Convert, verify, and transform data between formats.</p>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div class="card-sharp p-6 flex flex-col">
             <h3 class="text-xl font-bold text-white mb-2">JSON Mapper</h3>
-            <p class="text-gray-400 text-sm mb-4">Visually transform complex JSON structures. Define mapping rules
-              between schemas with an intuitive UI.</p>
+            <p class="text-gray-400 text-sm mb-4">Visually transform complex JSON structures. Define mapping rules between schemas with an intuitive drag-and-drop interface.</p>
             <div class="mt-auto pt-4 flex flex-wrap gap-2">
               <span class="keyword-badge">json</span>
               <span class="keyword-badge">mapper</span>
@@ -192,30 +247,8 @@
             </div>
           </div>
           <div class="card-sharp p-6 flex flex-col">
-            <h3 class="text-xl font-bold text-white mb-2">Regex Tester</h3>
-            <p class="text-gray-400 text-sm mb-4">Test patterns with live highlighting, detailed match explanations, and
-              capture group visualization.</p>
-            <div class="mt-auto pt-4 flex flex-wrap gap-2">
-              <span class="keyword-badge">regex</span>
-              <span class="keyword-badge">expression</span>
-              <span class="keyword-badge">test</span>
-            </div>
-          </div>
-          <div class="card-sharp p-6 flex flex-col">
-            <h3 class="text-xl font-bold text-white mb-2">Checksum Calculator<span class="new-badge">New</span></h3>
-            <p class="text-gray-400 text-sm mb-4">Generate and verify file and text integrity. Calculates MD5, SHA-1,
-              SHA-256, and SHA-512 hashes locally.</p>
-            <div class="mt-auto pt-4 flex flex-wrap gap-2">
-              <span class="keyword-badge">checksum</span>
-              <span class="keyword-badge">hash</span>
-              <span class="keyword-badge">md5</span>
-              <span class="keyword-badge">sha</span>
-            </div>
-          </div>
-          <div class="card-sharp p-6 flex flex-col">
             <h3 class="text-xl font-bold text-white mb-2">Base64 Converter</h3>
-            <p class="text-gray-400 text-sm mb-4">Easily encode and decode data using various Base64 formats (Standard,
-              URL-safe, MIME).</p>
+            <p class="text-gray-400 text-sm mb-4">Encode and decode data using Standard, URL-safe, or MIME Base64 formats. Handles binary files too.</p>
             <div class="mt-auto pt-4 flex flex-wrap gap-2">
               <span class="keyword-badge">base64</span>
               <span class="keyword-badge">encode</span>
@@ -223,150 +256,210 @@
             </div>
           </div>
           <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">Checksum Calculator<span class="new-badge">New</span></h3>
+            <p class="text-gray-400 text-sm mb-4">Generate and verify file integrity. Calculates MD5, SHA-1, SHA-256, and SHA-512 hashes locally.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">hash</span>
+              <span class="keyword-badge">md5</span>
+              <span class="keyword-badge">sha256</span>
+            </div>
+          </div>
+          <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">URL Parser</h3>
+            <p class="text-gray-400 text-sm mb-4">Deconstruct any URL into components. Analyze schemes, hosts, query parameters, and identify security issues.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">url</span>
+              <span class="keyword-badge">query params</span>
+              <span class="keyword-badge">parse</span>
+            </div>
+          </div>
+          <div class="card-sharp p-6 flex flex-col">
             <h3 class="text-xl font-bold text-white mb-2">DateTime Converter<span class="new-badge">New</span></h3>
-            <p class="text-gray-400 text-sm mb-4">Parse, format, and convert dates across timezones. Perfect for
-              debugging timestamp issues.</p>
+            <p class="text-gray-400 text-sm mb-4">Parse, format, and convert dates across timezones. Debug timestamp issues with epoch conversion.</p>
             <div class="mt-auto pt-4 flex flex-wrap gap-2">
               <span class="keyword-badge">date</span>
-              <span class="keyword-badge">time</span>
               <span class="keyword-badge">timezone</span>
-              <span class="keyword-badge">unix</span>
+              <span class="keyword-badge">epoch</span>
             </div>
           </div>
           <div class="card-sharp p-6 flex flex-col">
             <h3 class="text-xl font-bold text-white mb-2">Word Count<span class="new-badge">New</span></h3>
-            <p class="text-gray-400 text-sm mb-4">Analyze text with detailed statistics including word count,
-              characters, and readability scores.</p>
+            <p class="text-gray-400 text-sm mb-4">Analyze text with word count, character count, reading time, and readability scores.</p>
             <div class="mt-auto pt-4 flex flex-wrap gap-2">
               <span class="keyword-badge">word count</span>
-              <span class="keyword-badge">text analysis</span>
               <span class="keyword-badge">readability</span>
-              <span class="keyword-badge">seo</span>
+              <span class="keyword-badge">stats</span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Category: Productivity & Workflow -->
-      <div>
-        <div class="section-tag">
-          <span>[CATEGORY_03] // PRODUCTIVITY_WORKFLOW</span>
+      <!-- CATEGORY: Generators -->
+      <div class="mb-16">
+        <div class="section-tag mb-6">
+          <span>[CATEGORY] // GENERATORS</span>
         </div>
-        <p class="text-gray-400 max-w-4xl mb-8 text-lg">Tools designed to keep you focused, organized, and efficient throughout
-          your development day.</p>
+        <p class="text-gray-400 max-w-4xl mb-8 text-lg">Generate secure credentials, unique identifiers, and placeholder content on demand.</p>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">Password Generator</h3>
+            <p class="text-gray-400 text-sm mb-4">Create strong, random passwords with customizable length and complexity. Includes history and strength indicator.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">password</span>
+              <span class="keyword-badge">secure</span>
+              <span class="keyword-badge">random</span>
+            </div>
+          </div>
+          <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">UUID Generator</h3>
+            <p class="text-gray-400 text-sm mb-4">Generate universally unique identifiers in v1 (timestamp) and v4 (random) formats. Bulk generation supported.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">uuid</span>
+              <span class="keyword-badge">guid</span>
+              <span class="keyword-badge">v4</span>
+            </div>
+          </div>
+          <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">Lorem Ipsum<span class="new-badge">New</span></h3>
+            <p class="text-gray-400 text-sm mb-4">Generate placeholder text with customizable options for paragraphs, sentences, or words.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">lorem ipsum</span>
+              <span class="keyword-badge">placeholder</span>
+              <span class="keyword-badge">text</span>
+            </div>
+          </div>
+          <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">Colour Palette<span class="new-badge">New</span></h3>
+            <p class="text-gray-400 text-sm mb-4">Create and export colour palettes with a live UI preview. Export to CSS, Tailwind, or JSON.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">colour</span>
+              <span class="keyword-badge">palette</span>
+              <span class="keyword-badge">design</span>
+            </div>
+          </div>
+          <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">Cron Builder</h3>
+            <p class="text-gray-400 text-sm mb-4">Build cron expressions with a natural language interface. See when your schedule will next run.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">cron</span>
+              <span class="keyword-badge">schedule</span>
+              <span class="keyword-badge">jobs</span>
+            </div>
+          </div>
+          <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">Calculator</h3>
+            <p class="text-gray-400 text-sm mb-4">Math expression evaluator with variable support, unit conversions, and history. Powered by math.js.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">math</span>
+              <span class="keyword-badge">units</span>
+              <span class="keyword-badge">variables</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CATEGORY: Productivity & Visualization -->
+      <div class="mb-16">
+        <div class="section-tag mb-6">
+          <span>[CATEGORY] // PRODUCTIVITY_VISUALIZATION</span>
+        </div>
+        <p class="text-gray-400 max-w-4xl mb-8 text-lg">Tools to keep you focused, organized, and productive.</p>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div class="card-sharp p-6 flex flex-col">
             <h3 class="text-xl font-bold text-white mb-2">Diagram Editor<span class="new-badge">New</span></h3>
-            <p class="text-gray-400 text-sm mb-4">Create and visualize diagrams for documentation and planning. Write
-              Mermaid code for flowcharts and sequence diagrams.</p>
+            <p class="text-gray-400 text-sm mb-4">Create flowcharts, sequence diagrams, and entity relationships using Mermaid syntax with live preview.</p>
             <div class="mt-auto pt-4 flex flex-wrap gap-2">
-              <span class="keyword-badge">diagram</span>
               <span class="keyword-badge">mermaid</span>
               <span class="keyword-badge">flowchart</span>
+              <span class="keyword-badge">diagram</span>
+            </div>
+          </div>
+          <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">Shape Snap</h3>
+            <p class="text-gray-400 text-sm mb-4">Freehand drawing that automatically recognizes and converts to perfect shapes. Great for quick mockups.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">draw</span>
+              <span class="keyword-badge">shapes</span>
+              <span class="keyword-badge">sketch</span>
             </div>
           </div>
           <div class="card-sharp p-6 flex flex-col">
             <h3 class="text-xl font-bold text-white mb-2">Command Vault</h3>
-            <p class="text-gray-400 text-sm mb-4">Your personal and searchable snippet library. Securely store commands,
-              code snippets, notes, and links for quick access.</p>
+            <p class="text-gray-400 text-sm mb-4">Your personal, searchable snippet library. Store commands, code snippets, and notes for quick access.</p>
             <div class="mt-auto pt-4 flex flex-wrap gap-2">
-              <span class="keyword-badge">vault</span>
               <span class="keyword-badge">snippets</span>
+              <span class="keyword-badge">commands</span>
               <span class="keyword-badge">notes</span>
             </div>
           </div>
           <div class="card-sharp p-6 flex flex-col">
             <h3 class="text-xl font-bold text-white mb-2">Pomodoro Timer</h3>
-            <p class="text-gray-400 text-sm mb-4">Boost your productivity with a built-in Pomodoro timer. Manage focus
-              sessions and breaks to stay in the zone.</p>
+            <p class="text-gray-400 text-sm mb-4">Built-in focus timer with customizable work/break intervals. Stay in the zone with audio notifications.</p>
             <div class="mt-auto pt-4 flex flex-wrap gap-2">
-              <span class="keyword-badge">pomodoro</span>
               <span class="keyword-badge">timer</span>
               <span class="keyword-badge">focus</span>
+              <span class="keyword-badge">productivity</span>
             </div>
           </div>
           <div class="card-sharp p-6 flex flex-col">
             <h3 class="text-xl font-bold text-white mb-2">Clipboard Manager</h3>
-            <p class="text-gray-400 text-sm mb-4">Keeps a history of your clipboard items. Perfect for gathering data
-              from multiple sources and recalling it later.</p>
+            <p class="text-gray-400 text-sm mb-4">Keep a history of your clipboard items. Perfect for gathering data from multiple sources.</p>
             <div class="mt-auto pt-4 flex flex-wrap gap-2">
               <span class="keyword-badge">clipboard</span>
               <span class="keyword-badge">history</span>
               <span class="keyword-badge">paste</span>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Category: Generators & Utilities -->
-      <div>
-        <div class="section-tag">
-          <span>[CATEGORY_04] // GENERATORS_UTILITIES</span>
-        </div>
-        <p class="text-gray-400 max-w-4xl mb-8 text-lg">Generate placeholder data, secure credentials, and unique identifiers on
-          demand.</p>
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div class="card-sharp p-6 flex flex-col">
-            <h3 class="text-xl font-bold text-white mb-2">Password Generator</h3>
-            <p class="text-gray-400 text-sm mb-4">Create strong, random passwords with customizable complexity and
-              length. Includes history and secure local storage.</p>
+            <h3 class="text-xl font-bold text-white mb-2">Emoji Picker</h3>
+            <p class="text-gray-400 text-sm mb-4">Searchable emoji reference with categories and skin tone support. Copy with one click.</p>
             <div class="mt-auto pt-4 flex flex-wrap gap-2">
-              <span class="keyword-badge">password</span>
-              <span class="keyword-badge">security</span>
-              <span class="keyword-badge">generator</span>
-            </div>
-          </div>
-          <div class="card-sharp p-6 flex flex-col">
-            <h3 class="text-xl font-bold text-white mb-2">UUID Generator</h3>
-            <p class="text-gray-400 text-sm mb-4">Generate universally unique identifiers (UUIDs) in various versions
-              (v1, v4).</p>
-            <div class="mt-auto pt-4 flex flex-wrap gap-2">
-              <span class="keyword-badge">uuid</span>
-              <span class="keyword-badge">guid</span>
-              <span class="keyword-badge">generator</span>
-            </div>
-          </div>
-          <div class="card-sharp p-6 flex flex-col">
-            <h3 class="text-xl font-bold text-white mb-2">Lorem Ipsum Generator<span class="new-badge">New</span></h3>
-            <p class="text-gray-400 text-sm mb-4">Generate placeholder text with customizable options for paragraphs,
-              sentences, and words.</p>
-            <div class="mt-auto pt-4 flex flex-wrap gap-2">
-              <span class="keyword-badge">lorem ipsum</span>
-              <span class="keyword-badge">text</span>
-              <span class="keyword-badge">placeholder</span>
-            </div>
-          </div>
-          <div class="card-sharp p-6 flex flex-col">
-            <h3 class="text-xl font-bold text-white mb-2">Colour Palette Generator<span class="new-badge">New</span>
-            </h3>
-            <p class="text-gray-400 text-sm mb-4">Create and export beautiful colour palettes with a live UI preview.
-              Brainstorm UI/UX color schemes instantly.</p>
-            <div class="mt-auto pt-4 flex flex-wrap gap-2">
-              <span class="keyword-badge">color</span>
-              <span class="keyword-badge">palette</span>
-              <span class="keyword-badge">ui</span>
-              <span class="keyword-badge">design</span>
-            </div>
-          </div>
-          <div class="card-sharp p-6 flex flex-col">
-            <h3 class="text-xl font-bold text-white mb-2">Cron Builder</h3>
-            <p class="text-gray-400 text-sm mb-4">Build and understand cron expressions with a natural language
-              interface. Generate cron schedules for automated tasks.</p>
-            <div class="mt-auto pt-4 flex flex-wrap gap-2">
-              <span class="keyword-badge">cron</span>
-              <span class="keyword-badge">schedule</span>
-              <span class="keyword-badge">generator</span>
-              <span class="keyword-badge">job</span>
+              <span class="keyword-badge">emoji</span>
+              <span class="keyword-badge">unicode</span>
+              <span class="keyword-badge">copy</span>
             </div>
           </div>
         </div>
       </div>
-
     </div>
   </section>
 
-  <!-- Section 3: And More To Come... -->
-  <section class="py-16 bg-black border-b border-gray-800">
+  <!-- TABLETS VS SMART VIEWS -->
+  <section class="py-16 bg-gray-900/30 border-t border-gray-800">
+    <div class="container mx-auto px-6">
+      <div class="max-w-4xl mx-auto">
+        <div class="section-tag mb-6">
+          <span>[CLARIFICATION] // TABLETS_VS_SMART_VIEWS</span>
+        </div>
+        <h2 class="text-2xl md:text-3xl font-mono text-white mb-6">What's the Difference?</h2>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="card-sharp p-6 border-emerald-500/30">
+            <h3 class="text-emerald-500 font-mono text-sm mb-3">// Tablets (This Page)</h3>
+            <p class="text-gray-400 text-sm mb-4">Standalone tools for <strong class="text-white">generating, calculating, or testing</strong>. No content required - just open and use.</p>
+            <ul class="text-gray-500 text-xs space-y-1">
+              <li>-> Generate a UUID</li>
+              <li>-> Test a regex pattern</li>
+              <li>-> Decode a JWT</li>
+              <li>-> Build a cron expression</li>
+            </ul>
+          </div>
+          <div class="card-sharp p-6">
+            <h3 class="text-gray-400 font-mono text-sm mb-3">// Smart Views (Features Page)</h3>
+            <p class="text-gray-400 text-sm mb-4">Specialized views that <strong class="text-white">activate when you paste content</strong>. They understand your data structure.</p>
+            <ul class="text-gray-500 text-xs space-y-1">
+              <li>-> Paste JSON -> Tree explorer</li>
+              <li>-> Paste CSV -> Spreadsheet view</li>
+              <li>-> Paste Markdown -> Live preview</li>
+              <li>-> Paste diff -> Side-by-side comparison</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AND MORE TO COME -->
+  <section class="py-16 bg-black border-t border-gray-800">
     <div class="container mx-auto px-6 text-center">
       <h2 class="text-3xl md:text-4xl font-mono text-white mb-4">AN EVER-GROWING TOOLKIT</h2>
       <p class="text-gray-400 text-lg max-w-2xl mx-auto mb-8">
@@ -384,22 +477,49 @@
     </div>
   </section>
 
-  <!-- Section 4: Final CTA -->
-  <section class="py-20 border-b border-gray-800">
-    <div class="container mx-auto px-6 text-center">
-      <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">Ready to Explore the Full Toolkit?</h2>
-      <p class="text-gray-400 text-lg mb-8 max-w-xl mx-auto">
-        All these specialized tablets are available instantly in your browser. <span class="text-white">No installation.
-          No setup. Just powerful tools that work.</span>
-      </p>
-      <a href="https://app.scratchtabs.com" target="_blank"
-        class="terminal-button text-xl px-12 py-4">
-        <span class="text-gray-500 mr-2">$</span> launch_app<span class="cursor-blink">|</span>
-      </a>
+  <!-- EXPLORE MORE -->
+  <section class="py-16 md:py-24 border-t border-gray-800">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-mono text-white mb-4">Explore the Platform</h2>
+        <p class="text-gray-400 text-lg max-w-2xl mx-auto">
+          Tablets are just one part of Scratch Tabs. Discover the full platform.
+        </p>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <a href="index.html" class="card-sharp p-8 block group">
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-emerald-500 font-mono text-sm">// THE_PITCH</h3>
+            <span class="text-gray-600 group-hover:text-emerald-500 transition-colors">-></span>
+          </div>
+          <h4 class="text-white font-bold text-xl mb-2">Why Scratch Tabs?</h4>
+          <p class="text-gray-400 text-sm">See how Transformation Pipelines and local-first architecture replace your scattered browser tabs.</p>
+        </a>
+        <a href="features.html" class="card-sharp p-8 block group">
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-emerald-500 font-mono text-sm">// THE_WORKBENCH</h3>
+            <span class="text-gray-600 group-hover:text-emerald-500 transition-colors">-></span>
+          </div>
+          <h4 class="text-white font-bold text-xl mb-2">The Intelligent Workbench</h4>
+          <p class="text-gray-400 text-sm">Monaco editor, Smart Views for JSON/CSV/Markdown, Split View, Diff Engine, and workspace management.</p>
+        </a>
+      </div>
     </div>
   </section>
 
-  <!-- Footer -->
+  <!-- Final CTA -->
+  <section class="py-20 border-t border-gray-800">
+    <div class="container mx-auto px-6 text-center">
+      <h2 class="text-3xl md:text-5xl font-mono text-white mb-8">READY TO LAUNCH?</h2>
+      <div class="flex flex-col sm:flex-row gap-6 justify-center items-center">
+        <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button text-xl px-12 py-5">
+          <span class="text-gray-500 mr-2">$</span> launch_app<span class="cursor-blink">|</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
   <footer class="py-12 border-t border-gray-800 bg-black">
     <div class="container mx-auto px-6">
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
@@ -427,8 +547,14 @@
     </div>
   </footer>
 
+  <!-- Image Modal -->
+  <div id="imgModal" class="img-modal" onclick="this.classList.remove('active')">
+    <img src="" alt="">
+  </div>
+
   <script>
     document.getElementById("currentYear").textContent = new Date().getFullYear();
+    function openModal(src) { const m = document.getElementById('imgModal'); m.querySelector('img').src = src; m.classList.add('active'); }
     const mobileMenuButton = document.getElementById("mobile-menu-button");
     const mobileMenu = document.getElementById("mobile-menu");
     mobileMenuButton.addEventListener("click", () => {

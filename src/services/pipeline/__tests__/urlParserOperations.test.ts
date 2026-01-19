@@ -438,7 +438,23 @@ describe("URL Parser Pipeline Operations", () => {
       pipeline.steps = [step];
 
       const result = await runPipeline("", pipeline);
-      expect(result.output).toBe("curl");
+      expect(result.output).toBe("");
+    });
+
+    it("should work in line-by-line mode for multiple URLs", async () => {
+      const step = createStep("url.to-curl", {});
+      step.applyPerLine = true;
+      const pipeline = createPipeline();
+      pipeline.steps = [step];
+
+      const input = "https://example.com/api\nhttps://other.com/data";
+      const result = await runPipeline(input, pipeline);
+
+      const lines = result.output.split("\n");
+      expect(lines[0]).toContain('curl "https://example.com/api"');
+      expect(lines.some((l) => l.includes('curl "https://other.com/data"'))).toBe(
+        true
+      );
     });
   });
 

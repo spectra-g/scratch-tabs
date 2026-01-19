@@ -107,18 +107,17 @@
   </header>
 
   <!-- Hero Section -->
-  <section class="py-16 md:py-24 border-b border-gray-800">
+  <section class="pt-16 pb-12 md:pt-24 md:pb-16 border-b border-gray-800">
     <div class="container mx-auto px-6 text-center">
+      <div class="inline-flex items-center space-x-2 px-2 py-1 border border-gray-800 bg-gray-900 mb-6">
+        <span class="text-emerald-500 font-mono text-xs">// SYSTEM_CHANGELOG</span>
+      </div>
       <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight mb-6">
-        <span class="text-emerald-500 font-mono">SYSTEM_UPDATES</span><br />& EVOLUTION
+        Updates & <span class="text-emerald-500">Evolution.</span>
       </h1>
-      <p class="text-gray-400 text-lg md:text-xl max-w-3xl mx-auto leading-relaxed mb-8">
-        The complete history of Scratch Tabs. From minor utility tweaks to major architectural shifts, every change is
-        documented here.
+      <p class="text-lg md:text-xl text-gray-400 mb-8 max-w-3xl mx-auto leading-relaxed">
+        The complete history of Scratch Tabs. From minor utility tweaks to major architectural shifts, every change is documented here.
       </p>
-      <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button text-lg px-8 py-4">
-        <span class="text-gray-500 mr-2">$</span> launch_latest_v1.17.0
-      </a>
     </div>
   </section>
 
@@ -151,7 +150,7 @@
             <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># improvements</h4>
             <ul class="space-y-2 mb-6">
               <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Performance Optimization:</strong> Native browser scrolling eliminates expensive resize calculations and render cycles</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Theme-Aware Gradients:</strong> Gradients use CSS variables to match tab bar background color, ensuring visibility in all themes</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Theme-Aware Gradients:</strong> Gradients use CSS variables to match tab bar background colour, ensuring visibility in all themes</span></li>
             </ul>
           </div>
         </div>
@@ -470,21 +469,45 @@
     </div>
   </section>
 
-  <!-- Final CTA Section -->
-  <section class="py-20 border-b border-gray-800">
+  <!-- EXPLORE MORE -->
+  <section class="py-16 md:py-24 border-t border-gray-800">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-mono text-white mb-4">Explore the Platform</h2>
+        <p class="text-gray-400 text-lg max-w-2xl mx-auto">
+          See what's new in action. Discover the full Scratch Tabs platform.
+        </p>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <a href="features.html" class="card-sharp p-8 block group">
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-emerald-500 font-mono text-sm">// THE_WORKBENCH</h3>
+            <span class="text-gray-600 group-hover:text-emerald-500 transition-colors">-></span>
+          </div>
+          <h4 class="text-white font-bold text-xl mb-2">The Intelligent Workbench</h4>
+          <p class="text-gray-400 text-sm">Monaco editor, Smart Views for JSON/CSV/Markdown, Split View, Diff Engine, and workspace management.</p>
+        </a>
+        <a href="tablets.html" class="card-sharp p-8 block group">
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-emerald-500 font-mono text-sm">// THE_ARSENAL</h3>
+            <span class="text-gray-600 group-hover:text-emerald-500 transition-colors">-></span>
+          </div>
+          <h4 class="text-white font-bold text-xl mb-2">The Utility Belt</h4>
+          <p class="text-gray-400 text-sm">25+ standalone tablets: JWT Toolkit, REST Client, Regex Tester, Password Generator, and more.</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="py-20 border-t border-gray-800">
     <div class="container mx-auto px-6 text-center">
-      <h2 class="text-3xl md:text-4xl font-bold text-white mb-6 uppercase tracking-tighter font-mono">
-        Ready to Upgrade?
-      </h2>
-      <p class="text-gray-400 text-lg mb-8 max-w-xl mx-auto">
-        All updates are instantly available. No download required.
-      </p>
-      <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button text-xl px-12 py-4">
-        <span class="text-gray-500 mr-2">$</span> launch_app<span class="cursor-blink">|</span>
-      </a>
-      <p class="text-xs font-mono text-gray-600 mt-6 uppercase tracking-widest">
-        CLIENT_SIDE_ONLY // PRIVACY_FIRST // OFFLINE_CAPABLE
-      </p>
+      <h2 class="text-3xl md:text-5xl font-mono text-white mb-8">READY TO LAUNCH?</h2>
+      <div class="flex flex-col sm:flex-row gap-6 justify-center items-center">
+        <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button text-xl px-12 py-5">
+          <span class="text-gray-500 mr-2">$</span> launch_app<span class="cursor-blink">|</span>
+        </a>
+      </div>
     </div>
   </section>
 

@@ -8,26 +8,23 @@
   ███████║╚██████╗██║  ██║██║  ██║   ██║   ╚██████╗██║  ██║       ██║   ██║  ██║██████╔╝███████║
   ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝       ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚══════╝
 
-  👋 Hey developer! You found the source. Nice.
+  A privacy-first developer toolkit that runs 100% in your browser.
+  No servers. No tracking. No accounts. Just pure client-side power.
 
-  📝 What is this?
-     A privacy-first developer toolkit that runs 100% in your browser.
-     No servers. No tracking. No accounts. Just pure client-side power.
+  Privacy Philosophy:
+    - Your data never leaves your device
+    - Zero analytics, zero cookies
+    - All processing happens locally via IndexedDB
+    - Even our CDN only serves static assets
 
-  🔒 Privacy Philosophy:
-     • Your data never leaves your device
-     • Zero analytics, zero cookies
-     • All processing happens locally via IndexedDB
-     • Even our CDN only serves static assets
+  Tech Stack:
+    React 18 - TypeScript - Monaco Editor - Zustand - IndexedDB
+    Built with care for developers who care about privacy.
 
-  🛠️ Tech Stack:
-     React 18 • TypeScript • Monaco Editor • Zustand • IndexedDB
-     Built with care for developers who care about privacy.
+  Contribute:
+    github.com/spectra-g/scratch-tabs-feedback
 
-  💡 Contribute:
-     github.com/spectra-g/scratch-tabs-feedback
-
-  ⚡ Made with code and coffee by developers, for developers.
+  Made with code and coffee by developers, for developers.
 -->
 
 <head>
@@ -78,6 +75,7 @@
           "browserRequirements": "Requires modern web browser with JavaScript and IndexedDB.",
           "keywords": "developer tools, json editor, json tools, scratchpad, local data editor, client-side tools, privacy-focused editor, free editor, no tracking, data playground, developer tools, temporary email, password generator, regex tester, jwt decoder, base64 converter, text manipulation, data conversion, pomodoro timer, rest client, command vault, api testing, offline tools",
           "featureList": [
+            "Transformation Pipelines: Chain operations like Unix pipes",
             "Persistent Workspaces & Split-View UI",
             "Client-Side AI: In-browser text summarization",
             "REST API Client with variable support",
@@ -121,7 +119,7 @@
 
   <header class="py-4 px-6 sticky top-0 z-50">
     <div class="container mx-auto flex justify-between items-center">
-      <a href="#" class="flex items-center space-x-2">
+      <a href="index.html" class="flex items-center space-x-2">
         <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs Logo" class="logo-size" />
         <span class="text-xl sm:text-2xl font-bold text-white font-mono">SCRATCH_TABS</span>
       </a>
@@ -162,230 +160,210 @@
     </div>
   </header>
 
-  <!-- LAYER 1: THE INTELLIGENT INTAKE -->
+  <!-- HERO: THE PITCH -->
   <section id="hero" class="pt-16 pb-24 md:pt-24 md:pb-32">
     <div class="container mx-auto px-6">
-      <div class="flex flex-col md:flex-row items-center gap-12">
-        <!-- Left Column -->
-        <div class="md:w-1/2 text-left">
-          <div class="inline-flex items-center space-x-2 px-2 py-1 border border-gray-800 bg-gray-900 mb-6">
-            <span class="text-emerald-500 font-mono text-xs">[LAYER_01] // INTELLIGENT_INTAKE</span>
+      <div class="flex flex-col items-center text-center mb-12">
+        <div class="inline-flex items-center space-x-2 px-2 py-1 border border-gray-800 bg-gray-900 mb-6">
+          <span class="text-emerald-500 font-mono text-xs">v1.17.0 // PIPELINE_UPDATE_LIVE</span>
+        </div>
+        <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight mb-6">
+          The Missing Half of Your <span class="text-emerald-500">Dev Environment.</span>
+        </h1>
+        <div class="w-full max-w-3xl mx-auto my-8 bg-[#0a0a0a] border border-gray-800 rounded p-6 font-mono text-sm md:text-base text-left shadow-2xl relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-1 h-full bg-gray-800"></div>
+          <div class="flex items-start mb-4 opacity-60">
+            <span class="text-red-500 mr-4 select-none">-</span>
+            <div>
+              <span class="text-purple-400">const</span> <span class="text-white">workflow</span> = <span class="text-yellow-300">IDE</span> + <span class="text-gray-400">[ Notes, Postman, JWT.io, JSONLint, Notepad, Sublime, Draw, TODOs, Passwords ]</span>;
+            </div>
           </div>
-          <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight mb-6">
-            Finally, a home for your <span class="text-emerald-500">temporary data.</span>
-          </h1>
-          <p class="text-lg md:text-xl text-gray-400 mb-4 leading-relaxed">
-            You've got JSON in Notes, logs in Sublime, and 23 Untitled IDE tabs you're afraid to close.
-          </p>
-          <p class="text-lg md:text-xl text-gray-400 mb-6 leading-relaxed">
-            There's a better way. Scratch Tabs is your private workspace for temporary data - paste anything, it auto-detects, formats and transforms. No accounts, 100% offline.
-          </p>
-          <p class="text-base md:text-lg text-emerald-500 font-mono mb-8">
-            Powered by Monaco.
-          </p>
-          <div class="flex flex-col sm:flex-row gap-4 items-center sm:items-start">
-            <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button">
-              <span class="text-gray-500 mr-2">$</span> launch_app<span class="cursor-blink">|</span>
-            </a>
+          <div class="flex items-start">
+            <span class="text-emerald-500 mr-4 select-none">+</span>
+            <div>
+              <span class="text-purple-400">const</span> <span class="text-white">workflow</span> = <span class="text-yellow-300">IDE</span> + <span class="text-emerald-500 font-bold">SCRATCH_TABS</span>;
+            </div>
           </div>
         </div>
-
-        <!-- Right Column -->
-        <div class="md:w-1/2 w-full">
-          <div class="border border-gray-800 shadow-2xl">
-            <video
-              class="w-full h-auto"
-              autoplay
-              loop
-              muted
-              playsinline
-              poster="https://scratchtabs.b-cdn.net/demo-json-opt.png"
-            >
-              <source src="https://scratchtabs.b-cdn.net/demo-json-opt.mp4" type="video/mp4">
-              Your browser does not support the video tag.
-            </video>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- LAYER 2: THE ONE-CLICK WORKBENCH -->
-  <section id="data-promotion" class="py-16 md:py-24 border-t border-gray-800">
-    <div class="container mx-auto px-6">
-      <div class="mb-10">
-        <div class="inline-flex items-center space-x-2 px-2 py-1 border border-gray-800 bg-gray-900 mb-4">
-          <span class="text-emerald-500 font-mono text-xs">[LAYER_02] // THE_WORKBENCH</span>
-        </div>
-        <p class="text-lg text-gray-400 max-w-3xl leading-relaxed">
-          Raw text is just the beginning. One click promotes your data into a dedicated <span class="text-emerald-500 font-mono syntax-action">Workbench</span>: a purpose-built environment for that specific format. Examples:
+        <p class="text-lg text-gray-400 mb-8 max-w-2xl mx-auto leading-relaxed">
+          Your private, offline-first workbench for the data that doesn't belong in git. Detects formats, transforms data, and remembers everything so you can close those 23 browser tabs.
         </p>
-      </div>
-
-      <!-- Promotion Examples Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <!-- JSON/CSV Promotion -->
-        <div class="card-sharp p-5">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="text-white font-mono text-sm syntax-data">JSON</h3>
-            <span class="text-emerald-500 font-mono text-xs">→</span>
-          </div>
-          <p class="text-gray-400 text-xs mb-4 font-mono">Text Editor → <span class="syntax-feature">Interactive Tree</span> with Tools</p>
-          <img src="https://scratchtabs.b-cdn.net/layer-02-json.png" alt="JSON Tree view with interactive navigation" class="w-full h-auto border border-gray-800 cursor-pointer hover:border-emerald-500 transition-colors" onclick="openModal(this.src)">
-        </div>
-
-        <!-- Markdown Promotion -->
-        <div class="card-sharp p-5">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="text-white font-mono text-sm syntax-data">MARKDOWN</h3>
-            <span class="text-emerald-500 font-mono text-xs">→</span>
-          </div>
-          <p class="text-gray-400 text-xs mb-4 font-mono">Text Editor → <span class="syntax-feature">Live Preview</span></p>
-          <img src="https://scratchtabs.b-cdn.net/layer-02-markdown.png" alt="Markdown split view with live preview" class="w-full h-auto border border-gray-800 cursor-pointer hover:border-emerald-500 transition-colors" onclick="openModal(this.src)">
-        </div>
-
-        <!-- cURL Promotion -->
-        <div class="card-sharp p-5">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="text-white font-mono text-sm syntax-tech">CURL</h3>
-            <span class="text-emerald-500 font-mono text-xs">→</span>
-          </div>
-          <p class="text-gray-400 text-xs mb-4 font-mono">Raw Command → <span class="syntax-feature">UI Builder</span></p>
-          <img src="https://scratchtabs.b-cdn.net/layer-02-curl.png" alt="REST Client with cURL auto-parsing" class="w-full h-auto border border-gray-800 cursor-pointer hover:border-emerald-500 transition-colors" onclick="openModal(this.src)">
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button text-lg px-8 py-3">
+            <span class="text-gray-500 mr-2">$</span> launch_app<span class="cursor-blink">|</span>
+          </a>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- LAYER 3: STANDALONE TABLETS -->
-  <section id="tablet-arsenal" class="py-16 md:py-24 border-t border-gray-800 bg-gray-900/30">
+  <section class="py-12 border-b border-gray-800 bg-[#050505]">
     <div class="container mx-auto px-6">
-      <div class="mb-10">
-        <div class="inline-flex items-center space-x-2 px-2 py-1 border border-gray-800 bg-gray-900 mb-4">
-          <span class="text-emerald-500 font-mono text-xs">[LAYER_03] // SPECIALIZED_UTILITIES</span>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <!-- Card 1 -->
+        <div class="p-5 border border-gray-800 bg-[#0a0a0a] rounded hover:border-emerald-500/50 transition-colors">
+          <div class="text-emerald-500 font-mono text-xs mb-3">01 // THE_EDITOR</div>
+          <h3 class="text-white font-bold text-lg mb-2">Monaco Core</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">The same engine as VS Code. Syntax highlighting for 40+ languages, multi-cursor editing, and regex search.</p>
         </div>
-        <p class="text-lg text-gray-400 max-w-3xl leading-relaxed">
-          A collection of 25+ standalone "Tablets" (mini-apps) for the tasks that usually require a dozen browser tabs. No data intake required - just pure, offline utility.
-        </p>
-      </div>
-
-      <!-- Tablet Clusters Bento Grid -->
-      <div class="bento-grid">
-        <!-- Security Cluster -->
-        <div class="card-sharp p-5 lg:col-span-2 flex flex-col">
-          <div class="flex justify-between items-start mb-3">
-            <h3 class="text-emerald-500 font-mono text-xs">// Security Cluster</h3>
-            <span class="text-gray-700 font-mono text-xs">auth_&_keys</span>
-          </div>
-          <div class="flex flex-wrap gap-2 mb-4">
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">JWT Toolkit</span>
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Password Gen</span>
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">UUID Gen</span>
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Checksum Calc</span>
-          </div>
-          <img src="https://scratchtabs.b-cdn.net/tablet-jwt.png" alt="JWT Toolkit interface with decoded payload" class="w-full h-auto max-h-48 border border-gray-800 cursor-pointer hover:border-emerald-500 transition-colors object-cover" onclick="openModal(this.src)">
+        <!-- Card 2 -->
+        <div class="p-5 border border-gray-800 bg-[#0a0a0a] rounded hover:border-emerald-500/50 transition-colors">
+          <div class="text-emerald-500 font-mono text-xs mb-3">02 // THE_WORKSPACE</div>
+          <h3 class="text-white font-bold text-lg mb-2">Persistent State</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">Organize tasks into persistent Workspaces. Split views, drag-and-drop management, and auto-save.</p>
         </div>
-
-        <!-- Logic Cluster -->
-        <div class="card-sharp p-5 lg:col-span-2 flex flex-col">
-          <div class="flex justify-between items-start mb-3">
-            <h3 class="text-emerald-500 font-mono text-xs">// Logic Cluster</h3>
-            <span class="text-gray-700 font-mono text-xs">parsing_&_testing</span>
-          </div>
-          <div class="flex flex-wrap gap-2 mb-4">
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Regex Tester</span>
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Cron Builder</span>
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Epoch Converter</span>
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">DateTime Tools</span>
-          </div>
-          <img src="https://scratchtabs.b-cdn.net/tablet-regex.png" alt="Regex tester with live match highlighting" class="w-full h-auto max-h-48 border border-gray-800 cursor-pointer hover:border-emerald-500 transition-colors object-cover" onclick="openModal(this.src)">
+        <!-- Card 3 -->
+        <div class="p-5 border border-gray-800 bg-[#0a0a0a] rounded hover:border-emerald-500/50 transition-colors">
+          <div class="text-emerald-500 font-mono text-xs mb-3">03 // INTELLIGENCE</div>
+          <h3 class="text-white font-bold text-lg mb-2">Smart Views</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">Paste raw data, get a UI. JSON becomes a tree, CSV becomes a spreadsheet, Markdown gets a live preview.</p>
         </div>
-
-        <!-- Visualization Cluster -->
-        <div class="card-sharp p-5 lg:row-span-2 flex flex-col">
-          <div class="flex justify-between items-start mb-3">
-            <h3 class="text-emerald-500 font-mono text-xs">// Visualization</h3>
-            <span class="text-gray-700 font-mono text-xs">diagrams_&_sketching</span>
-          </div>
-          <div class="flex flex-col gap-2 mb-4">
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Mermaid Editor</span>
-            <span class="px-2 py-1 bg-gray-900 border border-gray-800 text-gray-400 text-xs font-mono">Shape Snap</span>
-          </div>
-          <img src="https://scratchtabs.b-cdn.net/mermaid.png" alt="Mermaid diagram editor with live preview" class="w-full h-auto border border-gray-800 cursor-pointer hover:border-emerald-500 transition-colors flex-grow object-cover" onclick="openModal(this.src)">
-        </div>
-
-        <!-- Quick Access Mini Cards -->
-        <div class="card-sharp p-3 flex items-center justify-between">
-          <span class="font-mono text-gray-500 text-xs">0x15</span>
-          <span class="text-white text-xs font-mono">Base64 Encoder</span>
-          <span class="text-emerald-500 text-xs">→</span>
-        </div>
-        <div class="card-sharp p-3 flex items-center justify-between">
-          <span class="font-mono text-gray-500 text-xs">0x16</span>
-          <span class="text-white text-xs font-mono">URL Parser</span>
-          <span class="text-emerald-500 text-xs">→</span>
-        </div>
-        <div class="card-sharp p-3 flex items-center justify-between">
-          <span class="font-mono text-gray-500 text-xs">0x17</span>
-          <span class="text-white text-xs font-mono">Lorem Ipsum</span>
-          <span class="text-emerald-500 text-xs">→</span>
-        </div>
-        <div class="card-sharp p-3 flex items-center justify-between">
-          <span class="font-mono text-gray-500 text-xs">0x18</span>
-          <span class="text-white text-xs font-mono">Colour Picker</span>
-          <span class="text-emerald-500 text-xs">→</span>
-        </div>
-        <div class="card-sharp p-3 flex items-center justify-between">
-          <span class="font-mono text-gray-500 text-xs">0x19</span>
-          <span class="text-white text-xs font-mono">JSON Mapper</span>
-          <span class="text-emerald-500 text-xs">→</span>
-        </div>
-        <div class="card-sharp p-3 flex items-center justify-between">
-          <span class="font-mono text-gray-500 text-xs">0x1A</span>
-          <span class="text-white text-xs font-mono">Calculator</span>
-          <span class="text-emerald-500 text-xs">→</span>
+        <!-- Card 4 -->
+        <div class="p-5 border border-gray-800 bg-[#0a0a0a] rounded hover:border-emerald-500/50 transition-colors">
+          <div class="text-emerald-500 font-mono text-xs mb-3">04 // UTILITIES</div>
+          <h3 class="text-white font-bold text-lg mb-2">Tablet Arsenal</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">25+ specialized engineering tools like JWT Decoders, Regex Testers, and Cron Builders built-in.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- THE FOUNDATION -->
+  <!-- HEADLINE FEATURE: TRANSFORMATION PIPELINE -->
+  <section id="pipeline" class="py-16 md:py-24 border-t border-gray-800 bg-gray-900/20">
+    <div class="container mx-auto px-6">
+      <div class="flex flex-col lg:flex-row gap-12 items-center">
+        <div class="lg:w-1/2">
+          <div class="section-tag"><span>[NEW_FEATURE] // TRANSFORMATION_PIPELINE</span></div>
+          <h2 class="text-3xl md:text-4xl font-mono text-white mb-6">Unix Pipes for the <span class="text-emerald-500">Browser Age.</span></h2>
+          <p class="text-lg text-gray-400 mb-6 leading-relaxed">Eliminate the clipboard shuffle between isolated tools. Build reusable processing chains visually.</p>
+          <ul class="space-y-4 mb-8">
+            <li class="flex items-start"><span class="text-emerald-500 mr-3 font-mono">01.</span><span class="text-gray-300 text-sm"><strong>Chain Operations:</strong> Connect Decode -> Format -> Filter -> Extract steps.</span></li>
+            <li class="flex items-start"><span class="text-emerald-500 mr-3 font-mono">02.</span><span class="text-gray-300 text-sm"><strong>Live Preview:</strong> See exactly how your data transforms at every step.</span></li>
+            <li class="flex items-start"><span class="text-emerald-500 mr-3 font-mono">03.</span><span class="text-gray-300 text-sm"><strong>Save & Replay:</strong> Save complex pipelines to your library for one-click reuse later.</span></li>
+          </ul>
+        </div>
+        <div class="lg:w-1/2 w-full">
+          <div class="relative bg-[#0a0a0a] border border-gray-700 rounded-lg p-1 shadow-2xl">
+            <div class="h-8 bg-[#1a1a1a] border-b border-gray-800 flex items-center px-3 space-x-2 mb-1">
+              <div class="w-3 h-3 rounded-full bg-red-500/20"></div>
+              <div class="w-3 h-3 rounded-full bg-yellow-500/20"></div>
+              <span class="text-[10px] text-gray-500 font-mono ml-2">pipeline_editor.tsx</span>
+            </div>
+            <div class="bg-[#050505] p-6 relative min-h-[300px] flex flex-col gap-4">
+              <div class="p-3 bg-[#111] border border-gray-700 rounded flex justify-between items-center shadow-lg relative z-10">
+                <span class="text-emerald-500 font-mono text-xs">INPUT</span>
+                <span class="text-gray-400 text-xs truncate max-w-[150px]">eyJhbGciOiJIUzI1NiJ9...</span>
+              </div>
+              <div class="h-6 w-0.5 bg-gray-700 mx-auto"></div>
+              <div class="p-3 bg-[#1a1a1a] border border-emerald-500/50 rounded flex justify-between items-center shadow-lg relative z-10">
+                <div class="flex items-center gap-2">
+                  <span class="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center text-[10px]">1</span>
+                  <span class="text-white font-mono text-sm">Base64 Decode</span>
+                </div>
+                <span class="text-gray-500 text-[10px]">SUCCESS</span>
+              </div>
+              <div class="h-6 w-0.5 bg-gray-700 mx-auto"></div>
+              <div class="p-3 bg-[#1a1a1a] border border-emerald-500/50 rounded flex justify-between items-center shadow-lg relative z-10">
+                <div class="flex items-center gap-2">
+                  <span class="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center text-[10px]">2</span>
+                  <span class="text-white font-mono text-sm">JSON Prettify</span>
+                </div>
+                <span class="text-gray-500 text-[10px]">SUCCESS</span>
+              </div>
+              <div class="mt-4 p-3 bg-[#111] border border-gray-700 rounded border-l-2 border-l-emerald-500 font-mono text-xs text-gray-300">
+                {<br/>&nbsp;&nbsp;"alg": "HS256",<br/>&nbsp;&nbsp;"typ": "JWT"<br/>}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- THE FOUNDATION: ARCHITECTURE & PRIVACY -->
   <section id="tech-specs" class="py-16 md:py-24 border-t border-gray-800 bg-black">
     <div class="container mx-auto px-6">
       <div class="mb-10">
-        <div class="inline-flex items-center space-x-2 px-2 py-1 border border-gray-800 bg-black mb-4">
-          <span class="text-emerald-500 font-mono text-xs">[FOUNDATION] // ARCHITECTURE</span>
+        <div class="section-tag">
+          <span>[FOUNDATION] // LOCAL_FIRST_ARCHITECTURE</span>
         </div>
-        <p class="text-gray-400 text-sm mb-2">Built for high-security environments. Your data never leaves your browser.</p>
+        <h2 class="text-3xl md:text-4xl font-mono text-white mb-4">Built for High-Security Environments.</h2>
+        <p class="text-gray-400 text-lg max-w-3xl leading-relaxed">
+          Your data never leaves your browser. No servers to trust, no network requests to intercept, no accounts to breach.
+        </p>
       </div>
 
-      <!-- Dense Spec Sheet Grid with Solid Borders -->
+      <!-- Dense Spec Sheet Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-gray-800">
         <div class="border border-gray-800 p-5 h-full bg-black">
           <h3 class="text-emerald-500 font-mono text-xs mb-2 uppercase tracking-wider">STORAGE</h3>
           <p class="text-white text-sm font-mono mb-2">IndexedDB (Local-Only)</p>
-          <p class="text-gray-500 text-xs leading-tight">Data never touches our disks.</p>
+          <p class="text-gray-500 text-xs leading-tight">Data never touches our disks. Everything persists in your browser's local database.</p>
         </div>
         <div class="border border-gray-800 p-5 h-full bg-black">
           <h3 class="text-emerald-500 font-mono text-xs mb-2 uppercase tracking-wider">NETWORK</h3>
-          <p class="text-white text-sm font-mono mb-2">Zero Requests</p>
-          <p class="text-gray-500 text-xs leading-tight">Air-gapped potential. No telemetry.</p>
+          <p class="text-white text-sm font-mono mb-2">Zero Data Egress</p>
+          <p class="text-gray-500 text-xs leading-tight">Network activity is strictly limited to fetching app assets (lazy loading modules). Your input data never leaves the browser.</p>
         </div>
         <div class="border border-gray-800 p-5 h-full bg-black">
           <h3 class="text-emerald-500 font-mono text-xs mb-2 uppercase tracking-wider">PRIVACY</h3>
-          <p class="text-white text-sm font-mono mb-2">No Accounts</p>
-          <p class="text-gray-500 text-xs leading-tight">No cookies. No tracking.</p>
+          <p class="text-white text-sm font-mono mb-2">No Accounts Required</p>
+          <p class="text-gray-500 text-xs leading-tight">No cookies. No tracking scripts. No fingerprinting. Just tools.</p>
         </div>
         <div class="border border-gray-800 p-5 h-full bg-black">
           <h3 class="text-emerald-500 font-mono text-xs mb-2 uppercase tracking-wider">SHARING</h3>
-          <p class="text-white text-sm font-mono mb-2">Hash-Based</p>
-          <p class="text-gray-500 text-xs leading-tight">Share tabs via URLs that never reach server logs.</p>
+          <p class="text-white text-sm font-mono mb-2">Hash-Based URLs</p>
+          <p class="text-gray-500 text-xs leading-tight">Share tabs via URLs that never reach server logs. Content lives in the fragment.</p>
+        </div>
+      </div>
+
+      <!-- Trust Indicators -->
+      <div class="mt-12 grid md:grid-cols-3 gap-6">
+        <div class="card-sharp p-5">
+          <h4 class="text-white font-mono text-sm mb-2">Transparent Architecture</h4>
+          <p class="text-gray-500 text-xs">Verify it yourself. Inspect the network tab. Analyze the bundles. Zero data leaves your browser.</p>
+        </div>
+        <div class="card-sharp p-5">
+          <h4 class="text-white font-mono text-sm mb-2">Works Offline</h4>
+          <p class="text-gray-500 text-xs">Load once, use forever. Perfect for planes, VPNs, and air-gapped networks.</p>
+        </div>
+        <div class="card-sharp p-5">
+          <h4 class="text-white font-mono text-sm mb-2">Enterprise Friendly</h4>
+          <p class="text-gray-500 text-xs">No data exfiltration concerns. Your security team will love it.</p>
         </div>
       </div>
     </div>
   </section>
 
-
+  <!-- EXPLORE MORE -->
+  <section class="py-16 md:py-24 border-t border-gray-800">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-mono text-white mb-4">Explore the Platform</h2>
+        <p class="text-gray-400 text-lg max-w-2xl mx-auto">
+          Scratch Tabs is more than a text editor. Discover the intelligent workbench and specialized utilities.
+        </p>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <a href="features.html" class="card-sharp p-8 block group">
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-emerald-500 font-mono text-sm">// THE_WORKBENCH</h3>
+            <span class="text-gray-600 group-hover:text-emerald-500 transition-colors">-></span>
+          </div>
+          <h4 class="text-white font-bold text-xl mb-2">The Intelligent Workbench</h4>
+          <p class="text-gray-400 text-sm">Monaco editor, Smart Views for JSON/CSV/Markdown, Split View, Diff Engine, and workspace management.</p>
+        </a>
+        <a href="tablets.html" class="card-sharp p-8 block group">
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-emerald-500 font-mono text-sm">// THE_ARSENAL</h3>
+            <span class="text-gray-600 group-hover:text-emerald-500 transition-colors">-></span>
+          </div>
+          <h4 class="text-white font-bold text-xl mb-2">The Utility Belt</h4>
+          <p class="text-gray-400 text-sm">25+ standalone tablets: JWT Toolkit, REST Client, Regex Tester, Password Generator, and more.</p>
+        </a>
+      </div>
+    </div>
+  </section>
 
   <!-- Final CTA -->
   <section class="py-20 border-t border-gray-800">
@@ -426,14 +404,8 @@
     </div>
   </footer>
 
-  <!-- Image Modal -->
-  <div id="imgModal" class="img-modal" onclick="this.classList.remove('active')">
-    <img src="" alt="">
-  </div>
-
   <script>
     document.getElementById("currentYear").textContent = new Date().getFullYear();
-    function openModal(src) { const m = document.getElementById('imgModal'); m.querySelector('img').src = src; m.classList.add('active'); }
     const mobileMenuButton = document.getElementById("mobile-menu-button");
     const mobileMenu = document.getElementById("mobile-menu");
     const mobileMenuLinks = mobileMenu.querySelectorAll("a");
