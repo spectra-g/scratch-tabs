@@ -12,7 +12,6 @@ import { shallow } from "zustand/shallow";
 import { modelManager } from "../../services/modelManager";
 import { migrateTextToRich } from "../RichText/utils/contentMigration";
 import { useClipboardStore } from "../../stores/clipboardStore";
-import { BatchToolsModal } from "../BatchTools/BatchToolsModal";
 import { PipelineEditorModal } from "../Pipeline/PipelineEditorModal";
 import { usePipelineStore } from "../../stores/pipelineStore";
 import { useSmartViewSync } from "../../hooks/useSmartViewSync";
@@ -137,7 +136,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
     });
   }, [activeTab, activeTabId, updateTabState]);
 
-  const handleBatchToolsApply = useCallback((content: string) => {
+  const handlePipelineApply = useCallback((content: string) => {
     if (!activeTabId) return;
 
     // Update tab content in store
@@ -154,7 +153,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
   const activeViewId = activeTab ? getActiveView(activeTab.id) : null;
   const extendedView =
     activeTab && activeViewId
-      ? smartViewRegistry.getView(activeTab.language, activeViewId)
+      ? smartViewRegistry.getView(activeTab.language, activeViewId) || null
       : null;
 
   // Determine if we should show a side-by-side preview based on the view mode
@@ -277,11 +276,8 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
         </div>
       )}
 
-      {/* BatchToolsModal - Always available regardless of view mode */}
-      <BatchToolsModal onApply={handleBatchToolsApply} />
-
       {/* PipelineEditorModal - New pipeline-based transformations */}
-      <PipelineModalWrapper onApply={handleBatchToolsApply} />
+      <PipelineModalWrapper onApply={handlePipelineApply} />
 
       {/* Floating Macro Toolbar - Shows when recording/playing for the correct tab/side */}
       {!activeTab?.isTablet && !activeTab?.isRich && forceShowToolbar && targetTabId === activeTabId && targetSide === side && (

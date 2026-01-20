@@ -101,9 +101,6 @@ jest.mock('../../../hooks/useEditorAI', () => ({
 }));
 
 jest.mock('../../../tablets/dynamicRegistry', () => ({}));
-jest.mock('../../BatchTools/BatchToolsModal', () => ({
-  BatchToolsModal: () => <div data-testid="batch-tools-modal">Batch Tools Modal</div>,
-}));
 
 // Mock services
 jest.mock('../../../services/modelManager', () => ({
@@ -131,6 +128,7 @@ jest.mock('@monaco-editor/react', () => ({
       const mockEditor = {
         updateOptions: jest.fn(),
         getOption: jest.fn(),
+        onDidFocusEditorWidget: jest.fn((cb) => cb()),
         onDidChangeCursorPosition: jest.fn(),
         onDidChangeModelContent: jest.fn(),
         dispose: jest.fn(),

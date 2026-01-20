@@ -1,12 +1,10 @@
 import { useRef, useEffect } from "react";
 import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { useAIStore } from "../stores/aiStore";
-import { useBatchToolsStore } from "../stores/batchToolsStore";
 
 interface UseEditorActionsProps {
   editor: Monaco.editor.IStandaloneCodeEditor | null;
   monaco: typeof Monaco | null;
-  activeTabId: string;
   latestActiveTabRef: React.RefObject<any>;
   isAiReady: boolean;
   isAiLoading: boolean;
@@ -17,14 +15,12 @@ interface UseEditorActionsProps {
 export const useEditorActions = ({
   editor,
   monaco,
-  activeTabId,
   latestActiveTabRef,
   isAiReady,
   isAiLoading,
   isCodegenReady,
   isCodegenGenerating,
 }: UseEditorActionsProps) => {
-  const batchToolsDisposableRef = useRef<Monaco.IDisposable | null>(null);
   const aiSummarizeDisposableRef = useRef<Monaco.IDisposable | null>(null);
   const aiCodegenDisposableRef = useRef<Monaco.IDisposable | null>(null);
   const aiReadyContextKeyRef =
@@ -32,7 +28,6 @@ export const useEditorActions = ({
   const codegenReadyContextKeyRef =
     useRef<Monaco.editor.IContextKey<boolean> | null>(null);
 
-  const { openModal: openBatchToolsModal } = useBatchToolsStore();
   const { summarizeTextWithModal, runCodegen } = useAIStore();
 
   // Register actions only when editor or monaco changes
@@ -40,40 +35,12 @@ export const useEditorActions = ({
     if (!editor || !monaco) return;
 
     // Clean up previous actions if they exist
-    if (batchToolsDisposableRef.current) {
-      batchToolsDisposableRef.current.dispose();
-    }
     if (aiSummarizeDisposableRef.current) {
       aiSummarizeDisposableRef.current.dispose();
     }
     if (aiCodegenDisposableRef.current) {
       aiCodegenDisposableRef.current.dispose();
     }
-
-    // Add Batch Tools context menu action
-    batchToolsDisposableRef.current = editor.addAction({
-      id: "batch-tools",
-      label: "Transformations",
-      contextMenuGroupId: "navigation",
-      contextMenuOrder: 2.5,
-      run: () => {
-        try {
-          const model = editor.getModel();
-          const selectedText =
-            model && !model.isDisposed()
-              ? model.getValueInRange(editor.getSelection()!) || ""
-              : "";
-          const fullContent =
-            model && !model.isDisposed() ? model.getValue() : "";
-          openBatchToolsModal(fullContent, selectedText);
-        } catch (error) {
-          console.warn(
-            "[useEditorActions] Failed to open batch tools modal:",
-            error,
-          );
-        }
-      },
-    });
 
     // Create context keys for AI actions
     try {
@@ -180,10 +147,6 @@ export const useEditorActions = ({
 
     // Cleanup function
     return () => {
-      if (batchToolsDisposableRef.current) {
-        batchToolsDisposableRef.current.dispose();
-        batchToolsDisposableRef.current = null;
-      }
       if (aiSummarizeDisposableRef.current) {
         aiSummarizeDisposableRef.current.dispose();
         aiSummarizeDisposableRef.current = null;
