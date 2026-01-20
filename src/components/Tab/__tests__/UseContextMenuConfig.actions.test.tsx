@@ -7,19 +7,16 @@ import { Tab } from '../../../types';
 jest.mock('../../../stores/tabsStore');
 jest.mock('../../../stores/splitViewStore');
 jest.mock('../../../stores/rootStore');
-jest.mock('../../../stores/batchToolsStore');
 jest.mock('../../../stores/macroStore');
 jest.mock('../../../services/modelManager');
 
 // Import store types for proper mocking
 import { useSplitViewStore } from '../../../stores/splitViewStore';
 import { useRootStore } from '../../../stores/rootStore';
-import { useBatchToolsStore } from '../../../stores/batchToolsStore';
 import { useMacroStore } from '../../../stores/macroStore';
 
 const mockUseSplitViewStore = useSplitViewStore as jest.MockedFunction<typeof useSplitViewStore>;
 const mockUseRootStore = useRootStore as jest.MockedFunction<typeof useRootStore>;
-const mockUseBatchToolsStore = useBatchToolsStore as jest.MockedFunction<typeof useBatchToolsStore>;
 const mockUseMacroStore = useMacroStore as jest.MockedFunction<typeof useMacroStore>;
 
 const mockUseTabsStore = useTabsStore as jest.MockedFunction<typeof useTabsStore>;
@@ -74,9 +71,6 @@ describe('UseContextMenuConfig - Actions and Structure', () => {
       toggleTabPin: jest.fn(),
     } as any);
 
-    mockUseBatchToolsStore.mockReturnValue({
-      batchToolsVisible: false,
-    } as any);
 
     mockUseMacroStore.mockReturnValue({
       setForceShowToolbar: jest.fn(),
@@ -247,18 +241,30 @@ describe('UseContextMenuConfig - Actions and Structure', () => {
     expect(result.current.splitModalProps?.isOpen).toBe(true);
   });
 
-  it('should include Macro Recording menu item after Transformations', () => {
+  it('should include Transformation Pipeline menu item', () => {
     const { result } = renderHook(() =>
       useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
     );
 
     const menuItems = result.current.menuItems;
-    const transformationsIndex = menuItems.findIndex(item => item.id === 'transformations');
+    const pipelineItem = menuItems.find(item => item.id === 'pipeline');
+
+    expect(pipelineItem).toBeDefined();
+    expect(pipelineItem?.label).toBe('Transformation Pipeline');
+  });
+
+  it('should include Macro Recording menu item after Transformation Pipeline', () => {
+    const { result } = renderHook(() =>
+      useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
+    );
+
+    const menuItems = result.current.menuItems;
+    const pipelineIndex = menuItems.findIndex(item => item.id === 'pipeline');
     const macroIndex = menuItems.findIndex(item => item.id === 'macroRecording');
 
-    expect(transformationsIndex).not.toBe(-1);
+    expect(pipelineIndex).not.toBe(-1);
     expect(macroIndex).not.toBe(-1);
-    expect(macroIndex).toBe(transformationsIndex + 1);
+    expect(macroIndex).toBe(pipelineIndex + 1);
     expect(menuItems[macroIndex].label).toBe('Macro Recording');
   });
 

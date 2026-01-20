@@ -107,18 +107,17 @@
   </header>
 
   <!-- Hero Section -->
-  <section class="py-16 md:py-24 border-b border-gray-800">
+  <section class="pt-16 pb-12 md:pt-24 md:pb-16 border-b border-gray-800">
     <div class="container mx-auto px-6 text-center">
+      <div class="inline-flex items-center space-x-2 px-2 py-1 border border-gray-800 bg-gray-900 mb-6">
+        <span class="text-emerald-500 font-mono text-xs">// SYSTEM_CHANGELOG</span>
+      </div>
       <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight mb-6">
-        <span class="text-emerald-500 font-mono">SYSTEM_UPDATES</span><br />& EVOLUTION
+        Updates & <span class="text-emerald-500">Evolution.</span>
       </h1>
-      <p class="text-gray-400 text-lg md:text-xl max-w-3xl mx-auto leading-relaxed mb-8">
-        The complete history of Scratch Tabs. From minor utility tweaks to major architectural shifts, every change is
-        documented here.
+      <p class="text-lg md:text-xl text-gray-400 mb-8 max-w-3xl mx-auto leading-relaxed">
+        The complete history of Scratch Tabs. From minor utility tweaks to major architectural shifts, every change is documented here.
       </p>
-      <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button text-lg px-8 py-4">
-        <span class="text-gray-500 mr-2">$</span> launch_latest_v1.17.0
-      </a>
     </div>
   </section>
 
@@ -127,32 +126,41 @@
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
 
-        <!-- Version 1.17.0 -->
+        <!-- Version 1.18.0 -->
         <div class="changelog-entry latest">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-white">V1.17.0</h2>
+              <h2 class="text-2xl font-bold text-white">V1.18.0</h2>
               <span class="badge latest">LATEST</span>
             </div>
-            <span class="text-gray-500 text-xs font-mono">01/13/2026</span>
+            <span class="text-gray-500 text-xs font-mono">01/19/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">BROWSER-STYLE SCROLLABLE TABS</h3>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">TRANSFORMATION PIPELINE</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">Complete tab bar navigation overhaul with browser-style scrolling behavior, eliminating tab squashing and adding clear visual indicators for hidden content plus native touch gesture support.</p>
+            <p class="mb-4">A powerful new data transformation system that lets you chain multiple operations together to process text, JSON, and other data formats. Build reusable pipelines with 37+ operations spanning text manipulation, encoding, filtering, and more.</p>
 
             <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
             <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Horizontal Tab Scrolling:</strong> Tabs now maintain minimum readable width (80px) with variable widths and scroll horizontally when they overflow, preventing tab squashing</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Gradient Scroll Indicators:</strong> Visual masking gradients fade from tab bar background to transparent at edges, clearly indicating when tabs are hidden off-screen and scrollable in both light and dark modes</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Mouse Wheel Scrolling:</strong> Scroll through tabs using vertical mouse wheel gestures over the tab bar for intuitive navigation</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Touch Gesture Support:</strong> Swipe horizontally to scroll through tabs, or long-press (250ms) to drag and reorder tabs - properly distinguishing between scrolling and dragging on touch devices</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Transformation Pipeline Editor:</strong> 3-panel interface with operations palette, pipeline canvas, and live preview - chain operations like Trim → Uppercase → Base64 Encode → JSON Format</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>37+ Pipeline Operations:</strong> Text processing (case conversion, trim, whitespace), line operations (sort, reverse, dedupe, shuffle), filtering (regex, keyword, keep first/last N), encoding (Base64, URL), checksums, and redaction</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Drag-and-Drop Reordering:</strong> Rearrange pipeline steps with smooth drag-and-drop - each step can be enabled/disabled individually</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Persistent Pipelines:</strong> Save named pipelines and load them across sessions</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Real-Time Preview:</strong> Live output preview with execution stats (duration, character counts) as you build your pipeline</span></li>
             </ul>
-
-            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># improvements</h4>
-            <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Performance Optimization:</strong> Native browser scrolling eliminates expensive resize calculations and render cycles</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Theme-Aware Gradients:</strong> Gradients use CSS variables to match tab bar background color, ensuring visibility in all themes</span></li>
-            </ul>
+          </div>
+        </div>
+        <!-- Version 1.17.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.17.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">01/13/2026</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">BROWSER-STYLE SCROLLABLE TABS</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p>Native horizontal scrolling for tabs with visual gradient indicators and touch support</p>
           </div>
         </div>
         <!-- Version 1.16.0 -->
@@ -470,21 +478,45 @@
     </div>
   </section>
 
-  <!-- Final CTA Section -->
-  <section class="py-20 border-b border-gray-800">
+  <!-- EXPLORE MORE -->
+  <section class="py-16 md:py-24 border-t border-gray-800">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-mono text-white mb-4">Explore the Platform</h2>
+        <p class="text-gray-400 text-lg max-w-2xl mx-auto">
+          See what's new in action. Discover the full Scratch Tabs platform.
+        </p>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <a href="tablets.html" class="card-sharp p-8 block group">
+          <div class="flex justify-between items-start mb-4">
+            <span class="text-gray-600 group-hover:text-emerald-500 transition-colors">&lt;-</span>
+            <h3 class="text-emerald-500 font-mono text-sm">// THE_ARSENAL</h3>
+          </div>
+          <h4 class="text-white font-bold text-xl mb-2">The Utility Belt</h4>
+          <p class="text-gray-400 text-sm">25+ standalone tablets: JWT Toolkit, REST Client, Regex Tester, Password Generator, and more.</p>
+        </a>
+        <a href="index.html#tech-specs" class="card-sharp p-8 block group">
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-emerald-500 font-mono text-sm">// THE_FOUNDATION</h3>
+            <span class="text-gray-600 group-hover:text-emerald-500 transition-colors">-></span>
+          </div>
+          <h4 class="text-white font-bold text-xl mb-2">Privacy & Architecture</h4>
+          <p class="text-gray-400 text-sm">100% client-side, zero tracking, offline-capable. See how we built for high-security environments.</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="py-20 border-t border-gray-800">
     <div class="container mx-auto px-6 text-center">
-      <h2 class="text-3xl md:text-4xl font-bold text-white mb-6 uppercase tracking-tighter font-mono">
-        Ready to Upgrade?
-      </h2>
-      <p class="text-gray-400 text-lg mb-8 max-w-xl mx-auto">
-        All updates are instantly available. No download required.
-      </p>
-      <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button text-xl px-12 py-4">
-        <span class="text-gray-500 mr-2">$</span> launch_app<span class="cursor-blink">|</span>
-      </a>
-      <p class="text-xs font-mono text-gray-600 mt-6 uppercase tracking-widest">
-        CLIENT_SIDE_ONLY // PRIVACY_FIRST // OFFLINE_CAPABLE
-      </p>
+      <h2 class="text-3xl md:text-5xl font-mono text-white mb-8">READY TO LAUNCH?</h2>
+      <div class="flex flex-col sm:flex-row gap-6 justify-center items-center">
+        <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button text-xl px-12 py-5">
+          <span class="text-gray-500 mr-2">$</span> launch_app<span class="cursor-blink">|</span>
+        </a>
+      </div>
     </div>
   </section>
 
@@ -494,7 +526,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.17.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.18.0</span>
         </div>
 
         <div class="flex space-x-8">
@@ -506,9 +538,6 @@
             class="text-gray-500 hover:text-emerald-500 font-mono text-xs">KO-FI</a>
         </div>
 
-        <div class="text-gray-600 font-mono text-xs">
-          Built for developers, by developers.
-        </div>
       </div>
       <div class="mt-8 text-center text-gray-700 text-[10px] font-mono">
         &copy; <span id="currentYear"></span> SCRATCH_TABS. NO_TRACKING. NO_ACCOUNTS. 100%_CLIENT_SIDE.

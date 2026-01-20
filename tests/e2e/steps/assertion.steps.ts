@@ -90,10 +90,6 @@ Then('each line should be valid JSON', async function() {
   await this.editor.expectEachLineIsValidJson();
 });
 
-Then('the batch tools modal should appear', async function() {
-  await this.navigation.expectBatchToolsModalToAppear();
-});
-
 Then('the tab rename input should appear', async function() {
   await this.tabBar.expectTabRenameInputToAppear();
 });

@@ -3,8 +3,24 @@ config:
   max_versions: 100  # Maximum number of versions to display
 
 releases:
-  - version: "1.17.0"
+  - version: "1.18.0"
     type: "latest"
+    draft: false
+    date: "2026-01-19"
+    headline: "Transformation Pipeline"
+    summary: "CyberChef-style data processing with chainable operations, drag-and-drop reordering, and persistent pipelines"
+    description: "A powerful new data transformation system that lets you chain multiple operations together to process text, JSON, and other data formats. Build reusable pipelines with 37+ operations spanning text manipulation, encoding, filtering, and more."
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**Transformation Pipeline Editor:** 3-panel interface with operations palette, pipeline canvas, and live preview - chain operations like Trim → Uppercase → Base64 Encode → JSON Format"
+          - "**37+ Pipeline Operations:** Text processing (case conversion, trim, whitespace), line operations (sort, reverse, dedupe, shuffle), filtering (regex, keyword, keep first/last N), encoding (Base64, URL), checksums, and redaction"
+          - "**Drag-and-Drop Reordering:** Rearrange pipeline steps with smooth drag-and-drop - each step can be enabled/disabled individually"
+          - "**Persistent Pipelines:** Save named pipelines and load them across sessions"
+          - "**Real-Time Preview:** Live output preview with execution stats (duration, character counts) as you build your pipeline"
+
+  - version: "1.17.0"
+    type: "release"
     draft: false
     date: "2026-01-13"
     headline: "Browser-Style Scrollable Tabs"

@@ -12,7 +12,8 @@ import { shallow } from "zustand/shallow";
 import { modelManager } from "../../services/modelManager";
 import { migrateTextToRich } from "../RichText/utils/contentMigration";
 import { useClipboardStore } from "../../stores/clipboardStore";
-import { BatchToolsModal } from "../BatchTools/BatchToolsModal";
+import { PipelineEditorModal } from "../Pipeline/PipelineEditorModal";
+import { usePipelineStore } from "../../stores/pipelineStore";
 import { useSmartViewSync } from "../../hooks/useSmartViewSync";
 import type * as Monaco from "monaco-editor";
 import { FloatingMacroToolbar } from "../Macro/FloatingMacroToolbar";
@@ -26,6 +27,21 @@ interface EditorPaneWrapperProps {
 const PreviewLoadingFallback = () => (
   <div className="text-muted p-4 animate-pulse">Loading Preview...</div>
 );
+
+// Wrapper component for PipelineEditorModal that reads from the store
+const PipelineModalWrapper: React.FC<{ onApply: (content: string) => void }> = ({ onApply }) => {
+  const { isOpen, content, closeModal } = usePipelineStore();
+
+  if (!isOpen) return null;
+
+  return (
+    <PipelineEditorModal
+      initialContent={content}
+      onApply={onApply}
+      onClose={closeModal}
+    />
+  );
+};
 
 // Full content accessor for preview components (removing large content guard)
 const getContentForPreview = (tab: any): string => {
@@ -120,7 +136,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
     });
   }, [activeTab, activeTabId, updateTabState]);
 
-  const handleBatchToolsApply = useCallback((content: string) => {
+  const handlePipelineApply = useCallback((content: string) => {
     if (!activeTabId) return;
 
     // Update tab content in store
@@ -137,7 +153,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
   const activeViewId = activeTab ? getActiveView(activeTab.id) : null;
   const extendedView =
     activeTab && activeViewId
-      ? smartViewRegistry.getView(activeTab.language, activeViewId)
+      ? smartViewRegistry.getView(activeTab.language, activeViewId) || null
       : null;
 
   // Determine if we should show a side-by-side preview based on the view mode
@@ -260,8 +276,8 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
         </div>
       )}
 
-      {/* BatchToolsModal - Always available regardless of view mode */}
-      <BatchToolsModal onApply={handleBatchToolsApply} />
+      {/* PipelineEditorModal - New pipeline-based transformations */}
+      <PipelineModalWrapper onApply={handlePipelineApply} />
 
       {/* Floating Macro Toolbar - Shows when recording/playing for the correct tab/side */}
       {!activeTab?.isTablet && !activeTab?.isRich && forceShowToolbar && targetTabId === activeTabId && targetSide === side && (

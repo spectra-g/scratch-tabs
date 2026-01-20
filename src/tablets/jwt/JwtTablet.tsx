@@ -7,6 +7,7 @@ import { Tabs } from "./components/ui/Tabs";
 import { JwtHistory } from "./components/JwtHistory";
 import { JwtState, JwtHistoryItem, StoredKey } from "./types";
 import { SensitiveDataManager } from "../../utils/sensitiveDataManager";
+import { Key } from "../../components/Icons";
 
 interface JwtTabletState extends TabletState {
   type: "jwt";
@@ -244,6 +245,7 @@ export const JwtTablet: Tablet = {
       <div className="h-full bg-canvas flex flex-col">
         {/* Header */}
         <div className="flex items-center space-x-3 p-4 border-b border-base flex-none">
+          <Key className="w-6 h-6 text-main opacity-80" />
           <h2 className="text-2xl font-bold text-main">JWT</h2>
         </div>
 

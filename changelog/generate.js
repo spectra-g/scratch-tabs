@@ -261,6 +261,15 @@ function updateLandingPagesVersion(latestVersion) {
         }
       }
 
+      // Special case: Update hero version tag in index.html
+      if (page === 'index.html') {
+        const heroVersionRegex = /(v)[\d.]+(\ \/\/ LATEST)/g;
+        if (heroVersionRegex.test(content)) {
+          content = content.replace(heroVersionRegex, `$1${latestVersion}$2`);
+          updated = true;
+        }
+      }
+
       if (updated) {
         fs.writeFileSync(filePath, content, 'utf8');
         console.log(`✅ Updated version to ${latestVersion} in landing/${page}`);

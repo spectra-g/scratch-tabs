@@ -3,14 +3,6 @@ Feature: Tab context menu
   Background:
     Given I am on the homepage
 
-  Scenario: Open Transformations from tab context menu
-    When I set clipboard content to "Hello from clipboard"
-    When I click the icon for "New tab with contents from clipboard"
-    Then the "Scratch 1" tab should be active
-    When I right-click the "Scratch 1" tab
-    And I select "Transformations" from the context menu
-    Then the batch tools modal should appear
-
   Scenario: Tablet context menu items
     When I click the icon for "New tablet"
     And I select "Calculator" from the tablet selector

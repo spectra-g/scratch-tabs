@@ -3,7 +3,7 @@ import { useSplitViewStore } from "../../stores/splitViewStore";
 import { useRootStore } from "../../stores/rootStore";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
 import { useMacroStore } from "../../stores/macroStore";
-import { useBatchToolsStore } from "../../stores/batchToolsStore";
+import { usePipelineStore } from "../../stores/pipelineStore";
 import {
   Copy,
   GitCompare,
@@ -11,7 +11,6 @@ import {
   ExternalLink,
   ChevronRight,
   ChevronLeft,
-  MagicWand,
   Layers,
   Maximize,
   Split,
@@ -25,6 +24,7 @@ import {
   PanelLeftClose,
   PanelRightClose,
   Download,
+  Play,
 } from "../Icons";
 import { FormatSelector } from "./FormatSelector";
 import { formatRegistry } from "../../formats";
@@ -102,7 +102,7 @@ export const useContextMenuConfig = (
   const [splitModalState, setSplitModalState] = useState<{ tabId: string } | null>(null);
   const [shareModalState, setShareModalState] = useState<{ tabId: string } | null>(null);
   const [tabletModalOpen, setTabletModalOpen] = useState(false);
-  const { openModal: openBatchToolsModal } = useBatchToolsStore();
+  const { openModal: openPipelineModal } = usePipelineStore();
 
   const tab = tabsStore.tabs.find((t: any) => t.id === tabId);
 
@@ -156,9 +156,10 @@ export const useContextMenuConfig = (
     closeContextMenu();
   };
 
-  const handleOpenTransformations = () => {
+
+  const handleOpenPipeline = () => {
     if (tab) {
-      openBatchToolsModal(tab.content || "", "");
+      openPipelineModal(tab.content || "");
       closeContextMenu();
     }
   };
@@ -455,12 +456,12 @@ Add any other context about the problem here.
     },
     // Separator
     { id: "sep-2", isSeparator: true },
-    // 7. Transformations
+    // Transformation Pipeline
     {
-      id: "transformations",
-      label: "Transformations",
-      icon: MagicWand,
-      action: handleOpenTransformations,
+      id: "pipeline",
+      label: "Transformation Pipeline",
+      icon: Play,
+      action: handleOpenPipeline,
       condition: !!tab && !tab.isTablet && !tab.isRich,
     },
     // Macro Recording
