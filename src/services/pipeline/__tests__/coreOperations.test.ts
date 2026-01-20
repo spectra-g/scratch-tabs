@@ -212,19 +212,42 @@ describe("Core Pipeline Operations", () => {
     });
 
     describe("Sorting Operations", () => {
-        describe("text.sort-asc", () => {
+        describe("text.sort", () => {
+
             it("should sort lines alphabetically ascending", async () => {
                 const input = "cherry\napple\nbanana";
-                const result = await execute("text.sort-asc", input);
+                const result = await execute("text.sort", input, { mode: "asc" });
                 expect(result).toBe("apple\nbanana\ncherry");
             });
-        });
 
-        describe("text.sort-desc", () => {
             it("should sort lines alphabetically descending", async () => {
                 const input = "apple\nbanana\ncherry";
-                const result = await execute("text.sort-desc", input);
+                const result = await execute("text.sort", input, { mode: "desc" });
                 expect(result).toBe("cherry\nbanana\napple");
+            });
+
+            it("should perform natural sort", async () => {
+                const input = "item10\nitem2\nitem1";
+                const result = await execute("text.sort", input, { mode: "natural" });
+                expect(result).toBe("item1\nitem2\nitem10");
+            });
+
+            it("should perform numeric ascending sort", async () => {
+                const input = "10\n2\n100\n1";
+                const result = await execute("text.sort", input, { mode: "numeric-asc" });
+                expect(result).toBe("1\n2\n10\n100");
+            });
+
+            it("should perform numeric descending sort", async () => {
+                const input = "10\n2\n100\n1";
+                const result = await execute("text.sort", input, { mode: "numeric-desc" });
+                expect(result).toBe("100\n10\n2\n1");
+            });
+
+            it("should sort by line length", async () => {
+                const input = "short\nlongest_line\nmedium";
+                const result = await execute("text.sort", input, { mode: "length" });
+                expect(result).toBe("short\nmedium\nlongest_line");
             });
         });
 
@@ -635,8 +658,7 @@ describe("Core Pipeline Operations", () => {
                 "text.invert-case",
                 "text.alternating-case",
                 "text.remove-duplicates",
-                "text.sort-asc",
-                "text.sort-desc",
+                "text.sort",
                 "text.reverse-lines",
                 "text.shuffle-lines",
                 "text.join-lines",
@@ -669,6 +691,7 @@ describe("Core Pipeline Operations", () => {
         it("should have valid parameter definitions", () => {
             const opsWithParams = [
                 "text.remove-extra-whitespace",
+                "text.sort",
                 "text.join-lines",
                 "text.split-lines",
                 "text.add-line-numbers",

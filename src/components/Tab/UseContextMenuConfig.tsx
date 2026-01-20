@@ -3,7 +3,6 @@ import { useSplitViewStore } from "../../stores/splitViewStore";
 import { useRootStore } from "../../stores/rootStore";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
 import { useMacroStore } from "../../stores/macroStore";
-import { useBatchToolsStore } from "../../stores/batchToolsStore";
 import { usePipelineStore } from "../../stores/pipelineStore";
 import {
   Copy,
@@ -12,7 +11,6 @@ import {
   ExternalLink,
   ChevronRight,
   ChevronLeft,
-  MagicWand,
   Layers,
   Maximize,
   Split,
@@ -104,7 +102,6 @@ export const useContextMenuConfig = (
   const [splitModalState, setSplitModalState] = useState<{ tabId: string } | null>(null);
   const [shareModalState, setShareModalState] = useState<{ tabId: string } | null>(null);
   const [tabletModalOpen, setTabletModalOpen] = useState(false);
-  const { openModal: openBatchToolsModal } = useBatchToolsStore();
   const { openModal: openPipelineModal } = usePipelineStore();
 
   const tab = tabsStore.tabs.find((t: any) => t.id === tabId);
@@ -159,12 +156,6 @@ export const useContextMenuConfig = (
     closeContextMenu();
   };
 
-  const handleOpenTransformations = () => {
-    if (tab) {
-      openBatchToolsModal(tab.content || "", "");
-      closeContextMenu();
-    }
-  };
 
   const handleOpenPipeline = () => {
     if (tab) {
@@ -465,18 +456,10 @@ Add any other context about the problem here.
     },
     // Separator
     { id: "sep-2", isSeparator: true },
-    // 7. Transformations
-    {
-      id: "transformations",
-      label: "Transformations",
-      icon: MagicWand,
-      action: handleOpenTransformations,
-      condition: !!tab && !tab.isTablet && !tab.isRich,
-    },
-    // Pipeline
+    // Transformation Pipeline
     {
       id: "pipeline",
-      label: "Pipeline",
+      label: "Transformation Pipeline",
       icon: Play,
       action: handleOpenPipeline,
       condition: !!tab && !tab.isTablet && !tab.isRich,

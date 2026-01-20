@@ -324,27 +324,56 @@ const coreOperations: OperationDefinition[] = [
 
     // === SORTING & LINE ORDER ===
     {
-        id: "text.sort-asc",
-        name: "Sort Lines (A-Z)",
-        description: "Sort lines alphabetically in ascending order",
+        id: "text.sort",
+        name: "Sort Lines",
+        description: "Sort lines using various algorithms",
         categories: ["text", "sorting"],
-        parameters: [],
-        execute: (input) => {
-            return input.split("\n").sort().join("\n");
+        parameters: [
+            {
+                name: "mode",
+                label: "Sort Mode",
+                type: "select",
+                default: "asc",
+                options: [
+                    { value: "asc", label: "Alphabetical (A-Z)" },
+                    { value: "desc", label: "Alphabetical (Z-A)" },
+                    { value: "natural", label: "Natural Sort" },
+                    { value: "numeric-asc", label: "Numeric (Ascending)" },
+                    { value: "numeric-desc", label: "Numeric (Descending)" },
+                    { value: "length", label: "By Length" },
+                ],
+            },
+        ],
+        execute: (input, params) => {
+            const mode = (params.mode as string) ?? "asc";
+            const lines = input.split("\n");
+
+            switch (mode) {
+                case "asc":
+                    return lines.sort().join("\n");
+                case "desc":
+                    return lines.sort().reverse().join("\n");
+                case "natural":
+                    return lines.sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).join("\n");
+                case "numeric-asc":
+                    return lines.sort((a, b) => {
+                        const numA = parseFloat(a.replace(/[^\d.-]/g, ""));
+                        const numB = parseFloat(b.replace(/[^\d.-]/g, ""));
+                        return (isNaN(numA) ? 0 : numA) - (isNaN(numB) ? 0 : numB);
+                    }).join("\n");
+                case "numeric-desc":
+                    return lines.sort((a, b) => {
+                        const numA = parseFloat(a.replace(/[^\d.-]/g, ""));
+                        const numB = parseFloat(b.replace(/[^\d.-]/g, ""));
+                        return (isNaN(numB) ? 0 : numB) - (isNaN(numA) ? 0 : numA);
+                    }).join("\n");
+                case "length":
+                    return lines.sort((a, b) => a.length - b.length).join("\n");
+                default:
+                    return lines.sort().join("\n");
+            }
         },
-        keywords: ["sort", "alphabetical", "ascending"],
-        source: "core",
-    },
-    {
-        id: "text.sort-desc",
-        name: "Sort Lines (Z-A)",
-        description: "Sort lines alphabetically in descending order",
-        categories: ["text", "sorting"],
-        parameters: [],
-        execute: (input) => {
-            return input.split("\n").sort().reverse().join("\n");
-        },
-        keywords: ["sort", "alphabetical", "descending"],
+        keywords: ["sort", "alphabetical", "natural", "numeric", "length"],
         source: "core",
     },
     {

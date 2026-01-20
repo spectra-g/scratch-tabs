@@ -264,7 +264,7 @@ export const PipelineEditorModal: React.FC<PipelineEditorModalProps> = ({
           <div className="flex items-center space-x-3">
             <div className="flex items-center space-x-2">
               <Play className="w-5 h-5 text-secondary" />
-              <h2 className="text-lg font-medium text-main">Pipeline Editor</h2>
+              <h2 className="text-lg font-medium text-main">Transformation Pipeline</h2>
             </div>
             {pipeline.name && (
               <span className="text-sm text-main bg-element px-2 py-1 rounded">

@@ -16,7 +16,7 @@ export class PipelineActions {
    */
   async openPipelineModal(): Promise<void> {
     // Wait for the Pipeline modal to be visible
-    const modal = this.page.locator('text=Pipeline Editor');
+    const modal = this.page.locator('text=Transformation Pipeline');
     await expect(modal).toBeVisible();
   }
 
@@ -24,7 +24,7 @@ export class PipelineActions {
    * Verify the Pipeline modal is visible
    */
   async expectPipelineModalVisible(): Promise<void> {
-    const modal = this.page.locator('text=Pipeline Editor');
+    const modal = this.page.locator('text=Transformation Pipeline');
     await expect(modal).toBeVisible();
   }
 
@@ -32,7 +32,7 @@ export class PipelineActions {
    * Verify the Pipeline modal is not visible
    */
   async expectPipelineModalNotVisible(): Promise<void> {
-    const modal = this.page.locator('text=Pipeline Editor');
+    const modal = this.page.locator('text=Transformation Pipeline');
     await expect(modal).not.toBeVisible();
   }
 
