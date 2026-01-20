@@ -102,11 +102,6 @@ export class NavigationActions {
     await this.waitForPageStabilization();
   }
 
-  async expectBatchToolsModalToAppear() {
-    // Wait for the batch tools modal to appear by looking for the "Batch Tools" heading
-    await expect(this.page.getByRole('heading', { name: 'Batch Tools' })).toBeVisible();
-  }
-
   async expectDiffModalToAppear() {
     // Wait for the diff modal to appear - look for diff view elements
     await expect(this.page.locator('.monaco-diff-editor')).toBeVisible();
