@@ -22,6 +22,8 @@ import {
     Type
 } from "../Icons";
 import { clsx } from "clsx";
+import { WorkspaceContextMenu } from "./WorkspaceContextMenu";
+import { SidebarTabContextMenu } from "./SidebarTabContextMenu";
 
 const ROW_HEIGHT = 32;
 
@@ -40,13 +42,49 @@ export const Sidebar: React.FC = () => {
         expandWorkspace,
         collapseWorkspace,
         searchQuery,
-        setSearchQuery
+        setSearchQuery,
+        refreshWorkspaceMetadata
     } = useSidebarStore();
 
     const { splitView } = useSplitViewStore();
     const activeTabId = splitView?.activeSide === 'right' ? splitView?.activeRightTabId : splitView?.activeLeftTabId;
 
     const [switchingToWorkspaceId, setSwitchingToWorkspaceId] = useState<string | null>(null);
+    const prevActiveWorkspaceIdRef = useRef<string | null>(activeWorkspaceId);
+    const [workspaceContextMenu, setWorkspaceContextMenu] = useState<{
+        workspaceId: string;
+        position: { x: number; y: number };
+    } | null>(null);
+    const [tabContextMenu, setTabContextMenu] = useState<{
+        tabId: string;
+        workspaceId: string;
+        position: { x: number; y: number };
+    } | null>(null);
+
+    // Load metadata for all workspaces on mount to show tab counts
+    useEffect(() => {
+        const loadAllWorkspaceMetadata = async () => {
+            // Load metadata for all non-active workspaces
+            const inactiveWorkspaces = workspaces.filter(w => w.id !== activeWorkspaceId);
+            await Promise.all(
+                inactiveWorkspaces.map(ws => refreshWorkspaceMetadata(ws.id))
+            );
+        };
+
+        if (workspaces.length > 0 && activeWorkspaceId) {
+            loadAllWorkspaceMetadata();
+        }
+    }, [workspaces.length, activeWorkspaceId, refreshWorkspaceMetadata]); // Include all dependencies
+
+    // Refresh previous workspace metadata when switching workspaces
+    useEffect(() => {
+        const prevWorkspaceId = prevActiveWorkspaceIdRef.current;
+        if (prevWorkspaceId && prevWorkspaceId !== activeWorkspaceId) {
+            // Refresh the metadata for the workspace we just left
+            refreshWorkspaceMetadata(prevWorkspaceId);
+        }
+        prevActiveWorkspaceIdRef.current = activeWorkspaceId;
+    }, [activeWorkspaceId, refreshWorkspaceMetadata]);
 
     const treeItems = useMemo(() => {
         const items: TreeItem[] = [];
@@ -134,11 +172,35 @@ export const Sidebar: React.FC = () => {
 
     const handleTabClick = async (tabId: string, workspaceId: string) => {
         if (workspaceId !== activeWorkspaceId) {
+            // Refresh current workspace metadata before switching
+            // This ensures the sidebar shows the correct state after the switch
+            if (activeWorkspaceId) {
+                await refreshWorkspaceMetadata(activeWorkspaceId);
+            }
             setSwitchingToWorkspaceId(workspaceId);
             await switchWorkspace(workspaceId);
             setSwitchingToWorkspaceId(null);
         }
         setActiveTab(tabId);
+    };
+
+    const handleWorkspaceContextMenu = (e: React.MouseEvent, workspaceId: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setWorkspaceContextMenu({
+            workspaceId,
+            position: { x: e.clientX, y: e.clientY }
+        });
+    };
+
+    const handleTabContextMenu = (e: React.MouseEvent, tabId: string, workspaceId: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setTabContextMenu({
+            tabId,
+            workspaceId,
+            position: { x: e.clientX, y: e.clientY }
+        });
     };
 
     const renderRow = ({ index, style }: { index: number; style: React.CSSProperties }) => {
@@ -157,6 +219,7 @@ export const Sidebar: React.FC = () => {
                     )}
                     onClick={() => handleWorkspaceClick(item.id, item.isExpanded)}
                     onDoubleClick={() => switchWorkspace(item.id)}
+                    onContextMenu={(e) => handleWorkspaceContextMenu(e, item.id)}
                 >
                     <span className="mr-1">
                         {item.isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
@@ -183,6 +246,7 @@ export const Sidebar: React.FC = () => {
                     item.isActive ? "bg-primary-subtle border-r-2 border-primary" : "text-secondary"
                 )}
                 onClick={() => handleTabClick(item.id, item.workspaceId)}
+                onContextMenu={(e) => handleTabContextMenu(e, item.id, item.workspaceId)}
             >
                 <span className="mr-2 opacity-70">
                     <TabIcon language={item.language} isTablet={item.isTablet} />
@@ -215,7 +279,7 @@ export const Sidebar: React.FC = () => {
     if (!isSidebarExpanded) return null;
 
     return (
-        <div className="tablet-sidebar w-72 flex flex-col h-full border-r border-base bg-surface-secondary">
+        <div className="tablet-sidebar w-72 flex-shrink-0 flex flex-col h-full border-r border-base bg-surface-secondary">
             <div className="p-3 flex flex-col gap-2">
                 <div className="flex items-center justify-between">
                     <h2 className="text-xs font-bold uppercase tracking-wider text-secondary">Explorer</h2>
@@ -256,6 +320,23 @@ export const Sidebar: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {workspaceContextMenu && (
+                <WorkspaceContextMenu
+                    workspaceId={workspaceContextMenu.workspaceId}
+                    position={workspaceContextMenu.position}
+                    onClose={() => setWorkspaceContextMenu(null)}
+                />
+            )}
+
+            {tabContextMenu && (
+                <SidebarTabContextMenu
+                    tabId={tabContextMenu.tabId}
+                    workspaceId={tabContextMenu.workspaceId}
+                    position={tabContextMenu.position}
+                    onClose={() => setTabContextMenu(null)}
+                />
+            )}
         </div>
     );
 };

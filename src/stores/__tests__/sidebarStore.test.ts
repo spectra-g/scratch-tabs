@@ -1,5 +1,6 @@
 const mockStorageProvider = {
     getTabsByWorkspace: jest.fn() as jest.MockedFunction<(workspaceId: string) => Promise<any[]>>,
+    getSplitViewByWorkspace: jest.fn() as jest.MockedFunction<(workspaceId: string) => Promise<any>>,
 };
 
 jest.mock("../../db", () => ({
@@ -74,7 +75,12 @@ describe("SidebarStore", () => {
             const mockTabs = [
                 { id: "tab1", title: "Tab 1", language: "typescript", lastModified: 100, workspaceId: wsId }
             ];
+            const mockSplitView = {
+                leftTabs: ["tab1"],
+                rightTabs: [],
+            };
             mockStorageProvider.getTabsByWorkspace.mockResolvedValue(mockTabs);
+            mockStorageProvider.getSplitViewByWorkspace.mockResolvedValue(mockSplitView);
 
             await useSidebarStore.getState().expandWorkspace(wsId);
 
@@ -103,17 +109,22 @@ describe("SidebarStore", () => {
         it("should refresh metadata and handle loading states", async () => {
             const wsId = "ws-1";
             const mockTabs = [{ id: "t1", title: "T1", language: "js", lastModified: 200, workspaceId: wsId }];
+            const mockSplitView = { leftTabs: ["t1"], rightTabs: [] };
 
             // Setup a pending promise to test loading state
-            let resolvePromise: any;
-            const promise = new Promise<any[]>((resolve) => { resolvePromise = resolve; });
-            mockStorageProvider.getTabsByWorkspace.mockReturnValue(promise);
+            let resolveTabsPromise: any;
+            let resolveSplitViewPromise: any;
+            const tabsPromise = new Promise<any[]>((resolve) => { resolveTabsPromise = resolve; });
+            const splitViewPromise = new Promise<any>((resolve) => { resolveSplitViewPromise = resolve; });
+            mockStorageProvider.getTabsByWorkspace.mockReturnValue(tabsPromise);
+            mockStorageProvider.getSplitViewByWorkspace.mockReturnValue(splitViewPromise);
 
             const refreshPromise = useSidebarStore.getState().refreshWorkspaceMetadata(wsId);
 
             expect(useSidebarStore.getState().loadingWorkspaceIds.has(wsId)).toBe(true);
 
-            resolvePromise(mockTabs);
+            resolveTabsPromise(mockTabs);
+            resolveSplitViewPromise(mockSplitView);
             await refreshPromise;
 
             expect(useSidebarStore.getState().loadingWorkspaceIds.has(wsId)).toBe(false);
@@ -123,6 +134,7 @@ describe("SidebarStore", () => {
         it("should handle reach errors during refresh", async () => {
             const wsId = "ws-1";
             mockStorageProvider.getTabsByWorkspace.mockRejectedValue(new Error("DB Error"));
+            mockStorageProvider.getSplitViewByWorkspace.mockRejectedValue(new Error("DB Error"));
 
             await useSidebarStore.getState().refreshWorkspaceMetadata(wsId);
 

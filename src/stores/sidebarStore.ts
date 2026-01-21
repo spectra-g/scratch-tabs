@@ -74,7 +74,28 @@ export const useSidebarStore = create<SidebarState>((set, get) => {
 
             try {
                 const tabs = await storage.getTabsByWorkspace(workspaceId);
-                const metadata: SidebarTabInfo[] = tabs.map((t) => ({
+                const splitView = await storage.getSplitViewByWorkspace(workspaceId);
+
+                // Create tab map for quick lookup
+                const tabMap = new Map(tabs.map(t => [t.id, t]));
+
+                // Order tabs according to splitView order (leftTabs then rightTabs)
+                let orderedTabs: typeof tabs = [];
+                if (splitView) {
+                    const allTabIds = [...(splitView.leftTabs || []), ...(splitView.rightTabs || [])];
+                    // Map IDs to tabs, preserving splitView order
+                    orderedTabs = allTabIds
+                        .map(id => tabMap.get(id))
+                        .filter((t): t is typeof tabs[number] => t !== undefined);
+
+                    // Add any tabs not in splitView (shouldn't happen, but defensive)
+                    const remainingTabs = tabs.filter(t => !allTabIds.includes(t.id));
+                    orderedTabs = [...orderedTabs, ...remainingTabs];
+                } else {
+                    orderedTabs = tabs;
+                }
+
+                const metadata: SidebarTabInfo[] = orderedTabs.map((t) => ({
                     id: t.id,
                     title: t.title,
                     language: t.language,

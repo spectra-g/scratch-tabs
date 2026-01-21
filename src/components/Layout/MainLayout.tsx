@@ -318,16 +318,15 @@ const MainLayout: React.FC = () => {
 
   return (
     <div className="h-screen flex flex-col bg-canvas text-main transition-colors duration-200">
-      <div
-        ref={containerRef}
-        className="flex w-full h-full min-w-0 overflow-hidden"
-      >
+      <div className="flex w-full h-full min-w-0 overflow-hidden">
         <Sidebar />
         {tabCount === 0 && workspaces.length === 0 ? (
-
           <WelcomeScreen />
         ) : (
-          <>
+          <div
+            ref={containerRef}
+            className="flex flex-1 h-full min-w-0 overflow-hidden"
+          >
             <div
               className="flex flex-col h-full overflow-hidden min-w-0"
               style={leftPaneStyle}
@@ -369,7 +368,7 @@ const MainLayout: React.FC = () => {
                 </div>
               </>
             )}
-          </>
+          </div>
         )}
       </div>
 
