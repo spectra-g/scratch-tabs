@@ -19,7 +19,8 @@ import {
     Plus,
     Pin,
     Calculator,
-    Type
+    Type,
+    X
 } from "../Icons";
 import { clsx } from "clsx";
 import { WorkspaceContextMenu } from "./WorkspaceContextMenu";
@@ -37,6 +38,8 @@ export const Sidebar: React.FC = () => {
     const { setActiveTab } = useRootStore();
     const {
         isSidebarExpanded,
+        isMobileOpen,
+        setMobileOpen,
         expandedWorkspaceIds,
         workspaceTabsMetadata,
         expandWorkspace,
@@ -190,6 +193,11 @@ export const Sidebar: React.FC = () => {
             setSwitchingToWorkspaceId(null);
         }
         setActiveTab(tabId);
+
+        // Auto-close sidebar on mobile after selection
+        if (typeof window !== 'undefined' && window.innerWidth < 768) {
+            setMobileOpen(false);
+        }
     };
 
     const handleWorkspaceContextMenu = (e: React.MouseEvent, workspaceId: string) => {
@@ -312,20 +320,59 @@ export const Sidebar: React.FC = () => {
         listRef.current.scrollToItem(activeTabIndex, "smart");
     }, [activeTabId, treeItems, activeTabs, expandedWorkspaceIds, expandWorkspace]);
 
-    if (!isSidebarExpanded) return null;
+    // Desktop: hidden when collapsed
+    // Mobile: always rendered (controlled by transform)
+    const isDesktopHidden = !isSidebarExpanded && typeof window !== 'undefined' && window.innerWidth >= 768;
+
+    if (isDesktopHidden) return null;
+
+    // Responsive container classes
+    // Mobile: Fixed overlay with slide-in animation
+    // Desktop: Relative flow with collapse behavior
+    const containerClasses = clsx(
+        "flex flex-col h-full bg-surface-secondary border-r border-base transition-all duration-300 ease-in-out",
+        // Mobile: Fixed overlay
+        "fixed inset-y-0 left-0 z-50 w-72 shadow-2xl transform",
+        isMobileOpen ? "translate-x-0" : "-translate-x-full",
+        // Desktop: Relative flow
+        "md:relative md:transform-none md:shadow-none md:z-0",
+        // Desktop collapse: w-0 when collapsed
+        isSidebarExpanded ? "md:w-72" : "md:w-0 md:border-r-0 md:overflow-hidden"
+    );
 
     return (
-        <div className="tablet-sidebar w-72 flex-shrink-0 flex flex-col h-full border-r border-base bg-surface-secondary">
+        <>
+            {/* Mobile backdrop */}
+            {isMobileOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm transition-opacity duration-300"
+                    onClick={() => setMobileOpen(false)}
+                    aria-label="Close sidebar"
+                />
+            )}
+
+            <div className={containerClasses}>
             <div className="p-3 flex flex-col gap-2">
                 <div className="flex items-center justify-between">
                     <h2 className="text-xs font-bold uppercase tracking-wider text-secondary">Explorer</h2>
-                    <button
-                        onClick={() => createWorkspace("New Workspace")}
-                        className="p-1 hover:bg-element-hover rounded text-secondary hover:text-main"
-                        title="New Workspace"
-                    >
-                        <Plus size={16} />
-                    </button>
+                    <div className="flex gap-1">
+                        <button
+                            onClick={() => createWorkspace("New Workspace")}
+                            className="p-1 hover:bg-element-hover rounded text-secondary hover:text-main"
+                            title="New Workspace"
+                        >
+                            <Plus size={16} />
+                        </button>
+                        {/* Mobile only: close button */}
+                        <button
+                            onClick={() => setMobileOpen(false)}
+                            className="p-1 hover:bg-element-hover rounded text-secondary hover:text-main md:hidden"
+                            title="Close sidebar"
+                            aria-label="Close sidebar"
+                        >
+                            <X size={16} />
+                        </button>
+                    </div>
                 </div>
                 <div className="relative">
                     <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-secondary" size={14} />
@@ -366,6 +413,14 @@ export const Sidebar: React.FC = () => {
                 />
             )}
 
+            {workspaceContextMenu && (
+                <WorkspaceContextMenu
+                    workspaceId={workspaceContextMenu.workspaceId}
+                    position={workspaceContextMenu.position}
+                    onClose={() => setWorkspaceContextMenu(null)}
+                />
+            )}
+
             {tabContextMenu && (
                 <SidebarTabContextMenu
                     tabId={tabContextMenu.tabId}
@@ -374,7 +429,8 @@ export const Sidebar: React.FC = () => {
                     onClose={() => setTabContextMenu(null)}
                 />
             )}
-        </div>
+            </div>
+        </>
     );
 };
 

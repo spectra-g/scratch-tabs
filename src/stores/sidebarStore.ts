@@ -5,7 +5,11 @@ import { useWorkspaceStore } from "./workspaceStore";
 import { useTabsStore } from "./tabsStore";
 
 interface SidebarState {
+    // Desktop state
     isSidebarExpanded: boolean;
+    // Mobile state
+    isMobileOpen: boolean;
+
     expandedWorkspaceIds: Set<string>;
     workspaceTabsMetadata: Map<string, SidebarTabInfo[]>;
     loadingWorkspaceIds: Set<string>;
@@ -13,6 +17,7 @@ interface SidebarState {
 
     toggleSidebar: () => void;
     setSidebarExpanded: (expanded: boolean) => void;
+    setMobileOpen: (isOpen: boolean) => void;
     expandWorkspace: (workspaceId: string) => Promise<void>;
     collapseWorkspace: (workspaceId: string) => void;
     setSearchQuery: (query: string) => void;
@@ -23,7 +28,11 @@ export const useSidebarStore = create<SidebarState>((set, get) => {
     const storage = StorageProviderFactory.getProvider();
 
     return {
+        // Desktop: open by default for discoverability
         isSidebarExpanded: true,
+        // Mobile: closed by default to maximize editor space
+        isMobileOpen: false,
+
         expandedWorkspaceIds: new Set<string>(),
         workspaceTabsMetadata: new Map<string, SidebarTabInfo[]>(),
         loadingWorkspaceIds: new Set<string>(),
@@ -32,6 +41,8 @@ export const useSidebarStore = create<SidebarState>((set, get) => {
         toggleSidebar: () => set((state) => ({ isSidebarExpanded: !state.isSidebarExpanded })),
 
         setSidebarExpanded: (expanded: boolean) => set({ isSidebarExpanded: expanded }),
+
+        setMobileOpen: (isOpen: boolean) => set({ isMobileOpen: isOpen }),
 
         expandWorkspace: async (workspaceId: string) => {
             const { expandedWorkspaceIds, workspaceTabsMetadata, loadingWorkspaceIds } = get();

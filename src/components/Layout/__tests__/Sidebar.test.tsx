@@ -58,6 +58,8 @@ describe("Sidebar Component", () => {
 
         (useSidebarStore as any).mockReturnValue({
             isSidebarExpanded: true,
+            isMobileOpen: false,
+            setMobileOpen: jest.fn(),
             expandedWorkspaceIds: new Set(),
             workspaceTabsMetadata: new Map(),
             expandWorkspace: jest.fn(),
@@ -95,6 +97,8 @@ describe("Sidebar Component", () => {
         const expandWorkspace = jest.fn();
         (useSidebarStore as any).mockReturnValue({
             isSidebarExpanded: true,
+            isMobileOpen: false,
+            setMobileOpen: jest.fn(),
             expandedWorkspaceIds: new Set(),
             workspaceTabsMetadata: new Map(),
             expandWorkspace,
@@ -111,6 +115,8 @@ describe("Sidebar Component", () => {
     it("returns null if sidebar is NOT expanded", () => {
         (useSidebarStore as any).mockReturnValue({
             isSidebarExpanded: false,
+            isMobileOpen: false,
+            setMobileOpen: jest.fn(),
             expandedWorkspaceIds: new Set(),
             workspaceTabsMetadata: new Map(),
             expandWorkspace: jest.fn(),
@@ -145,6 +151,8 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isMobileOpen: false,
+                setMobileOpen: jest.fn(),
                 expandedWorkspaceIds: new Set(["ws-1"]),
                 workspaceTabsMetadata: new Map(),
                 expandWorkspace: jest.fn(),
@@ -196,6 +204,8 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isMobileOpen: false,
+                setMobileOpen: jest.fn(),
                 expandedWorkspaceIds: new Set(["ws-1"]),
                 workspaceTabsMetadata: new Map(),
                 expandWorkspace: jest.fn(),
@@ -236,6 +246,8 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isMobileOpen: false,
+                setMobileOpen: jest.fn(),
                 expandedWorkspaceIds: new Set(["ws-1"]),
                 workspaceTabsMetadata: new Map(),
                 expandWorkspace: jest.fn(),
@@ -461,6 +473,8 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isMobileOpen: false,
+                setMobileOpen: jest.fn(),
                 expandedWorkspaceIds: new Set(["ws-1"]), // Workspace is expanded
                 workspaceTabsMetadata: new Map(),
                 expandWorkspace: jest.fn(),
@@ -533,6 +547,8 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isMobileOpen: false,
+                setMobileOpen: jest.fn(),
                 expandedWorkspaceIds: new Set(["ws-1"]),
                 workspaceTabsMetadata: new Map(),
                 expandWorkspace: jest.fn(),
@@ -569,6 +585,8 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isMobileOpen: false,
+                setMobileOpen: jest.fn(),
                 expandedWorkspaceIds: new Set(["ws-1"]),
                 workspaceTabsMetadata: new Map(),
                 expandWorkspace: jest.fn(),
@@ -593,6 +611,230 @@ describe("Sidebar Component", () => {
             // The active tab (tab-2) should be highlighted
             const activeTab = screen.getByText("Tab 2").closest('.flex');
             expect(activeTab).toHaveClass("bg-primary-subtle");
+        });
+    });
+
+    describe("Mobile Responsive Behavior", () => {
+        // Mock window.innerWidth for mobile tests
+        const mockInnerWidth = (width: number) => {
+            Object.defineProperty(window, 'innerWidth', {
+                writable: true,
+                configurable: true,
+                value: width,
+            });
+        };
+
+        afterEach(() => {
+            // Reset to desktop width
+            mockInnerWidth(1024);
+        });
+
+        it("should render mobile backdrop when isMobileOpen is true", () => {
+            (useSidebarStore as any).mockReturnValue({
+                isSidebarExpanded: true,
+                isMobileOpen: true, // Mobile sidebar is open
+                setMobileOpen: jest.fn(),
+                expandedWorkspaceIds: new Set(),
+                workspaceTabsMetadata: new Map(),
+                expandWorkspace: jest.fn(),
+                collapseWorkspace: jest.fn(),
+                searchQuery: "",
+                setSearchQuery: jest.fn(),
+                refreshWorkspaceMetadata: jest.fn(),
+            });
+
+            render(<Sidebar />);
+
+            // Should have a backdrop element
+            const backdrop = document.querySelector('.fixed.inset-0.bg-black\\/50');
+            expect(backdrop).toBeInTheDocument();
+        });
+
+        it("should not render backdrop when isMobileOpen is false", () => {
+            (useSidebarStore as any).mockReturnValue({
+                isSidebarExpanded: true,
+                isMobileOpen: false, // Mobile sidebar is closed
+                setMobileOpen: jest.fn(),
+                expandedWorkspaceIds: new Set(),
+                workspaceTabsMetadata: new Map(),
+                expandWorkspace: jest.fn(),
+                collapseWorkspace: jest.fn(),
+                searchQuery: "",
+                setSearchQuery: jest.fn(),
+                refreshWorkspaceMetadata: jest.fn(),
+            });
+
+            render(<Sidebar />);
+
+            // Should not have a backdrop element
+            const backdrop = document.querySelector('.fixed.inset-0.bg-black\\/50');
+            expect(backdrop).not.toBeInTheDocument();
+        });
+
+        it("should close sidebar on backdrop click", () => {
+            const mockSetMobileOpen = jest.fn();
+
+            (useSidebarStore as any).mockReturnValue({
+                isSidebarExpanded: true,
+                isMobileOpen: true,
+                setMobileOpen: mockSetMobileOpen,
+                expandedWorkspaceIds: new Set(),
+                workspaceTabsMetadata: new Map(),
+                expandWorkspace: jest.fn(),
+                collapseWorkspace: jest.fn(),
+                searchQuery: "",
+                setSearchQuery: jest.fn(),
+                refreshWorkspaceMetadata: jest.fn(),
+            });
+
+            render(<Sidebar />);
+
+            const backdrop = document.querySelector('.fixed.inset-0.bg-black\\/50');
+            if (backdrop) {
+                fireEvent.click(backdrop);
+                expect(mockSetMobileOpen).toHaveBeenCalledWith(false);
+            }
+        });
+
+        it("should render close button on mobile", () => {
+            (useSidebarStore as any).mockReturnValue({
+                isSidebarExpanded: true,
+                isMobileOpen: true,
+                setMobileOpen: jest.fn(),
+                expandedWorkspaceIds: new Set(),
+                workspaceTabsMetadata: new Map(),
+                expandWorkspace: jest.fn(),
+                collapseWorkspace: jest.fn(),
+                searchQuery: "",
+                setSearchQuery: jest.fn(),
+                refreshWorkspaceMetadata: jest.fn(),
+            });
+
+            render(<Sidebar />);
+
+            // Close button should be present
+            const closeButton = screen.getByTitle("Close sidebar");
+            expect(closeButton).toBeInTheDocument();
+        });
+
+        it("should close sidebar when close button is clicked", () => {
+            const mockSetMobileOpen = jest.fn();
+
+            (useSidebarStore as any).mockReturnValue({
+                isSidebarExpanded: true,
+                isMobileOpen: true,
+                setMobileOpen: mockSetMobileOpen,
+                expandedWorkspaceIds: new Set(),
+                workspaceTabsMetadata: new Map(),
+                expandWorkspace: jest.fn(),
+                collapseWorkspace: jest.fn(),
+                searchQuery: "",
+                setSearchQuery: jest.fn(),
+                refreshWorkspaceMetadata: jest.fn(),
+            });
+
+            render(<Sidebar />);
+
+            const closeButton = screen.getByTitle("Close sidebar");
+            fireEvent.click(closeButton);
+
+            expect(mockSetMobileOpen).toHaveBeenCalledWith(false);
+        });
+
+        it("should auto-close on mobile when tab is clicked", async () => {
+            mockInnerWidth(375); // Mobile width
+
+            const mockSetMobileOpen = jest.fn();
+            const mockSetActiveTab = jest.fn();
+            const mockTabs = [
+                { id: "tab-1", title: "Tab 1", language: "typescript", lastModified: 0, workspaceId: "ws-1" }
+            ];
+
+            (useTabsStore as any).mockReturnValue({
+                tabs: mockTabs,
+            });
+
+            (useRootStore as any).mockReturnValue({
+                setActiveTab: mockSetActiveTab,
+            });
+
+            (useSidebarStore as any).mockReturnValue({
+                isSidebarExpanded: true,
+                isMobileOpen: true,
+                setMobileOpen: mockSetMobileOpen,
+                expandedWorkspaceIds: new Set(["ws-1"]),
+                workspaceTabsMetadata: new Map(),
+                expandWorkspace: jest.fn(),
+                collapseWorkspace: jest.fn(),
+                searchQuery: "",
+                setSearchQuery: jest.fn(),
+                refreshWorkspaceMetadata: jest.fn(),
+            });
+
+            (useSplitViewStore as any).mockReturnValue({
+                splitView: {
+                    activeSide: "left",
+                    activeLeftTabId: "tab-1",
+                    leftTabs: ["tab-1"],
+                    rightTabs: []
+                },
+            });
+
+            render(<Sidebar />);
+
+            const tab = screen.getByText("Tab 1");
+            fireEvent.click(tab);
+
+            // Should close the mobile sidebar
+            expect(mockSetMobileOpen).toHaveBeenCalledWith(false);
+        });
+
+        it("should not auto-close on desktop when tab is clicked", async () => {
+            mockInnerWidth(1024); // Desktop width
+
+            const mockSetMobileOpen = jest.fn();
+            const mockSetActiveTab = jest.fn();
+            const mockTabs = [
+                { id: "tab-1", title: "Tab 1", language: "typescript", lastModified: 0, workspaceId: "ws-1" }
+            ];
+
+            (useTabsStore as any).mockReturnValue({
+                tabs: mockTabs,
+            });
+
+            (useRootStore as any).mockReturnValue({
+                setActiveTab: mockSetActiveTab,
+            });
+
+            (useSidebarStore as any).mockReturnValue({
+                isSidebarExpanded: true,
+                isMobileOpen: false,
+                setMobileOpen: mockSetMobileOpen,
+                expandedWorkspaceIds: new Set(["ws-1"]),
+                workspaceTabsMetadata: new Map(),
+                expandWorkspace: jest.fn(),
+                collapseWorkspace: jest.fn(),
+                searchQuery: "",
+                setSearchQuery: jest.fn(),
+                refreshWorkspaceMetadata: jest.fn(),
+            });
+
+            (useSplitViewStore as any).mockReturnValue({
+                splitView: {
+                    activeSide: "left",
+                    activeLeftTabId: "tab-1",
+                    leftTabs: ["tab-1"],
+                    rightTabs: []
+                },
+            });
+
+            render(<Sidebar />);
+
+            const tab = screen.getByText("Tab 1");
+            fireEvent.click(tab);
+
+            // Should NOT close the sidebar on desktop
+            expect(mockSetMobileOpen).not.toHaveBeenCalled();
         });
     });
 });
