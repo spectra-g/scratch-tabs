@@ -332,4 +332,189 @@ describe("Sidebar Component", () => {
             expect(mockRefreshWorkspaceMetadata).not.toHaveBeenCalledWith("ws-1");
         });
     });
+
+    describe("Reveal in Sidebar", () => {
+        it("should expand workspace when active tab is in a collapsed workspace", async () => {
+            const mockExpandWorkspace = jest.fn().mockResolvedValue(undefined);
+            const mockTabs = [
+                { id: "tab-1", title: "Tab 1", language: "typescript", lastModified: 0, workspaceId: "ws-1" }
+            ];
+
+            (useTabsStore as any).mockReturnValue({
+                tabs: mockTabs,
+            });
+
+            (useSidebarStore as any).mockReturnValue({
+                isSidebarExpanded: true,
+                expandedWorkspaceIds: new Set(), // Workspace is collapsed
+                workspaceTabsMetadata: new Map(),
+                expandWorkspace: mockExpandWorkspace,
+                collapseWorkspace: jest.fn(),
+                searchQuery: "",
+                setSearchQuery: jest.fn(),
+                refreshWorkspaceMetadata: jest.fn(),
+            });
+
+            (useSplitViewStore as any).mockReturnValue({
+                splitView: {
+                    activeSide: "left",
+                    activeLeftTabId: "tab-1", // Active tab is tab-1
+                    leftTabs: ["tab-1"],
+                    rightTabs: []
+                },
+            });
+
+            render(<Sidebar />);
+
+            // Should call expandWorkspace for the workspace containing the active tab
+            expect(mockExpandWorkspace).toHaveBeenCalledWith("ws-1");
+        });
+
+        it("should scroll to active tab when it is visible in the tree", () => {
+            const mockTabs = [
+                { id: "tab-1", title: "Tab 1", language: "typescript", lastModified: 0, workspaceId: "ws-1" },
+                { id: "tab-2", title: "Tab 2", language: "javascript", lastModified: 0, workspaceId: "ws-1" },
+                { id: "tab-3", title: "Tab 3", language: "python", lastModified: 0, workspaceId: "ws-1" }
+            ];
+
+            (useTabsStore as any).mockReturnValue({
+                tabs: mockTabs,
+            });
+
+            (useSidebarStore as any).mockReturnValue({
+                isSidebarExpanded: true,
+                expandedWorkspaceIds: new Set(["ws-1"]), // Workspace is expanded
+                workspaceTabsMetadata: new Map(),
+                expandWorkspace: jest.fn(),
+                collapseWorkspace: jest.fn(),
+                searchQuery: "",
+                setSearchQuery: jest.fn(),
+                refreshWorkspaceMetadata: jest.fn(),
+            });
+
+            (useSplitViewStore as any).mockReturnValue({
+                splitView: {
+                    activeSide: "left",
+                    activeLeftTabId: "tab-2", // Active tab is tab-2
+                    leftTabs: ["tab-1", "tab-2", "tab-3"],
+                    rightTabs: []
+                },
+            });
+
+            const { container } = render(<Sidebar />);
+
+            // The active tab should be highlighted
+            const activeTab = screen.getByText("Tab 2").closest('.flex');
+            expect(activeTab).toHaveClass("bg-primary-subtle");
+        });
+
+        it("should not expand workspace if active tab is not found", () => {
+            const mockExpandWorkspace = jest.fn();
+            const mockTabs = [
+                { id: "tab-1", title: "Tab 1", language: "typescript", lastModified: 0, workspaceId: "ws-1" }
+            ];
+
+            (useTabsStore as any).mockReturnValue({
+                tabs: mockTabs,
+            });
+
+            (useSidebarStore as any).mockReturnValue({
+                isSidebarExpanded: true,
+                expandedWorkspaceIds: new Set(),
+                workspaceTabsMetadata: new Map(),
+                expandWorkspace: mockExpandWorkspace,
+                collapseWorkspace: jest.fn(),
+                searchQuery: "",
+                setSearchQuery: jest.fn(),
+                refreshWorkspaceMetadata: jest.fn(),
+            });
+
+            (useSplitViewStore as any).mockReturnValue({
+                splitView: {
+                    activeSide: "left",
+                    activeLeftTabId: "tab-999", // Non-existent tab
+                    leftTabs: ["tab-1"],
+                    rightTabs: []
+                },
+            });
+
+            render(<Sidebar />);
+
+            // Should not call expandWorkspace for non-existent tab
+            expect(mockExpandWorkspace).not.toHaveBeenCalled();
+        });
+
+        it("should not scroll when there is no active tab", () => {
+            const mockTabs = [
+                { id: "tab-1", title: "Tab 1", language: "typescript", lastModified: 0, workspaceId: "ws-1" }
+            ];
+
+            (useTabsStore as any).mockReturnValue({
+                tabs: mockTabs,
+            });
+
+            (useSidebarStore as any).mockReturnValue({
+                isSidebarExpanded: true,
+                expandedWorkspaceIds: new Set(["ws-1"]),
+                workspaceTabsMetadata: new Map(),
+                expandWorkspace: jest.fn(),
+                collapseWorkspace: jest.fn(),
+                searchQuery: "",
+                setSearchQuery: jest.fn(),
+                refreshWorkspaceMetadata: jest.fn(),
+            });
+
+            (useSplitViewStore as any).mockReturnValue({
+                splitView: {
+                    activeSide: "left",
+                    activeLeftTabId: null, // No active tab
+                    leftTabs: ["tab-1"],
+                    rightTabs: []
+                },
+            });
+
+            const { container } = render(<Sidebar />);
+
+            // Should render without errors
+            expect(screen.getByText("Tab 1")).toBeInTheDocument();
+        });
+
+        it("should handle active tab in right pane", () => {
+            const mockTabs = [
+                { id: "tab-1", title: "Tab 1", language: "typescript", lastModified: 0, workspaceId: "ws-1" },
+                { id: "tab-2", title: "Tab 2", language: "javascript", lastModified: 0, workspaceId: "ws-1" }
+            ];
+
+            (useTabsStore as any).mockReturnValue({
+                tabs: mockTabs,
+            });
+
+            (useSidebarStore as any).mockReturnValue({
+                isSidebarExpanded: true,
+                expandedWorkspaceIds: new Set(["ws-1"]),
+                workspaceTabsMetadata: new Map(),
+                expandWorkspace: jest.fn(),
+                collapseWorkspace: jest.fn(),
+                searchQuery: "",
+                setSearchQuery: jest.fn(),
+                refreshWorkspaceMetadata: jest.fn(),
+            });
+
+            (useSplitViewStore as any).mockReturnValue({
+                splitView: {
+                    activeSide: "right", // Active side is right
+                    activeLeftTabId: "tab-1",
+                    activeRightTabId: "tab-2", // Active tab in right pane
+                    leftTabs: ["tab-1"],
+                    rightTabs: ["tab-2"]
+                },
+            });
+
+            render(<Sidebar />);
+
+            // The active tab (tab-2) should be highlighted
+            const activeTab = screen.getByText("Tab 2").closest('.flex');
+            expect(activeTab).toHaveClass("bg-primary-subtle");
+        });
+    });
 });

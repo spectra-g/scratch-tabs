@@ -653,7 +653,7 @@ No tabs matching "query"
 - [ ] Implement drag-drop reorder within workspace
 - [ ] Implement drag-drop between workspaces (Copy-then-Delete pattern)
 - [x] Add visual indicators (language, pinned, rich, active) - Already present
-- [ ] Implement "Reveal in Sidebar" (auto-scroll to active tab)
+- [x] Implement "Reveal in Sidebar" (auto-scroll to active tab)
 
 ### Phase 3: Split View Integration
 - [ ] Add split pane indicators [L] [R]

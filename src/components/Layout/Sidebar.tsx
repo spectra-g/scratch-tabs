@@ -261,6 +261,7 @@ export const Sidebar: React.FC = () => {
     };
 
     const listContainerRef = useRef<HTMLDivElement>(null);
+    const listRef = useRef<List>(null);
     const [listHeight, setListHeight] = useState(800);
 
     useEffect(() => {
@@ -275,6 +276,31 @@ export const Sidebar: React.FC = () => {
         observer.observe(listContainerRef.current);
         return () => observer.disconnect();
     }, []);
+
+    // Reveal in Sidebar: Auto-scroll to active tab
+    useEffect(() => {
+        if (!activeTabId || !listRef.current) return;
+
+        // Find the index of the active tab in treeItems
+        const activeTabIndex = treeItems.findIndex(
+            item => item.type === 'tab' && item.id === activeTabId
+        );
+
+        if (activeTabIndex === -1) {
+            // Active tab not found in current tree (maybe workspace is collapsed)
+            // Find the workspace containing the active tab and expand it
+            const activeTab = activeTabs.find(t => t.id === activeTabId);
+            if (activeTab && !expandedWorkspaceIds.has(activeTab.workspaceId)) {
+                expandWorkspace(activeTab.workspaceId).then(() => {
+                    // After expansion, the effect will re-run and scroll
+                });
+            }
+            return;
+        }
+
+        // Scroll to the active tab
+        listRef.current.scrollToItem(activeTabIndex, "smart");
+    }, [activeTabId, treeItems, activeTabs, expandedWorkspaceIds, expandWorkspace]);
 
     if (!isSidebarExpanded) return null;
 
@@ -306,6 +332,7 @@ export const Sidebar: React.FC = () => {
             <div ref={listContainerRef} className="flex-1 overflow-hidden">
                 {treeItems.length > 0 ? (
                     <List
+                        ref={listRef}
                         height={listHeight}
                         itemCount={treeItems.length}
                         itemSize={ROW_HEIGHT}
