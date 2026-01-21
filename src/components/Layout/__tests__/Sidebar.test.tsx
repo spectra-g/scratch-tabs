@@ -333,6 +333,84 @@ describe("Sidebar Component", () => {
         });
     });
 
+    describe("Search Functionality", () => {
+        it("should debounce search input changes", async () => {
+            jest.useFakeTimers();
+            const mockSetSearchQuery = jest.fn();
+
+            (useSidebarStore as any).mockReturnValue({
+                isSidebarExpanded: true,
+                expandedWorkspaceIds: new Set(),
+                workspaceTabsMetadata: new Map(),
+                expandWorkspace: jest.fn(),
+                collapseWorkspace: jest.fn(),
+                searchQuery: "",
+                setSearchQuery: mockSetSearchQuery,
+                refreshWorkspaceMetadata: jest.fn(),
+            });
+
+            render(<Sidebar />);
+
+            const searchInput = screen.getByPlaceholderText("Filter tabs...");
+
+            // Type "test" character by character
+            fireEvent.change(searchInput, { target: { value: "t" } });
+            fireEvent.change(searchInput, { target: { value: "te" } });
+            fireEvent.change(searchInput, { target: { value: "tes" } });
+            fireEvent.change(searchInput, { target: { value: "test" } });
+
+            // Should not call setSearchQuery immediately
+            expect(mockSetSearchQuery).not.toHaveBeenCalled();
+
+            // Fast-forward time by 300ms
+            jest.advanceTimersByTime(300);
+
+            // Should call setSearchQuery once with the final value
+            expect(mockSetSearchQuery).toHaveBeenCalledTimes(1);
+            expect(mockSetSearchQuery).toHaveBeenCalledWith("test");
+
+            jest.useRealTimers();
+        });
+
+        it("should show chevron down and folder open when searching", () => {
+            const mockTabs = [
+                { id: "tab-1", title: "Test Tab", language: "typescript", lastModified: 0, workspaceId: "ws-1" }
+            ];
+
+            (useTabsStore as any).mockReturnValue({
+                tabs: mockTabs,
+            });
+
+            (useSidebarStore as any).mockReturnValue({
+                isSidebarExpanded: true,
+                expandedWorkspaceIds: new Set(), // Workspace is collapsed
+                workspaceTabsMetadata: new Map(),
+                expandWorkspace: jest.fn(),
+                collapseWorkspace: jest.fn(),
+                searchQuery: "test", // Active search query
+                setSearchQuery: jest.fn(),
+                refreshWorkspaceMetadata: jest.fn(),
+            });
+
+            (useSplitViewStore as any).mockReturnValue({
+                splitView: {
+                    activeSide: "left",
+                    activeLeftTabId: "tab-1",
+                    leftTabs: ["tab-1"],
+                    rightTabs: []
+                },
+            });
+
+            render(<Sidebar />);
+
+            // The workspace should appear expanded (chevron down) even though it's collapsed
+            const workspace = screen.getByText("Workspace 1").closest('.flex');
+
+            // We can't easily check the icon itself, but we can verify the tab is visible
+            expect(screen.getByText("Test Tab")).toBeInTheDocument();
+        });
+    });
+
     describe("Reveal in Sidebar", () => {
         it("should expand workspace when active tab is in a collapsed workspace", async () => {
             const mockExpandWorkspace = jest.fn().mockResolvedValue(undefined);

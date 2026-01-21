@@ -61,6 +61,17 @@ export const Sidebar: React.FC = () => {
         position: { x: number; y: number };
     } | null>(null);
 
+    // Debounced search: separate input value from store query
+    const [searchInputValue, setSearchInputValue] = useState(searchQuery);
+
+    // Debounce search input (300ms delay)
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setSearchQuery(searchInputValue);
+        }, 300);
+        return () => clearTimeout(handler);
+    }, [searchInputValue, setSearchQuery]);
+
     // Load metadata for all workspaces on mount to show tab counts
     useEffect(() => {
         const loadAllWorkspaceMetadata = async () => {
@@ -172,11 +183,8 @@ export const Sidebar: React.FC = () => {
 
     const handleTabClick = async (tabId: string, workspaceId: string) => {
         if (workspaceId !== activeWorkspaceId) {
-            // Refresh current workspace metadata before switching
-            // This ensures the sidebar shows the correct state after the switch
-            if (activeWorkspaceId) {
-                await refreshWorkspaceMetadata(activeWorkspaceId);
-            }
+            // Don't manually refresh metadata here - let the useEffect handle it
+            // after the workspace switch completes and state is persisted
             setSwitchingToWorkspaceId(workspaceId);
             await switchWorkspace(workspaceId);
             setSwitchingToWorkspaceId(null);
@@ -209,6 +217,8 @@ export const Sidebar: React.FC = () => {
 
         if (item.type === 'workspace') {
             const isSwitching = switchingToWorkspaceId === item.id;
+            // If we have a search query, visually force expand indicator
+            const isVisuallyExpanded = item.isExpanded || !!searchQuery;
             return (
                 <div
                     style={style}
@@ -222,10 +232,10 @@ export const Sidebar: React.FC = () => {
                     onContextMenu={(e) => handleWorkspaceContextMenu(e, item.id)}
                 >
                     <span className="mr-1">
-                        {item.isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                        {isVisuallyExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                     </span>
                     <span className="mr-2">
-                        {item.isExpanded ? <FolderOpen size={16} className={item.isActive ? "text-primary" : ""} /> : <Folder size={16} className={item.isActive ? "text-primary" : ""} />}
+                        {isVisuallyExpanded ? <FolderOpen size={16} className={item.isActive ? "text-primary" : ""} /> : <Folder size={16} className={item.isActive ? "text-primary" : ""} />}
                     </span>
                     <span className="flex-1 truncate text-sm">
                         {item.name}
@@ -323,8 +333,8 @@ export const Sidebar: React.FC = () => {
                         type="text"
                         placeholder="Filter tabs..."
                         className="w-full bg-canvas border border-base rounded py-1 pl-8 pr-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        value={searchInputValue}
+                        onChange={(e) => setSearchInputValue(e.target.value)}
                     />
                 </div>
             </div>

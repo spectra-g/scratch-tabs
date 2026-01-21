@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { SidebarTabInfo } from "../types";
+import { SidebarTabInfo, Tab } from "../types";
 import { StorageProviderFactory } from "../db";
 import { useWorkspaceStore } from "./workspaceStore";
 import { useTabsStore } from "./tabsStore";
@@ -77,16 +77,17 @@ export const useSidebarStore = create<SidebarState>((set, get) => {
                 const splitView = await storage.getSplitViewByWorkspace(workspaceId);
 
                 // Create tab map for quick lookup
-                const tabMap = new Map(tabs.map(t => [t.id, t]));
+                const tabMap = new Map<string, Tab>(tabs.map(t => [t.id, t]));
 
                 // Order tabs according to splitView order (leftTabs then rightTabs)
-                let orderedTabs: typeof tabs = [];
+                // Explicitly type to ensure type safety
+                let orderedTabs: Tab[] = [];
                 if (splitView) {
                     const allTabIds = [...(splitView.leftTabs || []), ...(splitView.rightTabs || [])];
                     // Map IDs to tabs, preserving splitView order
                     orderedTabs = allTabIds
                         .map(id => tabMap.get(id))
-                        .filter((t): t is typeof tabs[number] => t !== undefined);
+                        .filter((t): t is Tab => t !== undefined);
 
                     // Add any tabs not in splitView (shouldn't happen, but defensive)
                     const remainingTabs = tabs.filter(t => !allTabIds.includes(t.id));
