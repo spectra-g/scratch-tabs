@@ -156,6 +156,8 @@ export {
   Coffee,
   ExternalLink,
   RefreshCw,
+  Github,
+  HardDrive,
 
   // Additional icons found in codebase
   DivideIcon,

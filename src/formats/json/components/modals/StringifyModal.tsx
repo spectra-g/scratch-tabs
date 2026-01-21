@@ -1,5 +1,5 @@
 import React from "react";
-import { BaseModal } from "./BaseModal";
+import { BaseModal } from "../../../../components/Modals/BaseModal";
 import { Editor } from "@monaco-editor/react";
 import { Tab } from "../../../../types";
 import { createTab } from "../../../../utils/tabUtils";

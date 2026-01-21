@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { BaseModal } from "../../formats/json/components/modals/BaseModal";
+import { BaseModal } from "../Modals/BaseModal";
 import { Download, CheckCircle2, Circle } from "lucide-react";
 import { Tab } from "../../types";
 import { useTabsStore } from "../../stores/tabsStore";

@@ -1,13 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Menu, Coffee, ExternalLink } from '../Icons';
+import { Menu, Coffee, ExternalLink, Info, History } from '../Icons';
 import { useClickOutside } from '../../hooks/useClickOutside';
+import { useModalStore } from '../../stores/modalStore';
 
 export const HamburgerMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const { openAboutModal, openChangelogModal } = useModalStore();
 
   useClickOutside(menuRef, () => setIsOpen(false));
 
@@ -21,6 +24,16 @@ export const HamburgerMenu: React.FC = () => {
       });
     }
   }, [isOpen]);
+
+  const handleAboutClick = () => {
+    openAboutModal();
+    setIsOpen(false);
+  };
+
+  const handleChangelogClick = () => {
+    openChangelogModal();
+    setIsOpen(false);
+  };
 
   const handleKofiClick = () => {
     window.open('https://ko-fi.com/scratchtabs', '_blank');
@@ -58,13 +71,27 @@ export const HamburgerMenu: React.FC = () => {
           }}
         >
           <button
+            onClick={handleAboutClick}
+            className="w-full px-3 py-2 text-left text-xs text-main hover:bg-themed-hover flex items-center space-x-2"
+          >
+            <Info size={14} />
+            <span>About</span>
+          </button>
+          <button
+            onClick={handleChangelogClick}
+            className="w-full px-3 py-2 text-left text-xs text-main hover:bg-themed-hover flex items-center space-x-2"
+          >
+            <History size={14} />
+            <span>What's New</span>
+          </button>
+          <div className="border-t border-base my-1"></div>
+          <button
             onClick={handleKofiClick}
             className="w-full px-3 py-2 text-left text-xs text-main hover:bg-themed-hover flex items-center space-x-2"
           >
             <Coffee size={14} />
             <span>Support on Ko-fi</span>
           </button>
-          <div className="border-t border-base my-1"></div>
           <button
             onClick={handleFeedbackClick}
             className="w-full px-3 py-2 text-left text-xs text-main hover:bg-themed-hover flex items-center space-x-2"

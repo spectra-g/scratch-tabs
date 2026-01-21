@@ -9,6 +9,7 @@ const RELEASES_FILE = path.join(__dirname, 'releases.yml');
 const CHANGELOG_HTML_FILE = path.join(__dirname, '..', 'landing', 'changelog.html');
 const WELCOME_SCREEN_FILE = path.join(__dirname, '..', 'src', 'components', 'Welcome', 'WelcomeScreen.tsx');
 const WELCOME_CONTENT_FILE = path.join(__dirname, '..', 'src', 'constants', 'welcomeContent.ts');
+const RELEASES_TS_FILE = path.join(__dirname, '..', 'src', 'data', 'releases.ts');
 
 /**
  * Remove all emojis from a string
@@ -227,6 +228,67 @@ function updateWelcomeScreenVersion(latestVersion) {
 }
 
 /**
+ * Generate TypeScript releases data file for in-app changelog
+ */
+function generateReleasesTS(releases, maxVersions) {
+  const releasesToExport = releases.slice(0, maxVersions);
+
+  // Transform releases to a clean TypeScript structure
+  const cleanReleases = releasesToExport.map(release => ({
+    version: release.version,
+    type: release.type,
+    date: release.date,
+    headline: stripEmojis(release.headline),
+    summary: stripEmojis(release.summary || release.description),
+    categories: (release.categories || []).map(cat => ({
+      name: stripEmojis(cat.name),
+      changes: (cat.changes || []).map(change => stripEmojis(change))
+    }))
+  }));
+
+  const latestVersion = cleanReleases[0]?.version || '0.0.0';
+
+  const tsContent = `// Auto-generated from releases.yml - DO NOT EDIT MANUALLY
+// Run: cd changelog && node generate.js
+
+export interface ReleaseCategory {
+  name: string;
+  changes: string[];
+}
+
+export interface Release {
+  version: string;
+  type: 'latest' | 'release' | 'beta' | 'alpha';
+  date: string;
+  headline: string;
+  summary: string;
+  categories: ReleaseCategory[];
+}
+
+export const APP_VERSION = '${latestVersion}';
+
+export const RELEASES: Release[] = ${JSON.stringify(cleanReleases, null, 2)};
+
+export const getLatestRelease = (): Release | undefined => RELEASES[0];
+
+export const getRecentReleases = (count: number = 10): Release[] => RELEASES.slice(0, count);
+`;
+
+  try {
+    // Ensure the data directory exists
+    const dataDir = path.dirname(RELEASES_TS_FILE);
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+
+    fs.writeFileSync(RELEASES_TS_FILE, tsContent, 'utf8');
+    console.log('✅ Generated src/data/releases.ts successfully');
+  } catch (error) {
+    console.error('❌ Error generating releases.ts:', error.message);
+  }
+}
+
+/**
  * Update version in all landing page HTML files
  */
 function updateLandingPagesVersion(latestVersion) {
@@ -328,6 +390,9 @@ function main() {
     // Update changelog.html
     updateChangelogFile(changelogHTML);
 
+    // Generate TypeScript releases data file
+    generateReleasesTS(releases, maxVersions);
+
     // Update version in welcome screen and landing pages
     const latestVersion = releases[0].version;
     updateWelcomeScreenVersion(latestVersion);
@@ -351,6 +416,7 @@ if (require.main === module) {
 module.exports = {
   main,
   generateChangelogHTML,
+  generateReleasesTS,
   updateChangelogFile,
   updateWelcomeScreenVersion,
   updateLandingPagesVersion,

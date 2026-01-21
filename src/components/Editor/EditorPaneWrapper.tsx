@@ -16,6 +16,7 @@ import { PipelineEditorModal } from "../Pipeline/PipelineEditorModal";
 import { usePipelineStore } from "../../stores/pipelineStore";
 import { useSmartViewSync } from "../../hooks/useSmartViewSync";
 import type * as Monaco from "monaco-editor";
+import { EditorRange } from "../../types";
 import { FloatingMacroToolbar } from "../Macro/FloatingMacroToolbar";
 import { useMacroEngine } from "../Macro/useMacroEngine";
 import { useMacroStore } from "../../stores/macroStore";
@@ -29,15 +30,15 @@ const PreviewLoadingFallback = () => (
 );
 
 // Wrapper component for PipelineEditorModal that reads from the store
-const PipelineModalWrapper: React.FC<{ onApply: (content: string) => void }> = ({ onApply }) => {
-  const { isOpen, content, closeModal } = usePipelineStore();
+const PipelineModalWrapper: React.FC<{ onApply: (content: string, range?: EditorRange | null) => void }> = ({ onApply }) => {
+  const { isOpen, content, selectionRange, selectedText, closeModal } = usePipelineStore();
 
   if (!isOpen) return null;
 
   return (
     <PipelineEditorModal
-      initialContent={content}
-      onApply={onApply}
+      initialContent={selectionRange ? selectedText : content}
+      onApply={(newContent) => onApply(newContent, selectionRange)}
       onClose={closeModal}
     />
   );
@@ -136,18 +137,23 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
     });
   }, [activeTab, activeTabId, updateTabState]);
 
-  const handlePipelineApply = useCallback((content: string) => {
+  const handlePipelineApply = useCallback((content: string, range?: EditorRange | null) => {
     if (!activeTabId) return;
 
-    // Update tab content in store
-    updateTabState(activeTabId, {
-      content,
-      lastModified: Date.now(),
-    });
+    if (range) {
+      // Apply only to the selected range
+      modelManager.replaceModelRangeWithUndo(activeTabId, content, range);
+    } else {
+      // Update tab content in store for full content replacement
+      updateTabState(activeTabId, {
+        content,
+        lastModified: Date.now(),
+      });
 
-    // Update the model directly without disposing it (prevents blank editor)
-    // The replaceModelContentWithUndo method preserves undo stack and updates the model in place
-    modelManager.replaceModelContentWithUndo(activeTabId, content);
+      // Update the model directly without disposing it (prevents blank editor)
+      // The replaceModelContentWithUndo method preserves undo stack and updates the model in place
+      modelManager.replaceModelContentWithUndo(activeTabId, content);
+    }
   }, [activeTabId, updateTabState]);
   // This logic is now safe because it depends on `activeTab` which is subscribed to granularly
   const activeViewId = activeTab ? getActiveView(activeTab.id) : null;

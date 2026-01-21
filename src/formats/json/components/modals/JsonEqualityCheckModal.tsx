@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Editor } from "@monaco-editor/react";
-import { BaseModal } from "./BaseModal";
+import { BaseModal } from "../../../../components/Modals/BaseModal";
 import {
   compareJsonEquality,
   EqualityResult,

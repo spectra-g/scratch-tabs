@@ -3,7 +3,7 @@ import { Tab } from "../types";
 import { useTabsStore } from "../stores/tabsStore";
 import { useRootStore } from "../stores/rootStore";
 import { StorageProviderFactory } from "../db";
-import { detectFormat, isAmbiguousFormat, getPotentialFormatMatches } from "../formats";
+import { isAmbiguousFormat, getPotentialFormatMatches } from "../formats";
 import { updateCursorIndicator } from "../utils/testIndicators";
 import { contentProcessingService } from "./contentProcessing";
 import { getContentForLanguageDetection } from "../utils/formatDetectionUtils";
@@ -102,7 +102,7 @@ class ModelManager {
       );
 
       const result = await contentProcessingService.processContent(content, context);
-      
+
       return {
         processed: result.processed,
         content: result.content,
@@ -137,7 +137,7 @@ class ModelManager {
 
     if (editor) {
       this.isProcessingContent.set(tabId, true);
-      
+
       editor.pushUndoStop();
       editor.executeEdits('content-processor', [{
         range: model.getFullModelRange(),
@@ -148,12 +148,12 @@ class ModelManager {
 
       setTimeout(() => {
         this.isProcessingContent.delete(tabId);
-        
+
         if (processingResult.language && processingResult.language !== currentTab.language) {
           useRootStore.getState().updateTabLanguage(tabId, processingResult.language, false);
           this.updateModelLanguage(tabId, processingResult.language);
         }
-        
+
         if (isFromPaste && processingResult.language) {
           this.triggerAutoFormat(tabId, processingResult.language);
         }
@@ -168,7 +168,7 @@ class ModelManager {
     if (!content || content.trim().length === 0) {
       return false;
     }
-    
+
     const fetchedContent = await this.fetchContentFromDatabase(tab.id);
     return !fetchedContent || fetchedContent.trim().length === 0;
   }
@@ -415,13 +415,13 @@ class ModelManager {
     const timeout = setTimeout(async () => {
       try {
         await this.storage.updateTabCursor(tabId, cursorPosition);
-        
+
         // CRITICAL: Update the cursor position in the store so it's available for tab switching
         useTabsStore.getState().updateTabState(tabId, { cursorPosition });
-        
+
         // Update DOM element for E2E tests to detect cursor position save completion
         updateCursorIndicator();
-        
+
         this.debouncedCursorPersistence.delete(tabId);
       } catch (error) {
         console.warn(
@@ -550,8 +550,8 @@ class ModelManager {
         const prevContent = this.lastContent.get(tab.id) || "";
         const wasFromPaste = this.isPasteRef.get(tab.id) || false;
         const isProcessingContent = this.isProcessingContent.get(tab.id) || false;
-        
-        
+
+
         // Don't clear the paste flag yet - let handleLanguageDetection consume it
         // This ensures the paste flag is available when we need to check for content processing
 
@@ -606,14 +606,14 @@ class ModelManager {
       this.lastContent.delete(tabId);
       this.isPasteRef.delete(tabId);
       this.isProcessingContent.delete(tabId);
-      
+
       // Clean up paste flag timeout
       const timeout = this.pasteFlagTimeouts.get(tabId);
       if (timeout) {
         clearTimeout(timeout);
         this.pasteFlagTimeouts.delete(tabId);
       }
-      
+
       // Dispose the model
       model.dispose();
     }
@@ -710,7 +710,7 @@ class ModelManager {
         // Find the editor instance that has this model
         const editors = this.monaco.editor.getEditors() || [];
         const editor = editors.find((e) => e.getModel() === model);
-        
+
         if (editor) {
           // Use executeEdits to preserve undo stack
           editor.pushUndoStop();
@@ -728,6 +728,53 @@ class ModelManager {
       } catch (error) {
         console.warn(
           `[ModelManager] Failed to replace model content with undo for tab ${tabId}:`,
+          error,
+        );
+      }
+    }
+  }
+
+  public replaceModelRangeWithUndo(
+    tabId: string,
+    content: string,
+    range: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number },
+  ): void {
+    const model = this.models.get(tabId);
+    if (model && !model.isDisposed() && this.monaco) {
+      try {
+        // Find the editor instance that has this model
+        const editors = this.monaco.editor.getEditors() || [];
+        const editor = editors.find((e) => e.getModel() === model);
+
+        if (editor) {
+          // Use executeEdits to preserve undo stack
+          editor.pushUndoStop();
+          editor.executeEdits("selection-transformation", [
+            {
+              range,
+              text: content,
+              forceMoveMarkers: false,
+            },
+          ]);
+          editor.pushUndoStop();
+          // The onDidChangeContent listener will automatically sync this back to the store
+        } else {
+          // Fallback to updating the model directly if no editor is found
+          // This won't preserve selection but will update the data
+          model.pushEditOperations(
+            [],
+            [
+              {
+                range,
+                text: content,
+              },
+            ],
+            () => null,
+          );
+        }
+      } catch (error) {
+        console.warn(
+          `[ModelManager] Failed to replace model range with undo for tab ${tabId}:`,
           error,
         );
       }
@@ -759,15 +806,15 @@ class ModelManager {
 
   // Method to mark that the next content change for a tab is from a paste operation
   public markNextChangeAsPaste(tabId: string): void {
-    
+
     // Clear any existing timeout
     const existingTimeout = this.pasteFlagTimeouts.get(tabId);
     if (existingTimeout) {
       clearTimeout(existingTimeout);
     }
-    
+
     this.isPasteRef.set(tabId, true);
-    
+
     // Set a timeout to clear the flag if it's not consumed within 500ms
     const timeout = setTimeout(() => {
       if (this.isPasteRef.has(tabId)) {
@@ -775,7 +822,7 @@ class ModelManager {
       }
       this.pasteFlagTimeouts.delete(tabId);
     }, 500);
-    
+
     this.pasteFlagTimeouts.set(tabId, timeout);
   }
 }
