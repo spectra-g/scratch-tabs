@@ -5,10 +5,8 @@ interface BaseModalProps {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
-  // Optional: Allow overriding max width/height for specific modals
   maxWidthClass?: string;
   maxHeightClass?: string;
-  // Optional: Responsive width class for viewport-based sizing
   widthClass?: string;
 }
 
@@ -16,24 +14,19 @@ export const BaseModal: React.FC<BaseModalProps> = ({
   title,
   onClose,
   children,
-  maxWidthClass = "max-w-4xl", // Default max width
-  maxHeightClass = "max-h-[85vh]", // Default max height
-  widthClass = "w-full", // Default viewport width
+  maxWidthClass = "max-w-4xl",
+  maxHeightClass = "max-h-[85vh]",
+  widthClass = "w-full",
 }) => {
   return (
-    // --- Backdrop ---
-    // Slightly darker, more blur potential if needed later
     <div
       className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
       onClick={onClose}
     >
-      {/* --- Modal Container --- */}
-      {/* Slightly lighter dark bg, refined border, larger shadow, constrained width/height */}
       <div
         className={`bg-surface rounded-lg shadow-xl ${widthClass} ${maxWidthClass} ${maxHeightClass} flex flex-col overflow-hidden border border-base`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* --- Modal Header --- */}
         <div className="flex-none flex items-center justify-between p-3 border-b border-base bg-surface">
           <h2 className="text-lg font-medium text-main">{title}</h2>
           <button
@@ -44,12 +37,7 @@ export const BaseModal: React.FC<BaseModalProps> = ({
             <X size={20} />
           </button>
         </div>
-
-        {/* --- Modal Content Area --- */}
-        {/* Let children handle padding, ensure scrollbar styling is applied */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
-          {" "}
-          {/* Allow vertical scroll */}
           {children}
         </div>
       </div>

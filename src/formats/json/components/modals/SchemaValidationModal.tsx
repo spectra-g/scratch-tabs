@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { BaseModal } from "./BaseModal";
+import { BaseModal } from "../../../../components/Modals/BaseModal";
 import { Editor } from "@monaco-editor/react";
 import { validateJsonSchema } from "../../utils/jsonSchema";
 import { CheckCircle2, XCircle } from "lucide-react";

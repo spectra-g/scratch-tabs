@@ -1,0 +1,645 @@
+// Auto-generated from releases.yml - DO NOT EDIT MANUALLY
+// Run: cd changelog && node generate.js
+
+export interface ReleaseCategory {
+  name: string;
+  changes: string[];
+}
+
+export interface Release {
+  version: string;
+  type: 'latest' | 'release' | 'beta' | 'alpha';
+  date: string;
+  headline: string;
+  summary: string;
+  categories: ReleaseCategory[];
+}
+
+export const APP_VERSION = '1.18.0';
+
+export const RELEASES: Release[] = [
+  {
+    "version": "1.18.0",
+    "type": "latest",
+    "date": "2026-01-19",
+    "headline": "Transformation Pipeline",
+    "summary": "CyberChef-style data processing with chainable operations, drag-and-drop reordering, and persistent pipelines",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Transformation Pipeline Editor:** 3-panel interface with operations palette, pipeline canvas, and live preview - chain operations like Trim → Uppercase → Base64 Encode → JSON Format",
+          "**37+ Pipeline Operations:** Text processing (case conversion, trim, whitespace), line operations (sort, reverse, dedupe, shuffle), filtering (regex, keyword, keep first/last N), encoding (Base64, URL), checksums, and redaction",
+          "**Drag-and-Drop Reordering:** Rearrange pipeline steps with smooth drag-and-drop - each step can be enabled/disabled individually",
+          "**Persistent Pipelines:** Save named pipelines and load them across sessions",
+          "**Real-Time Preview:** Live output preview with execution stats (duration, character counts) as you build your pipeline"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.17.0",
+    "type": "release",
+    "date": "2026-01-13",
+    "headline": "Browser-Style Scrollable Tabs",
+    "summary": "Native horizontal scrolling for tabs with visual gradient indicators and touch support",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Horizontal Tab Scrolling:** Tabs now maintain minimum readable width (80px) with variable widths and scroll horizontally when they overflow, preventing tab squashing",
+          "**Gradient Scroll Indicators:** Visual masking gradients fade from tab bar background to transparent at edges, clearly indicating when tabs are hidden off-screen and scrollable in both light and dark modes",
+          "**Mouse Wheel Scrolling:** Scroll through tabs using vertical mouse wheel gestures over the tab bar for intuitive navigation",
+          "**Touch Gesture Support:** Swipe horizontally to scroll through tabs, or long-press (250ms) to drag and reorder tabs - properly distinguishing between scrolling and dragging on touch devices"
+        ]
+      },
+      {
+        "name": "Improvements",
+        "changes": [
+          "**Performance Optimization:** Native browser scrolling eliminates expensive resize calculations and render cycles",
+          "**Theme-Aware Gradients:** Gradients use CSS variables to match tab bar background color, ensuring visibility in all themes"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.16.0",
+    "type": "release",
+    "date": "2026-01-12",
+    "headline": "Macro Recording & Menu Refinement",
+    "summary": "New Macro Recording engine with floating toolbar, status bar integration, and refined context menu",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Macro Recording Engine:** Record and replay complex editor interactions including typing, cursors, selection, and deletions with a new engine.",
+          "**Floating Macro Toolbar:** New draggable toolbar for Macro controls (Record, Play, Play to End) that appears automatically when recording starts."
+        ]
+      },
+      {
+        "name": "Improvements",
+        "changes": [
+          "**Context Menu Restructure:** significantly reorganized tab context menu for better usability - introducing 'Organize' submenu, top-level 'Share' and 'Duplicate', and clearer grouping.",
+          "**Menu Icons:** Updated icons across the context menu for better visual clarity (Share, Organize, Split, etc.).",
+          "**Status Bar Refinement:** Cleaned up status bar layout for better information density and visual balance."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.15.0",
+    "type": "release",
+    "date": "2026-01-03",
+    "headline": "Colour Palette: Canvas-First UX & Smart Tools",
+    "summary": "Complete rewrite with canvas-first interface, intelligent generation, and slide-over feature panels",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Canvas-First Interface:** Complete redesign into a 100% responsive canvas featuring vertical interactive color stripes with direct manipulation.",
+          "**Slide-Over Feature Panels:** Peripheral tools (Image Extraction, UI Preview, Accessibility, Export) are now housed in elegant slide-over containers, keeping the main interaction clean.",
+          "**Intelligent Palette Generation:** New generation engine using a `useReducer` pattern with space bar shortcuts and full Undo/Redo support.",
+          "**Enhanced Image Colour Extraction:** Modern sidebar interface for uploading images and sampling colors via direct click or region-dragging.",
+          "**UI Preview & Remix Engine:** Live preview of palettes on real UI components with an intelligent remixing engine and atomic locking.",
+          "**Omni-Selector Redesign:** A completely overhauled tool selector featuring weighted fuzzy search, a 'Recently Used' grid, and a high-density list layout for deep discovery.",
+          "**Markdown Preview Sync:** Bidirectional scroll synchronization and click-to-navigate between raw markdown editor and live preview - scroll either pane to keep them in sync, or click any preview element to jump to its source line."
+        ]
+      },
+      {
+        "name": "Improvements",
+        "changes": [
+          "**Accessibility Matrix with  Suggestions:** WCAG 2.1 compliance matrix with one-click suggestions to fix contrast failures.",
+          "**Multi-Format Export:** Directly export palettes to CSS, SCSS, Tailwind, or JSON, with the ability to create new workspace tabs instantly.",
+          "**Centralized Tool Execution:** Unified `ToolService` for all tool types (Tablets, Smart Views, Formats) ensure consistent tab creation and usage tracking.",
+          "**Comprehensive Tool Registry Tests:** Added a robust test suite for `ToolService`, `ToolCard`, and `ToolSelectorModal` to guarantee stability and keyboard navigation compliance.",
+          "**Smart View Sync Architecture:** Introduced extensible sync configuration system allowing any format (Markdown, HTML, CSV) to provide custom scroll/click synchronization while maintaining architectural separation."
+        ]
+      },
+      {
+        "name": "Fixed",
+        "changes": [
+          "**Generation Stability:** Implemented value-based state synchronization and memoization to prevent infinite render loops.",
+          "**Color Rendering Consistency:** Guaranteed `#` prefix normalization across all colors to prevent rendering failures."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.14.0",
+    "type": "release",
+    "date": "2025-12-29",
+    "headline": "Share Tabs with Privacy-First URLs",
+    "summary": "Share tab content via URLs with compression, smart trimming, and hash-based zero-knowledge privacy",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Share Tab URLs:** Generate shareable URLs from any tab via context menu - compressed content embedded directly in the URL for instant sharing",
+          "**Structure-Aware JSON Trimming:** Interactive key-selection UI for large JSON objects and arrays - selectively share specific data fields while maintaining valid structure",
+          "**Auto-Balancing Greedy Selection:** Intelligent algorithm that automatically unselects heavy fields to fit within URL limits while maximizing smaller, informative keys",
+          "**Smart Content Trimming:** Fallback line-range selector for text-based or malformed content ensuring you can always share high-density snippets",
+          "**Hash-Based Privacy Routing:** URLs use hash fragments (#/s/...) ensuring content never appears in server logs or network requests - true zero-knowledge sharing",
+          "**Visual Size Feedback:** Real-time colour-coded budget bar with individual key weight estimation and \"heavy offender\" warnings"
+        ]
+      },
+      {
+        "name": "Privacy & Security",
+        "changes": [
+          "**Zero-Knowledge Architecture:** Hash routing ensures shared content exists only in browser memory - never transmitted to servers, proxies, or logging systems",
+          "**No External Dependencies:** Pure client-side implementation with no third-party services, APIs, or tracking",
+          "**URL-Safe Encoding:** Automatic handling of special characters preventing routing conflicts and injection attacks"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.13.0",
+    "type": "release",
+    "date": "2025-12-23",
+    "headline": "Date/Time Command Center & Smart Inputs",
+    "summary": "Date/Time tablet with command-line inputs, natural language arithmetic, and multi-zone comparison",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Smart Command Inputs:** Control the tablet via the input field using `> [City]` to add timezones (e.g., `> Tokyo`), `> diff [date]` for duration analysis, or `> next friday` to jump dates.",
+          "**\"Command Center\" Layout:** Complete redesign into a multi-column interface optimized for developer workflows, featuring persistent history, grouped conversions, and real-time dashboarding.",
+          "**Natural Language Date Arithmetic:** Intelligent parsing engine supporting human-friendly math (e.g., `now + 5d`, `yesterday - 2w`).",
+          "**Timezone Explorer:** Compare your entered date/time across multiple configurable timezones with live DST indicators and smart city matching (e.g. \"NYC\", \"London\")."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.12.0",
+    "type": "release",
+    "date": "2025-12-05",
+    "headline": "Command Vault Complete Rework",
+    "summary": "Command Vault redesign with categories, search, scratchpad, and improved workflow",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Command Vault Redesign:** Complete rework with category-based organization, making it easier to manage and find your command snippets",
+          "**Command Search (Ctrl+R):** Quick search across all commands with instant filtering and copy-on-select",
+          "**Scratchpad:** Temporary editing space for modifying commands before copying or saving as new entries",
+          "**Category Management:** Create, organize, and delete categories to keep your commands structured",
+          "**Inline Command Editing:** Click any command to edit in place with auto-save on blur",
+          "**Drag-and-Drop Reordering:** Rearrange commands within categories to prioritize frequently used items",
+          "**Import/Export:** Bulk import commands from you terminal history with automatic category assignment"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.12.0",
+    "type": "release",
+    "date": "2025-12-03",
+    "headline": "Light/Dark Mode & Editor Enhancements",
+    "summary": "Theme system with Light/Dark mode toggle, bug fixes, and rich text improvements",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Light/Dark Mode Toggle:** Comprehensive theme system with light and dark modes for editor, smart views, and UI components - seamlessly switch between themes with persistent preference"
+        ]
+      },
+      {
+        "name": "Improvements",
+        "changes": [
+          "**Rich Text Bullet Point Indentation:** Enhanced list editing with proper indentation support for nested bullet points"
+        ]
+      },
+      {
+        "name": "Fixed",
+        "changes": [
+          "**Clipboard Content Comparison:** Fixed auto-formatting issue when comparing with content from clipboard",
+          "**Mermaid Diagram Export:** Fixed PNG export functionality for Mermaid diagrams"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.11.1",
+    "type": "release",
+    "date": "2025-11-18",
+    "headline": "Bug Fixes",
+    "summary": "Fixed clipboard processing in JSON comparison and Mermaid PNG export",
+    "categories": [
+      {
+        "name": "Fixed",
+        "changes": [
+          "**JSON Compare with Clipboard:** Clipboard content now properly processed through content pipeline when comparing - stringified JSON is automatically unstringified and formatted in diff modal for accurate side-by-side comparison",
+          "**Mermaid Diagram PNG Export:** Fixed SecurityError canvas tainting issue preventing PNG export by converting SVG to base64 data URL instead of blob URL"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.11.0",
+    "type": "release",
+    "date": "2025-11-14",
+    "headline": "JSON Query Panel & Navigation",
+    "summary": "JMESPath query panel, structure-aware navigation, and enhanced CSV editing",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**JSON Query Panel:** Interactive JMESPath query tool with live results preview, contextual sample queries generated from actual JSON structure, and built-in JMESPath guide with syntax examples",
+          "**Structure-Aware JSON Navigation:** Navigator tree clicks now reliably jump to exact locations in JSON using AST parsing (json-source-map), handling nested keys, missing properties, and edge cases correctly",
+          "**CSV Cell Actions:** Clear cell contents, copy cell values, and view full cell values in a modal for large data"
+        ]
+      },
+      {
+        "name": "Improvements",
+        "changes": [
+          "**JSON Navigator:** Full horizontal scrolling for long values instead of ellipsis truncation",
+          "**JSON Navigator:** Dynamic height adjustment using ResizeObserver for optimal space utilization",
+          "**JSON Equality Checker:** Enhanced array mismatch reporting with detailed diff information"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.10.0",
+    "type": "release",
+    "date": "2025-11-12",
+    "headline": "JSON & CSV Features",
+    "summary": "JSON equality checking, CSV export strategies, and smart delimiter detection",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**JSON Deep Equality Checker:** Order-insensitive JSON comparison using canonical hashing, with intelligent array analysis reporting matched, missing, and extra items",
+          "**JSON to CSV Export:** Intelligent JSON-to-CSV conversion with three strategies: expandFirst (recommended), expandAll (Cartesian product), and stringify (legacy)",
+          "**CSV Paste Cleaner:** Automatically detects and converts literal \\t escape sequences to actual tab characters on paste",
+          "**CSV Auto-Delimiter Detection:** Smart View automatically detects tab, comma, semicolon, or pipe delimiters for proper table rendering"
+        ]
+      },
+      {
+        "name": "Improvements",
+        "changes": [
+          "**CSV Export:** Nested objects automatically flattened with dot notation (e.g., user.name → user.name column)",
+          "**CSV Export:** Proper CSV escaping for quotes, delimiters, and newlines",
+          "**JWT Tablet:** Improved security messaging - clearer explanation of local storage and best practices"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.9.0",
+    "type": "release",
+    "date": "2025-11-11",
+    "headline": "JSON Data Extraction and Calculator improvements",
+    "summary": "JSON data extraction tool, calculator readability, and bug fixes",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**JSON Data Extraction:** Extract and filter values from JSON arrays with live preview, supporting nested paths, comparison operators (==, !=, >, <, >=, <=), and export to new tabs",
+          "**Calculator Human Readable Output:** Display calculation results in plain language for better comprehension"
+        ]
+      },
+      {
+        "name": "Fixed",
+        "changes": [
+          "Rich text editor: Date created header now properly isolated from document content",
+          "Calculator: Various calculation and operator handling bug fixes",
+          "Editor: Blank editor issue after applying transformations"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.8.0",
+    "type": "release",
+    "date": "2025-11-01",
+    "headline": "Calculator enhancements, JSON Mapper joins, and smart fixes",
+    "summary": "Calculator bit manipulation, JSON Mapper joins, and intelligent auto-fix",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Calculator Bit Toggler:** Interactive bit manipulation tool in programmer mode for binary operations",
+          "**Calculator Live Base Converter:** Real-time conversion between decimal, binary, octal, and hexadecimal",
+          "**JSON Auto-Fix:** Intelligent JSON repair tool that automatically fixes common syntax errors",
+          "**JSON Mapper Joins:** Join on matching identifiers when mapping array items"
+        ]
+      },
+      {
+        "name": "Improvements",
+        "changes": [
+          "**JSON Mapper:** Specify naming patterns on mapped files",
+          "**Calculator:** Less opportunity to enter incorrect calculator syntax"
+        ]
+      },
+      {
+        "name": "Fixed",
+        "changes": [
+          "General bug fixes to JSON Mapper"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.7.0",
+    "type": "release",
+    "date": "2025-10-24",
+    "headline": "Split tabs, JSON improvements, and bug fixes",
+    "summary": "Split tab functionality, JSON sanitize, and smart view enhancements",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Split Tab:** Split tab content into multiple tabs with extensive split configuration controls",
+          "**Smart View Callout Widget:** Visual indicator when smart view is available after auto-format detection",
+          "**JSON Sanitize:** Added sanitize feature for JSON smart view"
+        ]
+      },
+      {
+        "name": "Improvements",
+        "changes": [
+          "**JSON Mapper:** Enhanced filename controls for mapped files in folders with pattern matching and transformation rules",
+          "**Diff Viewer:** Now shows files in tab view order for better context"
+        ]
+      },
+      {
+        "name": "Fixed",
+        "changes": [
+          "Compare with JSON smart view bug fix",
+          "Pomodoro timer now appears correctly in browser title when running"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.6.0",
+    "type": "release",
+    "date": "2025-10-15",
+    "headline": "GraphQL tablet and Pomodoro fixes",
+    "summary": "GraphQL query builder with schema introspection and Pomodoro timer fix",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**GraphQL Tablet:** Interactive GraphQL query builder with schema introspection, query validation, and variables support"
+        ]
+      },
+      {
+        "name": "Fixed",
+        "changes": [
+          "Pomodoro timer getting stuck at 00:01 when auto-start next session is enabled"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.5.0",
+    "type": "release",
+    "date": "2025-10-07",
+    "headline": "Rich text enhancements and bug fixes",
+    "summary": "Rich text headings, underline, separators, and critical bug fixes",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Rich text H1, H2, H3:** Added heading support for better document structure",
+          "**Rich text Underline:** Added underline formatting option",
+          "**Rich text Separator:** Added horizontal separator for content division"
+        ]
+      },
+      {
+        "name": "Fixed",
+        "changes": [
+          "Rich text table selection bug",
+          "IP Details tablet caching IP address issue",
+          "Diff Smart View line wrapping causing text overlap"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.4.0",
+    "type": "release",
+    "date": "2025-09-25",
+    "headline": "New tablets and improvements",
+    "summary": "Five new tablets: Mermaid, Checksum, DateTime, Colour Palette, Lorem Ipsum",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Mermaid Diagram Tablet:** Create flowcharts, sequence diagrams, and more with live preview",
+          "**Checksum Tablet:** Generate MD5, SHA-1, SHA-256 checksums for text and files",
+          "**DateTime Tablet:** Parse, format, and convert dates across timezones and formats",
+          "**Colour Palette Tablet:** Create and export colour palettes with live UI preview",
+          "**Lorem Ipsum Tablet:** Generate placeholder text with customizable options",
+          "**SVG Smart View:** Live preview SVG with syntax highlighting and optimization"
+        ]
+      },
+      {
+        "name": "Technical Highlights",
+        "changes": [
+          "Enhanced regex explanations with detailed pattern descriptions",
+          "Improved language detection algorithms and bug fixes"
+        ]
+      },
+      {
+        "name": "Fixed",
+        "changes": [
+          "Curl multiline JSON body parsing in Smart View"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.3.0",
+    "type": "release",
+    "date": "2025-08-28",
+    "headline": "Rich text editing",
+    "summary": "Rich text editor with images, tables, lists, and code blocks",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Rich text editing - Images:** Paste and resize images",
+          "**Rich text editing - Style:** Create tables, lists, links",
+          "**Rich text editing - Code:** Code blocks with highlighting",
+          "**Rich text editing - Content:** Convert standard editor content to rich text or import content from other tabs"
+        ]
+      },
+      {
+        "name": "Fixed",
+        "changes": [
+          "JSON Smart View scroll-to from tree node now working at any nested level",
+          "Can undo a \"From sample\" action",
+          "Format detection issues - now more reliable"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.2.0",
+    "type": "release",
+    "date": "2025-08-15",
+    "headline": "Properties and INI Smart View",
+    "summary": "Smart Views for Properties and INI formats with editing and conversion",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Smart View for Properties:** Validate, edit, convert Properties with a dedicated builder",
+          "**Smart View for INI:** Validate, edit, convert INI with a dedicated builder",
+          "**CSV Smart View:** Search capabilities",
+          "**CSV Smart View:** Shift cells to the right where columns are missing"
+        ]
+      },
+      {
+        "name": "Technical Highlights",
+        "changes": [
+          "Improved JSON, CSV and R auto detection algorithms"
+        ]
+      },
+      {
+        "name": "Fixed",
+        "changes": [
+          "JSON Smart View replicating content across multiple tabs"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.1.0",
+    "type": "release",
+    "date": "2025-08-11",
+    "headline": "Curl command builder",
+    "summary": "Feature-rich Curl command builder Smart View with improved detection",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Smart View for Curl:** A feature rich Curl command builder"
+        ]
+      },
+      {
+        "name": "Technical Highlights",
+        "changes": [
+          "Improved JSON, Csv and R auto detection algorithms",
+          "Search JSON by path OR content",
+          "Fix broken JSON option",
+          "Search formats (Github request #2)",
+          "CTRL+Click for tab close without confirmation (Github request #2)",
+          "Middle mouse click for tab close without confirmation (Github request #2)",
+          "Larger clickable area for close button (Github request #2)"
+        ]
+      },
+      {
+        "name": "Fixed",
+        "changes": [
+          "JSON Smart View replicating content across multiple tabs",
+          "Do not kebab-case already kebab-cased JSON property"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.0.0",
+    "type": "release",
+    "date": "2025-08-06",
+    "headline": "Initial Public Release",
+    "summary": "First stable release with 50+ tools, multi-tab workspace, and privacy-first design",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**50+ Developer Tools:** JSON editor, JWT decoder, Regex tester, Word count, and more",
+          "**Multi-tab Workspace:** Organize your work with persistent tabs and split-view support",
+          "**Smart Format Detection:** Automatic recognition and formatting of JSON, YAML, Markdown, CSV, and other common formats",
+          "**Smart Views:** Take your editing to the next level with Smart Views, support for JSON, YAML, Markdown, HTML and CSV",
+          "**Offline AI Summarization:** Client-side text summarization using WebAssembly (experimental)",
+          "**Advanced Diff Tool:** Side-by-side comparison with syntax highlighting",
+          "**Workspace Management:** Save, export, and import entire workspaces",
+          "**Privacy-First Design:** 100% client-side processing, zero data collection"
+        ]
+      },
+      {
+        "name": "Technical Highlights",
+        "changes": [
+          "Built with React 18 and TypeScript for reliability and performance",
+          "Monaco Editor integration for advanced code editing capabilities",
+          "IndexedDB for persistent local storage",
+          "Service Worker support for process intensive tasks"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.9.0-beta",
+    "type": "beta",
+    "date": "2025-07-20",
+    "headline": "Beta Release",
+    "summary": "Feature-complete beta with REST client, JWT toolkit, and performance optimizations",
+    "categories": [
+      {
+        "name": "Added",
+        "changes": [
+          "REST client with environment variables and request history",
+          "JWT token decoder, verifier, and signer with multiple algorithms",
+          "Advanced JSON transformation tools with jq-like syntax",
+          "Batch text processing",
+          "CSV Smart View providing extended capabilities",
+          "Password and UUID generators with customizable options"
+        ]
+      },
+      {
+        "name": "Improved",
+        "changes": [
+          "Enhanced tab management with drag-and-drop reordering",
+          "Better error handling and user feedback",
+          "Improved keyboard shortcuts and accessibility",
+          "Performance optimizations for large files"
+        ]
+      },
+      {
+        "name": "Fixed",
+        "changes": [
+          "Memory leaks when switching between multiple tabs",
+          "Incorrect syntax highlighting for certain file types",
+          "Issues with workspace export containing special characters",
+          "Mobile layout problems on smaller screens"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.8.0-alpha",
+    "type": "alpha",
+    "date": "2025-05-05",
+    "headline": "Alpha Release",
+    "summary": "Initial alpha with core tab interface, JSON formatter, and plugin architecture",
+    "categories": [
+      {
+        "name": "Added",
+        "changes": [
+          "Core tab-based interface with workspace support",
+          "Basic JSON formatter and validator",
+          "Text editor with syntax highlighting for 20+ languages",
+          "Local storage persistence for tabs and settings",
+          "Import/export functionality for individual tabs"
+        ]
+      },
+      {
+        "name": "Architecture",
+        "changes": [
+          "Established plugin-based tablet system for extensibility",
+          "Implemented privacy-first design principles",
+          "Set up development toolchain with TypeScript and Vite",
+          "Created comprehensive testing framework"
+        ]
+      }
+    ]
+  }
+];
+
+export const getLatestRelease = (): Release | undefined => RELEASES[0];
+
+export const getRecentReleases = (count: number = 10): Release[] => RELEASES.slice(0, count);

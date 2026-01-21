@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { BaseModal } from "./BaseModal";
+import { BaseModal } from "../../../../components/Modals/BaseModal";
 import { CsvOptions, convertToCsv } from "../../utils/generateCsv";
 import { Editor } from "@monaco-editor/react";
 import { Download, Copy, Check, Info } from "lucide-react";

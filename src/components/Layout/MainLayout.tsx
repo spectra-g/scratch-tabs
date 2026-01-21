@@ -22,6 +22,7 @@ import { DiffModal } from "../DiffModal";
 import { SummarizeModal } from "../AI/SummarizeModal";
 import { SearchModal } from "../Search/SearchModal";
 import { AIModelManagementModal } from "../AI/AIModelManagementModal";
+import { AboutModal, ChangelogModal } from "../Modals";
 import { ConfirmationDialog } from "../Tab/ConfirmationDialog";
 import { TestFields } from "../TestFields/TestFields";
 import { MilestoneToast, MilestoneModal } from "../MilestoneCelebration";
@@ -385,6 +386,8 @@ const MainLayout: React.FC = () => {
       )}
       {isSearchOpen && <SearchModal />}
       <AIModelManagementModal />
+      <AboutModal />
+      <ChangelogModal />
 
       {keyboardCloseConfirmation && (
         <ConfirmationDialog

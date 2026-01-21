@@ -17,7 +17,7 @@ Feature: Smart View Callout Notification
     And I click the icon for "New tab with contents from clipboard"
     Then the status bar language should be "JSON"
     And I should see the smart view callout
-    And the smart view callout message should contain "Smart View for JSON is available"
+    And the smart view callout message should contain "JSON Detected"
 
   Scenario: Clicking Switch button activates Smart View
     When I set clipboard content to:
@@ -68,4 +68,4 @@ Feature: Smart View Callout Notification
     And I click the icon for "New tab with contents from clipboard"
     Then the status bar language should be "CSV / TSV"
     And I should see the smart view callout
-    And the smart view callout message should contain "Smart View for CSV / TSV is available"
+    And the smart view callout message should contain "CSV / TSV Detected"

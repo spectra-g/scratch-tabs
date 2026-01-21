@@ -9,7 +9,7 @@ import {
   ListFilter,
   Loader2,
 } from "../Icons";
-import { BaseModal } from "../../formats/json/components/modals/BaseModal";
+import { BaseModal } from "../Modals/BaseModal";
 import { SearchResult, SearchOptions } from "../../stores/searchStore";
 import { highlightMatchesInText } from "../../services/searchService";
 import { SearchPreviewPane } from "./SearchPreviewPane";

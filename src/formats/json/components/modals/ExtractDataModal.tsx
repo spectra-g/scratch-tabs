@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { BaseModal } from "./BaseModal";
+import { BaseModal } from "../../../../components/Modals/BaseModal";
 import { Editor } from "@monaco-editor/react";
 import { Copy, Check, ExternalLink } from "lucide-react";
 import { Tab } from "../../../../types";

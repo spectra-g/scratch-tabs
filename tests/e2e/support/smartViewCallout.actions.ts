@@ -83,6 +83,6 @@ export class SmartViewCalloutActions {
 
   async expectCalloutContainsFormat(formatName: string) {
     const message = this.getCalloutMessage();
-    await expect(message).toContainText(`Smart View for ${formatName} is available`);
+    await expect(message).toContainText(`${formatName} Detected`);
   }
 }

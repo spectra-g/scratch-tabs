@@ -49,7 +49,7 @@ export const SmartViewCalloutWidget: React.FC<SmartViewCalloutWidgetProps> = ({
         <div className="p-1.5 bg-primary/10 rounded-full flex-shrink-0">
            <Sparkles size={16} className="text-primary animate-pulse" />
         </div>
-        <div className="flex flex-col">
+        <div className="flex flex-col" data-testid="smart-view-callout-message">
           <span className="text-xs font-bold text-main">{formatName} Detected</span>
           <span className="text-[10px] text-muted truncate">Smart View available</span>
         </div>
