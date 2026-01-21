@@ -112,7 +112,14 @@ describe("Sidebar Component", () => {
         expect(expandWorkspace).toHaveBeenCalledWith("ws-1");
     });
 
-    it("returns null if sidebar is NOT expanded", () => {
+    it("renders with collapsed classes when sidebar is NOT expanded on desktop", () => {
+        // Mock desktop width
+        Object.defineProperty(window, 'innerWidth', {
+            writable: true,
+            configurable: true,
+            value: 1024,
+        });
+
         (useSidebarStore as any).mockReturnValue({
             isSidebarExpanded: false,
             isMobileOpen: false,
@@ -126,7 +133,13 @@ describe("Sidebar Component", () => {
         });
 
         const { container } = render(<Sidebar />);
-        expect(container.firstChild).toBeNull();
+
+        // Sidebar should still be in DOM for smooth animation
+        expect(container.firstChild).not.toBeNull();
+
+        // Should have the collapsed classes (md:w-0, md:overflow-hidden)
+        const sidebar = container.querySelector('.flex.flex-col.h-full');
+        expect(sidebar).toBeInTheDocument();
     });
 
     describe("Context Menu Integration", () => {

@@ -320,15 +320,9 @@ export const Sidebar: React.FC = () => {
         listRef.current.scrollToItem(activeTabIndex, "smart");
     }, [activeTabId, treeItems, activeTabs, expandedWorkspaceIds, expandWorkspace]);
 
-    // Desktop: hidden when collapsed
-    // Mobile: always rendered (controlled by transform)
-    const isDesktopHidden = !isSidebarExpanded && typeof window !== 'undefined' && window.innerWidth >= 768;
-
-    if (isDesktopHidden) return null;
-
     // Responsive container classes
     // Mobile: Fixed overlay with slide-in animation
-    // Desktop: Relative flow with collapse behavior
+    // Desktop: Relative flow with smooth collapse animation
     const containerClasses = clsx(
         "flex flex-col h-full bg-surface-secondary border-r border-base transition-all duration-300 ease-in-out",
         // Mobile: Fixed overlay
@@ -336,7 +330,7 @@ export const Sidebar: React.FC = () => {
         isMobileOpen ? "translate-x-0" : "-translate-x-full",
         // Desktop: Relative flow
         "md:relative md:transform-none md:shadow-none md:z-0",
-        // Desktop collapse: w-0 when collapsed
+        // Desktop collapse: w-0 when collapsed (smooth animation via CSS)
         isSidebarExpanded ? "md:w-72" : "md:w-0 md:border-r-0 md:overflow-hidden"
     );
 
@@ -404,14 +398,6 @@ export const Sidebar: React.FC = () => {
                     </div>
                 )}
             </div>
-
-            {workspaceContextMenu && (
-                <WorkspaceContextMenu
-                    workspaceId={workspaceContextMenu.workspaceId}
-                    position={workspaceContextMenu.position}
-                    onClose={() => setWorkspaceContextMenu(null)}
-                />
-            )}
 
             {workspaceContextMenu && (
                 <WorkspaceContextMenu
