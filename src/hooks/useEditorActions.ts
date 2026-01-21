@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react";
 import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { useAIStore } from "../stores/aiStore";
+import { usePipelineStore } from "../stores/pipelineStore";
 
 interface UseEditorActionsProps {
   editor: Monaco.editor.IStandaloneCodeEditor | null;
@@ -21,6 +22,7 @@ export const useEditorActions = ({
   isCodegenReady,
   isCodegenGenerating,
 }: UseEditorActionsProps) => {
+  const transformationsDisposableRef = useRef<Monaco.IDisposable | null>(null);
   const aiSummarizeDisposableRef = useRef<Monaco.IDisposable | null>(null);
   const aiCodegenDisposableRef = useRef<Monaco.IDisposable | null>(null);
   const aiReadyContextKeyRef =
@@ -28,6 +30,7 @@ export const useEditorActions = ({
   const codegenReadyContextKeyRef =
     useRef<Monaco.editor.IContextKey<boolean> | null>(null);
 
+  const { openModal: openPipelineModal } = usePipelineStore();
   const { summarizeTextWithModal, runCodegen } = useAIStore();
 
   // Register actions only when editor or monaco changes
@@ -35,12 +38,44 @@ export const useEditorActions = ({
     if (!editor || !monaco) return;
 
     // Clean up previous actions if they exist
+    if (transformationsDisposableRef.current) {
+      transformationsDisposableRef.current.dispose();
+    }
     if (aiSummarizeDisposableRef.current) {
       aiSummarizeDisposableRef.current.dispose();
     }
     if (aiCodegenDisposableRef.current) {
       aiCodegenDisposableRef.current.dispose();
     }
+
+    // Add Transformations context menu action
+    transformationsDisposableRef.current = editor.addAction({
+      id: "transformations-pipeline",
+      label: "Transformations",
+      contextMenuGroupId: "navigation",
+      contextMenuOrder: 2.5,
+      run: (ed) => {
+        try {
+          const model = ed.getModel();
+          if (!model || model.isDisposed()) return;
+
+          const selection = ed.getSelection();
+          let selectedText = "";
+          let fullContent = model.getValue();
+
+          if (selection && !selection.isEmpty()) {
+            selectedText = model.getValueInRange(selection);
+          }
+
+          openPipelineModal(fullContent, selectedText, selection);
+        } catch (error) {
+          console.warn(
+            "[useEditorActions] Failed to open transformations pipeline:",
+            error,
+          );
+        }
+      },
+    });
 
     // Create context keys for AI actions
     try {
@@ -147,6 +182,10 @@ export const useEditorActions = ({
 
     // Cleanup function
     return () => {
+      if (transformationsDisposableRef.current) {
+        transformationsDisposableRef.current.dispose();
+        transformationsDisposableRef.current = null;
+      }
       if (aiSummarizeDisposableRef.current) {
         aiSummarizeDisposableRef.current.dispose();
         aiSummarizeDisposableRef.current = null;

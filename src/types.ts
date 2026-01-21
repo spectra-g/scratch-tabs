@@ -40,6 +40,13 @@ export interface EditorPosition {
   column: number;
 }
 
+export interface EditorRange {
+  startLineNumber: number;
+  startColumn: number;
+  endLineNumber: number;
+  endColumn: number;
+}
+
 export interface SplitViewRecord {
   id: string;
   isSplit: boolean;
