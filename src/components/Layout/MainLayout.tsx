@@ -30,6 +30,8 @@ import { useAIStore } from "../../stores/aiStore";
 import { useStoreWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import { getTabsInVisualOrder } from "../../utils/diffModalHelpers";
+import { Sidebar } from "./Sidebar";
+
 
 const MainLayout: React.FC = () => {
   // Update document title with workspace name
@@ -320,7 +322,9 @@ const MainLayout: React.FC = () => {
         ref={containerRef}
         className="flex w-full h-full min-w-0 overflow-hidden"
       >
+        <Sidebar />
         {tabCount === 0 && workspaces.length === 0 ? (
+
           <WelcomeScreen />
         ) : (
           <>

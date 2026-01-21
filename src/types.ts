@@ -99,3 +99,13 @@ export type ResizeObserverCallback = (
   entries: ResizeObserverEntry[],
   observer: ResizeObserver,
 ) => void;
+export interface SidebarTabInfo {
+  id: string;
+  title: string;
+  language: string;
+  isTablet?: boolean;
+  isRich?: boolean;
+  isPinned?: boolean;
+  lastModified: number;
+  workspaceId: string;
+}
