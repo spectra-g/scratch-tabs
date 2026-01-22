@@ -47,7 +47,6 @@ export const WorkspaceContextMenu: React.FC<WorkspaceContextMenuProps> = ({
 
     const handleNewTab = () => {
         // TODO: Will be implemented when we add tab creation from sidebar
-        console.log("New tab in workspace:", workspaceId);
         onClose();
     };
 
@@ -55,7 +54,7 @@ export const WorkspaceContextMenu: React.FC<WorkspaceContextMenuProps> = ({
         if (workspace) {
             setNewName(workspace.name);
             setRenameDialogOpen(true);
-            onClose(); // Close context menu when dialog opens
+            // Don't call onClose() here - keep component mounted for dialog
         }
     };
 
@@ -70,6 +69,7 @@ export const WorkspaceContextMenu: React.FC<WorkspaceContextMenuProps> = ({
     const handleRenameCancel = () => {
         setRenameDialogOpen(false);
         setNewName("");
+        onClose();
     };
 
     const handleDuplicate = () => {
@@ -83,7 +83,7 @@ export const WorkspaceContextMenu: React.FC<WorkspaceContextMenuProps> = ({
 
     const handleDelete = () => {
         setConfirmDelete(true);
-        onClose(); // Close context menu when dialog opens
+        // Don't call onClose() here - keep component mounted for dialog
     };
 
     const handleDeleteConfirm = () => {
@@ -94,6 +94,7 @@ export const WorkspaceContextMenu: React.FC<WorkspaceContextMenuProps> = ({
 
     const handleDeleteCancel = () => {
         setConfirmDelete(false);
+        onClose();
     };
 
     const menuItems: MenuItem[] = [
@@ -127,10 +128,10 @@ export const WorkspaceContextMenu: React.FC<WorkspaceContextMenuProps> = ({
 
     return (
         <>
-            {!confirmDelete && !renameDialogOpen && (
+            {!confirmDelete && !renameDialogOpen && createPortal(
                 <div
                     ref={menuRef}
-                    className="absolute bg-surface border border-base rounded shadow-lg z-[60] py-1"
+                    className="fixed bg-surface border border-base rounded shadow-lg z-[100] py-1"
                     style={{
                         top: `${position.y}px`,
                         left: `${position.x}px`,
@@ -149,7 +150,8 @@ export const WorkspaceContextMenu: React.FC<WorkspaceContextMenuProps> = ({
                         }
                         return <ContextMenuItem key={item.id} item={item} />;
                     })}
-                </div>
+                </div>,
+                document.body
             )}
 
             {confirmDelete && workspace && (
@@ -163,7 +165,7 @@ export const WorkspaceContextMenu: React.FC<WorkspaceContextMenuProps> = ({
             )}
 
             {renameDialogOpen && createPortal(
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[110]">
                     <div ref={renameDialogRef} className="bg-surface border border-base rounded-lg shadow-xl p-6 w-96">
                         <h3 className="text-lg font-semibold text-main mb-4">Rename Workspace</h3>
                         <input

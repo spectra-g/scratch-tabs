@@ -34,4 +34,5 @@ Unix pipes for the browser.
 *   **Tools:** Click the extensions icon at the top right of the page.
 *   **Command Bar:** \`F1\`
 *   **Search:** \`Cmd/Ctrl + Shift + F\`
+*   **Sidebar toggle:** \`Cmd/Ctrl + B\`
 `;
