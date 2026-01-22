@@ -231,7 +231,7 @@ export const WelcomeScreen: React.FC = () => {
             />
             <h1 className="text-3xl font-mono font-medium text-main">SCRATCH_TABS</h1>
           </div>
-          <p className="text-muted text-sm font-mono mt-2">// v1.18.0</p>
+          <p className="text-muted text-sm font-mono mt-2">// v1.19.0</p>
         </div>
 
         {/* Actions Grid */}
