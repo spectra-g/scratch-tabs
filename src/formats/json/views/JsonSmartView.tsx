@@ -270,90 +270,100 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
       >
         {/* Main Content Panel */}
         <Panel minSize={30}>
-          <div className="flex h-full">
+          <PanelGroup direction="horizontal">
             {/* Navigator Panel */}
-            <div className="hidden lg:flex w-96 border-r border-base flex-col bg-surface-secondary">
-              <div className="p-3 border-b border-base">
-                <h3 className="text-sm font-medium text-main">Navigator</h3>
+            <Panel defaultSize={25} minSize={15} maxSize={40} className="hidden lg:block">
+              <div className="h-full border-r border-base flex flex-col bg-surface-secondary">
+                <div className="p-3 border-b border-base">
+                  <h3 className="text-sm font-medium text-main">Navigator</h3>
+                </div>
+                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                  <Navigator
+                    content={content}
+                    onNodeSelect={handleNodeSelect}
+                    tabId={tabId}
+                  />
+                </div>
               </div>
-              <div className="flex-1 overflow-y-auto custom-scrollbar">
-                <Navigator
-                  content={content}
-                  onNodeSelect={handleNodeSelect}
-                  tabId={tabId}
-                />
-              </div>
-            </div>
+            </Panel>
+
+            <PanelResizeHandle className="hidden lg:block w-1 bg-element hover:bg-info transition-colors cursor-col-resize" />
 
             {/* Editor Panel */}
-            <div className="flex-1 flex flex-col min-w-0 bg-surface">
-              <div className="p-3 border-b border-base bg-surface-secondary">
-                <h3 className="text-sm font-medium text-main">Editor</h3>
+            <Panel defaultSize={55} minSize={40}>
+              <div className="h-full flex flex-col min-w-0 bg-surface">
+                <div className="p-3 border-b border-base bg-surface-secondary">
+                  <h3 className="text-sm font-medium text-main">Editor</h3>
+                </div>
+                <div className="flex-1">
+                  <Editor
+                    key={`json-editor-${tabId}-${side}`}
+                    height="100%"
+                    language="json"
+                    theme={isDarkMode ? "vs-dark" : "vs"}
+                    onMount={handleEditorMount}
+                    options={{
+                      minimap: { enabled: false },
+                      fontSize: 14,
+                      wordWrap: "on",
+                      automaticLayout: true,
+                      copyWithSyntaxHighlighting: false,
+                      scrollBeyondLastLine: true,
+                      formatOnPaste: true,
+                      formatOnType: true,
+                      find: {
+                        addExtraSpaceOnTop: false,
+                      },
+                    }}
+                  />
+                </div>
               </div>
-              <div className="flex-1">
-                <Editor
-                  key={`json-editor-${tabId}-${side}`}
-                  height="100%"
-                  language="json"
-                  theme={isDarkMode ? "vs-dark" : "vs"}
-                  onMount={handleEditorMount}
-                  options={{
-                    minimap: { enabled: false },
-                    fontSize: 14,
-                    wordWrap: "on",
-                    automaticLayout: true,
-                    copyWithSyntaxHighlighting: false,
-                    scrollBeyondLastLine: true,
-                    formatOnPaste: true,
-                    formatOnType: true,
-                    find: {
-                      addExtraSpaceOnTop: false,
-                    },
-                  }}
-                />
-              </div>
-            </div>
+            </Panel>
+
+            <PanelResizeHandle className="hidden lg:block w-1 bg-element hover:bg-info transition-colors cursor-col-resize" />
 
             {/* Right Panel - Toolbox & Insights */}
-            <div className="hidden lg:flex w-52 border-l border-base flex-col bg-surface-secondary">
-              {/* Tab Headers */}
-              <div className="flex border-b border-base">
-                <button
-                  onClick={() => setActiveRightTab('toolbox')}
-                  className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${activeRightTab === 'toolbox'
-                    ? 'text-info bg-info-subtle border-b-2 border-info'
-                    : 'text-muted hover:text-main hover:bg-element-hover'
-                    }`}
-                >
-                  Toolbox
-                </button>
-                <button
-                  onClick={() => setActiveRightTab('insights')}
-                  className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${activeRightTab === 'insights'
-                    ? 'text-info bg-info-subtle border-b-2 border-info'
-                    : 'text-muted hover:text-main hover:bg-element-hover'
-                    }`}
-                >
-                  Insights
-                </button>
-              </div>
+            <Panel defaultSize={20} minSize={15} maxSize={30} className="hidden lg:block">
+              <div className="h-full border-l border-base flex flex-col bg-surface-secondary">
+                {/* Tab Headers */}
+                <div className="flex border-b border-base">
+                  <button
+                    onClick={() => setActiveRightTab('toolbox')}
+                    className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${activeRightTab === 'toolbox'
+                      ? 'text-info bg-info-subtle border-b-2 border-info'
+                      : 'text-muted hover:text-main hover:bg-element-hover'
+                      }`}
+                  >
+                    Toolbox
+                  </button>
+                  <button
+                    onClick={() => setActiveRightTab('insights')}
+                    className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${activeRightTab === 'insights'
+                      ? 'text-info bg-info-subtle border-b-2 border-info'
+                      : 'text-muted hover:text-main hover:bg-element-hover'
+                      }`}
+                  >
+                    Insights
+                  </button>
+                </div>
 
-              {/* Tab Content */}
-              <div className="flex-1 overflow-hidden">
-                {activeRightTab === 'toolbox' ? (
-                  <div className="h-full overflow-y-auto custom-scrollbar">
-                    <Toolbox
-                      editor={editor}
-                      onContentChange={onContentChange}
-                      addTab={addTab}
-                    />
-                  </div>
-                ) : (
-                  <Insights content={content} addTab={addTab} />
-                )}
+                {/* Tab Content */}
+                <div className="flex-1 overflow-hidden">
+                  {activeRightTab === 'toolbox' ? (
+                    <div className="h-full overflow-y-auto custom-scrollbar">
+                      <Toolbox
+                        editor={editor}
+                        onContentChange={onContentChange}
+                        addTab={addTab}
+                      />
+                    </div>
+                  ) : (
+                    <Insights content={content} addTab={addTab} />
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
+            </Panel>
+          </PanelGroup>
         </Panel>
 
         {/* Query Panel (Conditionally Rendered) */}
