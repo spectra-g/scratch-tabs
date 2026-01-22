@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useClickOutside } from "../../hooks/useClickOutside";
 import { ContextMenuItem } from "../Tab/ContextMenuItem";
 import { MenuItem } from "../Tab/types";
@@ -29,6 +30,7 @@ export const SidebarTabContextMenu: React.FC<SidebarTabContextMenuProps> = ({
     onClose
 }) => {
     const menuRef = useRef<HTMLDivElement>(null);
+    const renameDialogRef = useRef<HTMLDivElement>(null);
     const { removeTab, toggleTabPin, duplicateTab, updateTabTitle } = useRootStore();
     const { activeWorkspaceId, workspaces } = useWorkspaceStore();
     const { tabs: activeTabs } = useTabsStore();
@@ -59,9 +61,16 @@ export const SidebarTabContextMenu: React.FC<SidebarTabContextMenuProps> = ({
         }
     });
 
+    useClickOutside(renameDialogRef, () => {
+        if (renameDialogOpen) {
+            handleRenameCancel();
+        }
+    });
+
     const handleRename = () => {
         setNewTitle(getTabTitle());
         setRenameDialogOpen(true);
+        onClose(); // Close context menu when dialog opens
     };
 
     const handleRenameConfirm = () => {
@@ -90,6 +99,7 @@ export const SidebarTabContextMenu: React.FC<SidebarTabContextMenuProps> = ({
 
     const handleDelete = () => {
         setConfirmDelete(true);
+        onClose(); // Close context menu when dialog opens
     };
 
     const handleDeleteConfirm = () => {
@@ -174,7 +184,7 @@ export const SidebarTabContextMenu: React.FC<SidebarTabContextMenuProps> = ({
             {!confirmDelete && !renameDialogOpen && (
                 <div
                     ref={menuRef}
-                    className="absolute bg-surface border border-base rounded shadow-lg z-50 py-1"
+                    className="absolute bg-surface border border-base rounded shadow-lg z-[60] py-1"
                     style={{
                         top: `${position.y}px`,
                         left: `${position.x}px`,
@@ -206,9 +216,9 @@ export const SidebarTabContextMenu: React.FC<SidebarTabContextMenuProps> = ({
                 />
             )}
 
-            {renameDialogOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-surface border border-base rounded-lg shadow-xl p-6 w-96">
+            {renameDialogOpen && createPortal(
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+                    <div ref={renameDialogRef} className="bg-surface border border-base rounded-lg shadow-xl p-6 w-96">
                         <h3 className="text-lg font-semibold text-main mb-4">Rename Tab</h3>
                         <input
                             type="text"
@@ -241,7 +251,8 @@ export const SidebarTabContextMenu: React.FC<SidebarTabContextMenuProps> = ({
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </>
     );

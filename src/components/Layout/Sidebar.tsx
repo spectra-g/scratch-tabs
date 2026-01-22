@@ -12,6 +12,7 @@ import {
     FolderOpen,
     ChevronRight,
     ChevronDown,
+    ChevronLeft,
     File,
     FileCode,
     FileText,
@@ -25,6 +26,7 @@ import {
 import { clsx } from "clsx";
 import { WorkspaceContextMenu } from "./WorkspaceContextMenu";
 import { SidebarTabContextMenu } from "./SidebarTabContextMenu";
+import { IconRail } from "./IconRail";
 
 const ROW_HEIGHT = 32;
 
@@ -40,6 +42,7 @@ export const Sidebar: React.FC = () => {
         isSidebarExpanded,
         isMobileOpen,
         setMobileOpen,
+        toggleSidebar,
         expandedWorkspaceIds,
         workspaceTabsMetadata,
         expandWorkspace,
@@ -100,6 +103,25 @@ export const Sidebar: React.FC = () => {
         prevActiveWorkspaceIdRef.current = activeWorkspaceId;
     }, [activeWorkspaceId, refreshWorkspaceMetadata]);
 
+    // Calculate workspace tab counts for IconRail
+    const workspaceTabCounts = useMemo(() => {
+        const counts = new Map<string, number>();
+
+        workspaces.forEach(ws => {
+            const isActiveWs = ws.id === activeWorkspaceId;
+
+            if (isActiveWs) {
+                const allTabIds = [...(splitView?.leftTabs || []), ...(splitView?.rightTabs || [])];
+                counts.set(ws.id, allTabIds.length);
+            } else {
+                const metadata = workspaceTabsMetadata.get(ws.id) || [];
+                counts.set(ws.id, metadata.length);
+            }
+        });
+
+        return counts;
+    }, [workspaces, activeWorkspaceId, activeTabs, workspaceTabsMetadata, splitView?.leftTabs, splitView?.rightTabs]);
+
     const treeItems = useMemo(() => {
         const items: TreeItem[] = [];
         const lowerQuery = (searchQuery || '').toLowerCase();
@@ -112,7 +134,7 @@ export const Sidebar: React.FC = () => {
 
             if (isActiveWs) {
                 // For active workspace, use the order from splitView
-                const allTabIds = [...splitView.leftTabs, ...splitView.rightTabs];
+                const allTabIds = [...(splitView?.leftTabs || []), ...(splitView?.rightTabs || [])];
                 // Create a map for quick lookup
                 const tabMap = new Map(activeTabs.map(t => [t.id, t]));
                 // Map IDs to tabs in the correct order, converting to SidebarTabInfo
@@ -174,7 +196,7 @@ export const Sidebar: React.FC = () => {
         });
 
         return items;
-    }, [workspaces, activeWorkspaceId, activeTabs, workspaceTabsMetadata, expandedWorkspaceIds, activeTabId, searchQuery, splitView.leftTabs, splitView.rightTabs]);
+    }, [workspaces, activeWorkspaceId, activeTabs, workspaceTabsMetadata, expandedWorkspaceIds, activeTabId, searchQuery, splitView?.leftTabs, splitView?.rightTabs]);
 
     const handleWorkspaceClick = (wsId: string, isExpanded: boolean) => {
         if (isExpanded) {
@@ -345,6 +367,18 @@ export const Sidebar: React.FC = () => {
                 />
             )}
 
+            {/* Desktop: Show IconRail when collapsed */}
+            {!isSidebarExpanded && (
+                <IconRail
+                    workspaces={workspaces}
+                    activeWorkspaceId={activeWorkspaceId}
+                    workspaceTabCounts={workspaceTabCounts}
+                    onWorkspaceClick={switchWorkspace}
+                    onCreateWorkspace={() => createWorkspace("New Workspace")}
+                    onExpandSidebar={toggleSidebar}
+                />
+            )}
+
             <div className={containerClasses}>
             <div className="p-3 flex flex-col gap-2">
                 <div className="flex items-center justify-between">
@@ -356,6 +390,15 @@ export const Sidebar: React.FC = () => {
                             title="New Workspace"
                         >
                             <Plus size={16} />
+                        </button>
+                        {/* Desktop only: collapse button */}
+                        <button
+                            onClick={toggleSidebar}
+                            className="hidden md:block p-1 hover:bg-element-hover rounded text-secondary hover:text-main"
+                            title="Collapse sidebar (Cmd+B)"
+                            aria-label="Collapse sidebar"
+                        >
+                            <ChevronLeft size={16} />
                         </button>
                         {/* Mobile only: close button */}
                         <button

@@ -321,10 +321,11 @@ const MainLayout: React.FC = () => {
   return (
     <div className="h-screen flex flex-col bg-canvas text-main transition-colors duration-200">
       <div className="flex w-full h-full min-w-0 overflow-hidden">
-        <Sidebar />
         {tabCount === 0 && workspaces.length === 0 ? (
           <WelcomeScreen />
         ) : (
+          <>
+            <Sidebar />
           <div className="flex flex-1 h-full min-w-0 overflow-hidden flex-col">
             {/* Mobile header with menu trigger */}
             <div className="md:hidden flex items-center px-3 py-2 border-b border-base bg-surface-secondary">
@@ -386,6 +387,7 @@ const MainLayout: React.FC = () => {
             )}
             </div>
           </div>
+          </>
         )}
       </div>
 

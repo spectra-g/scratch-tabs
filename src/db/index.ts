@@ -28,6 +28,7 @@ interface WorkspaceRecord {
   links: WorkspaceLink[];
   createdAt: number;
   lastAccessed: number;
+  displayOrder?: number;
 }
 
 interface SettingsRecord {
@@ -84,6 +85,17 @@ export class ScratchTabsDB extends Dexie {
       settings: "key",
       pipelines: "id, name, lastUsedAt, lastModified, isFavorite",
     });
+
+    // Version 5: Add displayOrder to workspaces for stable ordering
+    this.version(5)
+      .stores({
+        tabs: "id, workspaceId, lastModified",
+        splitView: "id, workspaceId, lastModified",
+        workspaces: "id, lastAccessed, displayOrder",
+        settings: "key",
+        pipelines: "id, name, lastUsedAt, lastModified, isFavorite",
+      })
+      .upgrade((tx) => this.upgradeToV5(tx));
   }
 
   private async upgradeToV2(tx: any): Promise<void> {
@@ -117,6 +129,25 @@ export class ScratchTabsDB extends Dexie {
             .table("splitView")
             .update(sv.id, { workspaceId: defaultWorkspace.id }),
         ),
+      );
+    }
+  }
+
+  private async upgradeToV5(tx: any): Promise<void> {
+    // Assign displayOrder to existing workspaces based on current lastAccessed order
+    const workspaces = await tx.table("workspaces").toArray();
+
+    if (workspaces.length > 0) {
+      // Sort by lastAccessed (most recent first) to maintain current order
+      const sortedWorkspaces = workspaces.sort(
+        (a: WorkspaceRecord, b: WorkspaceRecord) => b.lastAccessed - a.lastAccessed
+      );
+
+      // Assign displayOrder starting from 0
+      await Promise.all(
+        sortedWorkspaces.map((ws: WorkspaceRecord, index: number) =>
+          tx.table("workspaces").update(ws.id, { displayOrder: index })
+        )
       );
     }
   }

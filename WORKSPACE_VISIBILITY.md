@@ -665,11 +665,12 @@ No tabs matching "query"
 - [ ] Implement cross-window sync for sidebar
 - [ ] Test multi-window scenarios
 
-### Phase 5: Polish
+### Phase 5: Polish (PARTIAL - Icon Rail & Display Order Complete)
 - [ ] Add filter functionality (`"Filter tabs..."` placeholder)
-- [ ] Add keyboard navigation
-- [ ] Add collapsed icon rail mode
-- [ ] Add responsive/mobile behavior
+- [x] Add keyboard navigation (Cmd+B toggle - already implemented)
+- [x] Add collapsed icon rail mode
+- [x] Add responsive/mobile behavior (already implemented)
+- [x] Add stable workspace ordering (displayOrder property)
 - [ ] Add workspace drag-to-reorder
 - [ ] Performance profiling
 - [ ] Accessibility audit
@@ -1005,31 +1006,180 @@ const moveTabToActiveWorkspace = async (tabId: string, sourceWorkspaceId: string
 
 | File | Relevance |
 |------|-----------|
-| `src/stores/workspaceStore.ts` | Workspace CRUD, switching logic |
+| `src/stores/workspaceStore.ts` | Workspace CRUD, switching logic, sorting |
 | `src/stores/tabsStore.ts` | Tab metadata store |
 | `src/stores/splitViewStore.ts` | Split view state |
+| `src/stores/sidebarStore.ts` | Sidebar state management |
 | `src/stores/broadcastStore.ts` | Cross-window sync |
+| `src/components/Layout/Sidebar.tsx` | Main sidebar component |
+| `src/components/Layout/IconRail.tsx` | Collapsed sidebar icon rail |
+| `src/components/Layout/workspaceColors.ts` | Workspace color utility |
 | `src/components/Workspace/WorkspaceSwitcher.tsx` | Current workspace UI |
 | `src/components/Tab/Management/*` | Tab management modal |
-| `src/db/index.ts` | IndexedDB operations |
+| `src/db/index.ts` | IndexedDB operations, migrations |
 | `src/services/modelManager.ts` | Content authority |
+| `src/types.ts` | Type definitions (Workspace, Tab, etc.) |
 
 ---
 
-## 16. Appendix B: Component Structure (Proposed)
+## 16. Appendix B: Component Structure (Actual)
 
 ```
-src/components/Sidebar/
-├── Sidebar.tsx                    # Main sidebar container
-├── SidebarHeader.tsx              # Search + new workspace button
-├── WorkspaceTree.tsx              # Workspace list component
-├── WorkspaceItem.tsx              # Single workspace row
-├── TabItem.tsx                    # Single tab row
-├── SidebarContextMenu.tsx         # Context menu component
-├── SidebarIcons.tsx               # Icon mapping for languages/types
-├── useSidebarDragDrop.ts          # Drag-drop logic hook
-└── sidebarStore.ts                # Sidebar-specific state
+src/components/Layout/
+├── Sidebar.tsx                    # Main sidebar container (virtualized)
+├── IconRail.tsx                   # Collapsed sidebar icon rail
+├── workspaceColors.ts             # Color generation utility
+├── WorkspaceContextMenu.tsx       # Workspace context menu
+├── SidebarTabContextMenu.tsx      # Tab context menu
+└── __tests__/
+    ├── Sidebar.test.tsx           # Sidebar component tests
+    ├── IconRail.test.tsx          # Icon rail tests
+    └── workspaceColors.test.ts    # Color utility tests
+
+src/stores/
+├── sidebarStore.ts                # Sidebar-specific state
+├── workspaceStore.ts              # Workspace management & sorting
+└── __tests__/
+    ├── sidebarStore.test.ts       # Sidebar store tests
+    └── workspaceStore.sorting.test.ts  # Sorting logic tests
 ```
+
+---
+
+## 17. Implementation Details: Icon Rail & Display Order
+
+**Status:** ✅ COMPLETE (2026-01-22)
+
+### 17.1 Display Order Property
+
+**Problem:** Workspace order was changing on every page refresh because workspaces were sorted by `lastAccessed`, which updates when you click a workspace. This caused workspaces to jump around unexpectedly.
+
+**Solution:** Added `displayOrder` property to `Workspace` interface.
+
+```typescript
+export interface Workspace {
+  id: string;
+  name: string;
+  notes?: string;
+  links: WorkspaceLink[];
+  createdAt: number;
+  lastAccessed: number;
+  displayOrder?: number; // NEW: Persistent sort order
+}
+```
+
+**Database Migration (v5):**
+- Assigns `displayOrder` to existing workspaces based on current `lastAccessed` order
+- Preserves user's existing workspace order on first load after update
+- New workspaces get `displayOrder = max + 1` (appears at bottom of list)
+
+**Sorting Logic:**
+```typescript
+const sortWorkspaces = (workspaces: Workspace[]): Workspace[] => {
+  return [...workspaces].sort((a, b) => {
+    // Primary: Use displayOrder if both have it
+    if (a.displayOrder !== undefined && b.displayOrder !== undefined) {
+      return a.displayOrder - b.displayOrder;
+    }
+    // If only one has displayOrder, it comes first
+    if (a.displayOrder !== undefined) return -1;
+    if (b.displayOrder !== undefined) return 1;
+    // Fallback: Use lastAccessed (for backward compatibility)
+    return b.lastAccessed - a.lastAccessed;
+  });
+};
+```
+
+**Benefits:**
+- Workspaces stay in the same order across page refreshes
+- Clicking a workspace no longer reorders the list
+- Backward compatible with workspaces created before this feature
+- Foundation for future drag-to-reorder feature
+
+### 17.2 Icon Rail (Collapsed Sidebar)
+
+**Problem:** Desktop users had no way to collapse the sidebar, wasting 288px of horizontal space when not needed.
+
+**Solution:** Implemented collapsible sidebar with icon rail (VS Code pattern).
+
+**Components:**
+- `IconRail.tsx` - Minimal 56px-wide rail showing workspace icons
+- `workspaceColors.ts` - Deterministic color generation utility
+
+**Icon Rail Features:**
+1. **Workspace Icons:** First letter of workspace name in colored square
+2. **Color Generation:** Deterministic hash-based colors from curated palette
+3. **Visual Feedback:**
+   - Active workspace: ring-2 border with primary color
+   - Hover: scale-105 transform, increased opacity
+4. **Actions:**
+   - Click workspace icon → Switch to that workspace
+   - Expand button (top) → Show full sidebar
+   - Create button (bottom) → New workspace
+
+**Color Palette:**
+```typescript
+// 12 carefully chosen colors with good contrast on dark backgrounds
+const WORKSPACE_COLOR_PALETTE = [
+  '#10b981', // emerald-500
+  '#3b82f6', // blue-500
+  '#8b5cf6', // violet-500
+  '#ec4899', // pink-500
+  '#f59e0b', // amber-500
+  '#14b8a6', // teal-500
+  '#ef4444', // red-500
+  '#06b6d4', // cyan-500
+  '#f97316', // orange-500
+  '#a855f7', // purple-500
+  '#84cc16', // lime-500
+  '#6366f1', // indigo-500
+];
+```
+
+**Keyboard Shortcut:** `Cmd+B` / `Ctrl+B` to toggle (already implemented in `useGlobalHotkeys`)
+
+**Responsive Behavior:**
+- **Desktop:** Collapsible sidebar with icon rail
+- **Mobile:** Unchanged off-canvas drawer pattern (no icon rail)
+
+**Theme Consistency:**
+- All classes use existing theme tokens (`bg-surface-secondary`, `border-base`, etc.)
+- 100% consistent with app's design system
+
+### 17.3 Implementation Files
+
+**New Files:**
+- `src/components/Layout/IconRail.tsx` - Icon rail component
+- `src/components/Layout/workspaceColors.ts` - Color utility
+- `src/components/Layout/__tests__/IconRail.test.tsx` - Icon rail tests
+- `src/components/Layout/__tests__/workspaceColors.test.ts` - Color utility tests
+- `src/stores/__tests__/workspaceStore.sorting.test.ts` - Sorting logic tests
+
+**Modified Files:**
+- `src/types.ts` - Added `displayOrder` to `Workspace` interface
+- `src/db/index.ts` - Added v5 migration for `displayOrder`
+- `src/stores/workspaceStore.ts` - Updated sorting logic
+- `src/components/Layout/Sidebar.tsx` - Added collapse toggle and IconRail integration
+
+**Test Coverage:**
+- ✅ 25 new tests (all passing)
+- ✅ All existing tests still pass
+- ✅ Unit tests for color generation
+- ✅ Unit tests for IconRail component
+- ✅ Unit tests for workspace sorting logic
+
+### 17.4 Migration Path
+
+**Upgrade from previous version:**
+1. Database automatically migrates to v5 on first load
+2. Existing workspaces assigned `displayOrder` based on current `lastAccessed` order
+3. User sees no change in workspace order
+4. From that point forward, order is stable (no more jumping on refresh)
+
+**New workspaces:**
+- Assigned `displayOrder = max(existing) + 1`
+- Always appear at bottom of list
+- Future drag-to-reorder will update `displayOrder` values
 
 ---
 

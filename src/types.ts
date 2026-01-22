@@ -93,6 +93,7 @@ export interface Workspace {
   links: WorkspaceLink[];
   createdAt: number;
   lastAccessed: number;
+  displayOrder?: number; // Persistent sort order (optional for backward compatibility)
 }
 
 export type ResizeObserverCallback = (
