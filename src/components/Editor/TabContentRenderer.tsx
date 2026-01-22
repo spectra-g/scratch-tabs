@@ -3,6 +3,7 @@ import { EditorInstance } from "./EditorInstance";
 import { TabletView } from "../Tab/TabletView";
 import { modelManager } from "../../services/modelManager";
 import { lazyWithReload } from "../../utils/chunkLoadUtils";
+import { WorkspaceEmptyState } from "../Workspace/WorkspaceEmptyState";
 import type { Tab } from "../../types";
 import type { SmartView } from "../../views/registry";
 import type * as Monaco from "monaco-editor";
@@ -89,11 +90,7 @@ const RENDERER_CONFIG: RendererConfig[] = [
   {
     id: "empty-state",
     condition: (ctx) => !ctx.activeTab || !ctx.activeTabId,
-    render: () => (
-      <div className="h-full flex items-center justify-center text-muted">
-        <p>No tab selected</p>
-      </div>
-    ),
+    render: () => <WorkspaceEmptyState />,
   },
   {
     id: "replacement-view",

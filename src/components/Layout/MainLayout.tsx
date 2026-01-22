@@ -30,6 +30,10 @@ import { useAIStore } from "../../stores/aiStore";
 import { useStoreWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import { getTabsInVisualOrder } from "../../utils/diffModalHelpers";
+import { Sidebar } from "./Sidebar";
+import { Menu } from "../Icons";
+import { useSidebarStore } from "../../stores/sidebarStore";
+
 
 const MainLayout: React.FC = () => {
   // Update document title with workspace name
@@ -316,14 +320,30 @@ const MainLayout: React.FC = () => {
 
   return (
     <div className="h-screen flex flex-col bg-canvas text-main transition-colors duration-200">
-      <div
-        ref={containerRef}
-        className="flex w-full h-full min-w-0 overflow-hidden"
-      >
+      <div className="flex w-full h-full min-w-0 overflow-hidden">
         {tabCount === 0 && workspaces.length === 0 ? (
           <WelcomeScreen />
         ) : (
           <>
+            <Sidebar />
+          <div className="flex flex-1 h-full min-w-0 overflow-hidden flex-col">
+            {/* Mobile header with menu trigger */}
+            <div className="md:hidden flex items-center px-3 py-2 border-b border-base bg-surface-secondary">
+              <button
+                onClick={() => useSidebarStore.getState().setMobileOpen(true)}
+                className="p-1 -ml-1 mr-2 text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
+                aria-label="Open sidebar"
+              >
+                <Menu size={20} />
+              </button>
+              <span className="font-semibold text-sm text-main">Scratch Tabs</span>
+            </div>
+
+            {/* Main content area */}
+            <div
+              ref={containerRef}
+              className="flex flex-1 h-full min-w-0 overflow-hidden"
+            >
             <div
               className="flex flex-col h-full overflow-hidden min-w-0"
               style={leftPaneStyle}
@@ -365,6 +385,8 @@ const MainLayout: React.FC = () => {
                 </div>
               </>
             )}
+            </div>
+          </div>
           </>
         )}
       </div>

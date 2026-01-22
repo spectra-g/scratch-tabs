@@ -17,7 +17,7 @@ The app detects data structures automatically.
 
 ### 2. Try a Tablet (Tool)
 Don't context switch.
-**Action:** Press \`/\` (forward slash) right now.
+**Action:** Click the extensions icon at the top right of the page.
 *   Type **"UUID"** to generate an ID.
 *   Type **"Cron"** to build a schedule.
 
@@ -30,8 +30,10 @@ Unix pipes for the browser.
 
 ---
 ### ⌨️ Cheat Sheet
-*   **New Tab:** Double-click empty space
-*   **Tools:** \`/\`
+*   **New Tab:** Double-click the empty space in the tab bar.
+*   **Tab options:** Right-click any tab for more options.
+*   **Tools:** Click the extensions icon at the top right of the page.
 *   **Command Bar:** \`F1\`
 *   **Search:** \`Cmd/Ctrl + Shift + F\`
+*   **Sidebar toggle:** \`Cmd/Ctrl + B\`
 `;

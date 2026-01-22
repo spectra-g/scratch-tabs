@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 
 interface ConfirmationDialogProps {
   isOpen: boolean;
@@ -62,7 +63,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
     }
     : {};
 
-  return (
+  return createPortal(
     <>
       {/* Backdrop */}
       <div
@@ -106,6 +107,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 };

@@ -1,0 +1,150 @@
+import { create } from "zustand";
+import { SidebarTabInfo, Tab } from "../types";
+import { StorageProviderFactory } from "../db";
+import { useWorkspaceStore } from "./workspaceStore";
+
+interface SidebarState {
+    // Desktop state
+    isSidebarExpanded: boolean;
+    // Mobile state
+    isMobileOpen: boolean;
+    // Width state for resizing
+    sidebarWidth: number;
+
+    expandedWorkspaceIds: Set<string>;
+    workspaceTabsMetadata: Map<string, SidebarTabInfo[]>;
+    loadingWorkspaceIds: Set<string>;
+    searchQuery: string;
+
+    toggleSidebar: () => void;
+    setSidebarExpanded: (expanded: boolean) => void;
+    setSidebarWidth: (width: number) => void;
+    setMobileOpen: (isOpen: boolean) => void;
+    expandWorkspace: (workspaceId: string) => Promise<void>;
+    collapseWorkspace: (workspaceId: string) => void;
+    setSearchQuery: (query: string) => void;
+    refreshWorkspaceMetadata: (workspaceId: string) => Promise<void>;
+}
+
+export const useSidebarStore = create<SidebarState>((set, get) => {
+    const storage = StorageProviderFactory.getProvider();
+
+    return {
+        // Desktop: open by default for discoverability
+        isSidebarExpanded: true,
+        // Mobile: closed by default to maximize editor space
+        isMobileOpen: false,
+        // Default width 288px (w-72)
+        sidebarWidth: 288,
+
+        expandedWorkspaceIds: new Set<string>(),
+        workspaceTabsMetadata: new Map<string, SidebarTabInfo[]>(),
+        loadingWorkspaceIds: new Set<string>(),
+        searchQuery: "",
+
+        toggleSidebar: () => set((state) => ({ isSidebarExpanded: !state.isSidebarExpanded })),
+
+        setSidebarExpanded: (expanded: boolean) => set({ isSidebarExpanded: expanded }),
+
+        setSidebarWidth: (width: number) => set({ sidebarWidth: width }),
+
+        setMobileOpen: (isOpen: boolean) => set({ isMobileOpen: isOpen }),
+
+        expandWorkspace: async (workspaceId: string) => {
+            const { expandedWorkspaceIds, workspaceTabsMetadata } = get();
+
+            // If already expanded, do nothing
+            if (expandedWorkspaceIds.has(workspaceId)) {
+                return;
+            }
+
+            // Optimistically expand the UI
+            set((state) => ({
+                expandedWorkspaceIds: new Set([...state.expandedWorkspaceIds, workspaceId])
+            }));
+
+            // Check if we need to load metadata
+            const activeWorkspaceId = useWorkspaceStore.getState().activeWorkspaceId;
+
+            // We fetch metadata if it's NOT the active workspace (active is handled by main store)
+            // AND we don't have it cached yet
+            if (workspaceId !== activeWorkspaceId && !workspaceTabsMetadata.has(workspaceId)) {
+                 await get().refreshWorkspaceMetadata(workspaceId);
+            }
+        },
+
+        collapseWorkspace: (workspaceId: string) => {
+            set((state) => {
+                const next = new Set(state.expandedWorkspaceIds);
+                next.delete(workspaceId);
+                return { expandedWorkspaceIds: next };
+            });
+        },
+
+        setSearchQuery: (query: string) => set({ searchQuery: query }),
+
+        refreshWorkspaceMetadata: async (workspaceId: string) => {
+            // Avoid duplicate fetches
+            if (get().loadingWorkspaceIds.has(workspaceId)) return;
+
+            set((state) => {
+                const next = new Set(state.loadingWorkspaceIds);
+                next.add(workspaceId);
+                return { loadingWorkspaceIds: next };
+            });
+
+            try {
+                const tabs = await storage.getTabsByWorkspace(workspaceId);
+                const splitView = await storage.getSplitViewByWorkspace(workspaceId);
+
+                // Create tab map for quick lookup
+                const tabMap = new Map<string, Tab>(tabs.map(t => [t.id, t]));
+
+                // Order tabs according to splitView order (leftTabs then rightTabs)
+                let orderedTabs: Tab[] = [];
+                if (splitView) {
+                    const allTabIds = [...(splitView.leftTabs || []), ...(splitView.rightTabs || [])];
+
+                    orderedTabs = allTabIds
+                        .map(id => tabMap.get(id))
+                        .filter((t): t is Tab => t !== undefined);
+
+                    // Add any tabs not in splitView
+                    const remainingTabs = tabs.filter(t => !allTabIds.includes(t.id));
+                    orderedTabs = [...orderedTabs, ...remainingTabs];
+                } else {
+                    orderedTabs = tabs;
+                }
+
+                const metadata: SidebarTabInfo[] = orderedTabs.map((t) => ({
+                    id: t.id,
+                    title: t.title,
+                    language: t.language,
+                    isTablet: t.isTablet,
+                    isRich: t.isRich,
+                    isPinned: t.isPinned,
+                    lastModified: t.lastModified,
+                    workspaceId: t.workspaceId,
+                }));
+
+                set((state) => {
+                    const nextMap = new Map(state.workspaceTabsMetadata);
+                    nextMap.set(workspaceId, metadata);
+                    const nextLoading = new Set(state.loadingWorkspaceIds);
+                    nextLoading.delete(workspaceId);
+                    return {
+                        workspaceTabsMetadata: nextMap,
+                        loadingWorkspaceIds: nextLoading,
+                    };
+                });
+            } catch (error) {
+                console.error(`Failed to fetch metadata for workspace ${workspaceId}:`, error);
+                set((state) => {
+                    const nextLoading = new Set(state.loadingWorkspaceIds);
+                    nextLoading.delete(workspaceId);
+                    return { loadingWorkspaceIds: nextLoading };
+                });
+            }
+        },
+    };
+});

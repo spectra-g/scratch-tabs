@@ -93,9 +93,20 @@ export interface Workspace {
   links: WorkspaceLink[];
   createdAt: number;
   lastAccessed: number;
+  displayOrder?: number; // Persistent sort order (optional for backward compatibility)
 }
 
 export type ResizeObserverCallback = (
   entries: ResizeObserverEntry[],
   observer: ResizeObserver,
 ) => void;
+export interface SidebarTabInfo {
+  id: string;
+  title: string;
+  language: string;
+  isTablet?: boolean;
+  isRich?: boolean;
+  isPinned?: boolean;
+  lastModified: number;
+  workspaceId: string;
+}

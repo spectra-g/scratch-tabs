@@ -10,6 +10,21 @@ import { WELCOME_TAB_CONTENT, NEW_TAB_PREFIX } from "../constants";
 import { modelManager } from "../services/modelManager";
 import { broadcastManager } from "./broadcastStore";
 
+// Helper function to sort workspaces by displayOrder (primary) or lastAccessed (fallback)
+const sortWorkspaces = (workspaces: Workspace[]): Workspace[] => {
+  return [...workspaces].sort((a, b) => {
+    // Primary: Use displayOrder if both have it
+    if (a.displayOrder !== undefined && b.displayOrder !== undefined) {
+      return a.displayOrder - b.displayOrder;
+    }
+    // If only one has displayOrder, it comes first
+    if (a.displayOrder !== undefined) return -1;
+    if (b.displayOrder !== undefined) return 1;
+    // Fallback: Use lastAccessed (most recent first)
+    return b.lastAccessed - a.lastAccessed;
+  });
+};
+
 // Helper function to safely convert activeSide string to union type
 const parseActiveSide = (side: string | null): "left" | "right" | null => {
   if (side === "left" || side === "right") {
@@ -56,10 +71,8 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
       try {
         const workspaces = await storage.getWorkspaces();
 
-        // Sort workspaces by lastAccessed (most recent first)
-        const sortedWorkspaces = workspaces.sort(
-          (a, b) => b.lastAccessed - a.lastAccessed,
-        );
+        // Sort workspaces by displayOrder (primary) or lastAccessed (fallback)
+        const sortedWorkspaces = sortWorkspaces(workspaces);
 
         // Determine which workspace to activate
         let workspaceToActivate: Workspace | null = null;
@@ -74,7 +87,11 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
               sortedWorkspaces.find((w) => w.id === currentActiveWsId) || null;
           } else {
             // Otherwise, activate the most recently accessed workspace
-            workspaceToActivate = sortedWorkspaces[0];
+            // Note: sortedWorkspaces is sorted by displayOrder, not lastAccessed
+            // So we need to find the workspace with the highest lastAccessed timestamp
+            workspaceToActivate = sortedWorkspaces.reduce((latest, current) => {
+              return current.lastAccessed > latest.lastAccessed ? current : latest;
+            }, sortedWorkspaces[0]);
           }
         }
 
@@ -291,9 +308,9 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
 
         // 6. Update Zustand stores
         set((state) => ({
-          workspaces: state.workspaces
-            .map((w) => (w.id === workspaceId ? updatedTargetWorkspace : w))
-            .sort((a, b) => a.name.localeCompare(b.name)), // Keep sorted
+          workspaces: sortWorkspaces(
+            state.workspaces.map((w) => (w.id === workspaceId ? updatedTargetWorkspace : w))
+          ),
           activeWorkspaceId: workspaceId,
         }));
 
@@ -371,9 +388,9 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
 
         // If the deleted workspace was active, switch to another one
         if (activeWorkspaceId === workspaceId) {
-          const remainingWorkspaces = workspaces
-            .filter((w) => w.id !== workspaceId)
-            .sort((a, b) => b.lastAccessed - a.lastAccessed);
+          const remainingWorkspaces = sortWorkspaces(
+            workspaces.filter((w) => w.id !== workspaceId)
+          );
 
           if (remainingWorkspaces.length > 0) {
             await switchWorkspace(remainingWorkspaces[0].id);
@@ -488,12 +505,19 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
     createWorkspace: async (name: string): Promise<string | null> => {
       set({ isLoading: true });
       try {
+        // Calculate displayOrder for new workspace (max + 1, appears at bottom)
+        const existingWorkspaces = get().workspaces;
+        const maxDisplayOrder = existingWorkspaces.reduce((max, ws) => {
+          return ws.displayOrder !== undefined && ws.displayOrder > max ? ws.displayOrder : max;
+        }, -1);
+
         const newWorkspace: Workspace = {
           id: crypto.randomUUID(),
           name,
           links: [],
           createdAt: Date.now(),
           lastAccessed: Date.now(),
+          displayOrder: maxDisplayOrder + 1,
         };
 
         // Create a welcome tab for new workspaces
@@ -545,7 +569,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
 
         // Update the state with the new workspace
         set((state) => ({
-          workspaces: [...state.workspaces, newWorkspace],
+          workspaces: sortWorkspaces([...state.workspaces, newWorkspace]),
         }));
 
         // Broadcast workspace creation with the updated workspace list

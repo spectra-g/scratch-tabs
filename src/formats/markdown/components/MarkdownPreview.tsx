@@ -23,7 +23,8 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => {
     // Apply Tailwind's typography plugin classes for nice default styling.
     // 'prose-invert' is for dark mode themes.
     // Enhanced with Word Count tablet's superior table styling
-    <div className="prose dark:prose-invert max-w-none p-0.5 text-sm [&>h1]:mb-2 [&>h2]:mb-2 [&>h3]:mb-2 [&>h4]:mb-2 [&>h5]:mb-2 [&>h6]:mb-2 [&>h1]:mt-4 [&>h2]:mt-3 [&>h3]:mt-3 [&>h4]:mt-2 [&>h5]:mt-2 [&>h6]:mt-2">
+    // Remove default backticks from inline code
+    <div className="prose dark:prose-invert max-w-none p-0.5 text-sm [&>h1]:mb-2 [&>h2]:mb-2 [&>h3]:mb-2 [&>h4]:mb-2 [&>h5]:mb-2 [&>h6]:mb-2 [&>h1]:mt-4 [&>h2]:mt-3 [&>h3]:mt-3 [&>h4]:mt-2 [&>h5]:mt-2 [&>h6]:mt-2 [&_code]:before:content-none [&_code]:after:content-none">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -107,6 +108,29 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => {
           li: ({ children }) => {
             const lineNum = lineNumbers.get(elementCounterRef.current++);
             return <li data-source-line={lineNum}>{children}</li>;
+          },
+          // Inline code and code blocks
+          code: ({ node, inline, className, children, ...props }: any) => {
+            const lineNum = lineNumbers.get(elementCounterRef.current++);
+
+            if (inline) {
+              // Inline code - render without backticks
+              return (
+                <code
+                  className="px-1.5 py-0.5 bg-element text-info rounded text-sm font-mono"
+                  {...props}
+                >
+                  {children}
+                </code>
+              );
+            }
+
+            // Code block
+            return (
+              <code className={className} data-source-line={lineNum} {...props}>
+                {children}
+              </code>
+            );
           },
           // Enhanced status icon rendering
           p: ({ children }) => {

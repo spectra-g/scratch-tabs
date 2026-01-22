@@ -6,6 +6,8 @@ import { useSplitViewStore } from "../stores/splitViewStore";
 import { useStoreWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import { useRootStore } from "../stores/rootStore";
+import { useSidebarStore } from "../stores/sidebarStore";
+
 
 interface UseGlobalHotkeysParams {
   /**
@@ -117,7 +119,18 @@ export function useGlobalHotkeys({
           saveTabDataById(tabIdToSave);
         }
       }
+
+      // --- Sidebar Toggle Shortcut (Ctrl+B / Cmd+B) ---
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        event.key === "b" &&
+        !event.shiftKey
+      ) {
+        event.preventDefault();
+        useSidebarStore.getState().toggleSidebar();
+      }
     };
+
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);

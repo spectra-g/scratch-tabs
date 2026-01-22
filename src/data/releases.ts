@@ -15,12 +15,31 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.18.0';
+export const APP_VERSION = '1.19.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.18.0",
+    "version": "1.19.0",
     "type": "latest",
+    "date": "2026-01-22",
+    "headline": "Workspace Sidebar Explorer",
+    "summary": "Workspace sidebar with collapsible tree view, icon rail, and intelligent workspace management",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Workspace Sidebar Explorer:** Collapsible tree view showing all workspaces and tabs - expand/collapse workspaces to browse without switching, with clear visual distinction between active and expanded workspaces",
+          "**Icon Rail (Collapsed Mode):** Minimal icon rail showing workspace first-letters in themed color badges - toggle between full sidebar and compact rail with Cmd+B or click to expand",
+          "**Context Menus:** Right-click workspaces for create/rename/delete actions, right-click tabs for rename/delete/pin/duplicate/move operations",
+          "**Auto-Reveal Active Tab:** Sidebar automatically expands active workspace and scrolls to show the current tab when switching via tab bar or keyboard",
+          "**Resizable Sidebar:** Drag the resize handle to adjust sidebar width (150px-600px) or drag below 100px to snap-collapse to icon rail with smooth visual feedback"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.18.0",
+    "type": "release",
     "date": "2026-01-19",
     "headline": "Transformation Pipeline",
     "summary": "CyberChef-style data processing with chainable operations, drag-and-drop reordering, and persistent pipelines",
