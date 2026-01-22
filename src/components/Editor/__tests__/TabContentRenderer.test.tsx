@@ -46,6 +46,13 @@ jest.mock('../../../services/modelManager', () => ({
   },
 }));
 
+// Mock WorkspaceEmptyState
+jest.mock('../../Workspace/WorkspaceEmptyState', () => ({
+  WorkspaceEmptyState: () => (
+    <div data-testid="workspace-empty-state">Workspace Empty State</div>
+  ),
+}));
+
 describe('TabContentRenderer', () => {
   const mockUpdateTabState = jest.fn();
   const mockOnTabletStateChange = jest.fn();
@@ -85,7 +92,7 @@ describe('TabContentRenderer', () => {
   });
 
   describe('Empty state', () => {
-    it('should render "No tab selected" when activeTab is null', () => {
+    it('should render WorkspaceEmptyState when activeTab is null', () => {
       render(
         <TabContentRenderer
           {...baseProps}
@@ -94,10 +101,10 @@ describe('TabContentRenderer', () => {
         />
       );
 
-      expect(screen.getByText('No tab selected')).toBeInTheDocument();
+      expect(screen.getByTestId('workspace-empty-state')).toBeInTheDocument();
     });
 
-    it('should render "No tab selected" when activeTabId is null', () => {
+    it('should render WorkspaceEmptyState when activeTabId is null', () => {
       render(
         <TabContentRenderer
           {...baseProps}
@@ -106,7 +113,7 @@ describe('TabContentRenderer', () => {
         />
       );
 
-      expect(screen.getByText('No tab selected')).toBeInTheDocument();
+      expect(screen.getByTestId('workspace-empty-state')).toBeInTheDocument();
     });
   });
 

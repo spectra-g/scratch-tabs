@@ -30,7 +30,8 @@ Unix pipes for the browser.
 
 ---
 ### ⌨️ Cheat Sheet
-*   **New Tab:** Double-click the empty space in the tab bar
+*   **New Tab:** Double-click the empty space in the tab bar.
+*   **Tab options:** Right-click any tab for more options.
 *   **Tools:** Click the extensions icon at the top right of the page.
 *   **Command Bar:** \`F1\`
 *   **Search:** \`Cmd/Ctrl + Shift + F\`

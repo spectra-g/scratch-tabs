@@ -297,22 +297,7 @@ export const useRootStore = create<RootStore>((set, get) => {
       storage
         .deleteTab(id)
         .catch((err) => console.error("Failed to delete tab from DB:", err));
-      const checkAndDeleteWorkspace = async () => {
-        const currentTabs = useTabsStore.getState().tabs;
-        const currentActiveWorkspaceId =
-          useWorkspaceStore.getState().activeWorkspaceId;
-        if (currentActiveWorkspaceId === tabToRemove.workspaceId) {
-          const remainingTabsInWorkspace = currentTabs.filter(
-            (tab) => tab.workspaceId === currentActiveWorkspaceId,
-          );
-          if (remainingTabsInWorkspace.length === 0) {
-            await useWorkspaceStore
-              .getState()
-              .deleteWorkspace(currentActiveWorkspaceId);
-          }
-        }
-      };
-      checkAndDeleteWorkspace();
+
       broadcastManager.broadcastWorkspaceState(
         useSplitViewStore.getState().splitView.workspaceId,
         {

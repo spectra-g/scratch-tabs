@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { Sidebar } from "../Sidebar";
 import { useWorkspaceStore } from "../../../stores/workspaceStore";
 import { useTabsStore } from "../../../stores/tabsStore";
@@ -71,7 +71,7 @@ describe("Sidebar Component", () => {
             setMobileOpen: jest.fn(),
             expandedWorkspaceIds: new Set(),
             workspaceTabsMetadata: new Map(),
-            expandWorkspace: jest.fn(),
+            expandWorkspace: jest.fn().mockResolvedValue(undefined),
             collapseWorkspace: jest.fn(),
             searchQuery: "",
             setSearchQuery: jest.fn(),
@@ -103,8 +103,25 @@ describe("Sidebar Component", () => {
         expect(screen.getByText("Workspace 1")).toBeInTheDocument();
     });
 
-    it("calls expandWorkspace when a collapsed workspace is clicked", () => {
-        const expandWorkspace = jest.fn();
+    it("calls expandWorkspace when a collapsed workspace with tabs is clicked", async () => {
+        const expandWorkspace = jest.fn().mockResolvedValue(undefined);
+        const mockTabsWithContent = [
+            { id: "tab-1", title: "Test Tab", language: "typescript", lastModified: 0, workspaceId: "ws-1", dateCreated: 0, content: "", languageLocked: false, cursorPosition: { lineNumber: 1, column: 1 } }
+        ];
+
+        (useTabsStore as any).mockReturnValue({
+            tabs: mockTabsWithContent,
+        });
+
+        (useSplitViewStore as any).mockReturnValue({
+            splitView: {
+                activeSide: "left",
+                activeLeftTabId: "tab-1",
+                leftTabs: ["tab-1"], // Include the tab in splitView
+                rightTabs: []
+            },
+        });
+
         (useSidebarStore as any).mockReturnValue({
             isSidebarExpanded: true,
             sidebarWidth: 288,
@@ -123,7 +140,56 @@ describe("Sidebar Component", () => {
 
         render(<Sidebar />);
         fireEvent.click(screen.getByText("Workspace 1"));
-        expect(expandWorkspace).toHaveBeenCalledWith("ws-1");
+
+        await waitFor(() => {
+            expect(expandWorkspace).toHaveBeenCalledWith("ws-1");
+        });
+    });
+
+    it("calls switchWorkspace when an empty workspace is clicked", async () => {
+        const switchWorkspace = jest.fn().mockResolvedValue(undefined);
+        (useWorkspaceStore as any).mockReturnValue({
+            workspaces: mockWorkspaces,
+            activeWorkspaceId: "ws-2", // Different active workspace
+            switchWorkspace,
+            createWorkspace: jest.fn(),
+        });
+
+        (useTabsStore as any).mockReturnValue({
+            tabs: [], // Empty workspace
+        });
+
+        (useSplitViewStore as any).mockReturnValue({
+            splitView: {
+                activeSide: "left",
+                activeLeftTabId: null,
+                leftTabs: [],
+                rightTabs: []
+            },
+        });
+
+        (useSidebarStore as any).mockReturnValue({
+            isSidebarExpanded: true,
+            sidebarWidth: 288,
+            setSidebarWidth: jest.fn(),
+            setSidebarExpanded: jest.fn(),
+            isMobileOpen: false,
+            setMobileOpen: jest.fn(),
+            expandedWorkspaceIds: new Set(),
+            workspaceTabsMetadata: new Map(),
+            expandWorkspace: jest.fn(),
+            collapseWorkspace: jest.fn(),
+            searchQuery: "",
+            setSearchQuery: jest.fn(),
+            refreshWorkspaceMetadata: jest.fn(),
+        });
+
+        render(<Sidebar />);
+        fireEvent.click(screen.getByText("Workspace 1"));
+
+        await waitFor(() => {
+            expect(switchWorkspace).toHaveBeenCalledWith("ws-1");
+        });
     });
 
     it("renders with collapsed classes when sidebar is NOT expanded on desktop", () => {

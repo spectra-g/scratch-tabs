@@ -296,11 +296,21 @@ export const Sidebar: React.FC = () => {
         return items;
     }, [workspaces, activeWorkspaceId, activeTabs, workspaceTabsMetadata, expandedWorkspaceIds, activeTabId, searchQuery, splitView?.leftTabs, splitView?.rightTabs]);
 
-    const handleWorkspaceClick = (wsId: string, isExpanded: boolean) => {
-        if (isExpanded) {
-            collapseWorkspace(wsId);
+    const handleWorkspaceClick = async (wsId: string, isExpanded: boolean, tabCount: number) => {
+        // If workspace is empty (no tabs), switch to it directly on single-click
+        // Otherwise, toggle expand/collapse
+        if (tabCount === 0) {
+            if (wsId !== activeWorkspaceId) {
+                setSwitchingToWorkspaceId(wsId);
+                await switchWorkspace(wsId);
+                setSwitchingToWorkspaceId(null);
+            }
         } else {
-            expandWorkspace(wsId);
+            if (isExpanded) {
+                collapseWorkspace(wsId);
+            } else {
+                expandWorkspace(wsId);
+            }
         }
     };
 
@@ -355,7 +365,7 @@ export const Sidebar: React.FC = () => {
                         item.isActive ? "text-main font-semibold border-l-2 border-primary" : "text-secondary",
                         isSwitching && "bg-primary-subtle animate-pulse"
                     )}
-                    onClick={() => handleWorkspaceClick(item.id, item.isExpanded)}
+                    onClick={() => handleWorkspaceClick(item.id, item.isExpanded, item.tabCount)}
                     onDoubleClick={() => switchWorkspace(item.id)}
                     onContextMenu={(e) => handleWorkspaceContextMenu(e, item.id)}
                 >
