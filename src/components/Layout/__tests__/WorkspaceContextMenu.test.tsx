@@ -60,7 +60,7 @@ describe("WorkspaceContextMenu", () => {
         });
 
         it("should render at the correct position", () => {
-            const { container } = render(
+            render(
                 <WorkspaceContextMenu
                     workspaceId={mockWorkspace.id}
                     position={{ x: 150, y: 200 }}
@@ -68,7 +68,8 @@ describe("WorkspaceContextMenu", () => {
                 />
             );
 
-            const menu = container.querySelector(".absolute");
+            // Menu is now portaled to document.body with fixed positioning
+            const menu = document.querySelector(".fixed.bg-surface");
             expect(menu).toHaveStyle({ top: "200px", left: "150px" });
         });
     });
@@ -271,7 +272,7 @@ describe("WorkspaceContextMenu", () => {
 
     describe("Menu Visibility", () => {
         it("should hide menu when rename dialog is open", () => {
-            const { container } = render(
+            render(
                 <WorkspaceContextMenu
                     workspaceId={mockWorkspace.id}
                     position={{ x: 100, y: 100 }}
@@ -281,12 +282,13 @@ describe("WorkspaceContextMenu", () => {
 
             fireEvent.click(screen.getByText("Rename Workspace"));
 
-            const menu = container.querySelector(".absolute.bg-surface");
+            // Menu is now portaled to document.body
+            const menu = document.querySelector(".fixed.bg-surface.rounded.shadow-lg");
             expect(menu).not.toBeInTheDocument();
         });
 
         it("should hide menu when delete confirmation is open", () => {
-            const { container } = render(
+            render(
                 <WorkspaceContextMenu
                     workspaceId={mockWorkspace.id}
                     position={{ x: 100, y: 100 }}
@@ -296,7 +298,8 @@ describe("WorkspaceContextMenu", () => {
 
             fireEvent.click(screen.getByText("Delete Workspace"));
 
-            const menu = container.querySelector(".absolute.bg-surface");
+            // Menu is now portaled to document.body
+            const menu = document.querySelector(".fixed.bg-surface.rounded.shadow-lg");
             expect(menu).not.toBeInTheDocument();
         });
     });

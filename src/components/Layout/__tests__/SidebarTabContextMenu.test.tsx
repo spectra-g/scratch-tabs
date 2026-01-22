@@ -99,7 +99,7 @@ describe("SidebarTabContextMenu", () => {
         });
 
         it("should render at the correct position", () => {
-            const { container } = render(
+            render(
                 <SidebarTabContextMenu
                     tabId={mockTab.id}
                     workspaceId="ws-1"
@@ -108,7 +108,8 @@ describe("SidebarTabContextMenu", () => {
                 />
             );
 
-            const menu = container.querySelector(".absolute");
+            // Menu is now portaled to document.body with fixed positioning
+            const menu = document.querySelector(".fixed.bg-surface");
             expect(menu).toHaveStyle({ top: "200px", left: "150px" });
         });
     });
@@ -369,7 +370,7 @@ describe("SidebarTabContextMenu", () => {
 
     describe("Menu Visibility", () => {
         it("should hide menu when rename dialog is open", () => {
-            const { container } = render(
+            render(
                 <SidebarTabContextMenu
                     tabId={mockTab.id}
                     workspaceId="ws-1"
@@ -380,12 +381,13 @@ describe("SidebarTabContextMenu", () => {
 
             fireEvent.click(screen.getByText("Rename"));
 
-            const menu = container.querySelector(".absolute.bg-surface");
+            // Menu is now portaled to document.body
+            const menu = document.querySelector(".fixed.bg-surface.rounded.shadow-lg");
             expect(menu).not.toBeInTheDocument();
         });
 
         it("should hide menu when confirmation dialog is open", () => {
-            const { container } = render(
+            render(
                 <SidebarTabContextMenu
                     tabId={mockTab.id}
                     workspaceId="ws-1"
@@ -396,7 +398,8 @@ describe("SidebarTabContextMenu", () => {
 
             fireEvent.click(screen.getByText("Close"));
 
-            const menu = container.querySelector(".absolute.bg-surface");
+            // Menu is now portaled to document.body
+            const menu = document.querySelector(".fixed.bg-surface.rounded.shadow-lg");
             expect(menu).not.toBeInTheDocument();
         });
     });
