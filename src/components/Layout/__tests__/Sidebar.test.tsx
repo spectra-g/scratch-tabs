@@ -56,8 +56,12 @@ describe("Sidebar Component", () => {
             setActiveTab: jest.fn(),
         });
 
+        // Updated Mock for new Store Properties (width, setWidth, etc)
         (useSidebarStore as any).mockReturnValue({
             isSidebarExpanded: true,
+            sidebarWidth: 288,
+            setSidebarWidth: jest.fn(),
+            setSidebarExpanded: jest.fn(),
             isMobileOpen: false,
             setMobileOpen: jest.fn(),
             expandedWorkspaceIds: new Set(),
@@ -66,6 +70,7 @@ describe("Sidebar Component", () => {
             collapseWorkspace: jest.fn(),
             searchQuery: "",
             setSearchQuery: jest.fn(),
+            refreshWorkspaceMetadata: jest.fn(),
         });
 
         (useSplitViewStore as any).mockReturnValue({
@@ -97,6 +102,9 @@ describe("Sidebar Component", () => {
         const expandWorkspace = jest.fn();
         (useSidebarStore as any).mockReturnValue({
             isSidebarExpanded: true,
+            sidebarWidth: 288,
+            setSidebarWidth: jest.fn(),
+            setSidebarExpanded: jest.fn(),
             isMobileOpen: false,
             setMobileOpen: jest.fn(),
             expandedWorkspaceIds: new Set(),
@@ -105,6 +113,7 @@ describe("Sidebar Component", () => {
             collapseWorkspace: jest.fn(),
             searchQuery: "",
             setSearchQuery: jest.fn(),
+            refreshWorkspaceMetadata: jest.fn(),
         });
 
         render(<Sidebar />);
@@ -122,6 +131,9 @@ describe("Sidebar Component", () => {
 
         (useSidebarStore as any).mockReturnValue({
             isSidebarExpanded: false,
+            sidebarWidth: 288,
+            setSidebarWidth: jest.fn(),
+            setSidebarExpanded: jest.fn(),
             isMobileOpen: false,
             setMobileOpen: jest.fn(),
             expandedWorkspaceIds: new Set(),
@@ -130,6 +142,7 @@ describe("Sidebar Component", () => {
             collapseWorkspace: jest.fn(),
             searchQuery: "",
             setSearchQuery: jest.fn(),
+            refreshWorkspaceMetadata: jest.fn(),
         });
 
         const { container } = render(<Sidebar />);
@@ -137,8 +150,10 @@ describe("Sidebar Component", () => {
         // Sidebar should still be in DOM for smooth animation
         expect(container.firstChild).not.toBeNull();
 
-        // Should have the collapsed classes (md:w-0, md:overflow-hidden)
-        const sidebar = container.querySelector('.flex.flex-col.h-full');
+        // Should have the collapsed classes.
+        // The containerClasses logic generates "md:w-0" when !isSidebarExpanded
+        // We look for the element containing that class.
+        const sidebar = container.querySelector('.md\\:w-0');
         expect(sidebar).toBeInTheDocument();
     });
 
@@ -164,6 +179,9 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                sidebarWidth: 288,
+                setSidebarWidth: jest.fn(),
+                setSidebarExpanded: jest.fn(),
                 isMobileOpen: false,
                 setMobileOpen: jest.fn(),
                 expandedWorkspaceIds: new Set(["ws-1"]),
@@ -217,6 +235,9 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                sidebarWidth: 288,
+                setSidebarWidth: jest.fn(),
+                setSidebarExpanded: jest.fn(),
                 isMobileOpen: false,
                 setMobileOpen: jest.fn(),
                 expandedWorkspaceIds: new Set(["ws-1"]),
@@ -259,6 +280,9 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                sidebarWidth: 288,
+                setSidebarWidth: jest.fn(),
+                setSidebarExpanded: jest.fn(),
                 isMobileOpen: false,
                 setMobileOpen: jest.fn(),
                 expandedWorkspaceIds: new Set(["ws-1"]),
@@ -297,6 +321,9 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                sidebarWidth: 288,
+                setSidebarWidth: jest.fn(),
+                setSidebarExpanded: jest.fn(),
                 expandedWorkspaceIds: new Set(["ws-1"]),
                 workspaceTabsMetadata: new Map(),
                 expandWorkspace: jest.fn(),
@@ -340,6 +367,9 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                sidebarWidth: 288,
+                setSidebarWidth: jest.fn(),
+                setSidebarExpanded: jest.fn(),
                 expandedWorkspaceIds: new Set(),
                 workspaceTabsMetadata: new Map(),
                 expandWorkspace: jest.fn(),
@@ -365,6 +395,9 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                sidebarWidth: 288,
+                setSidebarWidth: jest.fn(),
+                setSidebarExpanded: jest.fn(),
                 expandedWorkspaceIds: new Set(),
                 workspaceTabsMetadata: new Map(),
                 expandWorkspace: jest.fn(),
@@ -408,6 +441,9 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                sidebarWidth: 288,
+                setSidebarWidth: jest.fn(),
+                setSidebarExpanded: jest.fn(),
                 expandedWorkspaceIds: new Set(), // Workspace is collapsed
                 workspaceTabsMetadata: new Map(),
                 expandWorkspace: jest.fn(),
@@ -449,6 +485,9 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                sidebarWidth: 288,
+                setSidebarWidth: jest.fn(),
+                setSidebarExpanded: jest.fn(),
                 expandedWorkspaceIds: new Set(), // Workspace is collapsed
                 workspaceTabsMetadata: new Map(),
                 expandWorkspace: mockExpandWorkspace,
@@ -486,6 +525,9 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                sidebarWidth: 288,
+                setSidebarWidth: jest.fn(),
+                setSidebarExpanded: jest.fn(),
                 isMobileOpen: false,
                 setMobileOpen: jest.fn(),
                 expandedWorkspaceIds: new Set(["ws-1"]), // Workspace is expanded
@@ -525,6 +567,9 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                sidebarWidth: 288,
+                setSidebarWidth: jest.fn(),
+                setSidebarExpanded: jest.fn(),
                 expandedWorkspaceIds: new Set(),
                 workspaceTabsMetadata: new Map(),
                 expandWorkspace: mockExpandWorkspace,
@@ -560,6 +605,9 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                sidebarWidth: 288,
+                setSidebarWidth: jest.fn(),
+                setSidebarExpanded: jest.fn(),
                 isMobileOpen: false,
                 setMobileOpen: jest.fn(),
                 expandedWorkspaceIds: new Set(["ws-1"]),
@@ -598,6 +646,9 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                sidebarWidth: 288,
+                setSidebarWidth: jest.fn(),
+                setSidebarExpanded: jest.fn(),
                 isMobileOpen: false,
                 setMobileOpen: jest.fn(),
                 expandedWorkspaceIds: new Set(["ws-1"]),
@@ -645,6 +696,9 @@ describe("Sidebar Component", () => {
         it("should render mobile backdrop when isMobileOpen is true", () => {
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                sidebarWidth: 288,
+                setSidebarWidth: jest.fn(),
+                setSidebarExpanded: jest.fn(),
                 isMobileOpen: true, // Mobile sidebar is open
                 setMobileOpen: jest.fn(),
                 expandedWorkspaceIds: new Set(),
@@ -666,6 +720,9 @@ describe("Sidebar Component", () => {
         it("should not render backdrop when isMobileOpen is false", () => {
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                sidebarWidth: 288,
+                setSidebarWidth: jest.fn(),
+                setSidebarExpanded: jest.fn(),
                 isMobileOpen: false, // Mobile sidebar is closed
                 setMobileOpen: jest.fn(),
                 expandedWorkspaceIds: new Set(),
@@ -689,6 +746,9 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                sidebarWidth: 288,
+                setSidebarWidth: jest.fn(),
+                setSidebarExpanded: jest.fn(),
                 isMobileOpen: true,
                 setMobileOpen: mockSetMobileOpen,
                 expandedWorkspaceIds: new Set(),
@@ -712,6 +772,9 @@ describe("Sidebar Component", () => {
         it("should render close button on mobile", () => {
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                sidebarWidth: 288,
+                setSidebarWidth: jest.fn(),
+                setSidebarExpanded: jest.fn(),
                 isMobileOpen: true,
                 setMobileOpen: jest.fn(),
                 expandedWorkspaceIds: new Set(),
@@ -735,6 +798,9 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                sidebarWidth: 288,
+                setSidebarWidth: jest.fn(),
+                setSidebarExpanded: jest.fn(),
                 isMobileOpen: true,
                 setMobileOpen: mockSetMobileOpen,
                 expandedWorkspaceIds: new Set(),
@@ -773,6 +839,9 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                sidebarWidth: 288,
+                setSidebarWidth: jest.fn(),
+                setSidebarExpanded: jest.fn(),
                 isMobileOpen: true,
                 setMobileOpen: mockSetMobileOpen,
                 expandedWorkspaceIds: new Set(["ws-1"]),
@@ -821,6 +890,9 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                sidebarWidth: 288,
+                setSidebarWidth: jest.fn(),
+                setSidebarExpanded: jest.fn(),
                 isMobileOpen: false,
                 setMobileOpen: mockSetMobileOpen,
                 expandedWorkspaceIds: new Set(["ws-1"]),
@@ -848,6 +920,91 @@ describe("Sidebar Component", () => {
 
             // Should NOT close the sidebar on desktop
             expect(mockSetMobileOpen).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("Resizing Behavior", () => {
+        it("should render resize handle when expanded", () => {
+            (useSidebarStore as any).mockReturnValue({
+                isSidebarExpanded: true,
+                sidebarWidth: 288,
+                setSidebarWidth: jest.fn(),
+                setSidebarExpanded: jest.fn(),
+                expandedWorkspaceIds: new Set(),
+                workspaceTabsMetadata: new Map(),
+                expandWorkspace: jest.fn(),
+                collapseWorkspace: jest.fn(),
+                searchQuery: "",
+                setSearchQuery: jest.fn(),
+                refreshWorkspaceMetadata: jest.fn(),
+            });
+
+            const { container } = render(<Sidebar />);
+            const handle = container.querySelector('.cursor-col-resize');
+            expect(handle).toBeInTheDocument();
+        });
+
+        it("should call setSidebarWidth on mouseUp after resizing", () => {
+            const mockSetSidebarWidth = jest.fn();
+            (useSidebarStore as any).mockReturnValue({
+                isSidebarExpanded: true,
+                sidebarWidth: 288,
+                setSidebarWidth: mockSetSidebarWidth,
+                setSidebarExpanded: jest.fn(),
+                expandedWorkspaceIds: new Set(),
+                workspaceTabsMetadata: new Map(),
+                expandWorkspace: jest.fn(),
+                collapseWorkspace: jest.fn(),
+                searchQuery: "",
+                setSearchQuery: jest.fn(),
+                refreshWorkspaceMetadata: jest.fn(),
+            });
+
+            const { container } = render(<Sidebar />);
+            const handle = container.querySelector('.cursor-col-resize');
+
+            if (handle) {
+                // Simulate the drag sequence: Down -> Move (window) -> Up (window)
+                fireEvent.mouseDown(handle);
+                fireEvent.mouseMove(window, { clientX: 300 });
+                fireEvent.mouseUp(window, { clientX: 300 });
+
+                expect(mockSetSidebarWidth).toHaveBeenCalledWith(300);
+            } else {
+                throw new Error("Resize handle not found");
+            }
+        });
+
+        it("should snap to collapse when resized below threshold", () => {
+            const mockSetSidebarExpanded = jest.fn();
+            const mockSetSidebarWidth = jest.fn();
+            (useSidebarStore as any).mockReturnValue({
+                isSidebarExpanded: true,
+                sidebarWidth: 288,
+                setSidebarWidth: mockSetSidebarWidth,
+                setSidebarExpanded: mockSetSidebarExpanded,
+                expandedWorkspaceIds: new Set(),
+                workspaceTabsMetadata: new Map(),
+                expandWorkspace: jest.fn(),
+                collapseWorkspace: jest.fn(),
+                searchQuery: "",
+                setSearchQuery: jest.fn(),
+                refreshWorkspaceMetadata: jest.fn(),
+            });
+
+            const { container } = render(<Sidebar />);
+            const handle = container.querySelector('.cursor-col-resize');
+
+            if (handle) {
+                // Simulate Drag < 100px
+                fireEvent.mouseDown(handle);
+                fireEvent.mouseMove(window, { clientX: 50 });
+                fireEvent.mouseUp(window, { clientX: 50 });
+
+                expect(mockSetSidebarExpanded).toHaveBeenCalledWith(false);
+                // Also expect reset to default width
+                expect(mockSetSidebarWidth).toHaveBeenCalledWith(288);
+            }
         });
     });
 });

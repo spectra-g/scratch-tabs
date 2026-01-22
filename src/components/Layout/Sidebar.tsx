@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState, useEffect } from "react";
+import React, { useMemo, useRef, useState, useEffect, useCallback } from "react";
 
 import { FixedSizeList as List } from "react-window";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
@@ -29,6 +29,9 @@ import { SidebarTabContextMenu } from "./SidebarTabContextMenu";
 import { IconRail } from "./IconRail";
 
 const ROW_HEIGHT = 32;
+const MIN_WIDTH = 150;
+const MAX_WIDTH = 600;
+const SNAP_THRESHOLD = 100;
 
 type TreeItem =
     | { type: 'workspace'; id: string; name: string; isExpanded: boolean; isActive: boolean; tabCount: number }
@@ -49,7 +52,10 @@ export const Sidebar: React.FC = () => {
         collapseWorkspace,
         searchQuery,
         setSearchQuery,
-        refreshWorkspaceMetadata
+        refreshWorkspaceMetadata,
+        sidebarWidth,
+        setSidebarWidth,
+        setSidebarExpanded
     } = useSidebarStore();
 
     const { splitView } = useSplitViewStore();
@@ -78,6 +84,91 @@ export const Sidebar: React.FC = () => {
         return () => clearTimeout(handler);
     }, [searchInputValue, setSearchQuery]);
 
+    // Resize logic
+    const isResizingRef = useRef(false);
+    const sidebarRef = useRef<HTMLDivElement>(null);
+
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+        if (!isResizingRef.current || !sidebarRef.current) return;
+        e.preventDefault();
+
+        const newWidth = e.clientX;
+
+        // Visual Snap Feedback
+        if (newWidth < SNAP_THRESHOLD) {
+            // Visual feedback for "will collapse"
+            // We force a small width and opacity to indicate it's about to disappear
+            sidebarRef.current.style.width = '24px';
+            sidebarRef.current.style.opacity = '0.5';
+        } else {
+            // Normal drag behavior with clamping
+            let clampedWidth = newWidth;
+            if (clampedWidth < MIN_WIDTH) clampedWidth = MIN_WIDTH;
+            if (clampedWidth > MAX_WIDTH) clampedWidth = MAX_WIDTH;
+
+            sidebarRef.current.style.width = `${clampedWidth}px`;
+            sidebarRef.current.style.opacity = '1';
+        }
+    }, []);
+
+    const handleMouseUp = useCallback((e: MouseEvent) => {
+        if (!isResizingRef.current) return;
+
+        isResizingRef.current = false;
+        document.body.style.cursor = 'default';
+        document.body.style.userSelect = '';
+
+        // Remove listeners
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+
+        // Restore transitions (we removed them on mouse down to avoid drag lag)
+        if (sidebarRef.current) {
+            sidebarRef.current.style.transition = '';
+            sidebarRef.current.style.opacity = '';
+        }
+
+        const finalWidth = e.clientX;
+
+        if (finalWidth < SNAP_THRESHOLD) {
+            // Commit collapse
+            setSidebarExpanded(false);
+            setSidebarWidth(288); // Reset to default width for next expansion
+        } else {
+            // Commit new width
+            let clamped = finalWidth;
+            if (clamped < MIN_WIDTH) clamped = MIN_WIDTH;
+            if (clamped > MAX_WIDTH) clamped = MAX_WIDTH;
+            setSidebarWidth(clamped);
+        }
+    }, [handleMouseMove, setSidebarExpanded, setSidebarWidth]);
+
+    const handleMouseDown = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        isResizingRef.current = true;
+
+        // Disable transitions for instant resizing
+        if (sidebarRef.current) {
+            sidebarRef.current.style.transition = 'none';
+        }
+
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+    };
+
+    // Cleanup event listeners on unmount
+    useEffect(() => {
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [handleMouseMove, handleMouseUp]);
+
+
     // Load metadata for all workspaces on mount to show tab counts
     useEffect(() => {
         const loadAllWorkspaceMetadata = async () => {
@@ -91,7 +182,7 @@ export const Sidebar: React.FC = () => {
         if (workspaces.length > 0 && activeWorkspaceId) {
             loadAllWorkspaceMetadata();
         }
-    }, [workspaces.length, activeWorkspaceId, refreshWorkspaceMetadata]); // Include all dependencies
+    }, [workspaces.length, activeWorkspaceId, refreshWorkspaceMetadata]);
 
     // Refresh previous workspace metadata when switching workspaces
     useEffect(() => {
@@ -343,8 +434,6 @@ export const Sidebar: React.FC = () => {
     }, [activeTabId, treeItems, activeTabs, expandedWorkspaceIds, expandWorkspace]);
 
     // Responsive container classes
-    // Mobile: Fixed overlay with slide-in animation
-    // Desktop: Relative flow with smooth collapse animation
     const containerClasses = clsx(
         "flex flex-col h-full bg-surface-secondary border-r border-base transition-all duration-300 ease-in-out",
         // Mobile: Fixed overlay
@@ -353,8 +442,13 @@ export const Sidebar: React.FC = () => {
         // Desktop: Relative flow
         "md:relative md:transform-none md:shadow-none md:z-0",
         // Desktop collapse: w-0 when collapsed (smooth animation via CSS)
-        isSidebarExpanded ? "md:w-72" : "md:w-0 md:border-r-0 md:overflow-hidden"
+        isSidebarExpanded ? "" : "md:w-0 md:border-r-0 md:overflow-hidden"
     );
+
+    const sidebarStyle = useMemo(() => {
+        if (typeof window !== 'undefined' && window.innerWidth < 768) return {}; // Mobile default
+        return isSidebarExpanded ? { width: `${sidebarWidth}px` } : {};
+    }, [isSidebarExpanded, sidebarWidth]);
 
     return (
         <>
@@ -379,85 +473,93 @@ export const Sidebar: React.FC = () => {
                 />
             )}
 
-            <div className={containerClasses}>
-            <div className="p-3 flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-secondary">Explorer</h2>
-                    <div className="flex gap-1">
-                        <button
-                            onClick={() => createWorkspace("New Workspace")}
-                            className="p-1 hover:bg-element-hover rounded text-secondary hover:text-main"
-                            title="New Workspace"
-                        >
-                            <Plus size={16} />
-                        </button>
-                        {/* Desktop only: collapse button */}
-                        <button
-                            onClick={toggleSidebar}
-                            className="hidden md:block p-1 hover:bg-element-hover rounded text-secondary hover:text-main"
-                            title="Collapse sidebar (Cmd+B)"
-                            aria-label="Collapse sidebar"
-                        >
-                            <ChevronLeft size={16} />
-                        </button>
-                        {/* Mobile only: close button */}
-                        <button
-                            onClick={() => setMobileOpen(false)}
-                            className="p-1 hover:bg-element-hover rounded text-secondary hover:text-main md:hidden"
-                            title="Close sidebar"
-                            aria-label="Close sidebar"
-                        >
-                            <X size={16} />
-                        </button>
+            <div className={containerClasses} style={sidebarStyle} ref={sidebarRef}>
+                <div className="p-3 flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xs font-bold uppercase tracking-wider text-secondary">Explorer</h2>
+                        <div className="flex gap-1">
+                            <button
+                                onClick={() => createWorkspace("New Workspace")}
+                                className="p-1 hover:bg-element-hover rounded text-secondary hover:text-main"
+                                title="New Workspace"
+                            >
+                                <Plus size={16} />
+                            </button>
+                            {/* Desktop only: collapse button */}
+                            <button
+                                onClick={toggleSidebar}
+                                className="hidden md:block p-1 hover:bg-element-hover rounded text-secondary hover:text-main"
+                                title="Collapse sidebar (Cmd+B)"
+                                aria-label="Collapse sidebar"
+                            >
+                                <ChevronLeft size={16} />
+                            </button>
+                            {/* Mobile only: close button */}
+                            <button
+                                onClick={() => setMobileOpen(false)}
+                                className="p-1 hover:bg-element-hover rounded text-secondary hover:text-main md:hidden"
+                                title="Close sidebar"
+                                aria-label="Close sidebar"
+                            >
+                                <X size={16} />
+                            </button>
+                        </div>
+                    </div>
+                    <div className="relative">
+                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-secondary" size={14} />
+                        <input
+                            type="text"
+                            placeholder="Filter tabs..."
+                            className="w-full bg-canvas border border-base rounded py-1 pl-8 pr-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                            value={searchInputValue}
+                            onChange={(e) => setSearchInputValue(e.target.value)}
+                        />
                     </div>
                 </div>
-                <div className="relative">
-                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-secondary" size={14} />
-                    <input
-                        type="text"
-                        placeholder="Filter tabs..."
-                        className="w-full bg-canvas border border-base rounded py-1 pl-8 pr-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                        value={searchInputValue}
-                        onChange={(e) => setSearchInputValue(e.target.value)}
+
+                <div ref={listContainerRef} className="flex-1 overflow-hidden">
+                    {treeItems.length > 0 ? (
+                        <List
+                            ref={listRef}
+                            height={listHeight}
+                            itemCount={treeItems.length}
+                            itemSize={ROW_HEIGHT}
+                            width="100%"
+                            className="custom-scrollbar"
+                        >
+                            {renderRow}
+                        </List>
+                    ) : (
+                        <div className="p-4 text-center text-secondary text-sm italic">
+                            {searchQuery ? "No matches found" : "No workspaces"}
+                        </div>
+                    )}
+                </div>
+
+                {workspaceContextMenu && (
+                    <WorkspaceContextMenu
+                        workspaceId={workspaceContextMenu.workspaceId}
+                        position={workspaceContextMenu.position}
+                        onClose={() => setWorkspaceContextMenu(null)}
                     />
-                </div>
-            </div>
-
-            <div ref={listContainerRef} className="flex-1 overflow-hidden">
-                {treeItems.length > 0 ? (
-                    <List
-                        ref={listRef}
-                        height={listHeight}
-                        itemCount={treeItems.length}
-                        itemSize={ROW_HEIGHT}
-                        width="100%"
-                        className="custom-scrollbar"
-                    >
-                        {renderRow}
-                    </List>
-                ) : (
-                    <div className="p-4 text-center text-secondary text-sm italic">
-                        {searchQuery ? "No matches found" : "No workspaces"}
-                    </div>
                 )}
-            </div>
 
-            {workspaceContextMenu && (
-                <WorkspaceContextMenu
-                    workspaceId={workspaceContextMenu.workspaceId}
-                    position={workspaceContextMenu.position}
-                    onClose={() => setWorkspaceContextMenu(null)}
-                />
-            )}
+                {tabContextMenu && (
+                    <SidebarTabContextMenu
+                        tabId={tabContextMenu.tabId}
+                        workspaceId={tabContextMenu.workspaceId}
+                        position={tabContextMenu.position}
+                        onClose={() => setTabContextMenu(null)}
+                    />
+                )}
 
-            {tabContextMenu && (
-                <SidebarTabContextMenu
-                    tabId={tabContextMenu.tabId}
-                    workspaceId={tabContextMenu.workspaceId}
-                    position={tabContextMenu.position}
-                    onClose={() => setTabContextMenu(null)}
-                />
-            )}
+                {/* Resize Handle */}
+                {isSidebarExpanded && (
+                    <div
+                        className="hidden md:block absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary transition-colors z-10"
+                        onMouseDown={handleMouseDown}
+                    />
+                )}
             </div>
         </>
     );

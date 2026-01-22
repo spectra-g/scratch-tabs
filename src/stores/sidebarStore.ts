@@ -2,13 +2,14 @@ import { create } from "zustand";
 import { SidebarTabInfo, Tab } from "../types";
 import { StorageProviderFactory } from "../db";
 import { useWorkspaceStore } from "./workspaceStore";
-import { useTabsStore } from "./tabsStore";
 
 interface SidebarState {
     // Desktop state
     isSidebarExpanded: boolean;
     // Mobile state
     isMobileOpen: boolean;
+    // Width state for resizing
+    sidebarWidth: number;
 
     expandedWorkspaceIds: Set<string>;
     workspaceTabsMetadata: Map<string, SidebarTabInfo[]>;
@@ -17,6 +18,7 @@ interface SidebarState {
 
     toggleSidebar: () => void;
     setSidebarExpanded: (expanded: boolean) => void;
+    setSidebarWidth: (width: number) => void;
     setMobileOpen: (isOpen: boolean) => void;
     expandWorkspace: (workspaceId: string) => Promise<void>;
     collapseWorkspace: (workspaceId: string) => void;
@@ -32,6 +34,8 @@ export const useSidebarStore = create<SidebarState>((set, get) => {
         isSidebarExpanded: true,
         // Mobile: closed by default to maximize editor space
         isMobileOpen: false,
+        // Default width 288px (w-72)
+        sidebarWidth: 288,
 
         expandedWorkspaceIds: new Set<string>(),
         workspaceTabsMetadata: new Map<string, SidebarTabInfo[]>(),
@@ -42,27 +46,30 @@ export const useSidebarStore = create<SidebarState>((set, get) => {
 
         setSidebarExpanded: (expanded: boolean) => set({ isSidebarExpanded: expanded }),
 
+        setSidebarWidth: (width: number) => set({ sidebarWidth: width }),
+
         setMobileOpen: (isOpen: boolean) => set({ isMobileOpen: isOpen }),
 
         expandWorkspace: async (workspaceId: string) => {
-            const { expandedWorkspaceIds, workspaceTabsMetadata, loadingWorkspaceIds } = get();
+            const { expandedWorkspaceIds, workspaceTabsMetadata } = get();
 
             // If already expanded, do nothing
             if (expandedWorkspaceIds.has(workspaceId)) {
                 return;
             }
 
-            set((state) => {
-                const next = new Set(state.expandedWorkspaceIds);
-                next.add(workspaceId);
-                return { expandedWorkspaceIds: next };
-            });
+            // Optimistically expand the UI
+            set((state) => ({
+                expandedWorkspaceIds: new Set([...state.expandedWorkspaceIds, workspaceId])
+            }));
 
-            // If active workspace, we use tabsStore, so no need to fetch metadata here
-            // But we might want to refresh metadata for inactive workspaces if not present
+            // Check if we need to load metadata
             const activeWorkspaceId = useWorkspaceStore.getState().activeWorkspaceId;
+
+            // We fetch metadata if it's NOT the active workspace (active is handled by main store)
+            // AND we don't have it cached yet
             if (workspaceId !== activeWorkspaceId && !workspaceTabsMetadata.has(workspaceId)) {
-                await get().refreshWorkspaceMetadata(workspaceId);
+                 await get().refreshWorkspaceMetadata(workspaceId);
             }
         },
 
@@ -77,6 +84,9 @@ export const useSidebarStore = create<SidebarState>((set, get) => {
         setSearchQuery: (query: string) => set({ searchQuery: query }),
 
         refreshWorkspaceMetadata: async (workspaceId: string) => {
+            // Avoid duplicate fetches
+            if (get().loadingWorkspaceIds.has(workspaceId)) return;
+
             set((state) => {
                 const next = new Set(state.loadingWorkspaceIds);
                 next.add(workspaceId);
@@ -91,16 +101,15 @@ export const useSidebarStore = create<SidebarState>((set, get) => {
                 const tabMap = new Map<string, Tab>(tabs.map(t => [t.id, t]));
 
                 // Order tabs according to splitView order (leftTabs then rightTabs)
-                // Explicitly type to ensure type safety
                 let orderedTabs: Tab[] = [];
                 if (splitView) {
                     const allTabIds = [...(splitView.leftTabs || []), ...(splitView.rightTabs || [])];
-                    // Map IDs to tabs, preserving splitView order
+
                     orderedTabs = allTabIds
                         .map(id => tabMap.get(id))
                         .filter((t): t is Tab => t !== undefined);
 
-                    // Add any tabs not in splitView (shouldn't happen, but defensive)
+                    // Add any tabs not in splitView
                     const remainingTabs = tabs.filter(t => !allTabIds.includes(t.id));
                     orderedTabs = [...orderedTabs, ...remainingTabs];
                 } else {

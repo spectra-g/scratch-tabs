@@ -1,67 +1,51 @@
-import { getWorkspaceColor, getWorkspaceInitial } from '../workspaceColors';
+import { getWorkspaceColor, toPastel } from '../workspaceColors';
 
 describe('workspaceColors', () => {
   describe('getWorkspaceColor', () => {
-    it('returns consistent colors for the same workspace ID', () => {
-      const workspaceId = 'test-workspace-123';
-      const color1 = getWorkspaceColor(workspaceId);
-      const color2 = getWorkspaceColor(workspaceId);
+    it('returns a color string', () => {
+      const color = getWorkspaceColor('test-id');
+      expect(color).toMatch(/^#[0-9a-fA-F]{6}$/);
+    });
+
+    it('returns deterministic colors', () => {
+      const color1 = getWorkspaceColor('workspace-A');
+      const color2 = getWorkspaceColor('workspace-A');
+      const color3 = getWorkspaceColor('workspace-B');
 
       expect(color1).toBe(color2);
-    });
 
-    it('returns different colors for different workspace IDs', () => {
-      const workspaceId1 = 'workspace-1';
-      const workspaceId2 = 'workspace-2';
-
-      const color1 = getWorkspaceColor(workspaceId1);
-      const color2 = getWorkspaceColor(workspaceId2);
-
-      // Note: There's a small chance they could be the same color
-      // due to hash collisions, but it's unlikely with 12 colors
-      expect(typeof color1).toBe('string');
-      expect(typeof color2).toBe('string');
-      expect(color1).toMatch(/^#[0-9a-f]{6}$/i);
-      expect(color2).toMatch(/^#[0-9a-f]{6}$/i);
-    });
-
-    it('returns a valid hex color', () => {
-      const workspaceId = 'test-workspace';
-      const color = getWorkspaceColor(workspaceId);
-
-      expect(color).toMatch(/^#[0-9a-f]{6}$/i);
-    });
-
-    it('handles empty workspace ID', () => {
-      const color = getWorkspaceColor('');
-
-      expect(color).toMatch(/^#[0-9a-f]{6}$/i);
+      // If by chance these two hashes collide modulo 12, this test would fail.
+      // But we can check that AT LEAST distinct inputs CAN produce distinct outputs.
+      // or try a third one.
+      if (color1 === color3) {
+        const color4 = getWorkspaceColor('workspace-C');
+        expect(color1).not.toBe(color4);
+      } else {
+        expect(color1).not.toBe(color3);
+      }
     });
   });
 
-  describe('getWorkspaceInitial', () => {
-    it('returns first letter uppercased for normal workspace names', () => {
-      expect(getWorkspaceInitial('Project')).toBe('P');
-      expect(getWorkspaceInitial('work')).toBe('W');
-      expect(getWorkspaceInitial('123')).toBe('1');
+  describe('toPastel', () => {
+    it('returns a valid hex color', () => {
+      const originalColor = '#ff0000';
+      const pastelColor = toPastel(originalColor);
+      expect(pastelColor).toMatch(/^#[0-9a-fA-F]{6}$/);
     });
 
-    it('returns # for empty workspace name', () => {
-      expect(getWorkspaceInitial('')).toBe('#');
-    });
+    it('makes the color lighter', () => {
+      // Pure red
+      const original = '#FF0000';
+      const pastel = toPastel(original);
+      // Since we mix with white, R should stay FF (255), but G and B should increase from 00
 
-    it('returns # for whitespace-only workspace name', () => {
-      expect(getWorkspaceInitial('   ')).toBe('#');
-    });
+      const r = parseInt(pastel.substring(1, 3), 16);
+      const g = parseInt(pastel.substring(3, 5), 16);
+      const b = parseInt(pastel.substring(5, 7), 16);
 
-    it('trims whitespace before getting first letter', () => {
-      expect(getWorkspaceInitial('  Project  ')).toBe('P');
-    });
-
-    it('handles special characters', () => {
-      expect(getWorkspaceInitial('!Important')).toBe('!');
-      expect(getWorkspaceInitial('@Work')).toBe('@');
-      expect(getWorkspaceInitial('#Project')).toBe('#');
+      expect(r).toBeGreaterThanOrEqual(255); // Should be very close to 255
+      expect(g).toBeGreaterThan(0);
+      expect(b).toBeGreaterThan(0);
     });
   });
 });

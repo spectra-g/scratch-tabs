@@ -42,10 +42,15 @@ const hashString = (str: string): number => {
  * Get color for a workspace based on its ID
  * Returns a hex color string
  */
+/**
+ * Get color for a workspace based on its ID
+ * Returns a hex color string
+ */
 export const getWorkspaceColor = (workspaceId: string): string => {
   const hash = hashString(workspaceId);
   const colorIndex = hash % WORKSPACE_COLOR_PALETTE.length;
-  return WORKSPACE_COLOR_PALETTE[colorIndex];
+  const baseColor = WORKSPACE_COLOR_PALETTE[colorIndex];
+  return toPastel(baseColor);
 };
 
 /**
@@ -57,4 +62,36 @@ export const getWorkspaceInitial = (workspaceName: string): string => {
     return '#';
   }
   return workspaceName.trim()[0].toUpperCase();
+};
+
+/**
+ * Converts a hex color to a pastel version by mixing it with white.
+ * @param hex The hex color to convert (e.g. #RRGGBB)
+ * @param mixAmount The amount of white to mix in (0-1). Default 0.7 for soft pastel.
+ */
+export const toPastel = (hex: string, mixAmount: number = 0.5): string => {
+  let r = 0, g = 0, b = 0;
+
+  // Handle shorthand #RGB
+  if (hex.length === 4) {
+    r = parseInt(hex[1] + hex[1], 16);
+    g = parseInt(hex[2] + hex[2], 16);
+    b = parseInt(hex[3] + hex[3], 16);
+  } else if (hex.length === 7) {
+    r = parseInt(hex.substring(1, 3), 16);
+    g = parseInt(hex.substring(3, 5), 16);
+    b = parseInt(hex.substring(5, 7), 16);
+  }
+
+  // Mix with white (255, 255, 255)
+  r = Math.round(r + (255 - r) * mixAmount);
+  g = Math.round(g + (255 - g) * mixAmount);
+  b = Math.round(b + (255 - b) * mixAmount);
+
+  const toHex = (n: number) => {
+    const h = n.toString(16);
+    return h.length === 1 ? '0' + h : h;
+  };
+
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 };
