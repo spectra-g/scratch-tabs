@@ -67,7 +67,7 @@ describe('IconRail', () => {
     );
 
     const activeButton = screen.getByLabelText('Switch to Alpha');
-    expect(activeButton).toHaveClass('ring-2', 'ring-primary');
+    expect(activeButton).toHaveClass('ring-1', 'shadow-md');
   });
 
   it('calls onWorkspaceClick when workspace icon is clicked', () => {

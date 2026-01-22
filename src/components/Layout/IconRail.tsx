@@ -23,15 +23,15 @@ export const IconRail: React.FC<IconRailProps> = ({
 }) => {
   return (
     <div className="hidden md:flex flex-col w-[42px] h-full bg-surface-secondary border-r border-base">
-      {/* Expand button at top */}
-      <div className="flex items-center justify-center h-12 border-b border-base">
+      {/* Expand button at top - h-8 to align border with bottom of tab bar */}
+      <div className="flex items-center justify-center h-8 border-b border-base">
         <button
           onClick={onExpandSidebar}
-          className="p-2 hover:bg-element-hover rounded text-secondary hover:text-main transition-colors"
+          className="p-1.5 hover:bg-element-hover rounded text-secondary hover:text-main transition-colors"
           title="Expand sidebar (Cmd+B)"
           aria-label="Expand sidebar"
         >
-          <ChevronRight size={18} />
+          <ChevronRight size={14} />
         </button>
       </div>
 
@@ -51,7 +51,7 @@ export const IconRail: React.FC<IconRailProps> = ({
                   "w-7 h-7 rounded-lg flex items-center justify-center text-xs font-semibold transition-all",
                   "hover:scale-105 hover:shadow-lg",
                   isActive
-                    ? "shadow-md ring-2 ring-primary ring-offset-1 ring-offset-surface-secondary"
+                    ? "shadow-md ring-1 ring-slate-400/50 ring-offset-1 ring-offset-surface-secondary"
                     : "opacity-70 hover:opacity-100"
                 )}
                 style={{
@@ -68,15 +68,14 @@ export const IconRail: React.FC<IconRailProps> = ({
         })}
       </div>
 
-      {/* New workspace button at bottom */}
-      <div className="flex items-center justify-center h-12 border-t border-base">
+      <div className="flex items-center justify-center h-[29px] border-t border-base">
         <button
           onClick={onCreateWorkspace}
-          className="p-2 hover:bg-element-hover rounded text-secondary hover:text-main transition-colors"
+          className="p-1.5 hover:bg-element-hover rounded text-secondary hover:text-main transition-colors"
           title="New workspace"
           aria-label="Create new workspace"
         >
-          <Plus size={18} />
+          <Plus size={14} />
         </button>
       </div>
     </div>
