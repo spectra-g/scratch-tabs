@@ -87,6 +87,7 @@ export const Sidebar: React.FC = () => {
     // Resize logic
     const isResizingRef = useRef(false);
     const sidebarRef = useRef<HTMLDivElement>(null);
+    const [isDraggingBelowThreshold, setIsDraggingBelowThreshold] = useState(false);
 
     const handleMouseMove = useCallback((e: MouseEvent) => {
         if (!isResizingRef.current || !sidebarRef.current) return;
@@ -96,12 +97,15 @@ export const Sidebar: React.FC = () => {
 
         // Visual Snap Feedback
         if (newWidth < SNAP_THRESHOLD) {
-            // Visual feedback for "will collapse"
-            // We force a small width and opacity to indicate it's about to disappear
-            sidebarRef.current.style.width = '24px';
-            sidebarRef.current.style.opacity = '0.5';
+            // Show IconRail instead of thin sidebar
+            setIsDraggingBelowThreshold(true);
+            // Hide the main sidebar during drag below threshold
+            if (sidebarRef.current) {
+                sidebarRef.current.style.width = '0px';
+            }
         } else {
             // Normal drag behavior with clamping
+            setIsDraggingBelowThreshold(false);
             let clampedWidth = newWidth;
             if (clampedWidth < MIN_WIDTH) clampedWidth = MIN_WIDTH;
             if (clampedWidth > MAX_WIDTH) clampedWidth = MAX_WIDTH;
@@ -121,6 +125,9 @@ export const Sidebar: React.FC = () => {
         // Remove listeners
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mouseup', handleMouseUp);
+
+        // Clear dragging state
+        setIsDraggingBelowThreshold(false);
 
         // Restore transitions (we removed them on mouse down to avoid drag lag)
         if (sidebarRef.current) {
@@ -461,8 +468,8 @@ export const Sidebar: React.FC = () => {
                 />
             )}
 
-            {/* Desktop: Show IconRail when collapsed */}
-            {!isSidebarExpanded && (
+            {/* Desktop: Show IconRail when collapsed or dragging below threshold */}
+            {(!isSidebarExpanded || isDraggingBelowThreshold) && (
                 <IconRail
                     workspaces={workspaces}
                     activeWorkspaceId={activeWorkspaceId}

@@ -24,6 +24,11 @@ jest.mock("../../../stores/splitViewStore", () => ({
     useSplitViewStore: jest.fn(),
 }));
 
+// Mock IconRail component
+jest.mock("../IconRail", () => ({
+    IconRail: () => <div className="hidden md:flex flex-col w-[42px]" data-testid="icon-rail">IconRail</div>,
+}));
+
 // Mock ResizeObserver
 beforeAll(() => {
     global.ResizeObserver = class ResizeObserver {
@@ -1004,6 +1009,108 @@ describe("Sidebar Component", () => {
                 expect(mockSetSidebarExpanded).toHaveBeenCalledWith(false);
                 // Also expect reset to default width
                 expect(mockSetSidebarWidth).toHaveBeenCalledWith(288);
+            }
+        });
+
+        it("should show IconRail when dragging below threshold", () => {
+            const mockSetSidebarWidth = jest.fn();
+            const mockSetSidebarExpanded = jest.fn();
+            const mockWorkspaces = [
+                { id: "ws-1", name: "Workspace 1", createdAt: 0, lastAccessed: 0, links: [] },
+                { id: "ws-2", name: "Workspace 2", createdAt: 0, lastAccessed: 0, links: [] },
+            ];
+
+            (useWorkspaceStore as any).mockReturnValue({
+                workspaces: mockWorkspaces,
+                activeWorkspaceId: "ws-1",
+                switchWorkspace: jest.fn(),
+                createWorkspace: jest.fn(),
+            });
+
+            (useSidebarStore as any).mockReturnValue({
+                isSidebarExpanded: true,
+                sidebarWidth: 288,
+                setSidebarWidth: mockSetSidebarWidth,
+                setSidebarExpanded: mockSetSidebarExpanded,
+                expandedWorkspaceIds: new Set(),
+                workspaceTabsMetadata: new Map(),
+                expandWorkspace: jest.fn(),
+                collapseWorkspace: jest.fn(),
+                searchQuery: "",
+                setSearchQuery: jest.fn(),
+                refreshWorkspaceMetadata: jest.fn(),
+            });
+
+            const { container, rerender } = render(<Sidebar />);
+            const handle = container.querySelector('.cursor-col-resize');
+
+            // IconRail should not be visible initially
+            let iconRail = container.querySelector('[data-testid="icon-rail"]');
+            expect(iconRail).not.toBeInTheDocument();
+
+            if (handle) {
+                // Start dragging
+                fireEvent.mouseDown(handle);
+                // Move below threshold
+                fireEvent.mouseMove(window, { clientX: 50 });
+
+                // Force a re-render to see state changes
+                rerender(<Sidebar />);
+
+                // IconRail should now be visible (during drag below threshold)
+                iconRail = container.querySelector('[data-testid="icon-rail"]');
+                expect(iconRail).toBeInTheDocument();
+
+                // Release mouse
+                fireEvent.mouseUp(window, { clientX: 50 });
+            }
+        });
+
+        it("should hide IconRail when dragging back above threshold", () => {
+            const mockSetSidebarWidth = jest.fn();
+            const mockSetSidebarExpanded = jest.fn();
+            const mockWorkspaces = [
+                { id: "ws-1", name: "Workspace 1", createdAt: 0, lastAccessed: 0, links: [] },
+            ];
+
+            (useWorkspaceStore as any).mockReturnValue({
+                workspaces: mockWorkspaces,
+                activeWorkspaceId: "ws-1",
+                switchWorkspace: jest.fn(),
+                createWorkspace: jest.fn(),
+            });
+
+            (useSidebarStore as any).mockReturnValue({
+                isSidebarExpanded: true,
+                sidebarWidth: 288,
+                setSidebarWidth: mockSetSidebarWidth,
+                setSidebarExpanded: mockSetSidebarExpanded,
+                expandedWorkspaceIds: new Set(),
+                workspaceTabsMetadata: new Map(),
+                expandWorkspace: jest.fn(),
+                collapseWorkspace: jest.fn(),
+                searchQuery: "",
+                setSearchQuery: jest.fn(),
+                refreshWorkspaceMetadata: jest.fn(),
+            });
+
+            const { container } = render(<Sidebar />);
+            const handle = container.querySelector('.cursor-col-resize');
+
+            if (handle) {
+                // Start dragging
+                fireEvent.mouseDown(handle);
+                // Move below threshold
+                fireEvent.mouseMove(window, { clientX: 50 });
+                // Move back above threshold
+                fireEvent.mouseMove(window, { clientX: 250 });
+
+                // IconRail should not be visible when above threshold
+                const iconRail = container.querySelector('[data-testid="icon-rail"]');
+                expect(iconRail).not.toBeInTheDocument();
+
+                // Release mouse
+                fireEvent.mouseUp(window, { clientX: 250 });
             }
         });
     });

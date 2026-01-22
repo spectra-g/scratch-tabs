@@ -22,7 +22,7 @@ export const IconRail: React.FC<IconRailProps> = ({
   onExpandSidebar,
 }) => {
   return (
-    <div className="hidden md:flex flex-col w-14 h-full bg-surface-secondary border-r border-base">
+    <div className="hidden md:flex flex-col w-[42px] h-full bg-surface-secondary border-r border-base">
       {/* Expand button at top */}
       <div className="flex items-center justify-center h-12 border-b border-base">
         <button
@@ -44,14 +44,14 @@ export const IconRail: React.FC<IconRailProps> = ({
           const tabCount = workspaceTabCounts.get(workspace.id) || 0;
 
           return (
-            <div key={workspace.id} className="px-2 mb-2">
+            <div key={workspace.id} className="px-1.5 mb-2">
               <button
                 onClick={() => onWorkspaceClick(workspace.id)}
                 className={clsx(
-                  "w-10 h-10 rounded-lg flex items-center justify-center text-sm font-semibold transition-all",
+                  "w-7 h-7 rounded-lg flex items-center justify-center text-xs font-semibold transition-all",
                   "hover:scale-105 hover:shadow-lg",
                   isActive
-                    ? "shadow-md ring-2 ring-primary ring-offset-2 ring-offset-surface-secondary"
+                    ? "shadow-md ring-2 ring-primary ring-offset-1 ring-offset-surface-secondary"
                     : "opacity-70 hover:opacity-100"
                 )}
                 style={{
