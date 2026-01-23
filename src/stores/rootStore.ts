@@ -612,10 +612,13 @@ export const useRootStore = create<RootStore>((set, get) => {
 
         // Step 3: Add to target workspace
         if (targetWorkspaceId === activeWorkspaceId) {
-          // Target is active workspace - add to store
+          // Target is active workspace - add to store AND IndexedDB
           useTabsStore.getState().addTab(updatedTab);
           // Add to split view (left side by default)
           useSplitViewStore.getState().addTabToSide(updatedTab.id, false, updatedTab.id);
+
+          // CRITICAL: Persist to IndexedDB immediately (don't rely on debounced save)
+          await storage.saveTabNow(updatedTab);
 
           // Broadcast the change
           broadcastManager.broadcastWorkspaceState(
