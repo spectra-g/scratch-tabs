@@ -440,8 +440,8 @@ export const Sidebar: React.FC = () => {
     useEffect(() => {
         if (!activeTabId || !listRef.current) return;
 
-        // Only auto-expand when the active tab changes, not when workspaces expand/collapse
-        const activeTabChanged = prevActiveTabIdRef.current !== activeTabId;
+        // Only proceed if the active tab actually changed
+        if (prevActiveTabIdRef.current === activeTabId) return;
         prevActiveTabIdRef.current = activeTabId;
 
         // Find the index of the active tab in treeItems
@@ -449,7 +449,7 @@ export const Sidebar: React.FC = () => {
             item => item.type === 'tab' && item.id === activeTabId
         );
 
-        if (activeTabIndex === -1 && activeTabChanged) {
+        if (activeTabIndex === -1) {
             // Active tab not found in current tree (maybe workspace is collapsed)
             // Auto-expand the workspace containing the active tab
             const activeTab = activeTabs.find(t => t.id === activeTabId);
@@ -459,11 +459,9 @@ export const Sidebar: React.FC = () => {
             return;
         }
 
-        // Scroll to the active tab if it's visible
-        if (activeTabIndex !== -1) {
-            listRef.current.scrollToItem(activeTabIndex, "smart");
-        }
-    }, [activeTabId, treeItems, activeTabs, expandedWorkspaceIds, expandWorkspace]);
+        // Scroll to the active tab
+        listRef.current.scrollToItem(activeTabIndex, "smart");
+    }, [activeTabId, activeTabs, expandedWorkspaceIds, expandWorkspace]);
 
     // Responsive container classes
     const containerClasses = clsx(
