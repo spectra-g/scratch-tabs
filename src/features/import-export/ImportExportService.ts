@@ -140,6 +140,11 @@ export class ImportExportService {
     const allDbTabs = await this.storage.getTabs();
     const existingTabIds = new Set(allDbTabs.map((t) => t.id));
 
+    // Calculate the maximum displayOrder for migration
+    const maxDisplayOrder = existingWorkspaces.reduce((max, ws) => {
+      return Math.max(max, ws.displayOrder ?? 0);
+    }, 0);
+
     const existingSplitViewIds = new Set<string>();
     for (const ws of existingWorkspaces) {
       const svRecord = await this.storage.getSplitViewByWorkspace(ws.id);
@@ -151,7 +156,8 @@ export class ImportExportService {
     const splitViewsToSave: SplitViewState[] = [];
     const idRemap: Record<string, string> = {};
 
-    for (let impWs of importedWorkspaces) {
+    for (let i = 0; i < importedWorkspaces.length; i++) {
+      let impWs = importedWorkspaces[i];
       const originalImportedWorkspaceId = impWs.id;
       let currentDbWorkspaceId = originalImportedWorkspaceId;
       let finalName = impWs.name;
@@ -170,7 +176,14 @@ export class ImportExportService {
         summaryItem.status = "merged";
         summaryItem.reason = `Original ID ${originalImportedWorkspaceId.substring(0, 8)}... conflicted. Renamed and assigned new ID.`;
       }
+
+      // Migration: Ensure imported workspaces have displayOrder
+      // Assign sequential displayOrder values starting after existing workspaces
       impWs.lastAccessed = Date.now();
+      if (impWs.displayOrder === undefined) {
+        impWs.displayOrder = maxDisplayOrder + i + 1;
+      }
+
       workspacesToSave.push(impWs);
       summaryItem.name = finalName;
 
