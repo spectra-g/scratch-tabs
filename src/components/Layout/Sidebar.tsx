@@ -297,20 +297,26 @@ export const Sidebar: React.FC = () => {
     }, [workspaces, activeWorkspaceId, activeTabs, workspaceTabsMetadata, expandedWorkspaceIds, activeTabId, searchQuery, splitView?.leftTabs, splitView?.rightTabs]);
 
     const handleWorkspaceClick = async (wsId: string, isExpanded: boolean, tabCount: number) => {
-        // If workspace is empty (no tabs), switch to it directly on single-click
-        // Otherwise, toggle expand/collapse
-        if (tabCount === 0) {
-            if (wsId !== activeWorkspaceId) {
-                setSwitchingToWorkspaceId(wsId);
-                await switchWorkspace(wsId);
-                setSwitchingToWorkspaceId(null);
-            }
+        const isEmpty = tabCount === 0;
+        const isActive = wsId === activeWorkspaceId;
+
+        // Case 1: Empty AND Inactive
+        // Action: Switch to it (Selection behavior)
+        if (isEmpty && !isActive) {
+            setSwitchingToWorkspaceId(wsId);
+            await switchWorkspace(wsId);
+            setSwitchingToWorkspaceId(null);
+            return;
+        }
+
+        // Case 2: All other scenarios
+        // - Empty AND Active
+        // - Non-Empty (regardless of active state)
+        // Action: Toggle Expand/Collapse
+        if (isExpanded) {
+            collapseWorkspace(wsId);
         } else {
-            if (isExpanded) {
-                collapseWorkspace(wsId);
-            } else {
-                expandWorkspace(wsId);
-            }
+            expandWorkspace(wsId);
         }
     };
 
@@ -366,20 +372,23 @@ export const Sidebar: React.FC = () => {
                         isSwitching && "bg-primary-subtle animate-pulse"
                     )}
                     onClick={() => handleWorkspaceClick(item.id, item.isExpanded, item.tabCount)}
-                    onDoubleClick={() => switchWorkspace(item.id)}
+                    onDoubleClick={(e) => {
+                        e.stopPropagation();
+                        switchWorkspace(item.id);
+                    }}
                     onContextMenu={(e) => handleWorkspaceContextMenu(e, item.id)}
                 >
-                    <span className="mr-1">
+                    <span className="mr-1 pointer-events-none">
                         {isVisuallyExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                     </span>
-                    <span className="mr-2">
+                    <span className="mr-2 pointer-events-none">
                         {isVisuallyExpanded ? <FolderOpen size={16} className={item.isActive ? "text-primary" : ""} /> : <Folder size={16} className={item.isActive ? "text-primary" : ""} />}
                     </span>
-                    <span className="flex-1 truncate text-sm">
+                    <span className="flex-1 truncate text-sm pointer-events-none">
                         {item.name}
                         {isSwitching && <span className="ml-2 text-xs opacity-70">Switching...</span>}
                     </span>
-                    <span className="text-[10px] opacity-50 px-1.5 py-0.5 rounded-full bg-surface-secondary">
+                    <span className="text-[10px] opacity-50 px-1.5 py-0.5 rounded-full bg-surface-secondary pointer-events-none">
                         {item.tabCount}
                     </span>
                 </div>
@@ -426,8 +435,14 @@ export const Sidebar: React.FC = () => {
     }, []);
 
     // Reveal in Sidebar: Auto-scroll to active tab
+    // Only triggers when activeTabId changes (not when workspaces expand/collapse)
+    const prevActiveTabIdRef = useRef<string | null>(null);
     useEffect(() => {
         if (!activeTabId || !listRef.current) return;
+
+        // Only proceed if the active tab actually changed
+        if (prevActiveTabIdRef.current === activeTabId) return;
+        prevActiveTabIdRef.current = activeTabId;
 
         // Find the index of the active tab in treeItems
         const activeTabIndex = treeItems.findIndex(
@@ -436,19 +451,17 @@ export const Sidebar: React.FC = () => {
 
         if (activeTabIndex === -1) {
             // Active tab not found in current tree (maybe workspace is collapsed)
-            // Find the workspace containing the active tab and expand it
+            // Auto-expand the workspace containing the active tab
             const activeTab = activeTabs.find(t => t.id === activeTabId);
             if (activeTab && !expandedWorkspaceIds.has(activeTab.workspaceId)) {
-                expandWorkspace(activeTab.workspaceId).then(() => {
-                    // After expansion, the effect will re-run and scroll
-                });
+                expandWorkspace(activeTab.workspaceId);
             }
             return;
         }
 
         // Scroll to the active tab
         listRef.current.scrollToItem(activeTabIndex, "smart");
-    }, [activeTabId, treeItems, activeTabs, expandedWorkspaceIds, expandWorkspace]);
+    }, [activeTabId, activeTabs, expandedWorkspaceIds, expandWorkspace]);
 
     // Responsive container classes
     const containerClasses = clsx(

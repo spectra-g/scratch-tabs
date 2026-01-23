@@ -146,7 +146,7 @@ describe("Sidebar Component", () => {
         });
     });
 
-    it("calls switchWorkspace when an empty workspace is clicked", async () => {
+    it("calls switchWorkspace when an empty workspace is clicked and not active", async () => {
         const switchWorkspace = jest.fn().mockResolvedValue(undefined);
         (useWorkspaceStore as any).mockReturnValue({
             workspaces: mockWorkspaces,
@@ -189,6 +189,245 @@ describe("Sidebar Component", () => {
 
         await waitFor(() => {
             expect(switchWorkspace).toHaveBeenCalledWith("ws-1");
+        });
+    });
+
+    it("toggles expand/collapse when an empty workspace is clicked and already active", async () => {
+        const expandWorkspace = jest.fn().mockResolvedValue(undefined);
+        const collapseWorkspace = jest.fn();
+        const switchWorkspace = jest.fn().mockResolvedValue(undefined);
+
+        (useWorkspaceStore as any).mockReturnValue({
+            workspaces: mockWorkspaces,
+            activeWorkspaceId: "ws-1", // Same workspace is active
+            switchWorkspace,
+            createWorkspace: jest.fn(),
+        });
+
+        (useTabsStore as any).mockReturnValue({
+            tabs: [], // Empty workspace
+        });
+
+        (useSplitViewStore as any).mockReturnValue({
+            splitView: {
+                activeSide: "left",
+                activeLeftTabId: null,
+                leftTabs: [],
+                rightTabs: []
+            },
+        });
+
+        // Test expanding a collapsed workspace
+        (useSidebarStore as any).mockReturnValue({
+            isSidebarExpanded: true,
+            sidebarWidth: 288,
+            setSidebarWidth: jest.fn(),
+            setSidebarExpanded: jest.fn(),
+            isMobileOpen: false,
+            setMobileOpen: jest.fn(),
+            expandedWorkspaceIds: new Set(), // Workspace is collapsed
+            workspaceTabsMetadata: new Map(),
+            expandWorkspace,
+            collapseWorkspace,
+            searchQuery: "",
+            setSearchQuery: jest.fn(),
+            refreshWorkspaceMetadata: jest.fn(),
+        });
+
+        const { rerender } = render(<Sidebar />);
+        fireEvent.click(screen.getByText("Workspace 1"));
+
+        await waitFor(() => {
+            expect(expandWorkspace).toHaveBeenCalledWith("ws-1");
+            expect(switchWorkspace).not.toHaveBeenCalled();
+        });
+
+        // Now test collapsing an expanded workspace
+        jest.clearAllMocks();
+        (useSidebarStore as any).mockReturnValue({
+            isSidebarExpanded: true,
+            sidebarWidth: 288,
+            setSidebarWidth: jest.fn(),
+            setSidebarExpanded: jest.fn(),
+            isMobileOpen: false,
+            setMobileOpen: jest.fn(),
+            expandedWorkspaceIds: new Set(["ws-1"]), // Workspace is now expanded
+            workspaceTabsMetadata: new Map(),
+            expandWorkspace,
+            collapseWorkspace,
+            searchQuery: "",
+            setSearchQuery: jest.fn(),
+            refreshWorkspaceMetadata: jest.fn(),
+        });
+
+        rerender(<Sidebar />);
+        fireEvent.click(screen.getByText("Workspace 1"));
+
+        await waitFor(() => {
+            expect(collapseWorkspace).toHaveBeenCalledWith("ws-1");
+            expect(switchWorkspace).not.toHaveBeenCalled();
+        });
+    });
+
+    it("toggles expand/collapse when a non-empty workspace is clicked (regardless of active state)", async () => {
+        const expandWorkspace = jest.fn().mockResolvedValue(undefined);
+        const collapseWorkspace = jest.fn();
+        const mockTabsWithContent = [
+            { id: "tab-1", title: "Test Tab", language: "typescript", lastModified: 0, workspaceId: "ws-1", dateCreated: 0, content: "", languageLocked: false, cursorPosition: { lineNumber: 1, column: 1 } }
+        ];
+
+        (useTabsStore as any).mockReturnValue({
+            tabs: mockTabsWithContent,
+        });
+
+        (useSplitViewStore as any).mockReturnValue({
+            splitView: {
+                activeSide: "left",
+                activeLeftTabId: "tab-1",
+                leftTabs: ["tab-1"],
+                rightTabs: []
+            },
+        });
+
+        // Test with workspace not active and collapsed
+        (useWorkspaceStore as any).mockReturnValue({
+            workspaces: mockWorkspaces,
+            activeWorkspaceId: "ws-2", // Different workspace is active
+            switchWorkspace: jest.fn(),
+            createWorkspace: jest.fn(),
+        });
+
+        (useSidebarStore as any).mockReturnValue({
+            isSidebarExpanded: true,
+            sidebarWidth: 288,
+            setSidebarWidth: jest.fn(),
+            setSidebarExpanded: jest.fn(),
+            isMobileOpen: false,
+            setMobileOpen: jest.fn(),
+            expandedWorkspaceIds: new Set(), // Workspace is collapsed
+            workspaceTabsMetadata: new Map(),
+            expandWorkspace,
+            collapseWorkspace,
+            searchQuery: "",
+            setSearchQuery: jest.fn(),
+            refreshWorkspaceMetadata: jest.fn(),
+        });
+
+        render(<Sidebar />);
+        fireEvent.click(screen.getByText("Workspace 1"));
+
+        await waitFor(() => {
+            expect(expandWorkspace).toHaveBeenCalledWith("ws-1");
+        });
+    });
+
+    it("expands a collapsed active workspace with tabs when clicked", async () => {
+        const expandWorkspace = jest.fn().mockResolvedValue(undefined);
+        const collapseWorkspace = jest.fn();
+        const switchWorkspace = jest.fn();
+        const mockTabsWithContent = [
+            { id: "tab-1", title: "Test Tab", language: "typescript", lastModified: 0, workspaceId: "ws-1", dateCreated: 0, content: "", languageLocked: false, cursorPosition: { lineNumber: 1, column: 1 } }
+        ];
+
+        (useWorkspaceStore as any).mockReturnValue({
+            workspaces: mockWorkspaces,
+            activeWorkspaceId: "ws-1", // This workspace IS active
+            switchWorkspace,
+            createWorkspace: jest.fn(),
+        });
+
+        (useTabsStore as any).mockReturnValue({
+            tabs: mockTabsWithContent,
+        });
+
+        (useSplitViewStore as any).mockReturnValue({
+            splitView: {
+                activeSide: "left",
+                activeLeftTabId: "tab-1",
+                leftTabs: ["tab-1"],
+                rightTabs: []
+            },
+        });
+
+        (useSidebarStore as any).mockReturnValue({
+            isSidebarExpanded: true,
+            sidebarWidth: 288,
+            setSidebarWidth: jest.fn(),
+            setSidebarExpanded: jest.fn(),
+            isMobileOpen: false,
+            setMobileOpen: jest.fn(),
+            expandedWorkspaceIds: new Set(), // Workspace is collapsed
+            workspaceTabsMetadata: new Map(),
+            expandWorkspace,
+            collapseWorkspace,
+            searchQuery: "",
+            setSearchQuery: jest.fn(),
+            refreshWorkspaceMetadata: jest.fn(),
+        });
+
+        render(<Sidebar />);
+
+        // Click on the active workspace (which has tabs and is collapsed)
+        fireEvent.click(screen.getByText("Workspace 1"));
+
+        await waitFor(() => {
+            expect(expandWorkspace).toHaveBeenCalledWith("ws-1");
+            expect(switchWorkspace).not.toHaveBeenCalled();
+        });
+    });
+
+    it("collapses an expanded active workspace with tabs when clicked", async () => {
+        const expandWorkspace = jest.fn().mockResolvedValue(undefined);
+        const collapseWorkspace = jest.fn();
+        const switchWorkspace = jest.fn();
+        const mockTabsWithContent = [
+            { id: "tab-1", title: "Test Tab", language: "typescript", lastModified: 0, workspaceId: "ws-1", dateCreated: 0, content: "", languageLocked: false, cursorPosition: { lineNumber: 1, column: 1 } }
+        ];
+
+        (useWorkspaceStore as any).mockReturnValue({
+            workspaces: mockWorkspaces,
+            activeWorkspaceId: "ws-1", // This workspace IS active
+            switchWorkspace,
+            createWorkspace: jest.fn(),
+        });
+
+        (useTabsStore as any).mockReturnValue({
+            tabs: mockTabsWithContent,
+        });
+
+        (useSplitViewStore as any).mockReturnValue({
+            splitView: {
+                activeSide: "left",
+                activeLeftTabId: "tab-1",
+                leftTabs: ["tab-1"],
+                rightTabs: []
+            },
+        });
+
+        (useSidebarStore as any).mockReturnValue({
+            isSidebarExpanded: true,
+            sidebarWidth: 288,
+            setSidebarWidth: jest.fn(),
+            setSidebarExpanded: jest.fn(),
+            isMobileOpen: false,
+            setMobileOpen: jest.fn(),
+            expandedWorkspaceIds: new Set(["ws-1"]), // Workspace is EXPANDED
+            workspaceTabsMetadata: new Map(),
+            expandWorkspace,
+            collapseWorkspace,
+            searchQuery: "",
+            setSearchQuery: jest.fn(),
+            refreshWorkspaceMetadata: jest.fn(),
+        });
+
+        render(<Sidebar />);
+
+        // Click on the active workspace (which has tabs and is expanded)
+        fireEvent.click(screen.getByText("Workspace 1"));
+
+        await waitFor(() => {
+            expect(collapseWorkspace).toHaveBeenCalledWith("ws-1");
+            expect(switchWorkspace).not.toHaveBeenCalled();
         });
     });
 
