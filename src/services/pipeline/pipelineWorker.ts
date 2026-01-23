@@ -17,6 +17,10 @@ import { executePipeline, executeSingleOperation } from "./pipelineExecutor";
 // 1. Register categories and core operations
 import "./categories";
 import "./operations/coreOperations";
+import "./operations/encoding";
+import "./operations/logic";
+import "./operations/extraction";
+import "./operations/compression";
 
 // 2. Auto-discover Format & Tablet Operations via Glob Import
 // This tells Vite: "Find every file named 'pipelineOperations.ts' anywhere inside

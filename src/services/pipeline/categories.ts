@@ -99,6 +99,30 @@ export const coreCategories: OperationCategory[] = [
     order: 110,
   },
   {
+    id: "logic",
+    name: "Logic",
+    icon: "Cpu",
+    order: 55,
+  },
+  {
+    id: "extraction",
+    name: "Extraction",
+    icon: "Regex",
+    order: 85,
+  },
+  {
+    id: "compression",
+    name: "Compression",
+    icon: "Archive",
+    order: 95,
+  },
+  {
+    id: "encryption",
+    name: "Encryption",
+    icon: "Lock",
+    order: 92,
+  },
+  {
     id: "advanced",
     name: "Advanced",
     icon: "Code2",
