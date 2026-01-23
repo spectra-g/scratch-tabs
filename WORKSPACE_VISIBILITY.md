@@ -393,13 +393,13 @@ expandWorkspace: async (workspaceId: string) => {
 | Operation | Implementation |
 |-----------|----------------|
 | **View tab** | Switch to workspace first, then open tab |
-| **Delete tab** | Delete from IndexedDB directly, update metadata cache. **If last tab: delete workspace.** |
+| **Delete tab** | Delete from IndexedDB directly, update metadata cache. Empty workspaces are allowed. |
 | **Rename tab** | Update IndexedDB directly, update metadata cache |
 | **Duplicate tab** | Create in IndexedDB, update metadata cache |
-| **Move to active workspace** | Load content from IndexedDB, add to tabsStore, delete from IndexedDB. **If last tab in source: delete source workspace.** |
+| **Move to active workspace** | Load content from IndexedDB, add to tabsStore, delete from IndexedDB. Source workspace remains even if empty. |
 | **Move from active to inactive** | Save content to IndexedDB, remove from tabsStore, update metadata |
 
-> **Key Behavior:** Empty workspaces don't exist. Deleting or moving the last tab from a workspace automatically deletes that workspace. This is current app behavior and is maintained in the sidebar.
+> **Key Behavior (Updated 2026-01-23):** Empty workspaces ARE allowed. Moving or deleting the last tab from a workspace leaves an empty workspace. This allows users to organize their workspaces before adding content.
 
 ### Warning: Content on Demand
 
@@ -469,7 +469,7 @@ On hover:
 - Export Workspace
 - Delete Workspace
 
-> **Note:** "Delete Workspace" deletes all tabs within it. A workspace with 1 tab can also be deleted via the tab's "Close" action (which triggers workspace deletion as the last tab is removed).
+> **Note:** "Delete Workspace" deletes all tabs within it. Empty workspaces remain after all tabs are closed, allowing users to organize workspace structure independently of content.
 
 ### 7.3 Tab Row
 
@@ -595,15 +595,20 @@ No workspaces yet.
 [Create Workspace]
 ```
 
-**Empty workspace:** N/A - **Empty workspaces don't exist.**
+**Empty workspace:**
+```
+📁 My Empty Workspace          0 tabs
 
-> **Current Behavior (Maintained):** Deleting the last tab in a workspace automatically deletes the workspace. This behavior is preserved in the sidebar. Changing this is out of scope for this feature.
+(Click to create new tab)
+```
+
+> **Current Behavior (Updated 2026-01-23):** Empty workspaces are now allowed. Deleting the last tab in a workspace leaves the workspace empty, allowing users to organize workspace structure independently of content.
 
 **Sidebar implication:** When user deletes the last tab in a workspace via sidebar context menu:
 1. Tab is deleted
-2. Workspace is automatically deleted
-3. Sidebar refreshes to remove workspace from list
-4. If it was the active workspace, switch to another workspace (most recently accessed)
+2. Workspace becomes empty (remains in sidebar with "0 tabs" badge)
+3. Sidebar refreshes to show updated tab count
+4. Workspace can be used to add new tabs or deleted manually if no longer needed
 
 **Search/filter no results:**
 ```
@@ -935,12 +940,12 @@ User drags tab T from Inactive WS-A to Active WS-B
 - If step 3 fails: Log warning, user has duplicate (recoverable, not data loss)
 - If step 5 fails: Log warning, other windows may be stale until refresh
 
-**Edge Case - Last Tab Move:**
+**Edge Case - Last Tab Move (Updated 2026-01-23):**
 If the moved tab was the last tab in the source workspace:
 - After step 3 (delete from source), the source workspace is now empty
-- Delete the source workspace from IndexedDB
-- Remove from sidebar workspace list
-- Broadcast `WORKSPACE_DELETED` instead of `WORKSPACE_TABS_METADATA_UPDATED`
+- **The source workspace remains** (empty workspaces are allowed)
+- Sidebar shows the workspace with "0 tabs" badge
+- Broadcast `WORKSPACE_TABS_METADATA_UPDATED` to update the tab count in all windows
 
 **No spinner needed:** Operation is fast (milliseconds). Only show error states if something fails.
 

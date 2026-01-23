@@ -3,6 +3,7 @@ import { useTabsStore } from "./tabsStore";
 import { useSplitViewStore } from "./splitViewStore";
 import { useEditorStore } from "./editorStore";
 import { useWorkspaceStore } from "./workspaceStore";
+import { useSidebarStore } from "./sidebarStore";
 import { useMilestoneCelebrationStore } from "./milestoneCelebrationStore";
 import { Tab } from "../types";
 import { formatRegistry } from "../formats/registry";
@@ -59,6 +60,15 @@ interface RootStore {
     isRightSide: boolean,
   ) => Promise<void>;
   reorderTabs: (side: "left" | "right", newOrder: string[]) => void;
+  moveTabBetweenWorkspaces: (
+    tabId: string,
+    sourceWorkspaceId: string,
+    targetWorkspaceId: string
+  ) => Promise<void>;
+  reorderTabsInWorkspace: (
+    workspaceId: string,
+    newTabOrder: string[]
+  ) => Promise<void>;
   saveTabDataById: (tabId: string) => void;
   setActiveView: (tabId: string, viewId: string | null) => void;
   getActiveView: (tabId: string) => string | null;
@@ -559,6 +569,142 @@ export const useRootStore = create<RootStore>((set, get) => {
 
     reorderTabs: (side, newOrder) =>
       useSplitViewStore.getState().reorderTabs(side, newOrder),
+
+    /**
+     * Moves a tab from one workspace to another using the Copy-then-Delete pattern.
+     * Follows the architecture described in WORKSPACE_VISIBILITY.md Section 12.2.
+     *
+     * @param tabId - ID of the tab to move
+     * @param sourceWorkspaceId - Source workspace ID
+     * @param targetWorkspaceId - Target workspace ID
+     */
+    moveTabBetweenWorkspaces: async (
+      tabId: string,
+      sourceWorkspaceId: string,
+      targetWorkspaceId: string
+    ) => {
+      const activeWorkspaceId = useWorkspaceStore.getState().activeWorkspaceId;
+      const storage = StorageProviderFactory.getProvider();
+
+      try {
+        // Step 1: Get the full tab data
+        let fullTab: Tab | undefined;
+
+        if (sourceWorkspaceId === activeWorkspaceId) {
+          // Source is active workspace - get from store
+          fullTab = useTabsStore.getState().tabs.find(t => t.id === tabId);
+        } else {
+          // Source is inactive workspace - get from IndexedDB
+          const tabs = await storage.getTabsByWorkspace(sourceWorkspaceId);
+          fullTab = tabs.find(t => t.id === tabId);
+        }
+
+        if (!fullTab) {
+          throw new Error(`Tab ${tabId} not found in source workspace`);
+        }
+
+        // Step 2: Create updated tab with new workspaceId
+        const updatedTab: Tab = {
+          ...fullTab,
+          workspaceId: targetWorkspaceId,
+          lastModified: Date.now()
+        };
+
+        // Step 3: Add to target workspace
+        if (targetWorkspaceId === activeWorkspaceId) {
+          // Target is active workspace - add to store AND IndexedDB
+          useTabsStore.getState().addTab(updatedTab);
+          // Add to split view (left side by default)
+          useSplitViewStore.getState().addTabToSide(updatedTab.id, false, updatedTab.id);
+
+          // CRITICAL: Persist to IndexedDB immediately (don't rely on debounced save)
+          await storage.saveTabNow(updatedTab);
+
+          // Broadcast the change
+          broadcastManager.broadcastWorkspaceState(
+            targetWorkspaceId,
+            {
+              tabs: useTabsStore.getState().tabs,
+              splitView: useSplitViewStore.getState().splitView,
+            }
+          );
+        } else {
+          // Target is inactive workspace - save to IndexedDB
+          await storage.saveTabNow(updatedTab);
+          // Refresh sidebar metadata for target workspace
+          await useSidebarStore.getState().refreshWorkspaceMetadata(targetWorkspaceId);
+        }
+
+        // Step 4: Remove from source workspace
+        if (sourceWorkspaceId === activeWorkspaceId) {
+          // Source is active workspace - remove from store
+          modelManager.dispose(tabId);
+          useQueryPanelStore.getState().removePanelState(tabId);
+          useSplitViewStore.getState().removeTabFromSide(tabId);
+          useTabsStore.getState().removeTab(tabId);
+
+          // Broadcast the change
+          broadcastManager.broadcastWorkspaceState(
+            sourceWorkspaceId,
+            {
+              tabs: useTabsStore.getState().tabs,
+              splitView: useSplitViewStore.getState().splitView,
+            }
+          );
+        } else {
+          // Source is inactive workspace - delete from IndexedDB
+          await storage.deleteTab(tabId);
+          // Refresh sidebar metadata for source workspace
+          await useSidebarStore.getState().refreshWorkspaceMetadata(sourceWorkspaceId);
+        }
+      } catch (error) {
+        console.error('Failed to move tab between workspaces:', error);
+        throw error;
+      }
+    },
+
+    /**
+     * Reorders tabs within an inactive workspace.
+     * For active workspace, use reorderTabs() instead.
+     *
+     * @param workspaceId - Workspace ID
+     * @param newTabOrder - New order of tab IDs
+     */
+    reorderTabsInWorkspace: async (
+      workspaceId: string,
+      newTabOrder: string[]
+    ) => {
+      const activeWorkspaceId = useWorkspaceStore.getState().activeWorkspaceId;
+
+      // If this is the active workspace, use the existing reorderTabs
+      if (workspaceId === activeWorkspaceId) {
+        console.warn('Use reorderTabs() for active workspace reordering');
+        return;
+      }
+
+      const storage = StorageProviderFactory.getProvider();
+
+      try {
+        // Get the splitView for this workspace
+        const splitView = await storage.getSplitViewByWorkspace(workspaceId);
+
+        if (splitView) {
+          // Update the tab order in splitView
+          // For inactive workspaces, we maintain the combined order in leftTabs
+          splitView.leftTabs = newTabOrder;
+          splitView.lastModified = Date.now();
+
+          // Save the updated splitView
+          await storage.saveSplitViewNow(splitView);
+
+          // Refresh sidebar metadata
+          await useSidebarStore.getState().refreshWorkspaceMetadata(workspaceId);
+        }
+      } catch (error) {
+        console.error('Failed to reorder tabs in workspace:', error);
+        throw error;
+      }
+    },
 
     saveTabDataById: (tabId) => {
       const { tabs } = useTabsStore.getState();

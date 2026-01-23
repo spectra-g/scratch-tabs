@@ -1,6 +1,19 @@
 import React, { useMemo, useRef, useState, useEffect, useCallback } from "react";
 
 import { FixedSizeList as List } from "react-window";
+import {
+    DndContext,
+    DragEndEvent,
+    DragStartEvent,
+    PointerSensor,
+    TouchSensor,
+    KeyboardSensor,
+    useSensor,
+    useSensors,
+    DragOverlay,
+    pointerWithin,
+} from "@dnd-kit/core";
+import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
 import { useTabsStore } from "../../stores/tabsStore";
 import { useRootStore } from "../../stores/rootStore";
@@ -27,6 +40,8 @@ import { clsx } from "clsx";
 import { WorkspaceContextMenu } from "./WorkspaceContextMenu";
 import { SidebarTabContextMenu } from "./SidebarTabContextMenu";
 import { IconRail } from "./IconRail";
+import { SidebarDraggableTab } from "./SidebarDraggableTab";
+import { SidebarDraggableWorkspace } from "./SidebarDraggableWorkspace";
 
 const ROW_HEIGHT = 32;
 const MIN_WIDTH = 150;
@@ -40,7 +55,7 @@ type TreeItem =
 export const Sidebar: React.FC = () => {
     const { workspaces, activeWorkspaceId, switchWorkspace, createWorkspace } = useWorkspaceStore();
     const { tabs: activeTabs } = useTabsStore();
-    const { setActiveTab } = useRootStore();
+    const { setActiveTab, moveTabBetweenWorkspaces, reorderTabsInWorkspace } = useRootStore();
     const {
         isSidebarExpanded,
         isMobileOpen,
@@ -72,6 +87,23 @@ export const Sidebar: React.FC = () => {
         workspaceId: string;
         position: { x: number; y: number };
     } | null>(null);
+
+    // Drag and drop state
+    const [activeId, setActiveId] = useState<string | null>(null);
+    const [draggedTab, setDraggedTab] = useState<SidebarTabInfo | null>(null);
+
+    // Configure sensors for drag and drop
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: { distance: 5 }
+        }),
+        useSensor(TouchSensor, {
+            activationConstraint: { delay: 250, tolerance: 5 }
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates
+        })
+    );
 
     // Debounced search: separate input value from store query
     const [searchInputValue, setSearchInputValue] = useState(searchQuery);
@@ -355,6 +387,146 @@ export const Sidebar: React.FC = () => {
         });
     };
 
+    // Drag and drop handlers
+    const handleDragStart = (event: DragStartEvent) => {
+        const { active } = event;
+        setActiveId(active.id as string);
+
+        // Find the dragged tab info
+        if (active.data.current?.type === "tab") {
+            const tabId = active.data.current.tabId;
+            const workspaceId = active.data.current.workspaceId;
+
+            // Find the tab in treeItems
+            const tabItem = treeItems.find(
+                item => item.type === "tab" && item.id === tabId
+            ) as TreeItem & { type: "tab" } | undefined;
+
+            if (tabItem) {
+                setDraggedTab({
+                    id: tabItem.id,
+                    title: tabItem.title,
+                    language: tabItem.language,
+                    workspaceId: workspaceId,
+                    isTablet: tabItem.isTablet,
+                    isRich: tabItem.isRich,
+                    isPinned: tabItem.isPinned,
+                    lastModified: Date.now()
+                });
+            }
+        }
+    };
+
+    const handleDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event;
+
+        setActiveId(null);
+        setDraggedTab(null);
+
+        if (!over || active.id === over.id) return;
+
+        const activeData = active.data.current;
+        const overData = over.data.current;
+
+        // Only handle tab dragging
+        if (activeData?.type !== "tab") return;
+
+        const draggedTabId = activeData.tabId as string;
+        const sourceWorkspaceId = activeData.workspaceId as string;
+
+        // Case 1: Dropped on another tab (reorder within same workspace)
+        if (overData?.type === "tab") {
+            const targetTabId = overData.tabId as string;
+            const targetWorkspaceId = overData.workspaceId as string;
+
+            if (sourceWorkspaceId === targetWorkspaceId) {
+                // Reorder within same workspace
+                let tabs: SidebarTabInfo[];
+
+                if (sourceWorkspaceId === activeWorkspaceId) {
+                    // Active workspace - get from splitView order
+                    const allTabIds = [...(splitView?.leftTabs || []), ...(splitView?.rightTabs || [])];
+                    tabs = allTabIds
+                        .map(id => activeTabs.find(t => t.id === id))
+                        .filter((t): t is typeof activeTabs[0] => t !== undefined)
+                        .map(t => ({
+                            id: t.id,
+                            title: t.title,
+                            language: t.language,
+                            isTablet: t.isTablet,
+                            isRich: t.isRich,
+                            isPinned: t.isPinned,
+                            lastModified: t.lastModified,
+                            workspaceId: t.workspaceId,
+                        }));
+                } else {
+                    // Inactive workspace - get from metadata
+                    tabs = workspaceTabsMetadata.get(sourceWorkspaceId) || [];
+                }
+
+                const oldIndex = tabs.findIndex(t => t.id === draggedTabId);
+                const newIndex = tabs.findIndex(t => t.id === targetTabId);
+
+                if (oldIndex === -1 || newIndex === -1) return;
+
+                // Reorder the array
+                const newTabOrder = [...tabs];
+                const [removed] = newTabOrder.splice(oldIndex, 1);
+                newTabOrder.splice(newIndex, 0, removed);
+
+                // Update the order
+                if (sourceWorkspaceId === activeWorkspaceId) {
+                    // For active workspace, use the existing reorderTabs action
+                    const newTabIds = newTabOrder.map(t => t.id);
+                    // Determine which side this tab is on
+                    const isOnLeft = splitView?.leftTabs.includes(draggedTabId);
+                    if (splitView?.isSplit && isOnLeft !== undefined) {
+                        // If split, only reorder the relevant side
+                        const side = isOnLeft ? "left" : "right";
+                        const { reorderTabs } = useRootStore.getState();
+                        const sideTabIds = isOnLeft ? splitView.leftTabs : splitView.rightTabs;
+
+                        // Get the new order for the specific side
+                        const oldSideIndex = sideTabIds.indexOf(draggedTabId);
+                        const targetInSide = sideTabIds.indexOf(targetTabId);
+                        if (oldSideIndex !== -1 && targetInSide !== -1) {
+                            const newSideOrder = [...sideTabIds];
+                            const [removed] = newSideOrder.splice(oldSideIndex, 1);
+                            newSideOrder.splice(targetInSide, 0, removed);
+                            reorderTabs(side, newSideOrder);
+                        }
+                    } else {
+                        // Not split, reorder all on left side
+                        const { reorderTabs } = useRootStore.getState();
+                        reorderTabs("left", newTabIds);
+                    }
+                } else {
+                    // For inactive workspace, update via new action
+                    await reorderTabsInWorkspace(sourceWorkspaceId, newTabOrder.map(t => t.id));
+                }
+            } else {
+                // Different workspaces - move tab
+                try {
+                    await moveTabBetweenWorkspaces(draggedTabId, sourceWorkspaceId, targetWorkspaceId);
+                } catch (error) {
+                    console.error('Failed to move tab between workspaces:', error);
+                }
+            }
+        }
+        // Case 2: Dropped on a workspace (move to that workspace)
+        else if (overData?.type === "workspace") {
+            const targetWorkspaceId = overData.workspaceId as string;
+
+            if (sourceWorkspaceId !== targetWorkspaceId) {
+                try {
+                    await moveTabBetweenWorkspaces(draggedTabId, sourceWorkspaceId, targetWorkspaceId);
+                } catch (error) {
+                    console.error('Failed to move tab to workspace:', error);
+                }
+            }
+        }
+    };
+
     const renderRow = ({ index, style }: { index: number; style: React.CSSProperties }) => {
         const item = treeItems[index];
         if (!item) return null;
@@ -363,57 +535,41 @@ export const Sidebar: React.FC = () => {
             const isSwitching = switchingToWorkspaceId === item.id;
             // If we have a search query, visually force expand indicator
             const isVisuallyExpanded = item.isExpanded || !!searchQuery;
+
             return (
-                <div
+                <SidebarDraggableWorkspace
+                    id={item.id}
+                    name={item.name}
+                    isExpanded={item.isExpanded}
+                    isActive={item.isActive}
+                    tabCount={item.tabCount}
+                    isSwitching={isSwitching}
+                    isVisuallyExpanded={isVisuallyExpanded}
                     style={style}
-                    className={clsx(
-                        "flex items-center px-2 cursor-pointer hover:bg-element-hover group select-none",
-                        item.isActive ? "text-main font-semibold border-l-2 border-primary" : "text-secondary",
-                        isSwitching && "bg-primary-subtle animate-pulse"
-                    )}
                     onClick={() => handleWorkspaceClick(item.id, item.isExpanded, item.tabCount)}
                     onDoubleClick={(e) => {
                         e.stopPropagation();
                         switchWorkspace(item.id);
                     }}
                     onContextMenu={(e) => handleWorkspaceContextMenu(e, item.id)}
-                >
-                    <span className="mr-1 pointer-events-none">
-                        {isVisuallyExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                    </span>
-                    <span className="mr-2 pointer-events-none">
-                        {isVisuallyExpanded ? <FolderOpen size={16} className={item.isActive ? "text-primary" : ""} /> : <Folder size={16} className={item.isActive ? "text-primary" : ""} />}
-                    </span>
-                    <span className="flex-1 truncate text-sm pointer-events-none">
-                        {item.name}
-                        {isSwitching && <span className="ml-2 text-xs opacity-70">Switching...</span>}
-                    </span>
-                    <span className="text-[10px] opacity-50 px-1.5 py-0.5 rounded-full bg-surface-secondary pointer-events-none">
-                        {item.tabCount}
-                    </span>
-                </div>
+                />
             );
         }
 
         return (
-            <div
+            <SidebarDraggableTab
+                id={item.id}
+                title={item.title}
+                language={item.language}
+                workspaceId={item.workspaceId}
+                isActive={item.isActive}
+                isPinned={item.isPinned}
+                isTablet={item.isTablet}
+                isRich={item.isRich}
                 style={style}
-                className={clsx(
-                    "flex items-center px-6 cursor-pointer hover:bg-element-hover group select-none",
-                    item.isActive ? "bg-primary-subtle border-r-2 border-primary" : "text-secondary"
-                )}
                 onClick={() => handleTabClick(item.id, item.workspaceId)}
                 onContextMenu={(e) => handleTabContextMenu(e, item.id, item.workspaceId)}
-            >
-                <span className="mr-2 opacity-70">
-                    <TabIcon language={item.language} isTablet={item.isTablet} />
-                </span>
-                <span className={clsx("flex-1 truncate text-sm", item.isActive && "text-main font-medium")}>
-                    {item.title}
-                </span>
-                {item.isPinned && <Pin size={12} className="ml-1 opacity-50" />}
-                {item.isRich && <Type size={12} className="ml-1 opacity-50" />}
-            </div>
+            />
         );
     };
 
@@ -504,67 +660,90 @@ export const Sidebar: React.FC = () => {
             )}
 
             <div className={containerClasses} style={sidebarStyle} ref={sidebarRef}>
-                <div className="p-3 flex flex-col gap-2">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-xs font-bold uppercase tracking-wider text-secondary">Explorer</h2>
-                        <div className="flex gap-1">
-                            <button
-                                onClick={() => createWorkspace("New Workspace")}
-                                className="p-1 hover:bg-element-hover rounded text-secondary hover:text-main"
-                                title="New Workspace"
-                            >
-                                <Plus size={16} />
-                            </button>
-                            {/* Desktop only: collapse button */}
-                            <button
-                                onClick={toggleSidebar}
-                                className="hidden md:block p-1 hover:bg-element-hover rounded text-secondary hover:text-main"
-                                title="Collapse sidebar (Cmd+B)"
-                                aria-label="Collapse sidebar"
-                            >
-                                <ChevronLeft size={16} />
-                            </button>
-                            {/* Mobile only: close button */}
-                            <button
-                                onClick={() => setMobileOpen(false)}
-                                className="p-1 hover:bg-element-hover rounded text-secondary hover:text-main md:hidden"
-                                title="Close sidebar"
-                                aria-label="Close sidebar"
-                            >
-                                <X size={16} />
-                            </button>
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={pointerWithin}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                >
+                    <div className="p-3 flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-xs font-bold uppercase tracking-wider text-secondary">Explorer</h2>
+                            <div className="flex gap-1">
+                                <button
+                                    onClick={() => createWorkspace("New Workspace")}
+                                    className="p-1 hover:bg-element-hover rounded text-secondary hover:text-main"
+                                    title="New Workspace"
+                                >
+                                    <Plus size={16} />
+                                </button>
+                                {/* Desktop only: collapse button */}
+                                <button
+                                    onClick={toggleSidebar}
+                                    className="hidden md:block p-1 hover:bg-element-hover rounded text-secondary hover:text-main"
+                                    title="Collapse sidebar (Cmd+B)"
+                                    aria-label="Collapse sidebar"
+                                >
+                                    <ChevronLeft size={16} />
+                                </button>
+                                {/* Mobile only: close button */}
+                                <button
+                                    onClick={() => setMobileOpen(false)}
+                                    className="p-1 hover:bg-element-hover rounded text-secondary hover:text-main md:hidden"
+                                    title="Close sidebar"
+                                    aria-label="Close sidebar"
+                                >
+                                    <X size={16} />
+                                </button>
+                            </div>
+                        </div>
+                        <div className="relative">
+                            <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-secondary" size={14} />
+                            <input
+                                type="text"
+                                placeholder="Filter tabs..."
+                                className="w-full bg-canvas border border-base rounded py-1 pl-8 pr-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                value={searchInputValue}
+                                onChange={(e) => setSearchInputValue(e.target.value)}
+                            />
                         </div>
                     </div>
-                    <div className="relative">
-                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-secondary" size={14} />
-                        <input
-                            type="text"
-                            placeholder="Filter tabs..."
-                            className="w-full bg-canvas border border-base rounded py-1 pl-8 pr-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                            value={searchInputValue}
-                            onChange={(e) => setSearchInputValue(e.target.value)}
-                        />
-                    </div>
-                </div>
 
-                <div ref={listContainerRef} className="flex-1 overflow-hidden">
-                    {treeItems.length > 0 ? (
-                        <List
-                            ref={listRef}
-                            height={listHeight}
-                            itemCount={treeItems.length}
-                            itemSize={ROW_HEIGHT}
-                            width="100%"
-                            className="custom-scrollbar"
-                        >
-                            {renderRow}
-                        </List>
-                    ) : (
-                        <div className="p-4 text-center text-secondary text-sm italic">
-                            {searchQuery ? "No matches found" : "No workspaces"}
-                        </div>
-                    )}
-                </div>
+                    <div ref={listContainerRef} className="flex-1 overflow-hidden">
+                        {treeItems.length > 0 ? (
+                            <List
+                                ref={listRef}
+                                height={listHeight}
+                                itemCount={treeItems.length}
+                                itemSize={ROW_HEIGHT}
+                                width="100%"
+                                className="custom-scrollbar"
+                            >
+                                {renderRow}
+                            </List>
+                        ) : (
+                            <div className="p-4 text-center text-secondary text-sm italic">
+                                {searchQuery ? "No matches found" : "No workspaces"}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Drag Overlay */}
+                    <DragOverlay>
+                        {draggedTab && (
+                            <div className="px-6 py-2 bg-surface-highlight shadow-xl rounded flex items-center gap-2 border border-primary">
+                                <span className="opacity-70">
+                                    <TabIcon language={draggedTab.language} isTablet={draggedTab.isTablet} />
+                                </span>
+                                <span className="text-sm font-medium truncate max-w-[200px]">
+                                    {draggedTab.title}
+                                </span>
+                                {draggedTab.isPinned && <Pin size={12} className="opacity-50" />}
+                                {draggedTab.isRich && <Type size={12} className="opacity-50" />}
+                            </div>
+                        )}
+                    </DragOverlay>
+                </DndContext>
 
                 {workspaceContextMenu && (
                     <WorkspaceContextMenu
