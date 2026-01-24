@@ -16,6 +16,7 @@ import { WorkspaceActions } from './workspace.actions';
 import { SmartViewCalloutActions } from './smartViewCallout.actions';
 import { ShareActions } from './share.actions';
 import { PipelineActions } from './pipeline.actions';
+import { SidebarActions } from './sidebar.actions';
 
 /**
  * E2E World Class - Lightweight Orchestrator & Dependency Injection Container
@@ -47,6 +48,7 @@ export class E2EWorld extends World {
   smartViewCallout!: SmartViewCalloutActions;
   share!: ShareActions;
   pipeline!: PipelineActions;
+  sidebar!: SidebarActions;
 
   constructor(options: IWorldOptions) {
     super(options);
@@ -75,6 +77,7 @@ export class E2EWorld extends World {
     this.smartViewCallout = new SmartViewCalloutActions(this.page);
     this.share = new ShareActions(this.page, this.context);
     this.pipeline = new PipelineActions(this.page);
+    this.sidebar = new SidebarActions(this.page);
   }
 }
 

@@ -100,6 +100,8 @@ export const SidebarDraggableTab: React.FC<SidebarDraggableTabProps> = ({
       )}
       onClick={onClick}
       onContextMenu={onContextMenu}
+      data-testid={`sidebar-tab-${id}`}
+      aria-selected={isActive}
     >
       <span className="mr-2 opacity-70 pointer-events-none">
         <TabIcon language={language} isTablet={isTablet} />
