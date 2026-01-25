@@ -22,7 +22,7 @@ export const IconRail: React.FC<IconRailProps> = ({
   onExpandSidebar,
 }) => {
   return (
-    <div className="hidden md:flex flex-col w-[42px] h-full bg-surface-secondary border-r border-base">
+    <div className="hidden md:flex flex-col w-[42px] h-full bg-surface-secondary border-r border-base" data-testid="icon-rail">
       {/* Expand button at top - h-8 to align border with bottom of tab bar */}
       <div className="flex items-center justify-center h-8 border-b border-base">
         <button
@@ -30,6 +30,7 @@ export const IconRail: React.FC<IconRailProps> = ({
           className="p-1.5 hover:bg-element-hover rounded text-secondary hover:text-main transition-colors"
           title="Expand sidebar (Cmd+B)"
           aria-label="Expand sidebar"
+          data-testid="icon-rail-expand"
         >
           <ChevronRight size={14} />
         </button>
@@ -60,6 +61,7 @@ export const IconRail: React.FC<IconRailProps> = ({
                 }}
                 title={`${workspace.name} (${tabCount} tabs)`}
                 aria-label={`Switch to ${workspace.name}`}
+                data-testid={`icon-rail-workspace-${workspace.id}`}
               >
                 {initial}
               </button>
@@ -74,6 +76,7 @@ export const IconRail: React.FC<IconRailProps> = ({
           className="p-1.5 hover:bg-element-hover rounded text-secondary hover:text-main transition-colors"
           title="New workspace"
           aria-label="Create new workspace"
+          data-testid="icon-rail-create"
         >
           <Plus size={14} />
         </button>

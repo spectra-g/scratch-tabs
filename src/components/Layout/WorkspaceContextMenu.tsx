@@ -131,6 +131,7 @@ export const WorkspaceContextMenu: React.FC<WorkspaceContextMenuProps> = ({
             {!confirmDelete && !renameDialogOpen && createPortal(
                 <div
                     ref={menuRef}
+                    data-testid="workspace-context-menu"
                     className="fixed bg-surface border border-base rounded shadow-lg z-[100] py-1"
                     style={{
                         top: `${position.y}px`,
@@ -170,6 +171,7 @@ export const WorkspaceContextMenu: React.FC<WorkspaceContextMenuProps> = ({
                         <h3 className="text-lg font-semibold text-main mb-4">Rename Workspace</h3>
                         <input
                             type="text"
+                            data-testid="workspace-rename-input"
                             value={newName}
                             onChange={(e) => setNewName(e.target.value)}
                             onKeyDown={(e) => {

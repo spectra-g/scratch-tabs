@@ -382,6 +382,7 @@ export const SortableTab: React.FC<SortableTabProps> = ({
           <input
             ref={inputRef}
             type="text"
+            data-testid="tab-rename-input"
             value={editingTitle}
             onChange={(e) => onEditChange(e.target.value)}
             onBlur={onEditSubmit}

@@ -9,7 +9,8 @@ export class ContextMenuActions {
 
   async selectFromContextMenu(menuItem: string) {
     // Wait for context menu to appear - look for the custom context menu div
-    await this.page.waitForSelector('.bg-surface.border.border-base.rounded.shadow-lg.z-50.py-1', { state: 'visible' });
+    // Use partial class match to support both z-50 (Tab) and z-[100] (Workspace) menus
+    await this.page.waitForSelector('.bg-surface.border.border-base.rounded.shadow-lg.py-1, [data-testid$="context-menu"]', { state: 'visible' });
 
     // Use exact text match to avoid confusion between "Download" and "Download all tabs"
     const menuItemElement = this.page.getByRole('button', { name: menuItem, exact: true });

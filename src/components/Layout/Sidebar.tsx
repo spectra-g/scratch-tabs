@@ -659,7 +659,7 @@ export const Sidebar: React.FC = () => {
                 />
             )}
 
-            <div className={containerClasses} style={sidebarStyle} ref={sidebarRef}>
+            <div className={containerClasses} style={sidebarStyle} ref={sidebarRef} data-testid="sidebar">
                 <DndContext
                     sensors={sensors}
                     collisionDetection={pointerWithin}
@@ -674,6 +674,7 @@ export const Sidebar: React.FC = () => {
                                     onClick={() => createWorkspace("New Workspace")}
                                     className="p-1 hover:bg-element-hover rounded text-secondary hover:text-main"
                                     title="New Workspace"
+                                    data-testid="sidebar-create-workspace"
                                 >
                                     <Plus size={16} />
                                 </button>
@@ -705,6 +706,7 @@ export const Sidebar: React.FC = () => {
                                 className="w-full bg-canvas border border-base rounded py-1 pl-8 pr-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
                                 value={searchInputValue}
                                 onChange={(e) => setSearchInputValue(e.target.value)}
+                                data-testid="sidebar-search"
                             />
                         </div>
                     </div>

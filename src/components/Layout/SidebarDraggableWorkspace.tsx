@@ -52,8 +52,11 @@ export const SidebarDraggableWorkspace: React.FC<SidebarDraggableWorkspaceProps>
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       onContextMenu={onContextMenu}
+      data-testid={`sidebar-workspace-${id}`}
+      aria-expanded={isExpanded}
+      aria-selected={isActive}
     >
-      <span className="mr-1 pointer-events-none">
+      <span className="mr-1 pointer-events-none" data-testid={`sidebar-workspace-${id}-expand`}>
         {isVisuallyExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
       </span>
       <span className="mr-2 pointer-events-none">
@@ -67,7 +70,10 @@ export const SidebarDraggableWorkspace: React.FC<SidebarDraggableWorkspaceProps>
         {name}
         {isSwitching && <span className="ml-2 text-xs opacity-70">Switching...</span>}
       </span>
-      <span className="text-[10px] opacity-50 px-1.5 py-0.5 rounded-full bg-surface-secondary pointer-events-none">
+      <span
+        className="text-[10px] opacity-50 px-1.5 py-0.5 rounded-full bg-surface-secondary pointer-events-none"
+        data-testid={`sidebar-workspace-${id}-badge`}
+      >
         {tabCount}
       </span>
     </div>

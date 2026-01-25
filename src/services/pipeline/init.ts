@@ -17,6 +17,10 @@ registerCoreCategories();
 
 // 2. Register core text operations (formerly BatchTools)
 import "./operations/coreOperations";
+import "./operations/encoding";
+import "./operations/logic";
+import "./operations/extraction";
+import "./operations/compression";
 
 // Auto-discovery for formats/tablets is now handled in `./operations/discovery.ts`
 // which should be imported in the main application entry point (main.tsx)
