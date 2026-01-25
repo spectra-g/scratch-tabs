@@ -11,7 +11,7 @@ import { Page, expect } from '@playwright/test';
  * - Visual state verification
  */
 export class SidebarActions {
-  constructor(private page: Page) {}
+  constructor(private page: Page) { }
 
   /**
    * Toggle sidebar visibility using keyboard shortcut (Cmd+B or Ctrl+B)
@@ -336,5 +336,15 @@ export class SidebarActions {
    */
   async expectArrowInExpandedState(workspaceName: string) {
     await this.expectWorkspaceExpanded(workspaceName);
+  }
+
+  /**
+   * Type text into the workspace rename input
+   * @param text - The new name for the workspace
+   */
+  async typeInWorkspaceRenameInput(text: string) {
+    const input = this.page.getByTestId('workspace-rename-input');
+    await expect(input).toBeVisible();
+    await input.fill(text);
   }
 }

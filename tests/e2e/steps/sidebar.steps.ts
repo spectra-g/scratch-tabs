@@ -1,7 +1,7 @@
 const { When, Then } = require('@cucumber/cucumber');
 const { expect } = require('@playwright/test');
 
-export {}; // Make this file a module to avoid global scope conflicts
+export { }; // Make this file a module to avoid global scope conflicts
 
 // ============================================================================
 // WHEN Steps - Actions
@@ -25,6 +25,14 @@ When('I click the create workspace button in sidebar', async function () {
 
 When('I click on workspace icon for {string} in icon rail', async function (workspaceName: string) {
   await this.sidebar.clickWorkspaceIconInRail(workspaceName);
+});
+
+When('I right-click on workspace {string} in the sidebar', async function (workspaceName: string) {
+  await this.sidebar.rightClickWorkspace(workspaceName);
+});
+
+When('I type {string} in the workspace rename input', async function (text: string) {
+  await this.sidebar.typeInWorkspaceRenameInput(text);
 });
 
 // ============================================================================

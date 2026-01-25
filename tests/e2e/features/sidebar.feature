@@ -37,24 +37,29 @@ Feature: Workspace Sidebar
     When I click the icon for "New tab"
     Then the sidebar should be visible
     And workspace "Default Workspace" should be marked as active in sidebar
-    When I click the workspace switcher
-    And I click the "New workspace" button
-    And I type "Project Alpha" into the workspace name input
-    And I click the "Create" button
+    When I click the create workspace button in sidebar
+    Then the "New Workspace" workspace should be visible
+    When I right-click on workspace "New Workspace" in the sidebar
+    And I select "Rename Workspace" from the context menu
+    And I type "Project Alpha" in the workspace rename input
+    And I press Enter to confirm rename
     Then the "Project Alpha" workspace should be visible
     And workspace "Project Alpha" should be marked as active in sidebar
     And workspace "Default Workspace" should not be marked as active in sidebar
 
+      @wbug
     Scenario: Click tab in inactive workspace switches workspace
     When I click the icon for "New tab"
     And I double-click on the active tab
     And I type "Default Tab" in the rename input
     And I press Enter to confirm rename
     Then the "Default Tab" tab should exist on the page
-    When I click the workspace switcher
-    And I click the "New workspace" button
-    And I type "Project Alpha" into the workspace name input
-    And I click the "Create" button
+    When I click the create workspace button in sidebar
+    Then the "New Workspace" workspace should be visible
+    When I right-click on workspace "New Workspace" in the sidebar
+    And I select "Rename Workspace" from the context menu
+    And I type "Project Alpha" in the workspace rename input
+    And I press Enter to confirm rename
     Then the "Project Alpha" workspace should be visible
     When I click the icon for "New tab"
     And I double-click on the active tab
@@ -83,10 +88,12 @@ Feature: Workspace Sidebar
 
   Scenario: Click workspace icon in icon rail switches workspace
     When I click the icon for "New tab"
-    And I click the workspace switcher
-    And I click the "New workspace" button
-    And I type "Project Alpha" into the workspace name input
-    And I click the "Create" button
+    And I click the create workspace button in sidebar
+    Then the "New Workspace" workspace should be visible
+    When I right-click on workspace "New Workspace" in the sidebar
+    And I select "Rename Workspace" from the context menu
+    And I type "Project Alpha" in the workspace rename input
+    And I press Enter to confirm rename
     Then the "Project Alpha" workspace should be visible
     When I press "Cmd+B" to toggle the sidebar
     Then the icon rail should be visible
