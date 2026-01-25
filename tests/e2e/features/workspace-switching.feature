@@ -31,6 +31,7 @@ Feature: Workspace Switching
       Different data that should only exist in this workspace
       """
     And I click the "Scratch 2" tab
+    And I wait for the state to be saved
     And I double-click on the active tab
     And I type "New Workspace Tab" in the rename input
     And I press Enter to confirm rename

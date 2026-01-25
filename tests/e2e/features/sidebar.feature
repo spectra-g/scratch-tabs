@@ -62,6 +62,7 @@ Feature: Workspace Sidebar
     And I press Enter to confirm rename
     Then the "Project Alpha" workspace should be visible
     When I click the icon for "New tab"
+    And I wait for the state to be saved
     And I double-click on the active tab
     And I type "Alpha Tab" in the rename input
     And I press Enter to confirm rename

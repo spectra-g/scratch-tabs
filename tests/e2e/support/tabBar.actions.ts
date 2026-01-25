@@ -91,15 +91,15 @@ export class TabBarActions {
   }
 
   async expectTabRenameInputToAppear() {
-    // Wait for the rename input to appear - it should be an input field that replaces the tab title
-    const renameInput = this.page.locator('input[type="text"]').last();
+    // Wait for the rename input to appear - use specific test ID
+    const renameInput = this.page.getByTestId('tab-rename-input');
     await expect(renameInput).toBeVisible();
     await expect(renameInput).toBeFocused();
   }
 
   async typeInRenameInput(text: string) {
     // Clear existing content and type new text
-    const renameInput = this.page.locator('input[type="text"]').last();
+    const renameInput = this.page.getByTestId('tab-rename-input');
     await expect(renameInput).toBeVisible();
     await renameInput.fill(text);
   }
@@ -107,6 +107,7 @@ export class TabBarActions {
   async pressEnterToConfirmRename() {
     // Press Enter to confirm the rename
     const renameInput = this.page.locator('input[type="text"]').last();
+//    const renameInput = this.page.getByTestId('tab-rename-input');
     await expect(renameInput).toBeVisible();
     await renameInput.press('Enter');
   }
@@ -181,6 +182,6 @@ export class TabBarActions {
     // Find the currently active tab (has aria-selected="true")
     const activeTab = this.page.locator('[data-testid^="tab-"][aria-selected="true"]');
     await expect(activeTab).toBeVisible();
-    await activeTab.dblclick();
+    await activeTab.dblclick({ force: true });
   }
 } 
