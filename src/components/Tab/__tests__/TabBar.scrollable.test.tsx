@@ -34,9 +34,6 @@ jest.mock('../TabTooltip', () => ({
 jest.mock('../../ToolSelector', () => ({
   ToolSelectorModal: () => <div>ToolSelectorModal</div>,
 }));
-jest.mock('../../Workspace/WorkspaceSwitcher', () => ({
-  WorkspaceSwitcher: () => <div>WorkspaceSwitcher</div>,
-}));
 jest.mock('../HamburgerMenu', () => ({
   HamburgerMenu: () => <div>HamburgerMenu</div>,
 }));

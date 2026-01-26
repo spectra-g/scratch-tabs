@@ -19,6 +19,7 @@ import { useTabsStore } from "../../stores/tabsStore";
 import { useRootStore } from "../../stores/rootStore";
 import { useSidebarStore } from "../../stores/sidebarStore";
 import { useSplitViewStore } from "../../stores/splitViewStore";
+import { useModalStore } from "../../stores/modalStore";
 import { SidebarTabInfo } from "../../types";
 import {
     Folder,
@@ -31,8 +32,12 @@ import {
     Pin,
     Calculator,
     Type,
-    X
+    X,
+    Upload,
+    Download
 } from "../Icons";
+import { ExportWorkspacesModal } from "../Workspace/ExportWorkspacesModal";
+import { ImportWorkspacesModal } from "../Workspace/ImportWorkspacesModal";
 import { clsx } from "clsx";
 import { WorkspaceContextMenu } from "./WorkspaceContextMenu";
 import { SidebarTabContextMenu } from "./SidebarTabContextMenu";
@@ -84,6 +89,9 @@ export const Sidebar: React.FC = () => {
         workspaceId: string;
         position: { x: number; y: number };
     } | null>(null);
+
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+    const { isImportModalActive, openImportModal, closeImportModal } = useModalStore();
 
     // Drag and drop state
     const [activeId, setActiveId] = useState<string | null>(null);
@@ -737,7 +745,7 @@ export const Sidebar: React.FC = () => {
                         </div>
                     </div>
 
-                    <div ref={listContainerRef} className="flex-1 overflow-hidden">
+                    <div ref={listContainerRef} className="flex-1 overflow-hidden font-[system-ui]">
                         {treeItems.length > 0 ? (
                             <List
                                 ref={listRef}
@@ -754,6 +762,27 @@ export const Sidebar: React.FC = () => {
                                 {searchQuery ? "No matches found" : "No workspaces"}
                             </div>
                         )}
+                    </div>
+
+                    {/* Sidebar Footer with Import/Export - h-[29px] to align with status bar */}
+                    <div className="px-2 h-[29px] border-t border-base flex items-center justify-between gap-1 flex-shrink-0">
+                        <button
+                            onClick={() => openImportModal()}
+                            className="flex-1 flex items-center justify-center gap-1.5 px-2 h-full text-[11px] text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
+                            title="Import Workspaces"
+                        >
+                            <Upload size={12} />
+                            <span className="truncate">Import</span>
+                        </button>
+                        <div className="w-px h-3 bg-base self-center" />
+                        <button
+                            onClick={() => setIsExportModalOpen(true)}
+                            className="flex-1 flex items-center justify-center gap-1.5 px-2 h-full text-[11px] text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
+                            title="Export Workspaces"
+                        >
+                            <Download size={12} />
+                            <span className="truncate">Export</span>
+                        </button>
                     </div>
 
                     {/* Drag Overlay */}
@@ -807,6 +836,16 @@ export const Sidebar: React.FC = () => {
                         onMouseDown={handleMouseDown}
                     />
                 )}
+
+                {/* Modals */}
+                <ExportWorkspacesModal
+                    isOpen={isExportModalOpen}
+                    onClose={() => setIsExportModalOpen(false)}
+                />
+                <ImportWorkspacesModal
+                    isOpen={isImportModalActive}
+                    onClose={closeImportModal}
+                />
             </div>
         </>
     );

@@ -347,4 +347,13 @@ export class SidebarActions {
     await expect(input).toBeVisible();
     await input.fill(text);
   }
+
+  /**
+   * Wait for workspace to be visible
+   * @param workspaceName - The new name for the workspace
+   */
+  async waitForWorkspaceToBeVisible(workspaceName: string) {
+    const workspace = this.page.getByRole('button', { name: workspaceName });
+    await expect(workspace).toBeVisible();
+  }
 }

@@ -12,7 +12,6 @@ import { JsonSmartViewActions } from './jsonSmartView.actions';
 import { SvgSmartViewActions } from './svgSmartView.actions';
 import { DownloadActions } from './download.actions';
 import { ConfirmationDialogActions } from './confirmationDialog.actions';
-import { WorkspaceActions } from './workspace.actions';
 import { SmartViewCalloutActions } from './smartViewCallout.actions';
 import { ShareActions } from './share.actions';
 import { PipelineActions } from './pipeline.actions';
@@ -44,7 +43,6 @@ export class E2EWorld extends World {
   svgSmartView!: SvgSmartViewActions;
   download!: DownloadActions;
   confirmationDialog!: ConfirmationDialogActions;
-  workspace!: WorkspaceActions;
   smartViewCallout!: SmartViewCalloutActions;
   share!: ShareActions;
   pipeline!: PipelineActions;
@@ -73,7 +71,6 @@ export class E2EWorld extends World {
     this.svgSmartView = new SvgSmartViewActions(this.page);
     this.download = new DownloadActions(this.page);
     this.confirmationDialog = new ConfirmationDialogActions(this.page);
-    this.workspace = new WorkspaceActions(this.page);
     this.smartViewCallout = new SmartViewCalloutActions(this.page);
     this.share = new ShareActions(this.page, this.context);
     this.pipeline = new PipelineActions(this.page);

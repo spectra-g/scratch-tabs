@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
 import { StorageProviderFactory } from "../../db";
 import { ImportExportService } from "../../features/import-export/ImportExportService";
@@ -67,9 +68,9 @@ export const ExportWorkspacesModal: React.FC<ExportWorkspacesModalProps> = ({
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[100] p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
@@ -173,6 +174,7 @@ export const ExportWorkspacesModal: React.FC<ExportWorkspacesModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

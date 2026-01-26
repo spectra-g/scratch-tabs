@@ -88,3 +88,7 @@ Then('I should see workspace icons in the icon rail', async function () {
   expect(count).toBeGreaterThan(0);
   await expect(icons.first()).toBeVisible();
 });
+
+Then('the {string} workspace should be visible', async function (workspaceName: string) {
+  await this.sidebar.waitForWorkspaceToBeVisible(workspaceName);
+});
