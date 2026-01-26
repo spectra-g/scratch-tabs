@@ -16,6 +16,7 @@ import { broadcastManager } from "./broadcastStore";
 import { modelManager } from "../services/modelManager";
 import { useQueryPanelStore } from "../formats/json/stores/useQueryPanelStore";
 import { contentProcessingService } from "../services/contentProcessing";
+import { SidebarTabInfo } from "../types";
 
 // The RootStore now primarily holds ACTIONS that coordinate other stores.
 // It does NOT hold mirrored state like `tabs` or `splitView`.
@@ -81,7 +82,7 @@ interface RootStore {
  */
 const _extractImageFromClipboard = async (): Promise<string | null> => {
   const clipboardItems = await navigator.clipboard.read();
-  
+
   for (const clipboardItem of clipboardItems) {
     for (const type of clipboardItem.types) {
       if (type.startsWith('image/')) {
@@ -94,34 +95,79 @@ const _extractImageFromClipboard = async (): Promise<string | null> => {
       }
     }
   }
-  
+
   return null;
+};
+
+/**
+ * Helper to broadcast tab metadata updates for inactive workspaces
+ * This ensures all browser windows stay in sync when tabs are moved/reordered
+ */
+const _broadcastMetadataUpdate = async (workspaceId: string): Promise<void> => {
+  const storage = StorageProviderFactory.getProvider();
+  try {
+    const tabs = await storage.getTabsByWorkspace(workspaceId);
+    const splitView = await storage.getSplitViewByWorkspace(workspaceId);
+
+    // Create tab map for quick lookup
+    const tabMap = new Map<string, Tab>(tabs.map(t => [t.id, t]));
+
+    // Order tabs according to splitView order (leftTabs then rightTabs)
+    let orderedTabs: Tab[] = [];
+    if (splitView) {
+      const allTabIds = [...(splitView.leftTabs || []), ...(splitView.rightTabs || [])];
+      orderedTabs = allTabIds
+        .map(id => tabMap.get(id))
+        .filter((t): t is Tab => t !== undefined);
+
+      // Add any tabs not in splitView
+      const remainingTabs = tabs.filter(t => !allTabIds.includes(t.id));
+      orderedTabs = [...orderedTabs, ...remainingTabs];
+    } else {
+      orderedTabs = tabs;
+    }
+
+    const metadata: SidebarTabInfo[] = orderedTabs.map((t) => ({
+      id: t.id,
+      title: t.title,
+      language: t.language,
+      isTablet: t.isTablet,
+      isRich: t.isRich,
+      isPinned: t.isPinned,
+      lastModified: t.lastModified,
+      workspaceId: t.workspaceId,
+    }));
+
+    broadcastManager.broadcastWorkspaceTabsMetadata(workspaceId, metadata);
+  } catch (error) {
+    console.error(`Failed to broadcast metadata for workspace ${workspaceId}:`, error);
+  }
 };
 
 /**
  * Creates a new rich text tab for image pasting
  */
 const _createImageTab = async (
-  imageDataUrl: string, 
-  isRightSide: boolean, 
+  imageDataUrl: string,
+  isRightSide: boolean,
   storeActions: RootStore,
   createFinalTabObjectFn: (partialInputTab: Partial<Tab>, workspaceId: string, options: { defaultTitle: string; initialContent?: string }) => Tab
 ): Promise<void> => {
   const { canAddNewTab, addTab } = storeActions;
   if (!canAddNewTab(isRightSide)) return;
-  
+
   // Store image data for the rich text editor
   const { useClipboardStore } = await import('./clipboardStore');
   useClipboardStore.getState().setPendingImageData(imageDataUrl);
-  
+
   // Generate proper "Scratch n" title
   const ensuredWorkspaceId = await useWorkspaceStore.getState().ensureWorkspace();
   if (!ensuredWorkspaceId) return;
-  
+
   const currentTabs = useTabsStore.getState().tabs.filter((t) => t.workspaceId === ensuredWorkspaceId);
   const nonWelcomeTabs = currentTabs.filter((tab) => tab.title !== "Welcome");
   const defaultTitle = `${NEW_TAB_PREFIX} ${nonWelcomeTabs.length + 1}`;
-  
+
   const newTabObject = createFinalTabObjectFn({
     isRich: true,
     content: '', // Rich text tabs use richContent, not content
@@ -129,7 +175,7 @@ const _createImageTab = async (
   }, ensuredWorkspaceId, {
     defaultTitle,
   });
-  
+
   addTab(newTabObject, isRightSide);
 };
 
@@ -276,7 +322,7 @@ export const useRootStore = create<RootStore>((set, get) => {
           await _createImageTab(imageDataUrl, isRightSide, get(), _createFinalTabObject);
           return;
         }
-        
+
         // No images found, fall back to text content
         const content = await navigator.clipboard.readText();
         get().handleNewTab(isRightSide, content);
@@ -416,10 +462,10 @@ export const useRootStore = create<RootStore>((set, get) => {
       const tabsToClose = useSplitViewStore.getState().getTabsToLeft(tabId, isRightSide);
       const { tabs } = useTabsStore.getState();
       const isPinnedTab = (id: string) => tabs.find(t => t.id === id)?.isPinned || false;
-      
+
       // Update UI respecting pinned tabs
       useSplitViewStore.getState().closeTabsToLeftRespectingPins(tabId, isRightSide, isPinnedTab);
-      
+
       // Remove only unpinned tabs from data store
       tabsToClose.filter(id => !isPinnedTab(id)).forEach(id => get().removeTab(id));
     },
@@ -427,10 +473,10 @@ export const useRootStore = create<RootStore>((set, get) => {
       const tabsToClose = useSplitViewStore.getState().getTabsToRight(tabId, isRightSide);
       const { tabs } = useTabsStore.getState();
       const isPinnedTab = (id: string) => tabs.find(t => t.id === id)?.isPinned || false;
-      
+
       // Update UI respecting pinned tabs
       useSplitViewStore.getState().closeTabsToRightRespectingPins(tabId, isRightSide, isPinnedTab);
-      
+
       // Remove only unpinned tabs from data store
       tabsToClose.filter(id => !isPinnedTab(id)).forEach(id => get().removeTab(id));
     },
@@ -438,10 +484,10 @@ export const useRootStore = create<RootStore>((set, get) => {
       const tabsToClose = useSplitViewStore.getState().getAllExcept(tabId, isRightSide);
       const { tabs } = useTabsStore.getState();
       const isPinnedTab = (id: string) => tabs.find(t => t.id === id)?.isPinned || false;
-      
+
       // Update UI respecting pinned tabs
       useSplitViewStore.getState().closeAllExceptRespectingPins(tabId, isRightSide, isPinnedTab);
-      
+
       // Remove only unpinned tabs from data store
       tabsToClose.filter(id => !isPinnedTab(id)).forEach(id => get().removeTab(id));
     },
@@ -633,6 +679,8 @@ export const useRootStore = create<RootStore>((set, get) => {
           await storage.saveTabNow(updatedTab);
           // Refresh sidebar metadata for target workspace
           await useSidebarStore.getState().refreshWorkspaceMetadata(targetWorkspaceId);
+          // Broadcast metadata update for cross-window sync
+          await _broadcastMetadataUpdate(targetWorkspaceId);
         }
 
         // Step 4: Remove from source workspace
@@ -656,6 +704,8 @@ export const useRootStore = create<RootStore>((set, get) => {
           await storage.deleteTab(tabId);
           // Refresh sidebar metadata for source workspace
           await useSidebarStore.getState().refreshWorkspaceMetadata(sourceWorkspaceId);
+          // Broadcast metadata update for cross-window sync
+          await _broadcastMetadataUpdate(sourceWorkspaceId);
         }
       } catch (error) {
         console.error('Failed to move tab between workspaces:', error);
@@ -699,6 +749,8 @@ export const useRootStore = create<RootStore>((set, get) => {
 
           // Refresh sidebar metadata
           await useSidebarStore.getState().refreshWorkspaceMetadata(workspaceId);
+          // Broadcast metadata update for cross-window sync
+          await _broadcastMetadataUpdate(workspaceId);
         }
       } catch (error) {
         console.error('Failed to reorder tabs in workspace:', error);

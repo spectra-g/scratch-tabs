@@ -142,4 +142,56 @@ describe("SidebarStore", () => {
             expect(useSidebarStore.getState().workspaceTabsMetadata.has(wsId)).toBe(false);
         });
     });
+
+    describe("Handle Metadata Update (Broadcast Sync)", () => {
+        it("should update metadata cache when receiving broadcast update", () => {
+            const wsId = "ws-broadcast";
+            const metadata = [
+                { id: "t1", title: "Tab 1", language: "typescript", lastModified: 100, workspaceId: wsId },
+                { id: "t2", title: "Tab 2", language: "javascript", lastModified: 200, workspaceId: wsId }
+            ];
+
+            useSidebarStore.getState().handleMetadataUpdate(wsId, metadata);
+
+            const cachedMetadata = useSidebarStore.getState().workspaceTabsMetadata.get(wsId);
+            expect(cachedMetadata).toEqual(metadata);
+        });
+
+        it("should overwrite existing metadata for a workspace", () => {
+            const wsId = "ws-existing";
+            const oldMetadata = [
+                { id: "old1", title: "Old Tab", language: "python", lastModified: 50, workspaceId: wsId }
+            ];
+            const newMetadata = [
+                { id: "new1", title: "New Tab", language: "rust", lastModified: 150, workspaceId: wsId },
+                { id: "new2", title: "Another New", language: "go", lastModified: 160, workspaceId: wsId }
+            ];
+
+            // Set initial metadata
+            useSidebarStore.getState().handleMetadataUpdate(wsId, oldMetadata);
+            expect(useSidebarStore.getState().workspaceTabsMetadata.get(wsId)).toEqual(oldMetadata);
+
+            // Update with new metadata (simulating broadcast)
+            useSidebarStore.getState().handleMetadataUpdate(wsId, newMetadata);
+            expect(useSidebarStore.getState().workspaceTabsMetadata.get(wsId)).toEqual(newMetadata);
+            expect(useSidebarStore.getState().workspaceTabsMetadata.get(wsId)).toHaveLength(2);
+        });
+
+        it("should not affect metadata for other workspaces", () => {
+            const ws1 = "ws-1";
+            const ws2 = "ws-2";
+            const metadata1 = [
+                { id: "t1", title: "Tab 1", language: "typescript", lastModified: 100, workspaceId: ws1 }
+            ];
+            const metadata2 = [
+                { id: "t2", title: "Tab 2", language: "javascript", lastModified: 200, workspaceId: ws2 }
+            ];
+
+            useSidebarStore.getState().handleMetadataUpdate(ws1, metadata1);
+            useSidebarStore.getState().handleMetadataUpdate(ws2, metadata2);
+
+            expect(useSidebarStore.getState().workspaceTabsMetadata.get(ws1)).toEqual(metadata1);
+            expect(useSidebarStore.getState().workspaceTabsMetadata.get(ws2)).toEqual(metadata2);
+        });
+    });
 });

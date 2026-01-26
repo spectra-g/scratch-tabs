@@ -24,6 +24,7 @@ interface SidebarState {
     collapseWorkspace: (workspaceId: string) => void;
     setSearchQuery: (query: string) => void;
     refreshWorkspaceMetadata: (workspaceId: string) => Promise<void>;
+    handleMetadataUpdate: (workspaceId: string, metadata: SidebarTabInfo[]) => void;
 }
 
 export const useSidebarStore = create<SidebarState>((set, get) => {
@@ -69,7 +70,7 @@ export const useSidebarStore = create<SidebarState>((set, get) => {
             // We fetch metadata if it's NOT the active workspace (active is handled by main store)
             // AND we don't have it cached yet
             if (workspaceId !== activeWorkspaceId && !workspaceTabsMetadata.has(workspaceId)) {
-                 await get().refreshWorkspaceMetadata(workspaceId);
+                await get().refreshWorkspaceMetadata(workspaceId);
             }
         },
 
@@ -145,6 +146,16 @@ export const useSidebarStore = create<SidebarState>((set, get) => {
                     return { loadingWorkspaceIds: nextLoading };
                 });
             }
+        },
+
+        handleMetadataUpdate: (workspaceId: string, metadata: SidebarTabInfo[]) => {
+            // Update the metadata cache for the workspace
+            // This is called from broadcast events to keep all windows in sync
+            set((state) => {
+                const nextMap = new Map(state.workspaceTabsMetadata);
+                nextMap.set(workspaceId, metadata);
+                return { workspaceTabsMetadata: nextMap };
+            });
         },
     };
 });

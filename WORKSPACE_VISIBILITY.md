@@ -655,8 +655,8 @@ No tabs matching "query"
 ### Phase 2: Core Features (PARTIAL - Context Menus Complete)
 - [x] Add workspace context menu (create, rename, delete)
 - [x] Add tab context menu (rename, delete, pin, duplicate)
-- [ ] Implement drag-drop reorder within workspace
-- [ ] Implement drag-drop between workspaces (Copy-then-Delete pattern)
+- [x] Implement drag-drop reorder within workspace
+- [x] Implement drag-drop between workspaces (Copy-then-Delete pattern)
 - [x] Add visual indicators (language, pinned, rich, active) - Already present
 - [x] Implement "Reveal in Sidebar" (auto-scroll to active tab)
 
