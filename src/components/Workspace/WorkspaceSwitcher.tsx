@@ -10,12 +10,10 @@ import {
   Plus,
   Upload,
   Download,
-  ListTodo,
 } from "lucide-react";
 import { StorageProviderFactory } from "../../db";
 import { ExportWorkspacesModal } from "./ExportWorkspacesModal";
 import { ImportWorkspacesModal } from "./ImportWorkspacesModal";
-import { TabManagementModal } from "../Tab/Management";
 
 export const WorkspaceSwitcher: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -33,9 +31,6 @@ export const WorkspaceSwitcher: React.FC = () => {
 
   // Use modal store instead of local state
   const {
-    isTabManagementModalOpen,
-    openTabManagementModal,
-    closeTabManagementModal,
     isImportModalActive,
     openImportModal,
     closeImportModal,
@@ -302,16 +297,6 @@ export const WorkspaceSwitcher: React.FC = () => {
             <div className="px-1 py-1 border-t border-base">
               <button
                 onClick={() => {
-                  openTabManagementModal();
-                  setIsOpen(false);
-                }}
-                className="w-full text-left px-3 py-2 text-sm text-main hover:bg-element-hover flex items-center space-x-2 transition-colors rounded-md"
-              >
-                <ListTodo size={14} />
-                <span>Manage Tabs...</span>
-              </button>
-              <button
-                onClick={() => {
                   setIsExportModalOpen(true);
                   setIsOpen(false);
                 }}
@@ -379,10 +364,6 @@ export const WorkspaceSwitcher: React.FC = () => {
       <ImportWorkspacesModal
         isOpen={isImportModalActive}
         onClose={closeImportModal}
-      />
-      <TabManagementModal
-        isOpen={isTabManagementModalOpen}
-        onClose={() => closeTabManagementModal()}
       />
     </div>
   );
