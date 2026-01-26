@@ -30,78 +30,168 @@ export const OGWelcomeScreen: React.FC = () => {
           </h1>
         </div>
 
-        {/* Version */}
-        <p
-          className="text-sm mb-12"
-          style={{
-            color: '#9ca3af',
-            fontFamily: '"Fira Code", "JetBrains Mono", monospace'
-          }}
-        >
-          // v1.14.0
-        </p>
-
         {/* Main Headline - matching landing page */}
         <h2
-          className="text-3xl font-normal text-center mb-4"
+          className="text-4xl font-bold text-center mb-6"
           style={{
             color: '#FFFFFF',
-            maxWidth: '800px',
-            lineHeight: '1.5'
+            maxWidth: '900px',
+            lineHeight: '1.4'
           }}
         >
-          Finally, a home for your <span style={{ color: '#10b981' }}>temporary data.</span>
+          The Missing Half of Your <span style={{ color: '#10b981' }}>Dev Environment.</span>
         </h2>
 
-        {/* Subheadline */}
-        <p
-          className="text-xl text-center mb-12"
-          style={{
-            color: '#9ca3af',
-            maxWidth: '700px',
-            lineHeight: '1.6'
-          }}
-        >
-          Private workspace for temporary data. No accounts, 100% offline.
-        </p>
-
-        {/* Terminal-style feature list */}
+        {/* Code Diff Visual */}
         <div
-          className="w-full max-w-2xl p-6 mb-8"
+          className="w-full max-w-3xl mb-6 p-6"
           style={{
             backgroundColor: '#0a0a0a',
             border: '1px solid #374151',
-            borderRadius: '2px'
+            fontFamily: '"Fira Code", "JetBrains Mono", monospace',
+            fontSize: '13px'
           }}
         >
-          <div className="space-y-2" style={{ fontFamily: '"Fira Code", "JetBrains Mono", monospace', fontSize: '14px' }}>
-            <div style={{ color: '#9ca3af' }}>
-              <span style={{ color: '#10b981' }}>+</span> Intelligent format detection & auto-formatting
+          <div className="flex items-start mb-3" style={{ opacity: 0.6 }}>
+            <span style={{ color: '#ef4444', marginRight: '12px' }}>-</span>
+            <div>
+              <span style={{ color: '#a78bfa' }}>const</span> <span style={{ color: '#FFFFFF' }}>workflow</span> = <span style={{ color: '#fbbf24' }}>IDE</span> + <span style={{ color: '#9ca3af' }}>[ Notes, TODOs, JWT.io, JSONLint... ]</span>
             </div>
-            <div style={{ color: '#9ca3af' }}>
-              <span style={{ color: '#10b981' }}>+</span> 40+ formats supported (JSON, CSV, YAML, etc.)
+          </div>
+          <div className="flex items-start">
+            <span style={{ color: '#10b981', marginRight: '12px' }}>+</span>
+            <div>
+              <span style={{ color: '#a78bfa' }}>const</span> <span style={{ color: '#FFFFFF' }}>workflow</span> = <span style={{ color: '#fbbf24' }}>IDE</span> + <span style={{ color: '#10b981', fontWeight: 'bold' }}>SCRATCH_TABS</span>
             </div>
-            <div style={{ color: '#9ca3af' }}>
-              <span style={{ color: '#10b981' }}>+</span> 25+ specialized tablets (JWT, REST, GraphQL)
+          </div>
+        </div>
+
+        {/* Subheadline */}
+        <p
+          className="text-lg text-center mb-10"
+          style={{
+            color: '#9ca3af',
+            maxWidth: '800px',
+            lineHeight: '1.6'
+          }}
+        >
+          Your private, offline-first workbench for the data that doesn't belong in git.
+        </p>
+
+        {/* Feature Grid */}
+        <div
+          className="grid grid-cols-2 gap-4 w-full max-w-3xl mb-8"
+        >
+          <div
+            className="p-4"
+            style={{
+              backgroundColor: '#0a0a0a',
+              border: '1px solid #374151'
+            }}
+          >
+            <div
+              style={{
+                color: '#10b981',
+                fontFamily: '"Fira Code", "JetBrains Mono", monospace',
+                fontSize: '11px',
+                marginBottom: '8px'
+              }}
+            >
+              01 // MONACO_CORE
             </div>
-            <div style={{ color: '#9ca3af' }}>
-              <span style={{ color: '#10b981' }}>+</span> Powered by Monaco Editor
+            <h3 style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 'bold', marginBottom: '6px' }}>
+              VS Code Engine
+            </h3>
+            <p style={{ color: '#9ca3af', fontSize: '12px', lineHeight: '1.5' }}>
+              40+ languages, multi-cursor, regex search
+            </p>
+          </div>
+
+          <div
+            className="p-4"
+            style={{
+              backgroundColor: '#0a0a0a',
+              border: '1px solid #374151'
+            }}
+          >
+            <div
+              style={{
+                color: '#10b981',
+                fontFamily: '"Fira Code", "JetBrains Mono", monospace',
+                fontSize: '11px',
+                marginBottom: '8px'
+              }}
+            >
+              02 // WORKSPACES
             </div>
-            <div style={{ color: '#9ca3af' }}>
-              <span style={{ color: '#10b981' }}>+</span> 100% client-side • No tracking • No accounts
+            <h3 style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 'bold', marginBottom: '6px' }}>
+              Persistent State
+            </h3>
+            <p style={{ color: '#9ca3af', fontSize: '12px', lineHeight: '1.5' }}>
+              Split views, drag-and-drop, auto-save
+            </p>
+          </div>
+
+          <div
+            className="p-4"
+            style={{
+              backgroundColor: '#0a0a0a',
+              border: '1px solid #374151'
+            }}
+          >
+            <div
+              style={{
+                color: '#10b981',
+                fontFamily: '"Fira Code", "JetBrains Mono", monospace',
+                fontSize: '11px',
+                marginBottom: '8px'
+              }}
+            >
+              03 // SMART_VIEWS
             </div>
+            <h3 style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 'bold', marginBottom: '6px' }}>
+              Intelligent UI
+            </h3>
+            <p style={{ color: '#9ca3af', fontSize: '12px', lineHeight: '1.5' }}>
+              JSON → tree, CSV → spreadsheet, live preview
+            </p>
+          </div>
+
+          <div
+            className="p-4"
+            style={{
+              backgroundColor: '#0a0a0a',
+              border: '1px solid #374151'
+            }}
+          >
+            <div
+              style={{
+                color: '#10b981',
+                fontFamily: '"Fira Code", "JetBrains Mono", monospace',
+                fontSize: '11px',
+                marginBottom: '8px'
+              }}
+            >
+              04 // UTILITIES
+            </div>
+            <h3 style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 'bold', marginBottom: '6px' }}>
+              Tablet Arsenal
+            </h3>
+            <p style={{ color: '#9ca3af', fontSize: '12px', lineHeight: '1.5' }}>
+              25+ tools: JWT, REST Client, Regex Tester
+            </p>
           </div>
         </div>
 
         {/* Bottom Tagline */}
         <div
-          className="text-center text-xs tracking-widest"
+          className="text-center text-xs tracking-wider"
           style={{
             color: '#9ca3af',
             fontFamily: '"Fira Code", "JetBrains Mono", monospace'
           }}
         >
-          BUILT_FOR_DEVELOPERS • BY_DEVELOPERS
+          NO_ACCOUNTS • ZERO_DATA_EGRESS • 100%_CLIENT_SIDE
         </div>
       </div>
     </div>
