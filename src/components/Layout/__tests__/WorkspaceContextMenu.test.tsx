@@ -1,13 +1,14 @@
-import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { WorkspaceContextMenu } from "../WorkspaceContextMenu";
 import { useWorkspaceStore } from "../../../stores/workspaceStore";
+import { useRootStore } from "../../../stores/rootStore";
 
 // Mock stores
 jest.mock("../../../stores/workspaceStore");
 jest.mock("../../../hooks/useClickOutside", () => ({
     useClickOutside: jest.fn(),
 }));
+jest.mock("../../../stores/rootStore");
 
 const mockUseWorkspaceStore = useWorkspaceStore as jest.MockedFunction<typeof useWorkspaceStore>;
 
@@ -25,22 +26,35 @@ describe("WorkspaceContextMenu", () => {
         links: [],
     };
 
+    const mockSwitchWorkspace = jest.fn();
+    const mockHandleNewTab = jest.fn();
+
     beforeEach(() => {
         jest.clearAllMocks();
-        mockUseWorkspaceStore.mockReturnValue({
+
+        const mockState = {
             workspaces: [mockWorkspace],
             createWorkspace: mockCreateWorkspace,
             renameWorkspace: mockRenameWorkspace,
             deleteWorkspace: mockDeleteWorkspace,
-            activeWorkspaceId: null,
+            activeWorkspaceId: "ws-1",
             isLoading: false,
             error: null,
             loadWorkspaces: jest.fn(),
-            switchWorkspace: jest.fn(),
+            switchWorkspace: mockSwitchWorkspace,
             updateWorkspaceNotes: jest.fn(),
             addWorkspaceLink: jest.fn(),
             removeWorkspaceLink: jest.fn(),
             getActiveWorkspace: jest.fn(),
+        };
+
+        mockUseWorkspaceStore.mockReturnValue(mockState);
+        // Mock getState for non-hook usage
+        (useWorkspaceStore as any).getState = jest.fn().mockReturnValue(mockState);
+
+        // Mock RootStore
+        (useRootStore as any).getState = jest.fn().mockReturnValue({
+            handleNewTab: mockHandleNewTab,
         });
     });
 
@@ -75,7 +89,7 @@ describe("WorkspaceContextMenu", () => {
     });
 
     describe("New Tab Action", () => {
-        it("should close menu when New Tab is clicked", () => {
+        it("should close menu when New Tab is clicked", async () => {
             render(
                 <WorkspaceContextMenu
                     workspaceId={mockWorkspace.id}
@@ -85,7 +99,11 @@ describe("WorkspaceContextMenu", () => {
             );
 
             fireEvent.click(screen.getByText("New Tab"));
-            expect(mockOnClose).toHaveBeenCalled();
+
+            await waitFor(() => {
+                expect(mockHandleNewTab).toHaveBeenCalledWith(false);
+                expect(mockOnClose).toHaveBeenCalled();
+            });
         });
     });
 

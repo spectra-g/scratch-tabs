@@ -53,6 +53,7 @@ interface WorkspaceStore {
   ) => Promise<void>;
   removeWorkspaceLink: (workspaceId: string, linkId: string) => Promise<void>;
   getActiveWorkspace: () => Workspace | undefined;
+  reorderWorkspaces: (workspaceIds: string[]) => Promise<void>;
 }
 
 export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
@@ -600,6 +601,40 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
     getActiveWorkspace: () => {
       const { workspaces, activeWorkspaceId } = get();
       return workspaces.find((w) => w.id === activeWorkspaceId);
+    },
+
+    reorderWorkspaces: async (workspaceIds: string[]) => {
+      try {
+        const { workspaces } = get();
+
+        // Create a new list of workspaces with updated displayOrder
+        const updatedWorkspaces = workspaces.map(ws => {
+          const newIndex = workspaceIds.indexOf(ws.id);
+          if (newIndex !== -1) {
+            return { ...ws, displayOrder: newIndex };
+          }
+          return ws;
+        });
+
+        // Sort them for the local state
+        const sortedWorkspaces = sortWorkspaces(updatedWorkspaces);
+
+        // Persist to IndexedDB
+        await Promise.all(
+          sortedWorkspaces.map(ws => storage.saveWorkspace(ws))
+        );
+
+        // Update local state
+        set({ workspaces: sortedWorkspaces });
+
+        // Broadcast the update
+        broadcastManager.broadcastWorkspaceList(sortedWorkspaces);
+      } catch (error) {
+        console.error("Failed to reorder workspaces:", error);
+        set({
+          error: error instanceof Error ? error.message : "Failed to reorder workspaces",
+        });
+      }
     },
   };
 });

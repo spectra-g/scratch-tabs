@@ -22,9 +22,6 @@ import { useSplitViewStore } from "../../stores/splitViewStore";
 import { SidebarTabInfo } from "../../types";
 import {
     Folder,
-    FolderOpen,
-    ChevronRight,
-    ChevronDown,
     ChevronLeft,
     File,
     FileCode,
@@ -91,6 +88,7 @@ export const Sidebar: React.FC = () => {
     // Drag and drop state
     const [activeId, setActiveId] = useState<string | null>(null);
     const [draggedTab, setDraggedTab] = useState<SidebarTabInfo | null>(null);
+    const [draggedWorkspace, setDraggedWorkspace] = useState<{ id: string, name: string } | null>(null);
 
     // Configure sensors for drag and drop
     const sensors = useSensors(
@@ -414,6 +412,12 @@ export const Sidebar: React.FC = () => {
                     lastModified: Date.now()
                 });
             }
+        } else if (active.data.current?.type === "workspace") {
+            const workspaceId = active.data.current.workspaceId;
+            const workspace = workspaces.find(w => w.id === workspaceId);
+            if (workspace) {
+                setDraggedWorkspace({ id: workspace.id, name: workspace.name });
+            }
         }
     };
 
@@ -422,13 +426,35 @@ export const Sidebar: React.FC = () => {
 
         setActiveId(null);
         setDraggedTab(null);
+        setDraggedWorkspace(null);
 
         if (!over || active.id === over.id) return;
 
         const activeData = active.data.current;
         const overData = over.data.current;
 
-        // Only handle tab dragging
+        // Handle workspace reordering
+        if (activeData?.type === "workspace" && overData?.type === "workspace") {
+            const sourceWorkspaceId = activeData.workspaceId as string;
+            const targetWorkspaceId = overData.workspaceId as string;
+
+            if (sourceWorkspaceId !== targetWorkspaceId) {
+                const oldIndex = workspaces.findIndex(w => w.id === sourceWorkspaceId);
+                const newIndex = workspaces.findIndex(w => w.id === targetWorkspaceId);
+
+                if (oldIndex !== -1 && newIndex !== -1) {
+                    const newWorkspaceOrder = [...workspaces.map(w => w.id)];
+                    const [removed] = newWorkspaceOrder.splice(oldIndex, 1);
+                    newWorkspaceOrder.splice(newIndex, 0, removed);
+
+                    const { reorderWorkspaces } = useWorkspaceStore.getState();
+                    await reorderWorkspaces(newWorkspaceOrder);
+                }
+            }
+            return;
+        }
+
+        // Only handle tab dragging from here on
         if (activeData?.type !== "tab") return;
 
         const draggedTabId = activeData.tabId as string;
@@ -742,6 +768,16 @@ export const Sidebar: React.FC = () => {
                                 </span>
                                 {draggedTab.isPinned && <Pin size={12} className="opacity-50" />}
                                 {draggedTab.isRich && <Type size={12} className="opacity-50" />}
+                            </div>
+                        )}
+                        {draggedWorkspace && (
+                            <div className="px-6 py-2 bg-surface-highlight shadow-xl rounded flex items-center gap-2 border border-primary">
+                                <span className="text-primary opacity-70">
+                                    <Folder size={16} />
+                                </span>
+                                <span className="text-sm font-medium truncate max-w-[200px]">
+                                    {draggedWorkspace.name}
+                                </span>
                             </div>
                         )}
                     </DragOverlay>

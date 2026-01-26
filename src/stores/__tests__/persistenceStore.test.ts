@@ -71,6 +71,7 @@ interface WorkspaceStore {
   ) => Promise<void>;
   removeWorkspaceLink: (workspaceId: string, linkId: string) => Promise<void>;
   getActiveWorkspace: () => Workspace | undefined;
+  reorderWorkspaces: (workspaceIds: string[]) => Promise<void>;
 }
 
 interface TabsStore {
@@ -156,6 +157,7 @@ const mockWorkspaceState: WorkspaceStore = {
     Promise.resolve(),
   ),
   getActiveWorkspace: jest.fn(() => undefined),
+  reorderWorkspaces: jest.fn((workspaceIds: string[]) => Promise.resolve()),
 };
 
 const mockTabsState: TabsStore = {
@@ -445,7 +447,7 @@ describe("PersistenceStore", () => {
     it("should handle errors gracefully and log them", async () => {
       const consoleErrorSpy = jest
         .spyOn(console, "error")
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       mockStorageProvider.saveTabsNow.mockRejectedValueOnce(
         new Error("Storage error"),
