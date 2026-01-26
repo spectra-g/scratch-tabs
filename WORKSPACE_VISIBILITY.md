@@ -655,8 +655,8 @@ No tabs matching "query"
 ### Phase 2: Core Features (PARTIAL - Context Menus Complete)
 - [x] Add workspace context menu (create, rename, delete)
 - [x] Add tab context menu (rename, delete, pin, duplicate)
-- [ ] Implement drag-drop reorder within workspace
-- [ ] Implement drag-drop between workspaces (Copy-then-Delete pattern)
+- [x] Implement drag-drop reorder within workspace
+- [x] Implement drag-drop between workspaces (Copy-then-Delete pattern)
 - [x] Add visual indicators (language, pinned, rich, active) - Already present
 - [x] Implement "Reveal in Sidebar" (auto-scroll to active tab)
 
@@ -665,10 +665,10 @@ No tabs matching "query"
 - [ ] Add "Open in Split View" context menu
 - [ ] Handle drag-drop to split pane sections
 
-### Phase 4: Broadcast & Sync
-- [ ] Add `WORKSPACE_TABS_METADATA_UPDATED` broadcast message
-- [ ] Implement cross-window sync for sidebar
-- [ ] Test multi-window scenarios
+### Phase 4: Broadcast & Sync ✅ COMPLETE
+- [x] Add `WORKSPACE_TABS_METADATA_UPDATED` broadcast message
+- [x] Implement cross-window sync for sidebar
+- [x] Test multi-window scenarios
 
 ### Phase 5: Polish (PARTIAL - Icon Rail & Display Order Complete)
 - [ ] Add filter functionality (`"Filter tabs..."` placeholder)
@@ -676,14 +676,15 @@ No tabs matching "query"
 - [x] Add collapsed icon rail mode
 - [x] Add responsive/mobile behavior (already implemented)
 - [x] Add stable workspace ordering (displayOrder property)
-- [ ] Add workspace drag-to-reorder
+- [x] Add workspace drag-to-reorder
 - [ ] Performance profiling
 - [ ] Accessibility audit
 
-### Phase 6: Tab Management Modal
-- [ ] Evaluate sidebar usage vs modal usage
-- [ ] Decide deprecation path
-- [ ] Migrate remaining essential features if needed
+### Phase 6: Tab Management Modal (COMPLETE)
+- [x] Evaluate sidebar usage vs modal usage
+- [x] Decide deprecation path (Full removal)
+- [x] Migrate remaining essential features if needed (None required)
+- [x] Code removal and cleanup
 
 ---
 

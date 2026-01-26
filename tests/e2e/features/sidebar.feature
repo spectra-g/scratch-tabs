@@ -38,7 +38,7 @@ Feature: Workspace Sidebar
     Then the sidebar should be visible
     And workspace "Default Workspace" should be marked as active in sidebar
     When I click the create workspace button in sidebar
-    Then the "New Workspace" workspace should be visible
+    Then workspace "New Workspace" should be expanded in the sidebar
     When I right-click on workspace "New Workspace" in the sidebar
     And I select "Rename Workspace" from the context menu
     And I type "Project Alpha" in the workspace rename input
@@ -47,7 +47,6 @@ Feature: Workspace Sidebar
     And workspace "Project Alpha" should be marked as active in sidebar
     And workspace "Default Workspace" should not be marked as active in sidebar
 
-      @wbug
     Scenario: Click tab in inactive workspace switches workspace
     When I click the icon for "New tab"
     And I double-click on the active tab
@@ -55,7 +54,7 @@ Feature: Workspace Sidebar
     And I press Enter to confirm rename
     Then the "Default Tab" tab should exist on the page
     When I click the create workspace button in sidebar
-    Then the "New Workspace" workspace should be visible
+    Then workspace "New Workspace" should be expanded in the sidebar
     When I right-click on workspace "New Workspace" in the sidebar
     And I select "Rename Workspace" from the context menu
     And I type "Project Alpha" in the workspace rename input
@@ -68,7 +67,6 @@ Feature: Workspace Sidebar
     And I press Enter to confirm rename
     Then the "Alpha Tab" tab should exist on the page
     When I click on tab "Default Tab" in the sidebar
-    Then the "Default Workspace" workspace should be visible
     And tab "Default Tab" should be active in the tab bar
     And workspace "Default Workspace" should be marked as active in sidebar
 
@@ -76,7 +74,7 @@ Feature: Workspace Sidebar
     When I click the icon for "New tab"
     Then the sidebar should be visible
     When I click the create workspace button in sidebar
-    Then the "New Workspace" workspace should be visible
+    Then workspace "New Workspace" should be expanded in the sidebar
     And workspace "New Workspace" should be marked as active in sidebar
 
   Scenario: Icon rail shows workspace icons when collapsed
@@ -89,8 +87,12 @@ Feature: Workspace Sidebar
 
   Scenario: Click workspace icon in icon rail switches workspace
     When I click the icon for "New tab"
+    And I double-click on the active tab
+    And I type "Default Tab" in the rename input
+    And I press Enter to confirm rename
+    Then the "Default Tab" tab should exist on the page
     And I click the create workspace button in sidebar
-    Then the "New Workspace" workspace should be visible
+    Then workspace "New Workspace" should be expanded in the sidebar
     When I right-click on workspace "New Workspace" in the sidebar
     And I select "Rename Workspace" from the context menu
     And I type "Project Alpha" in the workspace rename input
@@ -98,5 +100,6 @@ Feature: Workspace Sidebar
     Then the "Project Alpha" workspace should be visible
     When I press "Cmd+B" to toggle the sidebar
     Then the icon rail should be visible
+    Then the "Default Tab" tab should not exist on the page
     When I click on workspace icon for "Default Workspace" in icon rail
-    Then the "Default Workspace" workspace should be visible
+    Then the "Default Tab" tab should exist on the page

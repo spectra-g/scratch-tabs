@@ -2,7 +2,7 @@
 import { useTabsStore } from "./tabsStore";
 import { useSplitViewStore } from "./splitViewStore";
 import { useWorkspaceStore } from "./workspaceStore";
-import { Tab, SplitViewState, Workspace } from "../types"; // Ensure these types are correct
+import { Tab, SplitViewState, Workspace, SidebarTabInfo } from "../types"; // Ensure these types are correct
 
 /**
  * Generates a UUID, with fallback for environments where crypto.randomUUID is not available
@@ -22,45 +22,52 @@ function generateUUID(): string {
 // Message types for type safety
 type BroadcastMessage =
   | {
-      type: "WORKSPACE_STATE_UPDATED"; // More specific: state for a PARTICULAR workspace
-      payload: {
-        workspaceId: string; // ID of the workspace that was updated
-        tabs?: Tab[]; // Tabs belonging to THIS workspaceId
-        splitView?: SplitViewState; // SplitView for THIS workspaceId
-      };
-    }
-  | {
-      type: "WORKSPACE_LIST_UPDATED"; // For create, rename workspace
-      payload: {
-        workspaces: Workspace[]; // The new complete list of workspaces
-        // Optionally, include the ID of the workspace that was just created/renamed
-        // if you want other tabs to potentially highlight it or offer to switch.
-        updatedWorkspaceId?: string;
-      };
-    }
-  | {
-      type: "WORKSPACE_DELETED";
-      payload: {
-        deletedWorkspaceId: string;
-        // newActiveWorkspaceId is NOT needed here anymore, each tab decides locally
-      };
-    }
-  | {
-      type: "REQUEST_FULL_SYNC"; // A new tab requests all data from an existing tab
-      payload: {
-        senderId: string; // Unique ID for the requesting tab
-      };
-    }
-  | {
-      type: "FULL_SYNC_RESPONSE"; // Response to REQUEST_FULL_SYNC
-      payload: {
-        workspaces: Workspace[];
-        activeWorkspaceId: string | null; // The sender's active workspace
-        tabs: Tab[]; // Tabs for the sender's active workspace
-        splitView: SplitViewState; // SplitView for the sender's active workspace
-        recipientId: string; // ID of the tab that requested the sync
-      };
+    type: "WORKSPACE_STATE_UPDATED"; // More specific: state for a PARTICULAR workspace
+    payload: {
+      workspaceId: string; // ID of the workspace that was updated
+      tabs?: Tab[]; // Tabs belonging to THIS workspaceId
+      splitView?: SplitViewState; // SplitView for THIS workspaceId
     };
+  }
+  | {
+    type: "WORKSPACE_LIST_UPDATED"; // For create, rename workspace
+    payload: {
+      workspaces: Workspace[]; // The new complete list of workspaces
+      // Optionally, include the ID of the workspace that was just created/renamed
+      // if you want other tabs to potentially highlight it or offer to switch.
+      updatedWorkspaceId?: string;
+    };
+  }
+  | {
+    type: "WORKSPACE_DELETED";
+    payload: {
+      deletedWorkspaceId: string;
+      // newActiveWorkspaceId is NOT needed here anymore, each tab decides locally
+    };
+  }
+  | {
+    type: "WORKSPACE_TABS_METADATA_UPDATED"; // For sidebar metadata sync
+    payload: {
+      workspaceId: string;
+      tabsMetadata: SidebarTabInfo[];
+    };
+  }
+  | {
+    type: "REQUEST_FULL_SYNC"; // A new tab requests all data from an existing tab
+    payload: {
+      senderId: string; // Unique ID for the requesting tab
+    };
+  }
+  | {
+    type: "FULL_SYNC_RESPONSE"; // Response to REQUEST_FULL_SYNC
+    payload: {
+      workspaces: Workspace[];
+      activeWorkspaceId: string | null; // The sender's active workspace
+      tabs: Tab[]; // Tabs for the sender's active workspace
+      splitView: SplitViewState; // SplitView for the sender's active workspace
+      recipientId: string; // ID of the tab that requested the sync
+    };
+  };
 
 class BroadcastManager {
   private static instance: BroadcastManager;
@@ -83,7 +90,7 @@ class BroadcastManager {
   }
 
   private setupListeners() {
-    this.channel.onmessage = (event: MessageEvent<BroadcastMessage>) => {
+    this.channel.onmessage = async (event: MessageEvent<BroadcastMessage>) => {
       const { type, payload } = event.data;
       const currentActiveWorkspaceId =
         useWorkspaceStore.getState().activeWorkspaceId;
@@ -233,6 +240,15 @@ class BroadcastManager {
             }
           }
           break;
+
+        case "WORKSPACE_TABS_METADATA_UPDATED":
+          // Update sidebar metadata cache for the specified workspace
+          const { useSidebarStore } = await import("./sidebarStore");
+          useSidebarStore.getState().handleMetadataUpdate(
+            payload.workspaceId,
+            payload.tabsMetadata
+          );
+          break;
       }
     };
   }
@@ -281,6 +297,20 @@ class BroadcastManager {
     this.channel.postMessage({
       type: "WORKSPACE_DELETED",
       payload: { deletedWorkspaceId },
+    });
+  }
+
+  // Broadcasts tab metadata updates for a workspace (for sidebar sync)
+  broadcastWorkspaceTabsMetadata(
+    workspaceId: string,
+    tabsMetadata: SidebarTabInfo[]
+  ) {
+    this.channel.postMessage({
+      type: "WORKSPACE_TABS_METADATA_UPDATED",
+      payload: {
+        workspaceId,
+        tabsMetadata,
+      },
     });
   }
 

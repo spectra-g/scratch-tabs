@@ -56,6 +56,7 @@ const mockQueryPanelStore = {
 
 const mockBroadcastManager = {
     broadcastWorkspaceState: jest.fn(),
+    broadcastWorkspaceTabsMetadata: jest.fn(),
 };
 
 jest.mock("../tabsStore", () => ({

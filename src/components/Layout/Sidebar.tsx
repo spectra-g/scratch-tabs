@@ -19,12 +19,10 @@ import { useTabsStore } from "../../stores/tabsStore";
 import { useRootStore } from "../../stores/rootStore";
 import { useSidebarStore } from "../../stores/sidebarStore";
 import { useSplitViewStore } from "../../stores/splitViewStore";
+import { useModalStore } from "../../stores/modalStore";
 import { SidebarTabInfo } from "../../types";
 import {
     Folder,
-    FolderOpen,
-    ChevronRight,
-    ChevronDown,
     ChevronLeft,
     File,
     FileCode,
@@ -34,8 +32,12 @@ import {
     Pin,
     Calculator,
     Type,
-    X
+    X,
+    Upload,
+    Download
 } from "../Icons";
+import { ExportWorkspacesModal } from "../Workspace/ExportWorkspacesModal";
+import { ImportWorkspacesModal } from "../Workspace/ImportWorkspacesModal";
 import { clsx } from "clsx";
 import { WorkspaceContextMenu } from "./WorkspaceContextMenu";
 import { SidebarTabContextMenu } from "./SidebarTabContextMenu";
@@ -88,9 +90,13 @@ export const Sidebar: React.FC = () => {
         position: { x: number; y: number };
     } | null>(null);
 
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+    const { isImportModalActive, openImportModal, closeImportModal } = useModalStore();
+
     // Drag and drop state
     const [activeId, setActiveId] = useState<string | null>(null);
     const [draggedTab, setDraggedTab] = useState<SidebarTabInfo | null>(null);
+    const [draggedWorkspace, setDraggedWorkspace] = useState<{ id: string, name: string } | null>(null);
 
     // Configure sensors for drag and drop
     const sensors = useSensors(
@@ -414,6 +420,12 @@ export const Sidebar: React.FC = () => {
                     lastModified: Date.now()
                 });
             }
+        } else if (active.data.current?.type === "workspace") {
+            const workspaceId = active.data.current.workspaceId;
+            const workspace = workspaces.find(w => w.id === workspaceId);
+            if (workspace) {
+                setDraggedWorkspace({ id: workspace.id, name: workspace.name });
+            }
         }
     };
 
@@ -422,13 +434,35 @@ export const Sidebar: React.FC = () => {
 
         setActiveId(null);
         setDraggedTab(null);
+        setDraggedWorkspace(null);
 
         if (!over || active.id === over.id) return;
 
         const activeData = active.data.current;
         const overData = over.data.current;
 
-        // Only handle tab dragging
+        // Handle workspace reordering
+        if (activeData?.type === "workspace" && overData?.type === "workspace") {
+            const sourceWorkspaceId = activeData.workspaceId as string;
+            const targetWorkspaceId = overData.workspaceId as string;
+
+            if (sourceWorkspaceId !== targetWorkspaceId) {
+                const oldIndex = workspaces.findIndex(w => w.id === sourceWorkspaceId);
+                const newIndex = workspaces.findIndex(w => w.id === targetWorkspaceId);
+
+                if (oldIndex !== -1 && newIndex !== -1) {
+                    const newWorkspaceOrder = [...workspaces.map(w => w.id)];
+                    const [removed] = newWorkspaceOrder.splice(oldIndex, 1);
+                    newWorkspaceOrder.splice(newIndex, 0, removed);
+
+                    const { reorderWorkspaces } = useWorkspaceStore.getState();
+                    await reorderWorkspaces(newWorkspaceOrder);
+                }
+            }
+            return;
+        }
+
+        // Only handle tab dragging from here on
         if (activeData?.type !== "tab") return;
 
         const draggedTabId = activeData.tabId as string;
@@ -711,7 +745,7 @@ export const Sidebar: React.FC = () => {
                         </div>
                     </div>
 
-                    <div ref={listContainerRef} className="flex-1 overflow-hidden">
+                    <div ref={listContainerRef} className="flex-1 overflow-hidden font-[system-ui]">
                         {treeItems.length > 0 ? (
                             <List
                                 ref={listRef}
@@ -730,6 +764,27 @@ export const Sidebar: React.FC = () => {
                         )}
                     </div>
 
+                    {/* Sidebar Footer with Import/Export - h-[29px] to align with status bar */}
+                    <div className="px-2 h-[29px] border-t border-base flex items-center justify-between gap-1 flex-shrink-0">
+                        <button
+                            onClick={() => openImportModal()}
+                            className="flex-1 flex items-center justify-center gap-1.5 px-2 h-full text-[11px] text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
+                            title="Import Workspaces"
+                        >
+                            <Upload size={12} />
+                            <span className="truncate">Import</span>
+                        </button>
+                        <div className="w-px h-3 bg-base self-center" />
+                        <button
+                            onClick={() => setIsExportModalOpen(true)}
+                            className="flex-1 flex items-center justify-center gap-1.5 px-2 h-full text-[11px] text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
+                            title="Export Workspaces"
+                        >
+                            <Download size={12} />
+                            <span className="truncate">Export</span>
+                        </button>
+                    </div>
+
                     {/* Drag Overlay */}
                     <DragOverlay>
                         {draggedTab && (
@@ -742,6 +797,16 @@ export const Sidebar: React.FC = () => {
                                 </span>
                                 {draggedTab.isPinned && <Pin size={12} className="opacity-50" />}
                                 {draggedTab.isRich && <Type size={12} className="opacity-50" />}
+                            </div>
+                        )}
+                        {draggedWorkspace && (
+                            <div className="px-6 py-2 bg-surface-highlight shadow-xl rounded flex items-center gap-2 border border-primary">
+                                <span className="text-primary opacity-70">
+                                    <Folder size={16} />
+                                </span>
+                                <span className="text-sm font-medium truncate max-w-[200px]">
+                                    {draggedWorkspace.name}
+                                </span>
                             </div>
                         )}
                     </DragOverlay>
@@ -771,6 +836,16 @@ export const Sidebar: React.FC = () => {
                         onMouseDown={handleMouseDown}
                     />
                 )}
+
+                {/* Modals */}
+                <ExportWorkspacesModal
+                    isOpen={isExportModalOpen}
+                    onClose={() => setIsExportModalOpen(false)}
+                />
+                <ImportWorkspacesModal
+                    isOpen={isImportModalActive}
+                    onClose={closeImportModal}
+                />
             </div>
         </>
     );

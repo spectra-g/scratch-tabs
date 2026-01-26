@@ -45,8 +45,18 @@ export const WorkspaceContextMenu: React.FC<WorkspaceContextMenuProps> = ({
         }
     });
 
-    const handleNewTab = () => {
-        // TODO: Will be implemented when we add tab creation from sidebar
+    const handleNewTab = async () => {
+        const { activeWorkspaceId, switchWorkspace } = useWorkspaceStore.getState();
+
+        // If clicking on an inactive workspace, switch to it first
+        if (workspaceId !== activeWorkspaceId) {
+            await switchWorkspace(workspaceId);
+        }
+
+        // Import rootStore and create a new tab
+        const { useRootStore } = await import("../../stores/rootStore");
+        useRootStore.getState().handleNewTab(false);
+
         onClose();
     };
 

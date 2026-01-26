@@ -271,15 +271,15 @@ export class ImportExportService {
         async () => {
           if (workspacesToSave.length > 0)
             await db.workspaces.bulkPut(workspacesToSave);
-          if (tabsToSave.length > 0)
-            await db.tabs.bulkPut(
-              tabsToSave.map((t) => ({
-                ...t,
-                dateCreated: t.dateCreated || Date.now(),
-                lastModified: t.lastModified || Date.now(),
-                content: t.content || "", // Ensure content is always a string
-              })),
-            );
+          await db.tabs.bulkPut(
+            tabsToSave.map((t) => ({
+              ...t,
+              dateCreated: t.dateCreated || Date.now(),
+              lastModified: t.lastModified || Date.now(),
+              content: t.content || "", // Ensure content is always a string
+              richContent: t.richContent ? JSON.stringify(t.richContent) : undefined,
+            })),
+          );
 
           const recordsToSaveToDb = splitViewsToSave.map((svs) => ({
             id: svs.id,

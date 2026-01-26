@@ -14,7 +14,6 @@ import { TabActions } from "./TabActions";
 import { TabTooltip } from "./TabTooltip";
 import { Tab } from "../../types";
 import { formatRegistry } from "../../formats";
-import { WorkspaceSwitcher } from "../Workspace/WorkspaceSwitcher";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
 import { HamburgerMenu } from "./HamburgerMenu";
 import {
@@ -709,11 +708,11 @@ export const TabBar: React.FC<TabBarProps> = ({
             style={{
               right: isRightSide
                 ? splitView.isSplit
-                  ? '160px'  // Right side in split view
-                  : '152px'  // Right side not split: WorkspaceSwitcher + HamburgerMenu + TabActions
+                  ? '96px'   // Right side in split view (Hamburger + TabActions)
+                  : '96px'   // Right side not split
                 : splitView.isSplit
                   ? '96px'   // Left side in split
-                  : '160px', // Left side not split: WorkspaceSwitcher + HamburgerMenu + TabActions
+                  : '96px',  // Left side not split
               background: 'linear-gradient(to left, rgb(var(--color-surface-tab-bar)) 20%, transparent 100%)',
             }}
             aria-hidden="true"
@@ -731,10 +730,7 @@ export const TabBar: React.FC<TabBarProps> = ({
           />
           {/* Only show WorkspaceSwitcher and HamburgerMenu on the right side when split, or on the left when not split */}
           {(isRightSide ? splitView.isSplit : !splitView.isSplit) && (
-            <>
-              <WorkspaceSwitcher />
-              <HamburgerMenu />
-            </>
+            <HamburgerMenu />
           )}
         </div>
       </div>
