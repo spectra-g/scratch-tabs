@@ -4,8 +4,80 @@ import { useRootStore } from "../../stores";
 import { ToolSelectorModal } from "../ToolSelector";
 import { toolService, ToolItem } from "../../services/toolService";
 import { TabActions } from "../Tab/TabActions";
-import { FileText, Extension, Upload, FolderOpen, File, Package } from "../Icons";
+import { FileText, Extension, Upload, File, Package, FileJson, Lock, Database, Globe } from "../Icons";
 import { ImportExportService } from "../../features/import-export/ImportExportService";
+import { getJSONDemoContent } from "./utils/welcomeUtils";
+import type { LucideProps } from "lucide-react";
+
+/**
+ * HeroActionCard - Enhanced action card for primary welcome actions
+ * Follows LAYOUT_GUIDELINES.md for semantic theming
+ */
+interface HeroActionCardProps {
+  icon: React.ComponentType<LucideProps>;
+  title: string;
+  description: string;
+  hint: string;
+  onClick: () => void;
+  colorScheme: 'primary' | 'info' | 'warning';
+}
+
+const colorSchemeMap: Record<'primary' | 'info' | 'warning', {
+  border: string;
+  hoverBorder: string;
+  iconBg: string;
+  iconHoverBg: string;
+  iconColor: string;
+}> = {
+  primary: {
+    border: "border-primary/30",
+    hoverBorder: "hover:border-primary/50",
+    iconBg: "bg-primary/10",
+    iconHoverBg: "group-hover:bg-primary/20",
+    iconColor: "text-primary",
+  },
+  info: {
+    border: "border-info/30",
+    hoverBorder: "hover:border-info/50",
+    iconBg: "bg-info/10",
+    iconHoverBg: "group-hover:bg-info/20",
+    iconColor: "text-info",
+  },
+  warning: {
+    border: "border-warning/30",
+    hoverBorder: "hover:border-warning/50",
+    iconBg: "bg-warning/10",
+    iconHoverBg: "group-hover:bg-warning/20",
+    iconColor: "text-warning",
+  },
+};
+
+const HeroActionCard: React.FC<HeroActionCardProps> = ({
+  icon: Icon,
+  title,
+  description,
+  hint,
+  onClick,
+  colorScheme,
+}) => {
+  const colors = colorSchemeMap[colorScheme];
+
+  return (
+    <button
+      onClick={onClick}
+      className={`group p-6 bg-surface ${colors.border} ${colors.hoverBorder} border rounded-xl
+        transition-all duration-200 hover:-translate-y-1 hover:shadow-md text-left w-full`}
+    >
+      <div className={`p-3 ${colors.iconBg} ${colors.iconHoverBg} rounded-lg inline-block mb-4 transition-colors`}>
+        <Icon size={24} className={colors.iconColor} />
+      </div>
+      <h3 className="text-main font-semibold text-base mb-2">{title}</h3>
+      <p className="text-muted text-sm mb-2">{description}</p>
+      <p className="text-muted/70 text-xs leading-relaxed">{hint}</p>
+    </button>
+  );
+};
+
 export const WelcomeScreen: React.FC = () => {
   const { handleNewTab, handleNewPopulatedTab } = useRootStore();
   const welcomeRef = useRef<HTMLDivElement>(null);
@@ -56,15 +128,8 @@ export const WelcomeScreen: React.FC = () => {
   }, []);
 
   const handleImportFromClipboard = useCallback(async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      if (text) {
-        handleNewTab(false, text);
-      }
-    } catch (err) {
-      console.error("Failed to read from clipboard:", err);
-      // Fallback: could show a message to user that they should use Ctrl+V instead
-    }
+    const content = await getJSONDemoContent();
+    handleNewTab(false, content);
   }, [handleNewTab]);
 
   const handleOpenFile = useCallback(() => {
@@ -158,48 +223,53 @@ export const WelcomeScreen: React.FC = () => {
     };
   }, [showToolSelector, handleOpenToolSelector]);
 
-  const actions = [
+  // Primary actions - most common first-time user tasks
+  const primaryActions: HeroActionCardProps[] = [
     {
-      icon: FileText,
-      title: "Start scratching",
-      action: "Double-click anywhere",
-      onClick: handleCreateNewTab,
-      clickable: true,
-    },
-    {
-      icon: File,
-      title: "Open file",
-      action: "Open file from your computer",
-      onClick: handleOpenFile,
-      clickable: true,
+      icon: FileJson,
+      title: "Format JSON",
+      description: "See Smart View in action",
+      hint: "Uses JSON from clipboard or shows an interactive demo",
+      onClick: handleImportFromClipboard,
+      colorScheme: "primary",
     },
     {
       icon: Extension,
-      title: "Open specialized tablet",
-      action: "Press / key",
+      title: "Dev Tools",
+      description: "25+ specialized tools",
+      hint: "JWT, Regex, UUID, Cron, REST Client, and more",
       onClick: handleOpenToolSelector,
-      clickable: true,
+      colorScheme: "info",
+    },
+    {
+      icon: FileText,
+      title: "New Scratch Pad",
+      description: "Empty Monaco editor",
+      hint: "Start with a blank canvas",
+      onClick: handleCreateNewTab,
+      colorScheme: "warning",
+    },
+  ];
+
+  // Secondary actions - other entry points
+  const secondaryActions = [
+    {
+      icon: File,
+      title: "Open File",
+      description: "From your computer",
+      onClick: handleOpenFile,
     },
     {
       icon: Upload,
-      title: "Import from clipboard",
-      action: "Paste text here",
+      title: "Paste Content",
+      description: "Auto-detect format",
       onClick: handleImportFromClipboard,
-      clickable: true,
     },
     {
       icon: Package,
-      title: "Import an exported Workspace",
-      action: "Load all workspaces from a .scratch file",
+      title: "Import Workspace",
+      description: "Load .scratch file",
       onClick: handleImportWorkspace,
-      clickable: true,
-    },
-    {
-      icon: FolderOpen,
-      title: "Drag a file",
-      action: "Drop a file here to open",
-      onClick: () => { }, // Handled by drag and drop
-      clickable: false,
     },
   ];
 
@@ -216,79 +286,103 @@ export const WelcomeScreen: React.FC = () => {
       {/* Welcome Content */}
       <div
         ref={welcomeRef}
-        className="flex-1 flex flex-col items-center justify-center text-muted cursor-pointer relative outline-none px-8"
+        className="flex-1 flex flex-col items-center justify-center text-muted cursor-pointer relative outline-none px-8 py-12"
         onDoubleClick={handleDoubleClick}
         onPaste={handlePaste}
         tabIndex={-1}
       >
-        {/* Header */}
-        <div className="text-center mb-12 w-full">
-          <div className="flex items-center justify-center w-full">
-            <img
-              src="/favicon-gray.svg"
-              alt="Scratch Tabs Logo"
-              className="w-7 h-7 mr-4 flex-shrink-0"
-            />
-            <h1 className="text-3xl font-mono font-medium text-main">SCRATCH_TABS</h1>
+        {/* TIER 1: Hero Section - Orientation */}
+        <div className="text-center mb-12 w-full max-w-3xl">
+          <div className="bg-element border border-base rounded-lg p-8">
+            {/* Logo + Title */}
+            <div className="flex items-center justify-center mb-4">
+              <img
+                src="/favicon-gray.svg"
+                alt="Scratch Tabs Logo"
+                className="w-7 h-7 mr-4 flex-shrink-0"
+              />
+              <h1 className="text-3xl font-mono font-medium text-main">SCRATCH_TABS</h1>
+            </div>
+            <p className="text-muted text-sm font-mono mb-6">// v1.19.0</p>
+
+            {/* Value Proposition */}
+            <h2 className="text-2xl font-semibold text-main mb-4">
+              Your Private Dev Workspace
+            </h2>
+            <p className="text-sm text-muted mb-6">
+              Monaco editor • <span className="text-primary">Smart Views</span> • 25+ Dev Tools
+            </p>
+
+            {/* Trust Badges */}
+            <div className="flex justify-center gap-6 text-xs text-muted">
+              <div className="flex items-center gap-2">
+                <Lock size={14} className="text-muted/70" />
+                <span>100% Local</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Database size={14} className="text-muted/70" />
+                <span>IndexedDB</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Globe size={14} className="text-muted/70" />
+                <span>Works Offline</span>
+              </div>
+            </div>
           </div>
-          <p className="text-muted text-sm font-mono mt-2">// v1.19.0</p>
         </div>
 
-        {/* Actions Grid */}
-        <div className="w-full max-w-2xl">
-          <div className="grid gap-3">
-            {actions.map((action, index) => {
-              // Render non-clickable action
-              if (!action.clickable) {
-                return (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-4 bg-surface-glass/30 rounded-lg border border-transparent text-left w-full"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="p-2 bg-surface-secondary border-none rounded-md">
-                        <action.icon size={18} className="text-secondary" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-main font-medium text-sm mb-1">
-                          {action.title}
-                        </div>
-                        <div className="text-muted text-xs">
-                          {action.action}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              // Render clickable action
-              return (
-                <button
-                  key={index}
-                  onClick={action.onClick}
-                  className="group flex items-center justify-between p-4 bg-surface-glass/30 hover:bg-surface-glass/50 rounded-lg transition-all duration-200 border border-transparent hover:border-base text-left w-full"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 bg-surface-secondary border-none rounded-md group-hover:bg-element/70 transition-colors">
-                      <action.icon size={18} className="text-secondary" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-main font-medium text-sm mb-1">
-                        {action.title}
-                      </div>
-                      <div className="text-muted text-xs">
-                        {action.action}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-muted text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                    Click to try
-                  </div>
-                </button>
-              );
-            })}
+        {/* TIER 2: Primary Actions - Common Tasks */}
+        <section className="w-full max-w-4xl mb-8">
+          <h3 className="text-sm font-medium uppercase tracking-wide text-muted mb-4 text-center">
+            Get Started
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {primaryActions.map((action, index) => (
+              <HeroActionCard key={index} {...action} />
+            ))}
           </div>
+        </section>
+
+        {/* TIER 3: Secondary Actions - Other Options */}
+        <section className="w-full max-w-4xl mb-8">
+          <h4 className="text-sm font-medium uppercase tracking-wide text-muted mb-3 text-center">
+            Other Options
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {secondaryActions.map((action, index) => (
+              <button
+                key={index}
+                onClick={action.onClick}
+                className="group p-4 bg-surface hover:bg-surface-highlight
+                  rounded-lg border border-base hover:border-primary/30
+                  transition-all duration-200 text-left"
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-element rounded-md">
+                    <action.icon size={18} className="text-secondary" />
+                  </div>
+                  <div className="text-main font-medium text-sm">{action.title}</div>
+                </div>
+                <p className="text-muted text-xs">{action.description}</p>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* TIER 4: Keyboard Shortcuts */}
+        <div className="mt-8 text-xs text-muted font-mono flex flex-wrap gap-4 justify-center">
+          <span>
+            <kbd className="bg-surface border border-base px-2 py-1 rounded">Double Click</kbd>
+            {" "}to create tab
+          </span>
+          <span>
+            <kbd className="bg-surface border border-base px-2 py-1 rounded">/</kbd>
+            {" "}for dev tools
+          </span>
+          <span>
+            <kbd className="bg-surface border border-base px-2 py-1 rounded">Ctrl+V</kbd>
+            {" "}to paste
+          </span>
         </div>
       </div>
 
