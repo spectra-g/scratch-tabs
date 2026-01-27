@@ -1,30 +1,31 @@
-export const WELCOME_TAB_CONTENT = `# 👋 Welcome to Your Workspace
+export const WELCOME_TAB_CONTENT = `# ⚡ Ready to Scratch
 
-You're all set! This workspace is ready for your content.
+Your workspace is live. Data stays in your browser.
 
-### Quick Reminders
-- **Smart Views:** Paste JSON/CSV to see automatic visualizations with the "Open View" button
-- **Dev Tools:** Click the extension icon to open 25+ tools (JWT, Regex, REST Client, UUID, Cron, etc.)
-- **Transformation Pipelines:** Right-click selected text → choose pipeline steps (Trim, Base64, etc.)
-- **Auto-Save:** Everything saves automatically to IndexedDB (100% local, no servers)
-- **Closing tabs:** If you close a tab it's gone forever
+### 🚀 Quick Start
+- **Paste Data:** JSON, XML, or JWT strings will trigger the **Smart View** button (top right)
+- **Open Tools:** Click the extension icon to access dev tools or what we call "Tablets"
+- **Transform:** Select text, **Right-Click**, and choose "Transformation Pipeline" to chain operations (e.g., Trim → Base64)
+- **Split View:** Move tabs between left and right panes for side-by-side comparison
 
-### Organize Your Work
-- **Create tabs** by double-clicking the tab bar or new tab icon (top right)
-- **Group related work** into different workspaces using the sidebar (\`Ctrl+B\`)
-- **Drag tabs** between left and right panes for split view comparison
+### 🔒 Privacy & Storage
+- **Offline & Private:** We use IndexedDB. No data is sent to any server
+- **Auto-Save:** Tabs persist across reloads automatically
+- **Warning:** Explicitly closing a tab (clicking 'x') deletes it permanently
 
-### Keyboard Shortcuts
-| Action | Shortcut |
-|--------|----------|
-| New tab | Double-click tab bar |
-| Dev tools | Extension icon (top right) |
-| Command bar | \`F1\` |
-| Global search | \`Ctrl+Shift+F\` |
-| Toggle sidebar | \`Ctrl+B\` |
-| Tab options | Right-click any tab |
+### ⌨️ Power User Shortcuts
+| Action | Windows/Linux | Mac |
+|--------|---------------|-----|
+| New Tab | Double-click bar | Double-click bar |
+| Omni-Search | \`Ctrl+Shift+F\` | \`Cmd+Shift+F\` |
+| Command Palette | \`F1\` | \`F1\` |
+| Toggle Sidebar | \`Ctrl+B\` | \`Cmd+B\` |
+
+### 💡 Pro Tips
+- **Workspaces:** Group related tabs into projects using the sidebar (\`Ctrl+B\`)
+- **Tab Options:** Right-click any tab for rename, duplicate, export, and more
+- **Format Lock:** Click the language badge to prevent auto-detection changes
 
 ---
-
-**Start by closing this tab or paste some data to begin!** All your work stays private in your browser.
+*Tip: Right-click this tab and choose Split Right to enable Split View.*
 `;

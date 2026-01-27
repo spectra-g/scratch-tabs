@@ -229,23 +229,23 @@ export const WelcomeScreen: React.FC = () => {
       icon: FileJson,
       title: "Format JSON",
       description: "See Smart View in action",
-      hint: "Uses JSON from clipboard or shows an interactive demo",
+      hint: "Pastes from clipboard to demo Tree View, analysis, and formatting",
       onClick: handleImportFromClipboard,
       colorScheme: "primary",
     },
     {
       icon: Extension,
       title: "Dev Tools",
-      description: "25+ specialized tools",
-      hint: "JWT, Regex, UUID, Cron, REST Client, and more",
+      description: "25+ offline utilities",
+      hint: "JWT, Regex, Cron, Diff, UUID, Base64, and converters",
       onClick: handleOpenToolSelector,
       colorScheme: "info",
     },
     {
       icon: FileText,
       title: "New Scratch Pad",
-      description: "Empty Monaco editor",
-      hint: "Start with a blank canvas",
+      description: "Full-featured Monaco editor",
+      hint: "Markdown, TypeScript, SQL, JSON, and 40+ formats",
       onClick: handleCreateNewTab,
       colorScheme: "warning",
     },
@@ -317,15 +317,15 @@ export const WelcomeScreen: React.FC = () => {
             <div className="flex justify-center gap-6 text-xs text-muted">
               <div className="flex items-center gap-2">
                 <Lock size={14} className="text-muted/70" />
-                <span>100% Local</span>
+                <span>Offline & Private</span>
               </div>
               <div className="flex items-center gap-2">
                 <Database size={14} className="text-muted/70" />
-                <span>IndexedDB</span>
+                <span>Persisted Locally</span>
               </div>
               <div className="flex items-center gap-2">
                 <Globe size={14} className="text-muted/70" />
-                <span>Works Offline</span>
+                <span>No Server Calls</span>
               </div>
             </div>
           </div>
