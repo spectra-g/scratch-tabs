@@ -5,6 +5,7 @@ import { useEditorStore } from "./editorStore";
 import { useWorkspaceStore } from "./workspaceStore";
 import { useSidebarStore } from "./sidebarStore";
 import { useMilestoneCelebrationStore } from "./milestoneCelebrationStore";
+import { useNavigationStore } from "./navigationStore";
 import { Tab } from "../types";
 import { formatRegistry } from "../formats/registry";
 import { incrementSetting } from "../db";
@@ -16,6 +17,7 @@ import { broadcastManager } from "./broadcastStore";
 import { modelManager } from "../services/modelManager";
 import { useQueryPanelStore } from "../formats/json/stores/useQueryPanelStore";
 import { contentProcessingService } from "../services/contentProcessing";
+import { navigationService } from "../services/navigationService";
 import { SidebarTabInfo } from "../types";
 
 // The RootStore now primarily holds ACTIONS that coordinate other stores.
@@ -75,6 +77,10 @@ interface RootStore {
   getActiveView: (tabId: string) => string | null;
   initialUrlProcessed: boolean;
   setInitialUrlProcessed: (status: boolean) => void;
+
+  // Navigation actions
+  navigateBack: () => Promise<void>;
+  navigateForward: () => Promise<void>;
 }
 
 /**
@@ -365,12 +371,19 @@ export const useRootStore = create<RootStore>((set, get) => {
 
     setActiveTab: (id) => {
       const { splitView } = useSplitViewStore.getState();
+      const { activeWorkspaceId } = useWorkspaceStore.getState();
+
       if (splitView.leftTabs.includes(id)) {
         useSplitViewStore.getState().setActiveLeftTab(id);
       } else if (splitView.rightTabs.includes(id)) {
         useSplitViewStore.getState().setActiveRightTab(id);
       } else {
         useSplitViewStore.getState().setActiveLeftTab(id);
+      }
+
+      // Record navigation history (only if not currently navigating via back/forward)
+      if (activeWorkspaceId && !navigationService.isCurrentlyNavigating()) {
+        useNavigationStore.getState().pushEntry(activeWorkspaceId, id);
       }
     },
 
@@ -789,6 +802,15 @@ export const useRootStore = create<RootStore>((set, get) => {
     getActiveView: (tabId) => {
       const tab = useTabsStore.getState().tabs.find((t) => t.id === tabId);
       return tab?.activeViewId || null;
+    },
+
+    // Navigation actions
+    navigateBack: async () => {
+      await navigationService.goBack();
+    },
+
+    navigateForward: async () => {
+      await navigationService.goForward();
     },
   };
 });

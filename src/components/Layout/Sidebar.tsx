@@ -20,10 +20,13 @@ import { useRootStore } from "../../stores/rootStore";
 import { useSidebarStore } from "../../stores/sidebarStore";
 import { useSplitViewStore } from "../../stores/splitViewStore";
 import { useModalStore } from "../../stores/modalStore";
+import { useNavigationStore } from "../../stores/navigationStore";
 import { SidebarTabInfo } from "../../types";
 import {
     Folder,
     ChevronLeft,
+    ArrowLeft,
+    ArrowRight,
     File,
     FileCode,
     FileText,
@@ -57,7 +60,8 @@ type TreeItem =
 export const Sidebar: React.FC = () => {
     const { workspaces, activeWorkspaceId, switchWorkspace, createWorkspace } = useWorkspaceStore();
     const { tabs: activeTabs } = useTabsStore();
-    const { setActiveTab, moveTabBetweenWorkspaces, reorderTabsInWorkspace } = useRootStore();
+    const { setActiveTab, moveTabBetweenWorkspaces, reorderTabsInWorkspace, navigateBack, navigateForward } = useRootStore();
+    const { canGoBack, canGoForward } = useNavigationStore();
     const {
         isSidebarExpanded,
         isMobileOpen,
@@ -702,7 +706,32 @@ export const Sidebar: React.FC = () => {
                 >
                     <div className="p-3 flex flex-col gap-2">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-xs font-bold uppercase tracking-wider text-secondary">Explorer</h2>
+                            <div className="flex items-center gap-2">
+                                {/* Navigation buttons */}
+                                <div className="flex bg-surface-raised rounded-md border border-base p-0.5">
+                                    <button
+                                        onClick={navigateBack}
+                                        disabled={!canGoBack()}
+                                        className="p-1 hover:bg-element-hover rounded text-secondary disabled:opacity-30 disabled:cursor-not-allowed hover:text-main transition-colors"
+                                        title="Go Back (Alt+Left)"
+                                        aria-label="Go Back"
+                                        data-testid="sidebar-nav-back"
+                                    >
+                                        <ArrowLeft size={14} />
+                                    </button>
+                                    <button
+                                        onClick={navigateForward}
+                                        disabled={!canGoForward()}
+                                        className="p-1 hover:bg-element-hover rounded text-secondary disabled:opacity-30 disabled:cursor-not-allowed hover:text-main transition-colors"
+                                        title="Go Forward (Alt+Right)"
+                                        aria-label="Go Forward"
+                                        data-testid="sidebar-nav-forward"
+                                    >
+                                        <ArrowRight size={14} />
+                                    </button>
+                                </div>
+                                <h2 className="text-xs font-bold uppercase tracking-wider text-secondary">Explorer</h2>
+                            </div>
                             <div className="flex gap-1">
                                 <button
                                     onClick={() => createWorkspace("New Workspace")}

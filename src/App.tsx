@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { initializeFormatProviders } from "./formats";
 import { broadcastManager } from "./stores/broadcastStore";
 import { useThemeStore } from "./stores/themeStore";
+import { useNavigationStore } from "./stores/navigationStore";
 import { ShareURLHandler } from "./components/Share/ShareURLHandler";
 import DragDropOverlay from "./components/DragDropOverlay";
 import { lazyWithReload } from "./utils/chunkLoadUtils";
@@ -31,6 +32,8 @@ function App() {
   useEffect(() => {
     broadcastManager.initialize();
     useThemeStore.getState().initializeTheme();
+    // Load navigation history from IndexedDB
+    useNavigationStore.getState().loadHistory();
   }, []);
 
   useEffect(() => {

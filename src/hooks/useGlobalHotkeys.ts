@@ -26,6 +26,8 @@ interface UseGlobalHotkeysParams {
  * - Ctrl+Shift+F: Open global search (with selected text)
  * - Ctrl+W: Close active tab (with confirmation if has content)
  * - Ctrl+S / Cmd+S: Save state and download active tab as file
+ * - Alt+Left: Navigate back in history
+ * - Alt+Right: Navigate forward in history
  */
 export function useGlobalHotkeys({
   onKeyboardCloseConfirmation,
@@ -51,10 +53,12 @@ export function useGlobalHotkeys({
   );
 
   // Get root store actions
-  const { saveTabDataById } = useStoreWithEqualityFn(
+  const { saveTabDataById, navigateBack, navigateForward } = useStoreWithEqualityFn(
     useRootStore,
     (state) => ({
       saveTabDataById: state.saveTabDataById,
+      navigateBack: state.navigateBack,
+      navigateForward: state.navigateForward,
     }),
     shallow,
   );
@@ -129,6 +133,18 @@ export function useGlobalHotkeys({
         event.preventDefault();
         useSidebarStore.getState().toggleSidebar();
       }
+
+      // --- Navigate Back (Alt+Left / Alt+ArrowLeft) ---
+      if (event.altKey && (event.key === "ArrowLeft" || event.key === "Left")) {
+        event.preventDefault();
+        navigateBack();
+      }
+
+      // --- Navigate Forward (Alt+Right / Alt+ArrowRight) ---
+      if (event.altKey && (event.key === "ArrowRight" || event.key === "Right")) {
+        event.preventDefault();
+        navigateForward();
+      }
     };
 
 
@@ -140,6 +156,8 @@ export function useGlobalHotkeys({
     activeLeftTabId,
     activeRightTabId,
     saveTabDataById,
+    navigateBack,
+    navigateForward,
     splitView?.activeSide,
     splitView?.activeLeftTabId,
     splitView?.activeRightTabId,
