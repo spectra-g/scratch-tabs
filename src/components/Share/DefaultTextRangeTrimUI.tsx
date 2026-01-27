@@ -14,12 +14,15 @@ export const DefaultTextRangeTrimUI: React.FC<TrimUIProps> = ({
   const lines = content.split("\n");
   const totalLines = lines.length;
 
-  // Default to showing middle portion of content
+  // Default to showing all content
   const defaultStart = 0;
-  const defaultEnd = totalLines - 1;
+  const defaultEnd = Math.max(0, totalLines - 1);
 
   const [startLine, setStartLine] = useState(defaultStart);
   const [endLine, setEndLine] = useState(defaultEnd);
+
+  // For single line content, ensure we handle it gracefully
+  const isSingleLine = totalLines === 1;
 
   // Calculate trimmed content and size
   useEffect(() => {
@@ -77,45 +80,53 @@ export const DefaultTextRangeTrimUI: React.FC<TrimUIProps> = ({
       </div>
 
       {/* Line range controls */}
-      <div className="space-y-3 flex-shrink-0">
-        {/* Start line */}
-        <div>
-          <label className="text-xs text-secondary block mb-1">
-            Start Line
-          </label>
-          <input
-            type="range"
-            min={0}
-            max={totalLines - 1}
-            value={startLine}
-            onChange={handleStartChange}
-            className="w-full"
-          />
-          <div className="flex justify-between text-xs text-muted mt-1">
-            <span>Line {startLine + 1}</span>
-            <span>{lines[startLine]?.substring(0, 30) || ""}...</span>
-          </div>
+      {isSingleLine ? (
+        <div className="bg-surface-secondary rounded p-3 text-xs text-secondary flex-shrink-0">
+          <p className="text-center">
+            Content has only one line. All content will be included in the share.
+          </p>
         </div>
+      ) : (
+        <div className="space-y-3 flex-shrink-0">
+          {/* Start line */}
+          <div>
+            <label className="text-xs text-secondary block mb-1">
+              Start Line
+            </label>
+            <input
+              type="range"
+              min={0}
+              max={totalLines - 1}
+              value={startLine}
+              onChange={handleStartChange}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-muted mt-1">
+              <span>Line {startLine + 1}</span>
+              <span>{lines[startLine]?.substring(0, 30) || ""}...</span>
+            </div>
+          </div>
 
-        {/* End line */}
-        <div>
-          <label className="text-xs text-secondary block mb-1">
-            End Line
-          </label>
-          <input
-            type="range"
-            min={0}
-            max={totalLines - 1}
-            value={endLine}
-            onChange={handleEndChange}
-            className="w-full"
-          />
-          <div className="flex justify-between text-xs text-muted mt-1">
-            <span>Line {endLine + 1}</span>
-            <span>{lines[endLine]?.substring(0, 30) || ""}...</span>
+          {/* End line */}
+          <div>
+            <label className="text-xs text-secondary block mb-1">
+              End Line
+            </label>
+            <input
+              type="range"
+              min={0}
+              max={totalLines - 1}
+              value={endLine}
+              onChange={handleEndChange}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-muted mt-1">
+              <span>Line {endLine + 1}</span>
+              <span>{lines[endLine]?.substring(0, 30) || ""}...</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Selection summary */}
       <div className="bg-surface-secondary rounded p-3 text-xs space-y-1 flex-shrink-0">
@@ -138,7 +149,7 @@ export const DefaultTextRangeTrimUI: React.FC<TrimUIProps> = ({
         <label className="text-xs text-secondary block mb-2">
           Preview ({selectedLines.toLocaleString()} lines selected)
         </label>
-        <div className="bg-canvas border border-base rounded p-3 text-xs font-mono text-secondary h-64 overflow-y-auto scrollbar-thin">
+        <div className="bg-canvas border border-base rounded p-3 text-xs font-mono text-secondary h-64 overflow-y-auto custom-scrollbar">
           {lines.slice(startLine, endLine + 1).map((line, i) => (
             <div key={i} className="hover:bg-element-hover px-1 -mx-1">
               <span className="text-muted inline-block w-12 text-right mr-2 select-none">

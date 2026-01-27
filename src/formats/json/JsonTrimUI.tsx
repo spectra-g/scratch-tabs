@@ -200,7 +200,7 @@ const JsonTrimUI: React.FC<TrimUIProps> = ({
                 />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
                 {keys.map((info) => (
                     <button
                         key={info.key}

@@ -318,4 +318,161 @@ describe('ShareModal', () => {
       expect(screen.getByTestId('line-range-selector')).toBeInTheDocument();
     });
   });
+
+  describe('Manual content customization', () => {
+    beforeEach(() => {
+      // Mock curl format without shareStrategy
+      (formatRegistry.getById as jest.Mock).mockReturnValue({
+        id: 'curl',
+        name: 'Curl',
+        shareStrategy: undefined,
+      });
+    });
+
+    test('should show Customize Content button when content fits', async () => {
+      const curlContent = 'curl https://api.example.com/users';
+      const tab = createMockTab('curl', curlContent);
+
+      (shareService.canFitInUrl as jest.Mock).mockReturnValue({
+        fits: true,
+        size: 100,
+        maxSize: 1800,
+        percentUsed: 5.5,
+      });
+
+      (shareService.generateShareUrl as jest.Mock).mockReturnValue('#/s/v1/curl/full/abc123');
+
+      await act(async () => {
+        render(<ShareModal tab={tab} onClose={mockOnClose} />);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Shareable URL')).toBeInTheDocument();
+      });
+
+      // Should show the Customize Content button
+      expect(screen.getByText('Customize Content')).toBeInTheDocument();
+    });
+
+    test('should show trim UI when Customize Content is clicked', async () => {
+      const curlContent = 'curl https://api.example.com/users';
+      const tab = createMockTab('curl', curlContent);
+
+      (shareService.canFitInUrl as jest.Mock).mockReturnValue({
+        fits: true,
+        size: 100,
+        maxSize: 1800,
+        percentUsed: 5.5,
+      });
+
+      (shareService.generateShareUrl as jest.Mock).mockReturnValue('#/s/v1/curl/full/abc123');
+
+      await act(async () => {
+        render(<ShareModal tab={tab} onClose={mockOnClose} />);
+      });
+
+      // Wait for initial render
+      await waitFor(() => {
+        expect(screen.getByText('Customize Content')).toBeInTheDocument();
+      });
+
+      // Click the Customize Content button
+      const customizeButton = screen.getByText('Customize Content');
+      await act(async () => {
+        customizeButton.click();
+      });
+
+      // Should now show the trim UI
+      await waitFor(() => {
+        expect(screen.getByTestId('line-range-selector')).toBeInTheDocument();
+      });
+
+      // Should show the trimmed content header
+      expect(screen.getByText(/Shareable URL \(Trimmed Content\)/)).toBeInTheDocument();
+    });
+
+    test('should show different message in manual trim mode', async () => {
+      const curlContent = 'curl https://api.example.com/users';
+      const tab = createMockTab('curl', curlContent);
+
+      (shareService.canFitInUrl as jest.Mock).mockReturnValue({
+        fits: true,
+        size: 100,
+        maxSize: 1800,
+        percentUsed: 5.5,
+      });
+
+      (shareService.generateShareUrl as jest.Mock).mockReturnValue('#/s/v1/curl/full/abc123');
+
+      await act(async () => {
+        render(<ShareModal tab={tab} onClose={mockOnClose} />);
+      });
+
+      // Click Customize Content
+      await waitFor(() => {
+        expect(screen.getByText('Customize Content')).toBeInTheDocument();
+      });
+
+      const customizeButton = screen.getByText('Customize Content');
+      await act(async () => {
+        customizeButton.click();
+      });
+
+      // Should show manual trim message
+      await waitFor(() => {
+        expect(screen.getByText(/This URL contains only the selected portion of your content/)).toBeInTheDocument();
+      });
+    });
+
+    test('should work with JSON content', async () => {
+      const jsonContent = '{"name": "test", "value": 123}';
+      const tab = createMockTab('json', jsonContent);
+
+      const mockJsonShareStrategy = {
+        supportsCustomTrim: true,
+        canTrim: jest.fn().mockReturnValue(true),
+        getTrimUI: jest.fn(),
+        encodeMetadata: jest.fn(),
+        decodeMetadata: jest.fn(),
+        applyTrim: jest.fn(),
+      };
+
+      (formatRegistry.getById as jest.Mock).mockReturnValue({
+        id: 'json',
+        name: 'JSON',
+        shareStrategy: mockJsonShareStrategy,
+      });
+
+      (shareService.canFitInUrl as jest.Mock).mockReturnValue({
+        fits: true,
+        size: 150,
+        maxSize: 1800,
+        percentUsed: 8.3,
+      });
+
+      (shareService.generateShareUrl as jest.Mock).mockReturnValue('#/s/v1/json/full/abc123');
+
+      await act(async () => {
+        render(<ShareModal tab={tab} onClose={mockOnClose} />);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Shareable URL')).toBeInTheDocument();
+      });
+
+      // Should show Customize Content button
+      expect(screen.getByText('Customize Content')).toBeInTheDocument();
+
+      // Click the button
+      const customizeButton = screen.getByText('Customize Content');
+      await act(async () => {
+        customizeButton.click();
+      });
+
+      // Should show JSON trim UI
+      await waitFor(() => {
+        expect(screen.getByTestId('json-trim-ui')).toBeInTheDocument();
+      });
+    });
+  });
 });
