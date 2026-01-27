@@ -1,39 +1,30 @@
-export const WELCOME_TAB_CONTENT = `# 👋 Welcome to Scratch Tabs.
+export const WELCOME_TAB_CONTENT = `# 👋 Welcome to Your Workspace
 
-**Your data stays here.** 100% Local (IndexedDB). No tracking. No servers.
+You're all set! This workspace is ready for your content.
 
-### 1. Try the "Smart View"
-The app detects data structures automatically.
-**Action:** Copy/Paste the JSON block below to see the "Smart View" popup appear in the top-right.
+### Quick Reminders
+- **Smart Views:** Paste JSON/CSV to see automatic visualizations with the "Open View" button
+- **Dev Tools:** Click the extension icon to open 25+ tools (JWT, Regex, REST Client, UUID, Cron, etc.)
+- **Transformation Pipelines:** Right-click selected text → choose pipeline steps (Trim, Base64, etc.)
+- **Auto-Save:** Everything saves automatically to IndexedDB (100% local, no servers)
+- **Closing tabs:** If you close a tab it's gone forever
 
-\`\`\`json
-{
-  "demo": "smart_view",
-  "status": "ready",
-  "features": ["tree_view", "json_path", "validation"],
-  "privacy": true
-}
-\`\`\`
+### Organize Your Work
+- **Create tabs** by double-clicking the tab bar or new tab icon (top right)
+- **Group related work** into different workspaces using the sidebar (\`Ctrl+B\`)
+- **Drag tabs** between left and right panes for split view comparison
 
-### 2. Try a Tablet (Tool)
-Don't context switch.
-**Action:** Click the extensions icon at the top right of the page.
-*   Type **"UUID"** to generate an ID.
-*   Type **"Cron"** to build a schedule.
-
-### 3. Transformation Pipelines
-Unix pipes for the browser.
-**Action:** Select the text below, **Right-Click**, and choose **Transformation Pipeline**.
-*Try adding steps: Trim -> Uppercase -> Base64 Encode*
-
-\`   transform_me_please   \`
+### Keyboard Shortcuts
+| Action | Shortcut |
+|--------|----------|
+| New tab | Double-click tab bar |
+| Dev tools | Extension icon (top right) |
+| Command bar | \`F1\` |
+| Global search | \`Ctrl+Shift+F\` |
+| Toggle sidebar | \`Ctrl+B\` |
+| Tab options | Right-click any tab |
 
 ---
-### ⌨️ Cheat Sheet
-*   **New Tab:** Double-click the empty space in the tab bar.
-*   **Tab options:** Right-click any tab for more options.
-*   **Tools:** Click the extensions icon at the top right of the page.
-*   **Command Bar:** \`F1\`
-*   **Search:** \`Cmd/Ctrl + Shift + F\`
-*   **Sidebar toggle:** \`Cmd/Ctrl + B\`
+
+**Start by closing this tab or paste some data to begin!** All your work stays private in your browser.
 `;
