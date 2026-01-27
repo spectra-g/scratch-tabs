@@ -132,6 +132,19 @@ export const WelcomeScreen: React.FC = () => {
     handleNewTab(false, content);
   }, [handleNewTab]);
 
+  const handlePasteFromClipboard = useCallback(async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        handleNewTab(false, text);
+      }
+    } catch (error) {
+      console.error("Failed to read from clipboard:", error);
+      // Fallback: just create an empty tab
+      handleNewTab(false);
+    }
+  }, [handleNewTab]);
+
   const handleOpenFile = useCallback(() => {
     const input = document.createElement("input");
     input.type = "file";
@@ -263,7 +276,7 @@ export const WelcomeScreen: React.FC = () => {
       icon: Upload,
       title: "Paste Content",
       description: "Auto-detect format",
-      onClick: handleImportFromClipboard,
+      onClick: handlePasteFromClipboard,
     },
     {
       icon: Package,
