@@ -190,8 +190,8 @@ describe('ToolSelectorModal', () => {
 
         await waitFor(() => {
             const tabletCard = screen.getByText('Tablet Item').closest('button');
-            // List items use border-l-secondary
-            expect(tabletCard?.className).toContain('border-l-secondary');
+            // List items use border-l-primary (updated polish)
+            expect(tabletCard?.className).toContain('border-l-primary');
         });
     });
 
@@ -211,7 +211,7 @@ describe('ToolSelectorModal', () => {
         });
 
         const initialCard = screen.getByText('Search Result').closest('button');
-        expect(initialCard?.className).toContain('border-l-secondary');
+        expect(initialCard?.className).toContain('border-l-primary');
 
         // Press right arrow - should not change selection in list view
         await act(async () => {
@@ -220,6 +220,6 @@ describe('ToolSelectorModal', () => {
 
         // Selection should remain the same
         const stillSelected = screen.getByText('Search Result').closest('button');
-        expect(stillSelected?.className).toContain('border-l-secondary');
+        expect(stillSelected?.className).toContain('border-l-primary');
     });
 });

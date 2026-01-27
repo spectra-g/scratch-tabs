@@ -76,16 +76,14 @@ export class TabBarActions {
     await expect(activeTab).toBeVisible();
   }
 
-  async clickOpenSpecializedTablet() {
-    // This button is on the welcome screen - look for the button with the text "Open specialized tablet"
-    const button = this.page.locator('button:has-text("Open specialized tablet")');
+  async clickDevTools() {
+    const button = this.page.locator('button:has-text("Dev Tools")');
     await expect(button).toBeVisible();
     await button.click();
   }
 
-  async clickImportFromClipboard() {
-    // This button is on the welcome screen - look for the button with the text "Import from clipboard"
-    const button = this.page.locator('button:has-text("Import from clipboard")');
+  async clickPasteContent() {
+    const button = this.page.locator('button:has-text("Paste Content")');
     await expect(button).toBeVisible();
     await button.click();
   }

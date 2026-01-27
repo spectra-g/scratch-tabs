@@ -1,3 +1,4 @@
+@welcome
 Feature: Welcome Screen Entry Points
 
   Background:
@@ -64,8 +65,8 @@ Feature: Welcome Screen Entry Points
     Then the preview should be visible
     And the URL should contain "welcome"
 
-  Scenario: Create new tablet from "Open specialized tablet" button
-    When I click the "Open specialized tablet" button
+  Scenario: Create new tablet from "Dev Tools" button
+    When I click the "Dev Tools" button
     And I select "Password Generator" from the tablet selector
     Then the "Welcome" tab should exist and not be active
     And the "Password Generator" tablet should be active
@@ -75,9 +76,9 @@ Feature: Welcome Screen Entry Points
     Then the preview should be visible
     And the URL should contain "welcome"
 
-  Scenario: Create new tab from "Import from clipboard" button
+  Scenario: Create new tab from "Paste Content" button
     When I set clipboard content to "Imported clipboard content"
-    And I click the "Import from clipboard" button
+    And I click the "Paste Content" button
     Then the "Welcome" tab should exist and not be active
     And the "Scratch 1" tab should be active
     And the active editor content should be:

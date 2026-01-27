@@ -15,12 +15,31 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.19.0';
+export const APP_VERSION = '1.20.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.19.0",
+    "version": "1.20.0",
     "type": "latest",
+    "date": "2026-01-27",
+    "headline": "Navigation History & Welcome Screen Redesign",
+    "summary": "VS Code-style back/forward navigation with persistence, plus modernized welcome screen with enhanced onboarding",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Global Navigation History:** Track your journey through workspaces and tabs with back/forward navigation - history persists across sessions in IndexedDB, remembers up to 50 entries with FIFO eviction, and automatically skips deleted tabs/workspaces",
+          "**Navigation Controls:** Back/Forward buttons in sidebar header with disabled states, plus keyboard shortcuts (Ctrl+Shift+- for back, Ctrl+Shift+= for forward)",
+          "**Smart Navigation:** Prevents recording history during back/forward operations to avoid recursion, validates entries before navigation, and handles cross-workspace jumps seamlessly",
+          "**Welcome Screen Redesign:** Modernized first-run experience with hero section featuring value proposition and trust badges (Offline & Private, Persisted Locally, No Server Calls), tiered action cards with semantic color theming, and enhanced keyboard shortcut discovery",
+          "**Enhanced Onboarding:** Primary action cards for Format JSON (demo Smart View), Dev Tools (25+ utilities), and New Scratch Tab, plus secondary actions for Open File, Paste Content, and Import Workspace - all with clear descriptions and hints"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.19.0",
+    "type": "release",
     "date": "2026-01-22",
     "headline": "Workspace Sidebar Explorer",
     "summary": "Workspace sidebar with collapsible tree view, icon rail, and intelligent workspace management",

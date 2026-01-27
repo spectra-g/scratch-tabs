@@ -217,7 +217,7 @@ export const ToolSelectorModal: React.FC<ToolSelectorModalProps> = ({
 
         return (
             <div className="mb-8">
-                <h2 className="text-[10px] uppercase tracking-[0.2em] text-muted font-bold mb-3 px-1">
+                <h2 className="text-[10px] uppercase tracking-[0.2em] text-muted/70 font-bold mb-3 px-1 relative before:absolute before:left-0 before:bottom-[-4px] before:w-8 before:h-0.5 before:bg-primary/30 before:rounded-full">
                     {title}
                 </h2>
                 <div className={layout === 'grid' ? "grid grid-cols-5 gap-3" : "flex flex-col gap-1"}>
@@ -249,7 +249,7 @@ export const ToolSelectorModal: React.FC<ToolSelectorModalProps> = ({
 
             {/* Modal Container */}
             <div
-                className="relative w-full max-w-4xl mx-4 bg-surface border border-base rounded-3xl shadow-2xl flex flex-col max-h-[80vh] overflow-hidden animate-in zoom-in-95 duration-200"
+                className="relative w-full max-w-4xl mx-4 bg-surface border border-base rounded-3xl shadow-2xl backdrop-blur-xl ring-1 ring-white/5 flex flex-col max-h-[80vh] overflow-hidden animate-in zoom-in-95 duration-200"
                 role="dialog"
                 aria-label="Tool Selector"
             >
@@ -265,7 +265,7 @@ export const ToolSelectorModal: React.FC<ToolSelectorModalProps> = ({
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onKeyDown={handleKeyDown}
                             placeholder="What do you want to do?"
-                            className="w-full bg-surface-raised/50 border-0 border-b-2 border-transparent focus:border-focus rounded-2xl py-5 pl-14 pr-14 text-main text-2xl font-light transition-all outline-none placeholder:text-muted/50"
+                            className="w-full bg-surface-raised/50 border-0 rounded-2xl py-5 pl-14 pr-14 text-main text-2xl font-light transition-all outline-none placeholder:text-muted/50 focus:bg-surface-raised focus:ring-2 focus:ring-primary/20 focus:shadow-lg"
                         />
                         <button
                             onClick={onClose}
@@ -293,8 +293,8 @@ export const ToolSelectorModal: React.FC<ToolSelectorModalProps> = ({
 
                             {results.tablets.length === 0 && results.smartViews.length === 0 && results.formats.length === 0 && (
                                 <div className="flex flex-col items-center justify-center py-20 text-center">
-                                    <div className="w-20 h-20 bg-surface-secondary rounded-full flex items-center justify-center mb-6">
-                                        <Search size={40} className="text-muted" />
+                                    <div className="w-20 h-20 bg-gradient-to-br from-surface-secondary to-surface-raised rounded-full flex items-center justify-center mb-6 shadow-inner">
+                                        <Search size={40} className="text-muted/50" />
                                     </div>
                                     <h3 className="text-main font-semibold text-xl">No tools match your search</h3>
                                     <p className="text-secondary mt-2">Try searching for keywords like "json", "jwt", or "uuid".</p>
@@ -308,15 +308,15 @@ export const ToolSelectorModal: React.FC<ToolSelectorModalProps> = ({
                 <div className="px-6 py-4 border-t border-base bg-surface-secondary/20 flex items-center justify-between text-[11px] text-muted font-medium">
                     <div className="flex items-center gap-6">
                         <span className="flex items-center gap-1.5">
-                            <kbd className="px-1.5 py-0.5 bg-surface border border-base rounded shadow-sm text-[10px]">↑↓←→</kbd>
+                            <kbd className="px-1.5 py-0.5 bg-gradient-to-b from-surface to-surface-secondary/50 border border-base rounded shadow-sm text-[10px] font-mono">↑↓←→</kbd>
                             <span>Navigate</span>
                         </span>
                         <span className="flex items-center gap-1.5">
-                            <kbd className="px-1.5 py-0.5 bg-surface border border-base rounded shadow-sm text-[10px]">↵</kbd>
+                            <kbd className="px-1.5 py-0.5 bg-gradient-to-b from-surface to-surface-secondary/50 border border-base rounded shadow-sm text-[10px] font-mono">↵</kbd>
                             <span>Select</span>
                         </span>
                         <span className="flex items-center gap-1.5">
-                            <kbd className="px-1.5 py-0.5 bg-surface border border-base rounded shadow-sm text-[10px]">esc</kbd>
+                            <kbd className="px-1.5 py-0.5 bg-gradient-to-b from-surface to-surface-secondary/50 border border-base rounded shadow-sm text-[10px] font-mono">esc</kbd>
                             <span>Close</span>
                         </span>
                     </div>

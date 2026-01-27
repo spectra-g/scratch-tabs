@@ -26,6 +26,8 @@ interface UseGlobalHotkeysParams {
  * - Ctrl+Shift+F: Open global search (with selected text)
  * - Ctrl+W: Close active tab (with confirmation if has content)
  * - Ctrl+S / Cmd+S: Save state and download active tab as file
+ * - Ctrl+Shift+-: Navigate back in history
+ * - Ctrl+Shift+=: Navigate forward in history
  */
 export function useGlobalHotkeys({
   onKeyboardCloseConfirmation,
@@ -51,10 +53,12 @@ export function useGlobalHotkeys({
   );
 
   // Get root store actions
-  const { saveTabDataById } = useStoreWithEqualityFn(
+  const { saveTabDataById, navigateBack, navigateForward } = useStoreWithEqualityFn(
     useRootStore,
     (state) => ({
       saveTabDataById: state.saveTabDataById,
+      navigateBack: state.navigateBack,
+      navigateForward: state.navigateForward,
     }),
     shallow,
   );
@@ -129,6 +133,32 @@ export function useGlobalHotkeys({
         event.preventDefault();
         useSidebarStore.getState().toggleSidebar();
       }
+
+      // --- Navigate Back (Ctrl+Shift+-) ---
+      // Note: Shift+- produces "_" character, but also check for "-" and the code
+      if (
+        event.ctrlKey &&
+        event.shiftKey &&
+        !event.altKey &&
+        !event.metaKey &&
+        (event.key === "_" || event.key === "-" || event.code === "Minus")
+      ) {
+        event.preventDefault();
+        navigateBack();
+      }
+
+      // --- Navigate Forward (Ctrl+Shift+=) ---
+      // Note: Shift+= produces "+" character, but also check for "=" and the code
+      if (
+        event.ctrlKey &&
+        event.shiftKey &&
+        !event.altKey &&
+        !event.metaKey &&
+        (event.key === "+" || event.key === "=" || event.code === "Equal")
+      ) {
+        event.preventDefault();
+        navigateForward();
+      }
     };
 
 
@@ -140,6 +170,8 @@ export function useGlobalHotkeys({
     activeLeftTabId,
     activeRightTabId,
     saveTabDataById,
+    navigateBack,
+    navigateForward,
     splitView?.activeSide,
     splitView?.activeLeftTabId,
     splitView?.activeRightTabId,

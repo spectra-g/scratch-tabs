@@ -52,9 +52,9 @@ describe('ToolCard', () => {
     it('applies focused styles when isFocused is true (list variant)', () => {
         const { rerender } = render(<ToolCard item={mockItem} onClick={() => { }} isFocused={false} variant="list" />);
         const button = screen.getByRole('button');
-        expect(button.className).not.toContain('border-l-secondary');
+        expect(button.className).not.toContain('border-l-primary');
 
         rerender(<ToolCard item={mockItem} onClick={() => { }} isFocused={true} variant="list" />);
-        expect(button.className).toContain('border-l-secondary');
+        expect(button.className).toContain('border-l-primary');
     });
 });

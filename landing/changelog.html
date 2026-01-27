@@ -126,27 +126,41 @@
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
 
-        <!-- Version 1.19.0 -->
+        <!-- Version 1.20.0 -->
         <div class="changelog-entry latest">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-white">V1.19.0</h2>
+              <h2 class="text-2xl font-bold text-white">V1.20.0</h2>
               <span class="badge latest">LATEST</span>
             </div>
-            <span class="text-gray-500 text-xs font-mono">01/22/2026</span>
+            <span class="text-gray-500 text-xs font-mono">01/27/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">WORKSPACE SIDEBAR EXPLORER</h3>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">NAVIGATION HISTORY & WELCOME SCREEN REDESIGN</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">A comprehensive workspace explorer that provides peripheral awareness of all workspaces and tabs in a persistent sidebar. Navigate your entire workspace structure with collapsible trees, context menus, and a minimal icon rail for focused work.</p>
+            <p class="mb-4">Navigate through your workspace journey with browser-style back/forward buttons and keyboard shortcuts, plus a completely redesigned welcome screen with improved visual hierarchy and clearer value proposition.</p>
 
             <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
             <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Workspace Sidebar Explorer:</strong> Collapsible tree view showing all workspaces and tabs - expand/collapse workspaces to browse without switching, with clear visual distinction between active and expanded workspaces</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Icon Rail (Collapsed Mode):</strong> Minimal icon rail showing workspace first-letters in themed color badges - toggle between full sidebar and compact rail with Cmd+B or click to expand</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Context Menus:</strong> Right-click workspaces for create/rename/delete actions, right-click tabs for rename/delete/pin/duplicate/move operations</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Auto-Reveal Active Tab:</strong> Sidebar automatically expands active workspace and scrolls to show the current tab when switching via tab bar or keyboard</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Resizable Sidebar:</strong> Drag the resize handle to adjust sidebar width (150px-600px) or drag below 100px to snap-collapse to icon rail with smooth visual feedback</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Global Navigation History:</strong> Track your journey through workspaces and tabs with back/forward navigation - history persists across sessions in IndexedDB, remembers up to 50 entries with FIFO eviction, and automatically skips deleted tabs/workspaces</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Navigation Controls:</strong> Back/Forward buttons in sidebar header with disabled states, plus keyboard shortcuts (Ctrl+Shift+- for back, Ctrl+Shift+= for forward)</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Smart Navigation:</strong> Prevents recording history during back/forward operations to avoid recursion, validates entries before navigation, and handles cross-workspace jumps seamlessly</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Welcome Screen Redesign:</strong> Modernized first-run experience with hero section featuring value proposition and trust badges (Offline & Private, Persisted Locally, No Server Calls), tiered action cards with semantic color theming, and enhanced keyboard shortcut discovery</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Enhanced Onboarding:</strong> Primary action cards for Format JSON (demo Smart View), Dev Tools (25+ utilities), and New Scratch Tab, plus secondary actions for Open File, Paste Content, and Import Workspace - all with clear descriptions and hints</span></li>
             </ul>
+          </div>
+        </div>
+        <!-- Version 1.19.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.19.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">01/22/2026</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">WORKSPACE SIDEBAR EXPLORER</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p>Workspace sidebar with collapsible tree view, icon rail, and intelligent workspace management</p>
           </div>
         </div>
         <!-- Version 1.18.0 -->
@@ -540,7 +554,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.19.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.20.0</span>
         </div>
 
         <div class="flex space-x-8">
