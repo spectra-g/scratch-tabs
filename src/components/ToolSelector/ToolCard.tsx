@@ -25,7 +25,7 @@ export const ToolCard = React.forwardRef<HTMLButtonElement, ToolCardProps>(({
                     group flex items-center p-3 w-full text-left
                     bg-surface hover:bg-element-hover border-b border-base last:border-0
                     transition-all duration-150 outline-none
-                    ${isFocused ? 'bg-element-hover border-l-2 border-l-secondary' : ''}
+                    ${isFocused ? 'bg-element-hover border-l-4 border-l-primary shadow-sm scale-[1.01]' : ''}
                 `}
             >
                 <div className="p-2 bg-surface-raised rounded-lg mr-4 group-hover:bg-surface transition-colors flex-shrink-0">
@@ -58,7 +58,7 @@ export const ToolCard = React.forwardRef<HTMLButtonElement, ToolCardProps>(({
                 ${isFocused ? 'bg-element-hover border-secondary shadow-md z-10' : ''}
             `}
         >
-            <div className="p-4 bg-surface-raised rounded-2xl mb-4 group-hover:bg-surface transition-colors shadow-sm">
+            <div className="p-4 bg-gradient-to-br from-surface-raised to-surface-secondary/30 rounded-2xl mb-4 group-hover:from-surface group-hover:to-surface-raised transition-all shadow-sm group-hover:shadow-md">
                 {Icon && <Icon size={32} className="text-secondary group-hover:text-main" />}
             </div>
             <h3 className="text-main font-semibold text-sm line-clamp-1 w-full">
