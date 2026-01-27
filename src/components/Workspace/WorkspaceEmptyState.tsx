@@ -133,7 +133,7 @@ export const WorkspaceEmptyState: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-2xl">
         <EmptyStateActionCard
           label="New Tab"
-          description="Empty Scratch Pad"
+          description="Empty Scratch Tab"
           icon="plus"
           colorScheme="primary"
           onClick={handleNewTabClick}

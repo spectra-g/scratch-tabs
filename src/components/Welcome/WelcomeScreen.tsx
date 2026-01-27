@@ -256,7 +256,7 @@ export const WelcomeScreen: React.FC = () => {
     },
     {
       icon: FileText,
-      title: "New Scratch Pad",
+      title: "New Scratch Tab",
       description: "Full-featured Monaco editor",
       hint: "Markdown, TypeScript, SQL, JSON, and 40+ formats",
       onClick: handleCreateNewTab,
@@ -316,7 +316,7 @@ export const WelcomeScreen: React.FC = () => {
               />
               <h1 className="text-3xl font-mono font-medium text-main">SCRATCH_TABS</h1>
             </div>
-            <p className="text-muted text-sm font-mono mb-6">// v1.19.0</p>
+            <p className="text-muted text-sm font-mono mb-6">// v1.20.0</p>
 
             {/* Value Proposition */}
             <h2 className="text-2xl font-semibold text-main mb-4">

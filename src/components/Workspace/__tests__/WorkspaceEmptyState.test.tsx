@@ -96,7 +96,7 @@ describe('WorkspaceEmptyState', () => {
       render(<WorkspaceEmptyState />);
 
       expect(screen.getByText('New Tab')).toBeInTheDocument();
-      expect(screen.getByText('Empty Scratch Pad')).toBeInTheDocument();
+      expect(screen.getByText('Empty Scratch Tab')).toBeInTheDocument();
       expect(screen.getByText('Paste')).toBeInTheDocument();
       expect(screen.getByText('From Clipboard')).toBeInTheDocument();
       expect(screen.getByText('Open File')).toBeInTheDocument();
