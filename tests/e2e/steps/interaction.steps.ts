@@ -115,11 +115,11 @@ When('I wait for the page to stabilize', async function () {
 When('I double-click on the page', async function () {
   await this.navigation.doubleClickOnPage();
 });
-When('I click the "Open specialized tablet" button', async function () {
-  await this.tabBar.clickOpenSpecializedTablet();
+When('I click the "Dev Tools" button', async function () {
+  await this.tabBar.clickDevTools();
 });
-When('I click the "Import from clipboard" button', async function () {
-  await this.tabBar.clickImportFromClipboard();
+When('I click the "Paste Content" button', async function () {
+  await this.tabBar.clickPasteContent();
 });
 
 When('I generate a 1.5MB JSON file and set it to clipboard', async function () {
