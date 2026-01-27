@@ -26,8 +26,8 @@ interface UseGlobalHotkeysParams {
  * - Ctrl+Shift+F: Open global search (with selected text)
  * - Ctrl+W: Close active tab (with confirmation if has content)
  * - Ctrl+S / Cmd+S: Save state and download active tab as file
- * - Alt+Left: Navigate back in history
- * - Alt+Right: Navigate forward in history
+ * - Ctrl+Shift+-: Navigate back in history
+ * - Ctrl+Shift+=: Navigate forward in history
  */
 export function useGlobalHotkeys({
   onKeyboardCloseConfirmation,
@@ -134,14 +134,28 @@ export function useGlobalHotkeys({
         useSidebarStore.getState().toggleSidebar();
       }
 
-      // --- Navigate Back (Alt+Left / Alt+ArrowLeft) ---
-      if (event.altKey && (event.key === "ArrowLeft" || event.key === "Left")) {
+      // --- Navigate Back (Ctrl+Shift+-) ---
+      // Note: Shift+- produces "_" character, but also check for "-" and the code
+      if (
+        event.ctrlKey &&
+        event.shiftKey &&
+        !event.altKey &&
+        !event.metaKey &&
+        (event.key === "_" || event.key === "-" || event.code === "Minus")
+      ) {
         event.preventDefault();
         navigateBack();
       }
 
-      // --- Navigate Forward (Alt+Right / Alt+ArrowRight) ---
-      if (event.altKey && (event.key === "ArrowRight" || event.key === "Right")) {
+      // --- Navigate Forward (Ctrl+Shift+=) ---
+      // Note: Shift+= produces "+" character, but also check for "=" and the code
+      if (
+        event.ctrlKey &&
+        event.shiftKey &&
+        !event.altKey &&
+        !event.metaKey &&
+        (event.key === "+" || event.key === "=" || event.code === "Equal")
+      ) {
         event.preventDefault();
         navigateForward();
       }

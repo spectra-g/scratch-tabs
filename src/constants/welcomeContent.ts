@@ -17,6 +17,8 @@ Your workspace is live. Data stays in your browser.
 | Action | Windows/Linux | Mac |
 |--------|---------------|-----|
 | New Tab | Double-click bar | Double-click bar |
+| Navigate Back | \`Ctrl+Shift+-\` | \`Ctrl+Shift+-\` |
+| Navigate Forward | \`Ctrl+Shift+=\` | \`Ctrl+Shift+=\` |
 | Omni-Search | \`Ctrl+Shift+F\` | \`Cmd+Shift+F\` |
 | Command Palette | \`F1\` | \`F1\` |
 | Toggle Sidebar | \`Ctrl+B\` | \`Cmd+B\` |

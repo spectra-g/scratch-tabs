@@ -713,7 +713,7 @@ export const Sidebar: React.FC = () => {
                                         onClick={navigateBack}
                                         disabled={!canGoBack()}
                                         className="p-1 hover:bg-element-hover rounded text-secondary disabled:opacity-30 disabled:cursor-not-allowed hover:text-main transition-colors"
-                                        title="Go Back (Alt+Left)"
+                                        title="Go Back (Ctrl+Shift+-)"
                                         aria-label="Go Back"
                                         data-testid="sidebar-nav-back"
                                     >
@@ -723,7 +723,7 @@ export const Sidebar: React.FC = () => {
                                         onClick={navigateForward}
                                         disabled={!canGoForward()}
                                         className="p-1 hover:bg-element-hover rounded text-secondary disabled:opacity-30 disabled:cursor-not-allowed hover:text-main transition-colors"
-                                        title="Go Forward (Alt+Right)"
+                                        title="Go Forward (Ctrl+Shift+=)"
                                         aria-label="Go Forward"
                                         data-testid="sidebar-nav-forward"
                                     >

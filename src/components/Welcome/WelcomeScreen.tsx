@@ -396,6 +396,12 @@ export const WelcomeScreen: React.FC = () => {
             <kbd className="bg-surface border border-base px-2 py-1 rounded">Ctrl+V</kbd>
             {" "}to paste
           </span>
+          <span>
+            <kbd className="bg-surface border border-base px-2 py-1 rounded">Ctrl+Shift+-</kbd>
+            {" / "}
+            <kbd className="bg-surface border border-base px-2 py-1 rounded">Ctrl+Shift+=</kbd>
+            {" "}to navigate
+          </span>
         </div>
       </div>
 
