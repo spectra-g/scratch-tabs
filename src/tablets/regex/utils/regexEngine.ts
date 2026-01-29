@@ -4,6 +4,8 @@ import {
   RegexFlag,
   RegexError,
   RegexExplanation,
+  RegexNode,
+  RegexQuantifier,
 } from "../types";
 
 export const DEFAULT_FLAGS: RegexFlag[] = [
@@ -570,4 +572,510 @@ function describeSimpleCharacterList(content: string): string {
   }
 
   return `one of ${chars.join(', ')}`;
+}
+
+// =============================================================================
+// AST Parser - Builds a structured tree from regex patterns
+// =============================================================================
+
+interface ParseContext {
+  pattern: string;
+  pos: number;
+}
+
+export function parseRegexToAST(pattern: string): RegexNode {
+  if (!pattern) {
+    return { type: "root", children: [] };
+  }
+
+  const ctx: ParseContext = { pattern, pos: 0 };
+  const children = parseSequence(ctx, null);
+
+  return {
+    type: "root",
+    children,
+    position: { start: 0, end: pattern.length },
+  };
+}
+
+function parseSequence(ctx: ParseContext, stopChar: string | null): RegexNode[] {
+  const nodes: RegexNode[] = [];
+  let currentAlternatives: RegexNode[][] | null = null;
+
+  while (ctx.pos < ctx.pattern.length) {
+    const char = ctx.pattern[ctx.pos];
+
+    // Stop at closing paren or end
+    if (stopChar && char === stopChar) {
+      break;
+    }
+
+    // Handle alternation
+    if (char === "|") {
+      if (!currentAlternatives) {
+        currentAlternatives = [nodes.slice()];
+        nodes.length = 0;
+      } else {
+        currentAlternatives.push(nodes.slice());
+        nodes.length = 0;
+      }
+      ctx.pos++;
+      continue;
+    }
+
+    const node = parseNode(ctx);
+    if (node) {
+      nodes.push(node);
+    }
+  }
+
+  // Handle alternation
+  if (currentAlternatives) {
+    currentAlternatives.push(nodes);
+    return [
+      {
+        type: "alternation",
+        children: currentAlternatives.map((alt) => ({
+          type: "sequence" as const,
+          children: alt,
+        })),
+      },
+    ];
+  }
+
+  return nodes;
+}
+
+function parseNode(ctx: ParseContext): RegexNode | null {
+  const char = ctx.pattern[ctx.pos];
+  const start = ctx.pos;
+
+  let node: RegexNode | null = null;
+
+  switch (char) {
+    case "^":
+      ctx.pos++;
+      node = { type: "anchor", value: "^", position: { start, end: ctx.pos } };
+      break;
+
+    case "$":
+      ctx.pos++;
+      node = { type: "anchor", value: "$", position: { start, end: ctx.pos } };
+      break;
+
+    case ".":
+      ctx.pos++;
+      node = { type: "escape", value: ".", position: { start, end: ctx.pos } };
+      break;
+
+    case "\\":
+      node = parseEscape(ctx);
+      break;
+
+    case "[":
+      node = parseCharacterClass(ctx);
+      break;
+
+    case "(":
+      node = parseGroup(ctx);
+      break;
+
+    case "{":
+      // Quantifier without preceding element - treat as literal
+      ctx.pos++;
+      node = { type: "literal", value: "{", position: { start, end: ctx.pos } };
+      break;
+
+    case "*":
+    case "+":
+    case "?":
+      // Quantifier without preceding element - treat as literal
+      ctx.pos++;
+      node = { type: "literal", value: char, position: { start, end: ctx.pos } };
+      break;
+
+    default:
+      ctx.pos++;
+      node = { type: "literal", value: char, position: { start, end: ctx.pos } };
+      break;
+  }
+
+  // Check for quantifier
+  if (node && ctx.pos < ctx.pattern.length) {
+    const quantifier = tryParseQuantifier(ctx);
+    if (quantifier) {
+      node = {
+        type: "quantified",
+        children: [node],
+        quantifier,
+        position: { start, end: ctx.pos },
+      };
+    }
+  }
+
+  return node;
+}
+
+function parseEscape(ctx: ParseContext): RegexNode {
+  const start = ctx.pos;
+  ctx.pos++; // Skip backslash
+
+  if (ctx.pos >= ctx.pattern.length) {
+    return { type: "literal", value: "\\", position: { start, end: ctx.pos } };
+  }
+
+  const char = ctx.pattern[ctx.pos];
+
+  // Handle \p{...} and \P{...} unicode properties
+  if ((char === "p" || char === "P") && ctx.pattern[ctx.pos + 1] === "{") {
+    const endBrace = ctx.pattern.indexOf("}", ctx.pos + 2);
+    if (endBrace !== -1) {
+      const value = ctx.pattern.slice(start, endBrace + 1);
+      ctx.pos = endBrace + 1;
+      return {
+        type: "escape",
+        value,
+        position: { start, end: ctx.pos },
+      };
+    }
+  }
+
+  // Handle \xHH hex escapes
+  if (char === "x") {
+    const hex = ctx.pattern.slice(ctx.pos + 1, ctx.pos + 3);
+    if (/^[0-9a-fA-F]{2}$/.test(hex)) {
+      const value = ctx.pattern.slice(start, ctx.pos + 3);
+      ctx.pos += 3;
+      return {
+        type: "escape",
+        value,
+        position: { start, end: ctx.pos },
+      };
+    }
+  }
+
+  // Handle \uHHHH unicode escapes
+  if (char === "u") {
+    if (ctx.pattern[ctx.pos + 1] === "{") {
+      const endBrace = ctx.pattern.indexOf("}", ctx.pos + 2);
+      if (endBrace !== -1) {
+        const value = ctx.pattern.slice(start, endBrace + 1);
+        ctx.pos = endBrace + 1;
+        return {
+          type: "escape",
+          value,
+          position: { start, end: ctx.pos },
+        };
+      }
+    } else {
+      const hex = ctx.pattern.slice(ctx.pos + 1, ctx.pos + 5);
+      if (/^[0-9a-fA-F]{4}$/.test(hex)) {
+        const value = ctx.pattern.slice(start, ctx.pos + 5);
+        ctx.pos += 5;
+        return {
+          type: "escape",
+          value,
+          position: { start, end: ctx.pos },
+        };
+      }
+    }
+  }
+
+  // Handle \k<name> named backreferences
+  if (char === "k" && ctx.pattern[ctx.pos + 1] === "<") {
+    const endAngle = ctx.pattern.indexOf(">", ctx.pos + 2);
+    if (endAngle !== -1) {
+      const value = ctx.pattern.slice(start, endAngle + 1);
+      ctx.pos = endAngle + 1;
+      return {
+        type: "backreference",
+        value,
+        position: { start, end: ctx.pos },
+      };
+    }
+  }
+
+  // Handle \cX control characters
+  if (char === "c" && ctx.pos + 1 < ctx.pattern.length) {
+    const controlChar = ctx.pattern[ctx.pos + 1];
+    if (/[a-zA-Z]/.test(controlChar)) {
+      const value = ctx.pattern.slice(start, ctx.pos + 2);
+      ctx.pos += 2;
+      return {
+        type: "escape",
+        value,
+        position: { start, end: ctx.pos },
+      };
+    }
+  }
+
+  // Handle \0 octal escape (simplified - only \0)
+  if (char === "0") {
+    ctx.pos++;
+    return {
+      type: "escape",
+      value: "\\0",
+      position: { start, end: ctx.pos },
+    };
+  }
+
+  // Explicitly handle common escapes for better downstream description
+  const commonEscapes = "nrtvfbBSwWdD";
+  if (commonEscapes.includes(char)) {
+    ctx.pos++;
+    return {
+      type: "escape",
+      value: "\\" + char,
+      position: { start, end: ctx.pos },
+    };
+  }
+
+  ctx.pos++;
+  return {
+    type: "escape",
+    value: "\\" + char,
+    position: { start, end: ctx.pos },
+  };
+}
+
+function parseCharacterClass(ctx: ParseContext): RegexNode {
+  const start = ctx.pos;
+  ctx.pos++; // Skip '['
+
+  let negated = false;
+  if (ctx.pos < ctx.pattern.length && ctx.pattern[ctx.pos] === "^") {
+    negated = true;
+    ctx.pos++;
+  }
+
+  // Find the closing bracket, handling escaped brackets
+  while (ctx.pos < ctx.pattern.length) {
+    if (ctx.pattern[ctx.pos] === "\\") {
+      ctx.pos += 2; // Skip escaped character
+    } else if (ctx.pattern[ctx.pos] === "]") {
+      ctx.pos++;
+      break;
+    } else {
+      ctx.pos++;
+    }
+  }
+
+  const value = ctx.pattern.slice(start, ctx.pos);
+
+  return {
+    type: "character-class",
+    value,
+    negated,
+    position: { start, end: ctx.pos },
+  };
+}
+
+function parseGroup(ctx: ParseContext): RegexNode {
+  const start = ctx.pos;
+  ctx.pos++; // Skip '('
+
+  let groupType: "capturing" | "non-capturing" | "named" = "capturing";
+  let assertion: "positive" | "negative" | undefined;
+  let direction: "ahead" | "behind" | undefined;
+  let groupName: string | undefined;
+
+  // Check for group modifiers
+  if (ctx.pos < ctx.pattern.length && ctx.pattern[ctx.pos] === "?") {
+    ctx.pos++;
+    if (ctx.pos < ctx.pattern.length) {
+      const modifier = ctx.pattern[ctx.pos];
+
+      switch (modifier) {
+        case ":":
+          groupType = "non-capturing";
+          ctx.pos++;
+          break;
+        case "=":
+          assertion = "positive";
+          direction = "ahead";
+          ctx.pos++;
+          break;
+        case "!":
+          assertion = "negative";
+          direction = "ahead";
+          ctx.pos++;
+          break;
+        case "<":
+          ctx.pos++;
+          if (ctx.pos < ctx.pattern.length) {
+            const nextChar = ctx.pattern[ctx.pos];
+            if (nextChar === "=") {
+              assertion = "positive";
+              direction = "behind";
+              ctx.pos++;
+            } else if (nextChar === "!") {
+              assertion = "negative";
+              direction = "behind";
+              ctx.pos++;
+            } else {
+              // Named group: (?<name>...)
+              groupType = "named";
+              const nameEnd = ctx.pattern.indexOf(">", ctx.pos);
+              if (nameEnd > ctx.pos) {
+                groupName = ctx.pattern.slice(ctx.pos, nameEnd);
+                ctx.pos = nameEnd + 1;
+              }
+            }
+          }
+          break;
+      }
+    }
+  }
+
+  // Parse children
+  const children = parseSequence(ctx, ")");
+
+  // Skip closing paren
+  if (ctx.pos < ctx.pattern.length && ctx.pattern[ctx.pos] === ")") {
+    ctx.pos++;
+  }
+
+  const node: RegexNode = {
+    type: direction ? (direction === "ahead" ? "lookahead" : "lookbehind") : "group",
+    children,
+    position: { start, end: ctx.pos },
+  };
+
+  if (assertion) {
+    node.assertion = assertion;
+    node.direction = direction;
+  }
+
+  if (groupType !== "capturing" || groupName) {
+    node.groupType = groupType;
+    if (groupName) {
+      node.groupName = groupName;
+    }
+  }
+
+  return node;
+}
+
+function tryParseQuantifier(ctx: ParseContext): RegexQuantifier | null {
+  const char = ctx.pattern[ctx.pos];
+
+  let quantifier: RegexQuantifier | null = null;
+
+  switch (char) {
+    case "*":
+      ctx.pos++;
+      quantifier = { min: 0, max: null, greedy: true };
+      break;
+    case "+":
+      ctx.pos++;
+      quantifier = { min: 1, max: null, greedy: true };
+      break;
+    case "?":
+      ctx.pos++;
+      quantifier = { min: 0, max: 1, greedy: true };
+      break;
+    case "{":
+      quantifier = parseBraceQuantifier(ctx);
+      break;
+  }
+
+  // Check for lazy modifier
+  if (quantifier && ctx.pos < ctx.pattern.length && ctx.pattern[ctx.pos] === "?") {
+    quantifier.greedy = false;
+    ctx.pos++;
+  }
+
+  return quantifier;
+}
+
+function parseBraceQuantifier(ctx: ParseContext): RegexQuantifier | null {
+  const start = ctx.pos;
+  ctx.pos++; // Skip '{'
+
+  let numStr = "";
+  while (ctx.pos < ctx.pattern.length && /\d/.test(ctx.pattern[ctx.pos])) {
+    numStr += ctx.pattern[ctx.pos];
+    ctx.pos++;
+  }
+
+  if (numStr === "") {
+    ctx.pos = start;
+    return null;
+  }
+
+  const min = parseInt(numStr, 10);
+  let max: number | null = min;
+
+  if (ctx.pos < ctx.pattern.length && ctx.pattern[ctx.pos] === ",") {
+    ctx.pos++;
+    let maxStr = "";
+    while (ctx.pos < ctx.pattern.length && /\d/.test(ctx.pattern[ctx.pos])) {
+      maxStr += ctx.pattern[ctx.pos];
+      ctx.pos++;
+    }
+    max = maxStr === "" ? null : parseInt(maxStr, 10);
+  }
+
+  if (ctx.pos < ctx.pattern.length && ctx.pattern[ctx.pos] === "}") {
+    ctx.pos++;
+    return { min, max, greedy: true };
+  }
+
+  // Invalid brace quantifier, reset
+  ctx.pos = start;
+  return null;
+}
+
+// =============================================================================
+// Natural Language Explanation Entry Point
+// =============================================================================
+
+import { explainRegexNaturally as generateNaturalExplanation } from "./naturalLanguageGenerator";
+
+/**
+ * Generates a human-readable, natural language explanation of a regex pattern.
+ * Uses semantic analysis to understand the pattern's purpose rather than
+ * just describing individual tokens.
+ *
+ * @example
+ * explainRegexNaturally("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$")
+ * // Returns: "Checks that the string contains at least one lowercase letter,
+ * //          one uppercase letter, one digit, and is at least 8 characters long."
+ */
+export function explainRegexNaturally(pattern: string): string {
+  if (!pattern) {
+    return "No pattern to explain.";
+  }
+
+  try {
+    const ast = parseRegexToAST(pattern);
+
+    // Fidelity check: Verify reconstruction matches original (optional but helpful for debugging)
+    // We don't block on this, but it ensures our parser/generator are in sync
+    // In production, we might log this or just proceed if it's close enough
+    try {
+      const { astToString } = require("./semanticAnalyzer");
+      const reconstructed = astToString(ast);
+      if (reconstructed !== pattern) {
+        console.warn(`AST reconstruction differs: "${reconstructed}" vs "${pattern}"`);
+      }
+    } catch {
+      // Ignore errors in fidelity check
+    }
+
+    return generateNaturalExplanation(ast);
+  } catch (error) {
+    // Fallback to basic explanation if parsing fails
+    return generateFallbackExplanation(pattern);
+  }
+}
+
+function generateFallbackExplanation(pattern: string): string {
+  const explanations = explainRegex(pattern);
+  if (explanations.length === 0) {
+    return "No pattern to explain.";
+  }
+
+  const parts = explanations.map((exp) => exp.description.toLowerCase());
+  return "Matches: " + parts.join(", ") + ".";
 }

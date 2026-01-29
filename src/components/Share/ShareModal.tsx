@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Suspense, useCallback, useMemo } from "react";
-import { X, Copy, Check, AlertCircle } from "lucide-react";
+import { X, Copy, Check, AlertCircle, Edit3 } from "lucide-react";
 import { Tab } from "../../types";
 import { shareService } from "../../services/shareService";
 import { SizeIndicator } from "./SizeIndicator";
@@ -23,6 +23,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ tab, onClose }) => {
   const [currentSize, setCurrentSize] = useState<number>(0);
   const [copied, setCopied] = useState(false);
   const [selection, setSelection] = useState<any>(null);
+  const [manualTrimMode, setManualTrimMode] = useState(false);
 
   const format = formatRegistry.getById(tab.language);
   const shareStrategy = format?.shareStrategy;
@@ -56,7 +57,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ tab, onClose }) => {
 
   // Update URL when selection changes
   useEffect(() => {
-    if (status === "needs-trim" && selection) {
+    if ((status === "needs-trim" || manualTrimMode) && selection) {
       const { content, size } = selection;
       setCurrentSize(size);
 
@@ -73,7 +74,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ tab, onClose }) => {
         setUrl(generatedUrl);
       }
     }
-  }, [selection, status]);
+  }, [selection, status, manualTrimMode, maxSize, shareStrategy, tab.language]);
 
   const handleCopy = async () => {
     try {
@@ -88,6 +89,11 @@ export const ShareModal: React.FC<ShareModalProps> = ({ tab, onClose }) => {
 
   const handleSelectionChange = useCallback((newSelection: any) => {
     setSelection(newSelection);
+  }, []);
+
+  const handleCustomizeContent = useCallback(() => {
+    setManualTrimMode(true);
+    setStatus("needs-trim");
   }, []);
 
   // Determine which trim UI to use - memoized to prevent re-creation on every render
@@ -142,13 +148,13 @@ export const ShareModal: React.FC<ShareModalProps> = ({ tab, onClose }) => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
           {/* Size Indicator */}
           <SizeIndicator currentSize={currentSize} maxSize={maxSize} />
 
           {/* URL Display (when fits) */}
-          {status === "fits" && (
-            <div className="space-y-2">
+          {status === "fits" && !manualTrimMode && (
+            <div className="space-y-3">
               <label className="text-sm font-medium text-main block">
                 Shareable URL
               </label>
@@ -180,11 +186,23 @@ export const ShareModal: React.FC<ShareModalProps> = ({ tab, onClose }) => {
               <p className="text-xs text-secondary">
                 Anyone with this link can open this content in a new tab
               </p>
+              <div className="pt-2 border-t border-base">
+                <button
+                  onClick={handleCustomizeContent}
+                  className="w-full px-4 py-2 bg-element hover:bg-element-hover border border-base rounded transition-colors flex items-center justify-center gap-2 text-main"
+                >
+                  <Edit3 size={16} />
+                  Customize Content
+                </button>
+                <p className="text-xs text-muted mt-2 text-center">
+                  Select specific lines or sections to share
+                </p>
+              </div>
             </div>
           )}
 
-          {/* Trim UI (when content too large) */}
-          {status === "needs-trim" && (
+          {/* Trim UI (when content too large or manual trim mode) */}
+          {(status === "needs-trim" || manualTrimMode) && (
             <div className="space-y-4">
               {/* URL display for trimmed content - always visible to prevent layout shift */}
               <div className="space-y-2 pb-4 border-b border-base">
@@ -223,8 +241,9 @@ export const ShareModal: React.FC<ShareModalProps> = ({ tab, onClose }) => {
                   <div className="flex items-start gap-2 text-xs text-warning bg-warning-subtle p-2 rounded">
                     <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
                     <p>
-                      This URL contains only the selected portion of your content.
-                      The recipient will see a trimmed version.
+                      {manualTrimMode
+                        ? "This URL contains only the selected portion of your content. The recipient will see a trimmed version."
+                        : "Content was too large for URL. This URL contains only the selected portion. The recipient will see a trimmed version."}
                     </p>
                   </div>
                 ) : (

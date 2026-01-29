@@ -163,3 +163,19 @@ Then('the JSON key {string} should be {string}', async function (keyName, state)
 Then('the budget bar should show the max of {string} characters', async function (max) {
   await this.share.expectBudgetBarStatus("", max);
 });
+
+Then('the {string} button should be visible', async function (buttonText) {
+  const modal = this.page.locator('.bg-surface.border.border-base.rounded-lg.shadow-xl');
+  await expect(modal).toBeVisible();
+
+  const button = modal.getByRole('button', { name: buttonText });
+  await expect(button).toBeVisible();
+});
+
+Then('the modal should show {string}', async function (text) {
+  const modal = this.page.locator('.bg-surface.border.border-base.rounded-lg.shadow-xl');
+  await expect(modal).toBeVisible();
+
+  // Check if the text appears in the modal
+  await expect(modal.getByText(text)).toBeVisible();
+});

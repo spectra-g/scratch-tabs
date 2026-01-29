@@ -15,9 +15,37 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.20.0';
+export const APP_VERSION = '1.21.0';
 
 export const RELEASES: Release[] = [
+  {
+    "version": "1.21.0",
+    "type": "latest",
+    "date": "2026-01-29",
+    "headline": "Share Customization, Curl UI Polish & Regex Engine Refined",
+    "summary": "Manual content trimming for privacy-safe sharing, compact professional Curl Smart View redesign, and refined Regex Plain English engine",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Manual Content Customization:** New \"Customize Content\" button in Share modal lets you manually trim content even when it fits within URL limits - exclude sensitive fields from JSON objects, select specific line ranges from text content, or reduce clutter by sharing only relevant data for privacy-safe collaboration",
+          "**Privacy-First JSON Sharing:** Selectively deselect sensitive fields (passwords, tokens, internal IDs) from JSON before sharing - maintain valid structure while excluding private data",
+          "**Flexible Line Range Selection:** Choose specific line ranges to share from text content without manually editing - perfect for sharing relevant snippets while excluding debug logs or sensitive information",
+          "**Modern Regex Syntax Support:** Added full support for Unicode property escapes (`\\p{...}`), hex escapes (`\\xHH`), and named backreferences (`\\k<name>`) to the Regex Plain English interpreter"
+        ]
+      },
+      {
+        "name": "Improvements",
+        "changes": [
+          "**Advanced Regex Semantic Engine:** Upgraded the \"Plain English\" interpreter to use a sophisticated AST-based parser with literal-aware semantic analysis - provides more robust recognition of complex patterns (emails, dates, SSNs) and gracefully handles incomplete or malformed regexes",
+          "**Natural Language Flow:** Improved explanation logic with sequential connectors (e.g., \"...and then ensures...\") and deduplicated phrasing for a more human, readable flow in complex validation patterns",
+          "**Strict Pattern Matching:** Refined numeric pattern matchers to eliminate false positives in partially alphanumeric strings while maintaining high accuracy for standard formats",
+          "**Curl Smart View Compact Design:** Redesigned with 25-37% tighter spacing for a more professional, scannable interface - card padding reduced from 16px to 12px horizontal and 10px vertical, headers from ~56px to ~48px height",
+          "**Enhanced Visual Hierarchy:** Method badges now larger and bolder (text-sm, font-semibold) with tracking-wide for instant recognition, domain names displayed in bold to stand out from full URLs, and numbered card indexes (#1, #2) for easy reference"
+        ]
+      }
+    ]
+  },
   {
     "version": "1.20.0",
     "type": "latest",

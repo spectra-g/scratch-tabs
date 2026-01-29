@@ -126,27 +126,49 @@
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
 
-        <!-- Version 1.20.0 -->
+        <!-- Version 1.21.0 -->
         <div class="changelog-entry latest">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-white">V1.20.0</h2>
+              <h2 class="text-2xl font-bold text-white">V1.21.0</h2>
+              <span class="badge latest">LATEST</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">01/29/2026</span>
+          </div>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">SHARE CUSTOMIZATION, CURL UI POLISH & REGEX ENGINE REFINED</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p class="mb-4">Enhance your sharing privacy with manual content customization, enjoy a sleeker professional Curl Smart View, and experience a significantly improved Regex 'Plain English' engine with modern syntax support and more natural explanations.</p>
+
+            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
+            <ul class="space-y-2 mb-6">
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Manual Content Customization:</strong> New "Customize Content" button in Share modal lets you manually trim content even when it fits within URL limits - exclude sensitive fields from JSON objects, select specific line ranges from text content, or reduce clutter by sharing only relevant data for privacy-safe collaboration</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Privacy-First JSON Sharing:</strong> Selectively deselect sensitive fields (passwords, tokens, internal IDs) from JSON before sharing - maintain valid structure while excluding private data</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Flexible Line Range Selection:</strong> Choose specific line ranges to share from text content without manually editing - perfect for sharing relevant snippets while excluding debug logs or sensitive information</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Modern Regex Syntax Support:</strong> Added full support for Unicode property escapes (`\p{...}`), hex escapes (`\xHH`), and named backreferences (`\k<name>`) to the Regex Plain English interpreter</span></li>
+            </ul>
+
+            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># improvements</h4>
+            <ul class="space-y-2 mb-6">
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Advanced Regex Semantic Engine:</strong> Upgraded the "Plain English" interpreter to use a sophisticated AST-based parser with literal-aware semantic analysis - provides more robust recognition of complex patterns (emails, dates, SSNs) and gracefully handles incomplete or malformed regexes</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Natural Language Flow:</strong> Improved explanation logic with sequential connectors (e.g., "...and then ensures...") and deduplicated phrasing for a more human, readable flow in complex validation patterns</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Strict Pattern Matching:</strong> Refined numeric pattern matchers to eliminate false positives in partially alphanumeric strings while maintaining high accuracy for standard formats</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Curl Smart View Compact Design:</strong> Redesigned with 25-37% tighter spacing for a more professional, scannable interface - card padding reduced from 16px to 12px horizontal and 10px vertical, headers from ~56px to ~48px height</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Enhanced Visual Hierarchy:</strong> Method badges now larger and bolder (text-sm, font-semibold) with tracking-wide for instant recognition, domain names displayed in bold to stand out from full URLs, and numbered card indexes (#1, #2) for easy reference</span></li>
+            </ul>
+          </div>
+        </div>
+        <!-- Version 1.20.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.20.0</h2>
               <span class="badge latest">LATEST</span>
             </div>
             <span class="text-gray-500 text-xs font-mono">01/27/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">NAVIGATION HISTORY & WELCOME SCREEN REDESIGN</h3>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">NAVIGATION HISTORY & WELCOME SCREEN REDESIGN</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">Navigate through your workspace journey with browser-style back/forward buttons and keyboard shortcuts, plus a completely redesigned welcome screen with improved visual hierarchy and clearer value proposition.</p>
-
-            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
-            <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Global Navigation History:</strong> Track your journey through workspaces and tabs with back/forward navigation - history persists across sessions in IndexedDB, remembers up to 50 entries with FIFO eviction, and automatically skips deleted tabs/workspaces</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Navigation Controls:</strong> Back/Forward buttons in sidebar header with disabled states, plus keyboard shortcuts (Ctrl+Shift+- for back, Ctrl+Shift+= for forward)</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Smart Navigation:</strong> Prevents recording history during back/forward operations to avoid recursion, validates entries before navigation, and handles cross-workspace jumps seamlessly</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Welcome Screen Redesign:</strong> Modernized first-run experience with hero section featuring value proposition and trust badges (Offline & Private, Persisted Locally, No Server Calls), tiered action cards with semantic color theming, and enhanced keyboard shortcut discovery</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Enhanced Onboarding:</strong> Primary action cards for Format JSON (demo Smart View), Dev Tools (25+ utilities), and New Scratch Tab, plus secondary actions for Open File, Paste Content, and Import Workspace - all with clear descriptions and hints</span></li>
-            </ul>
+            <p>VS Code-style back/forward navigation with persistence, plus modernized welcome screen with enhanced onboarding</p>
           </div>
         </div>
         <!-- Version 1.19.0 -->
@@ -554,7 +576,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.20.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.21.0</span>
         </div>
 
         <div class="flex space-x-8">

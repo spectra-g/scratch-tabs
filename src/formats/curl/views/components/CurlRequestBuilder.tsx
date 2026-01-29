@@ -78,14 +78,14 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 max-w-full">
       {/* Tab navigation */}
-      <div className="flex space-x-1 bg-element rounded-lg p-1">
+      <div className="flex space-x-0.5 bg-element rounded-lg p-0.5">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === tab.id
+            className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors ${activeTab === tab.id
               ? 'bg-primary text-white'
               : 'text-main hover:text-white hover:bg-element-hover'
               }`}
@@ -110,41 +110,31 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.2 }}
-        className="bg-surface/50 rounded-lg p-4"
+        className="bg-surface/50 rounded-lg p-3 max-w-full overflow-hidden"
       >
         {activeTab === 'url' && (
-          <div className="space-y-4">
+          <div className="flex items-center space-x-2">
             {/* Method selector */}
-            <div>
-              <label className="block text-sm font-medium text-main mb-2">
-                HTTP Method
-              </label>
-              <select
-                value={request.method}
-                onChange={(e) => handleMethodChange(e.target.value)}
-                className="w-full bg-surface-secondary border border-base rounded-lg px-3 py-2 text-main focus:outline-none focus:border-focus"
-              >
-                {methods.map((method) => (
-                  <option key={method} value={method}>
-                    {method}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              value={request.method}
+              onChange={(e) => handleMethodChange(e.target.value)}
+              className="w-32 bg-surface-secondary border border-base rounded-lg px-3 py-2 text-main focus:outline-none focus:border-focus"
+            >
+              {methods.map((method) => (
+                <option key={method} value={method}>
+                  {method}
+                </option>
+              ))}
+            </select>
 
             {/* URL input */}
-            <div>
-              <label className="block text-sm font-medium text-main mb-2">
-                URL
-              </label>
-              <input
-                type="text"
-                value={request.url}
-                onChange={(e) => handleUrlChange(e.target.value)}
-                placeholder="https://api.example.com/endpoint"
-                className="w-full bg-surface-secondary border border-base rounded-lg px-3 py-2 text-main placeholder-secondary focus:outline-none focus:border-focus"
-              />
-            </div>
+            <input
+              type="text"
+              value={request.url}
+              onChange={(e) => handleUrlChange(e.target.value)}
+              placeholder="https://api.example.com/endpoint"
+              className="flex-1 bg-surface-secondary border border-base rounded-lg px-3 py-2 text-main placeholder-secondary focus:outline-none focus:border-focus"
+            />
           </div>
         )}
 
@@ -219,7 +209,7 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
               </div>
             </div>
 
-            <div className="border border-base rounded-lg overflow-hidden">
+            <div className="border border-base rounded-lg overflow-hidden max-w-full">
               <Editor
                 height="200px"
                 language="json"
@@ -230,8 +220,13 @@ export const CurlRequestBuilder: React.FC<CurlRequestBuilderProps> = ({
                   minimap: { enabled: false },
                   fontSize: 12,
                   wordWrap: 'on',
+                  wrappingStrategy: 'advanced',
                   automaticLayout: true,
                   scrollBeyondLastLine: false,
+                  scrollbar: {
+                    horizontal: 'hidden',
+                    vertical: 'auto',
+                  },
                 }}
               />
             </div>

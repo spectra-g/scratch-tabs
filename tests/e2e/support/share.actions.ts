@@ -273,6 +273,9 @@ export class ShareActions {
     const keyButton = this.page.getByRole('button').filter({ hasText: keyName });
     await expect(keyButton).toBeVisible();
     await keyButton.click();
+
+    // Wait for React to update the URL after selection changes
+    await this.page.waitForTimeout(500);
   }
 
   async expectJsonKeySelected(keyName: string, selected: boolean) {
@@ -292,6 +295,25 @@ export class ShareActions {
     await expect(budgetText).toBeVisible();
     // We check for the max value which should be constant, and current which might vary slightly
     await expect(budgetText).toContainText(` / ${max}`);
+  }
+
+  async expectCustomizeContentButtonVisible() {
+    // The "Customize Content" button should be visible
+    const modal = this.page.locator('.bg-surface.border.border-base.rounded-lg.shadow-xl');
+    await expect(modal).toBeVisible();
+
+    const button = modal.getByRole('button', { name: 'Customize Content' });
+    await expect(button).toBeVisible();
+  }
+
+  async clickCustomizeContentButton() {
+    // Click the "Customize Content" button
+    const modal = this.page.locator('.bg-surface.border.border-base.rounded-lg.shadow-xl');
+    await expect(modal).toBeVisible();
+
+    const button = modal.getByRole('button', { name: 'Customize Content' });
+    await expect(button).toBeVisible();
+    await button.click();
   }
 
   async cleanup() {

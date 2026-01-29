@@ -13,6 +13,7 @@ interface CurlCardProps {
   onOpenInRestClient: () => void;
   onDelete?: () => void;
   onDuplicate?: () => void;
+  index?: number;
 }
 
 export const CurlCard: React.FC<CurlCardProps> = ({
@@ -23,6 +24,7 @@ export const CurlCard: React.FC<CurlCardProps> = ({
   onOpenInRestClient,
   onDelete,
   onDuplicate,
+  index,
 }) => {
   // Generate live curl command
   const generatedCurlCommand = useMemo(() => {
@@ -101,7 +103,7 @@ export const CurlCard: React.FC<CurlCardProps> = ({
   return (
     <motion.div
       layout
-      className={`border rounded-lg overflow-hidden transition-all duration-200 ${isExpanded
+      className={`border rounded-lg overflow-hidden transition-all duration-200 max-w-full ${isExpanded
         ? 'border-info bg-surface shadow-lg shadow-info/10'
         : 'border-base bg-surface/50 hover:border-base/70 hover:bg-surface/70'
         }`}
@@ -109,7 +111,7 @@ export const CurlCard: React.FC<CurlCardProps> = ({
     >
       {/* Card header - always visible */}
       <div
-        className={`p-4 cursor-pointer ${isExpanded ? '' : 'hover:bg-element-hover'}`}
+        className={`px-3 py-2.5 cursor-pointer ${isExpanded ? '' : 'hover:bg-element-hover'}`}
         onClick={onClick}
       >
         <div className="flex items-center justify-between">
@@ -126,29 +128,34 @@ export const CurlCard: React.FC<CurlCardProps> = ({
               )}
             </button>
 
+            {/* Card index */}
+            {typeof index === 'number' && (
+              <span className="text-xs text-muted/50 font-mono mr-1.5">#{index + 1}</span>
+            )}
+
             {/* Method badge */}
-            <span className={`px-2 py-1 rounded text-xs font-medium ${getMethodColor(request.method)}`}>
+            <span className={`px-2.5 py-1 rounded text-sm font-semibold tracking-wide ${getMethodColor(request.method)}`}>
               {request.method}
             </span>
 
             {/* URL */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center space-x-2">
-                <Globe size={14} className="text-muted flex-shrink-0" />
-                <span className="text-main truncate" title={request.url}>
+              <div className="flex items-center space-x-1.5">
+                <Globe size={12} className="text-secondary flex-shrink-0" />
+                <span className="text-main font-medium truncate" title={request.url}>
                   {getDomain(request.url)}
                 </span>
               </div>
-              <div className="text-xs text-muted truncate mt-0.5" title={request.url}>
+              <div className="text-xs text-muted truncate mt-px pl-[18px]" title={request.url}>
                 {request.url}
               </div>
             </div>
           </div>
 
           {/* Quick stats and actions */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
             {/* Quick stats */}
-            <div className="flex items-center space-x-4 text-xs text-muted">
+            <div className="flex items-center space-x-3 text-xs text-muted">
               {request.headers.length > 0 && (
                 <span>{request.headers.length} headers</span>
               )}
@@ -224,11 +231,11 @@ export const CurlCard: React.FC<CurlCardProps> = ({
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="border-t border-base"
+            className="border-t border-base overflow-hidden"
           >
-            <div className="p-4">
+            <div className="px-3 py-3 max-w-full">
               {/* Action buttons */}
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-3">
                 {request.url && request.url.trim() && (
                   <div className="flex items-center space-x-2">
                     <Clock size={14} className="text-muted" />
@@ -237,16 +244,16 @@ export const CurlCard: React.FC<CurlCardProps> = ({
                 )}
                 <button
                   onClick={onOpenInRestClient}
-                  className="flex items-center space-x-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors"
+                  className="flex items-center space-x-1.5 px-3 py-1.5 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm transition-colors"
                 >
-                  <ExternalLink size={16} />
+                  <ExternalLink size={14} />
                   <span>Open in Rest Client</span>
                 </button>
               </div>
 
               {/* Live curl command preview */}
-              <div className="mb-6 p-4 bg-canvas border border-base rounded-lg">
-                <div className="flex items-center justify-between mb-3">
+              <div className="mb-4 p-3 bg-canvas border border-base rounded-lg">
+                <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-2">
                     <Code size={16} className="text-info" />
                     <h4 className="text-sm font-medium text-main">Generated Curl Command</h4>
@@ -269,7 +276,7 @@ export const CurlCard: React.FC<CurlCardProps> = ({
                     </span>
                   </button>
                 </div>
-                <pre className="text-xs text-main font-mono overflow-x-auto custom-scrollbar p-3 bg-canvas rounded border border-base">
+                <pre className="text-xs text-main font-mono p-3 bg-canvas rounded border border-base max-w-full whitespace-pre-wrap break-all">
                   {generatedCurlCommand}
                 </pre>
               </div>

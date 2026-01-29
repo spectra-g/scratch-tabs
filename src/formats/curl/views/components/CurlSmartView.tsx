@@ -209,8 +209,8 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
         />
 
         {/* Command cards */}
-        <div className="flex-1 overflow-auto custom-scrollbar p-4 space-y-4">
-          {curlBlocks.map((block) => (
+        <div className="flex-1 overflow-auto custom-scrollbar p-3 space-y-3">
+          {curlBlocks.map((block, index) => (
             <motion.div
               key={block.id}
               initial={{ opacity: 0, y: 20 }}
@@ -225,6 +225,7 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
                 onOpenInRestClient={handleOpenInRestClient}
                 onDelete={() => handleDeleteCommand(block.id)}
                 onDuplicate={() => handleDuplicateCommand(block.id)}
+                index={index}
               />
             </motion.div>
           ))}

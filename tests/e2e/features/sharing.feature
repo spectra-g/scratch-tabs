@@ -1,3 +1,4 @@
+@share
 Feature: Tab Sharing
 
   Background:
@@ -140,3 +141,62 @@ Feature: Tab Sharing
     Then the share modal should appear
     And the JSON trim UI should not be visible
     And the default trim UI should be visible
+
+  Scenario: Manually customize content that fits
+    When I click the icon for "New tab"
+    And I type the following content into the active editor:
+      """
+      Small content that fits
+      Over two lines
+      """
+    And I right-click the "Scratch 1" tab
+    And I select "Share" from the context menu
+    Then the share modal should appear
+    And the shareable URL input should be visible
+    And the "Customize Content" button should be visible
+    When I click the "Customize Content" button in the share modal
+    Then the default trim UI should be visible
+    And the modal should show "Shareable URL (Trimmed Content)"
+
+  Scenario: Manually customize small JSON to exclude sensitive fields
+    When I click the icon for "New tab"
+    And I type the following content into the active editor:
+      """
+      {
+        "username": "john_doe",
+        "password": "secret123",
+        "email": "john@example.com"
+      }
+      """
+    And I right-click the "Scratch 1" tab
+    And I select "Share" from the context menu
+    Then the share modal should appear
+    And the shareable URL input should be visible
+    When I click the "Customize Content" button in the share modal
+    Then the JSON trim UI should be visible
+    And the JSON key "username" should be "selected"
+    And the JSON key "password" should be "selected"
+    And the JSON key "email" should be "selected"
+    When I toggle the JSON key "password"
+    Then the JSON key "password" should be "unselected"
+    When I copy the share URL from the modal
+    And I open the share URL in a new browser instance
+    Then the new browser instance should have a tab with JSON content
+    And the new browser instance tab content should contain "username"
+    And the new browser instance tab content should not contain "secret123"
+
+  Scenario: Customize Content button appears for text content
+    When I click the icon for "New tab"
+    And I type the following content into the active editor:
+      """
+      Line 1: This is public information
+      Line 2: This is also public
+      Line 3: SECRET DATA HERE
+      Line 4: More public content
+      """
+    And I right-click the "Scratch 1" tab
+    And I select "Share" from the context menu
+    Then the share modal should appear
+    And the "Customize Content" button should be visible
+    When I click the "Customize Content" button in the share modal
+    Then the default trim UI should be visible
