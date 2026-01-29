@@ -30,14 +30,14 @@ export const CurlDocumentHeader: React.FC<CurlDocumentHeaderProps> = ({
   };
 
   return (
-    <div className="border-b border-base bg-surface-secondary p-4">
+    <div className="border-b border-base bg-surface-secondary px-4 py-3">
       <div className="flex items-center justify-between">
         {/* Document info */}
-        <div className="flex items-center space-x-6">
+        <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
-            <Terminal size={20} className="text-info" />
-            <h2 className="text-lg font-semibold text-main">
-              Curl Request Workbench
+            <Terminal size={18} className="text-info" />
+            <h2 className="text-base font-semibold text-main">
+              Curl Workbench
             </h2>
           </div>
 
@@ -65,39 +65,39 @@ export const CurlDocumentHeader: React.FC<CurlDocumentHeaderProps> = ({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1.5">
           <button
             onClick={onToggleOptionsPalette}
-            className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${showOptionsPalette
+            className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors ${showOptionsPalette
               ? 'bg-primary text-white'
               : 'bg-element text-main hover:bg-element-hover'
               }`}
             title="Toggle options palette"
           >
-            <Palette size={16} />
+            <Palette size={14} />
             <span>Options</span>
           </button>
 
           <button
             onClick={onAddCommand}
-            className="flex items-center space-x-2 px-3 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition-colors"
+            className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition-colors"
           >
-            <Plus size={16} />
-            <span>Add Curl</span>
+            <Plus size={14} />
+            <span>Add Request</span>
           </button>
         </div>
       </div>
 
       {/* Domain list (if multiple) */}
       {summary.domains.length > 1 && (
-        <div className="mt-3 pt-3 border-t border-base/50">
+        <div className="mt-2 pt-2 border-t border-base/50">
           <div className="flex items-center space-x-2 text-xs text-muted">
             <span>Domains:</span>
             <div className="flex flex-wrap gap-1">
               {summary.domains.map((domain, index) => (
                 <span
                   key={domain}
-                  className="px-2 py-1 bg-element rounded text-secondary"
+                  className="px-1.5 py-0.5 bg-element rounded text-xs text-secondary"
                 >
                   {domain}
                 </span>

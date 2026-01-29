@@ -57,7 +57,7 @@ describe('CurlSmartView', () => {
     );
 
     expect(screen.getByTestId('curl-smart-view')).toBeInTheDocument();
-    expect(screen.getByText('Curl Request Workbench')).toBeInTheDocument();
+    expect(screen.getByText('Curl Workbench')).toBeInTheDocument();
     expect(screen.getByText('2 commands')).toBeInTheDocument();
   });
 
