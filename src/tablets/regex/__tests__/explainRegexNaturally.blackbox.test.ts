@@ -15,19 +15,19 @@ describe("explainRegexNaturally - Black Box Tests", () => {
     test.each([
       [
         "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$",
-        "Checks that the string contains at least one lowercase letter, contains at least one uppercase letter, contains at least one digit, and is at least 8 characters long.",
+        "Checks that the string contains at least one lowercase letter, uppercase letter, and digit, and then ensures it is at least 8 characters long.",
       ],
       [
         "^(?=.*[a-z])(?=.*\\d).{6,}$",
-        "Checks that the string contains at least one lowercase letter, contains at least one digit, and is at least 6 characters long.",
+        "Checks that the string contains at least one lowercase letter and digit, and then ensures it is at least 6 characters long.",
       ],
       [
         "^(?=.*[A-Z])(?=.*[a-z]).{8,}$",
-        "Checks that the string contains at least one uppercase letter, contains at least one lowercase letter, and is at least 8 characters long.",
+        "Checks that the string contains at least one uppercase letter and lowercase letter, and then ensures it is at least 8 characters long.",
       ],
       [
         "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*]).{10,}$",
-        "Checks that the string contains at least one lowercase letter, contains at least one uppercase letter, contains at least one digit, contains at least one special character, and is at least 10 characters long.",
+        "Checks that the string contains at least one lowercase letter, uppercase letter, digit, and special character, and then ensures it is at least 10 characters long.",
       ],
     ])("pattern: %s", (input, expected) => {
       expect(explainRegexNaturally(input)).toBe(expected);
@@ -41,11 +41,11 @@ describe("explainRegexNaturally - Black Box Tests", () => {
     test.each([
       [
         "^(?!.*password)(?=.*[A-Z]).{8,}$",
-        "Checks that the string contains at least one uppercase letter, does not contain 'password', and is at least 8 characters long.",
+        "Checks that the string contains at least one uppercase letter and does not contain 'password', and then ensures it is at least 8 characters long.",
       ],
       [
         "^(?!.*123)(?=.*[a-z]).{6,}$",
-        "Checks that the string contains at least one lowercase letter, does not contain '123', and is at least 6 characters long.",
+        "Checks that the string contains at least one lowercase letter and does not contain '123', and then ensures it is at least 6 characters long.",
       ],
     ])("pattern: %s", (input, expected) => {
       expect(explainRegexNaturally(input)).toBe(expected);

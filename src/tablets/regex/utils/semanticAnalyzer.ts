@@ -184,7 +184,20 @@ function describeEscapeNatural(value: string): string {
     "\\B": "non-word boundary",
     ".": "any character",
   };
-  return escapes[value] || value;
+
+  if (escapes[value]) return escapes[value];
+
+  // Handle hex and unicode escapes (simplified)
+  if (value.startsWith("\\x") || value.startsWith("\\u")) {
+    return value;
+  }
+
+  // Handle unicode property escapes \p{...}
+  if (value.startsWith("\\p{") || value.startsWith("\\P{")) {
+    return value;
+  }
+
+  return value;
 }
 
 // =============================================================================
@@ -200,30 +213,31 @@ const patternTemplates: PatternTemplate[] = [
       return lookaheads.length >= 2 && hasLengthRequirement(ast);
     },
     explain: (ast) => {
-      const requirements: string[] = [];
       const lookaheads = getLookaheads(ast);
       const negativeLookaheads = getNegativeLookaheads(ast);
+      const targets = lookaheads.map(describeLookaheadTarget);
+      const negativeTargets = negativeLookaheads.map(describeLookaheadTarget);
 
-      for (const la of lookaheads) {
-        const target = describeLookaheadTarget(la);
-        requirements.push(`contains at least one ${target}`);
+      let parts: string[] = [];
+      if (targets.length > 0) {
+        parts.push(`contains at least one ${formatListNatural(targets, "and")}`);
+      }
+      if (negativeTargets.length > 0) {
+        parts.push(`does not contain ${formatListNatural(negativeTargets, "and")}`);
       }
 
-      for (const la of negativeLookaheads) {
-        const target = describeLookaheadTarget(la);
-        requirements.push(`does not contain ${target}`);
-      }
-
-      const length = extractLengthRequirement(ast);
-      if (length) {
-        requirements.push(`is ${length} long`);
-      }
-
-      if (requirements.length === 0) {
+      if (parts.length === 0) {
         return "Validates a string with multiple requirements.";
       }
 
-      return `Checks that the string ${formatListNatural(requirements, "and")}.`;
+      let result = `Checks that the string ${formatListNatural(parts, "and")}`;
+
+      const length = extractLengthRequirement(ast);
+      if (length) {
+        result += `, and then ensures it is ${length} long`;
+      }
+
+      return result + ".";
     },
   },
 
@@ -232,11 +246,17 @@ const patternTemplates: PatternTemplate[] = [
     name: "email",
     matcher: (ast) => {
       const str = astToString(ast);
-      // Must have @ and a dot for domain, and word characters
-      return str.includes("@") &&
-             str.includes(".") &&
-             (str.includes("\\w") || str.includes("[\\w")) &&
-             !str.startsWith("(?<");  // Don't match lookbehinds like (?<=@)
+      // Traditional string matching check
+      const hasAt = findLiteralInAST(ast, "@") ||
+        findLiteralInAST(ast, "\\@") ||
+        findLiteralInAST(ast, "\\x40") ||
+        findLiteralInAST(ast, "\\u0040");
+      const hasDot = str.includes(".");
+
+      return hasAt &&
+        hasDot &&
+        (str.includes("\\w") || str.includes("[\\w")) &&
+        !str.startsWith("(?<");  // Don't match lookbehinds like (?<=@)
     },
     explain: () => "Matches an email address format.",
   },
@@ -269,6 +289,12 @@ const patternTemplates: PatternTemplate[] = [
       if (!anchors.start || !anchors.end || !str.includes("-")) {
         return false;
       }
+
+      // Must have ONLY digits and dashes (no letters) to avoid false positives with product IDs
+      if (hasLiteralLetters(ast)) {
+        return false;
+      }
+
       // Check for exactly 4-2-2 pattern (date) vs 3-2-4 pattern (SSN) or 3-3-4 (phone)
       const matches = str.match(/\\d\{(\d+)\}/g);
       if (!matches || matches.length !== 3) {
@@ -286,12 +312,12 @@ const patternTemplates: PatternTemplate[] = [
     matcher: (ast) => {
       const str = astToString(ast);
       const anchors = hasAnchors(ast);
+      if (!anchors.start || !anchors.end || !str.includes("/") || hasLiteralLetters(ast)) {
+        return false;
+      }
       return (
-        anchors.start &&
-        anchors.end &&
         str.includes("\\d{2}") &&
-        str.includes("\\d{4}") &&
-        str.includes("/")
+        str.includes("\\d{4}")
       );
     },
     explain: () => "Matches a date in MM/DD/YYYY format.",
@@ -326,6 +352,12 @@ const patternTemplates: PatternTemplate[] = [
       if (!anchors.start || !anchors.end || !str.includes("-")) {
         return false;
       }
+
+      // Tighten SSN to avoid false positives (should be mostly digits and dashes)
+      if (hasLiteralLetters(ast)) {
+        return false;
+      }
+
       const matches = str.match(/\\d\{(\d+)\}/g);
       if (!matches || matches.length !== 3) {
         return false;
@@ -343,7 +375,7 @@ const patternTemplates: PatternTemplate[] = [
     matcher: (ast) => {
       const str = astToString(ast);
       const anchors = hasAnchors(ast);
-      if (!anchors.start || !anchors.end || !str.includes("-") || str.includes("(")) {
+      if (!anchors.start || !anchors.end || !str.includes("-") || str.includes("(") || hasLiteralLetters(ast)) {
         return false;
       }
       const matches = str.match(/\\d\{(\d+)\}/g);
@@ -411,24 +443,93 @@ const patternTemplates: PatternTemplate[] = [
 ];
 
 // Helper to convert AST back to string for pattern matching
-function astToString(node: RegexNode): string {
-  if (node.value) {
+export function astToString(node: RegexNode): string {
+  if (node.value && node.type !== "character-class") {
     return node.value;
   }
-  if (node.children) {
-    let result = node.children.map(astToString).join("");
-    if (node.quantifier) {
-      const { min, max } = node.quantifier;
-      if (min === 0 && max === null) result += "*";
-      else if (min === 1 && max === null) result += "+";
-      else if (min === 0 && max === 1) result += "?";
-      else if (max === null) result += `{${min},}`;
-      else if (min === max) result += `{${min}}`;
-      else result += `{${min},${max}}`;
+
+  let result = "";
+
+  if (node.type === "character-class") {
+    result = node.value || "";
+  } else if (node.type === "alternation") {
+    result = (node.children || []).map(astToString).join("|");
+  } else if (node.type === "group" || node.type === "lookahead" || node.type === "lookbehind") {
+    let prefix = "(";
+    if (node.type === "lookahead") {
+      prefix += node.assertion === "positive" ? "?=" : "?!";
+    } else if (node.type === "lookbehind") {
+      prefix += node.assertion === "positive" ? "?<=" : "?<!";
+    } else if (node.groupType === "non-capturing") {
+      prefix += "?:";
+    } else if (node.groupType === "named" && node.groupName) {
+      prefix += `?<${node.groupName}>`;
     }
-    return result;
+    result = prefix + (node.children || []).map(astToString).join("") + ")";
+  } else if (node.children) {
+    result = node.children.map(astToString).join("");
   }
-  return "";
+
+  if (node.quantifier) {
+    const { min, max, greedy } = node.quantifier;
+    if (min === 0 && max === null) result += "*";
+    else if (min === 1 && max === null) result += "+";
+    else if (min === 0 && max === 1) result += "?";
+    else if (max === null) result += `{${min},}`;
+    else if (min === max) result += `{${min}}`;
+    else result += `{${min},${max}}`;
+
+    if (greedy === false) {
+      result += "?";
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Traverses the AST to find if there are any literal letters.
+ * This is used to prevent false positives in strict numeric patterns.
+ * It ignores letters used in escape sequences (\d, \w) or group names.
+ */
+export function hasLiteralLetters(node: RegexNode): boolean {
+  if (node.type === "literal" && /[a-zA-Z]/.test(node.value || "")) {
+    return true;
+  }
+
+  if (node.type === "character-class") {
+    // Check for letters in character class ranges/list
+    // This is a bit simplified - ideally we'd parse the class content
+    const content = node.value || "";
+    if (/[a-zA-Z]/.test(content.replace(/\\d|\\s|\\w/g, ""))) {
+      return true;
+    }
+  }
+
+  if (node.children) {
+    return node.children.some(child => hasLiteralLetters(child));
+  }
+  return false;
+}
+
+/**
+ * Traverses the AST to find a literal node with the specified value.
+ * This is more robust than string matching as it handles escaped vs unescaped
+ * characters and character classes correctly.
+ */
+export function findLiteralInAST(node: RegexNode, value: string): boolean {
+  if (node.type === "literal" && node.value === value) return true;
+  if (node.type === "escape" && node.value === value) return true;
+
+  // Also check inside character classes (if not negated)
+  if (node.type === "character-class" && !node.negated && node.value?.includes(value)) {
+    return true;
+  }
+
+  if (node.children) {
+    return node.children.some(child => findLiteralInAST(child, value));
+  }
+  return false;
 }
 
 // =============================================================================
@@ -469,9 +570,15 @@ function analyzeNode(node: RegexNode): SemanticUnit | null {
       return analyzeGroup(node);
     case "alternation":
       return analyzeAlternation(node);
+    case "backreference":
+      return analyzeBackreference(node);
     default:
       return null;
   }
+}
+
+function analyzeBackreference(node: RegexNode): SemanticUnit {
+  return { type: "match", description: node.value || "backreference" };
 }
 
 function analyzeAnchor(node: RegexNode): SemanticUnit {
@@ -664,6 +771,8 @@ function describeNodeNatural(node: RegexNode | null | undefined): string {
     case "alternation":
       const unit = analyzeAlternation(node);
       return unit.description;
+    case "backreference":
+      return node.value || "backreference";
     default:
       return node.value || "pattern";
   }

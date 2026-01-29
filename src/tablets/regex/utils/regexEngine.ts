@@ -725,8 +725,77 @@ function parseEscape(ctx: ParseContext): RegexNode {
   }
 
   const char = ctx.pattern[ctx.pos];
-  ctx.pos++;
 
+  // Handle \p{...} and \P{...} unicode properties
+  if ((char === "p" || char === "P") && ctx.pattern[ctx.pos + 1] === "{") {
+    const endBrace = ctx.pattern.indexOf("}", ctx.pos + 2);
+    if (endBrace !== -1) {
+      const value = ctx.pattern.slice(start, endBrace + 1);
+      ctx.pos = endBrace + 1;
+      return {
+        type: "escape",
+        value,
+        position: { start, end: ctx.pos },
+      };
+    }
+  }
+
+  // Handle \xHH hex escapes
+  if (char === "x") {
+    const hex = ctx.pattern.slice(ctx.pos + 1, ctx.pos + 3);
+    if (/^[0-9a-fA-F]{2}$/.test(hex)) {
+      const value = ctx.pattern.slice(start, ctx.pos + 3);
+      ctx.pos += 3;
+      return {
+        type: "escape",
+        value,
+        position: { start, end: ctx.pos },
+      };
+    }
+  }
+
+  // Handle \uHHHH unicode escapes
+  if (char === "u") {
+    if (ctx.pattern[ctx.pos + 1] === "{") {
+      const endBrace = ctx.pattern.indexOf("}", ctx.pos + 2);
+      if (endBrace !== -1) {
+        const value = ctx.pattern.slice(start, endBrace + 1);
+        ctx.pos = endBrace + 1;
+        return {
+          type: "escape",
+          value,
+          position: { start, end: ctx.pos },
+        };
+      }
+    } else {
+      const hex = ctx.pattern.slice(ctx.pos + 1, ctx.pos + 5);
+      if (/^[0-9a-fA-F]{4}$/.test(hex)) {
+        const value = ctx.pattern.slice(start, ctx.pos + 5);
+        ctx.pos += 5;
+        return {
+          type: "escape",
+          value,
+          position: { start, end: ctx.pos },
+        };
+      }
+    }
+  }
+
+  // Handle \k<name> named backreferences
+  if (char === "k" && ctx.pattern[ctx.pos + 1] === "<") {
+    const endAngle = ctx.pattern.indexOf(">", ctx.pos + 2);
+    if (endAngle !== -1) {
+      const value = ctx.pattern.slice(start, endAngle + 1);
+      ctx.pos = endAngle + 1;
+      return {
+        type: "backreference",
+        value,
+        position: { start, end: ctx.pos },
+      };
+    }
+  }
+
+  ctx.pos++;
   return {
     type: "escape",
     value: "\\" + char,
@@ -945,8 +1014,22 @@ export function explainRegexNaturally(pattern: string): string {
 
   try {
     const ast = parseRegexToAST(pattern);
+
+    // Fidelity check: Verify reconstruction matches original (optional but helpful for debugging)
+    // We don't block on this, but it ensures our parser/generator are in sync
+    // In production, we might log this or just proceed if it's close enough
+    try {
+      const { astToString } = require("./semanticAnalyzer");
+      const reconstructed = astToString(ast);
+      if (reconstructed !== pattern) {
+        console.warn(`AST reconstruction differs: "${reconstructed}" vs "${pattern}"`);
+      }
+    } catch {
+      // Ignore errors in fidelity check
+    }
+
     return generateNaturalExplanation(ast);
-  } catch {
+  } catch (error) {
     // Fallback to basic explanation if parsing fails
     return generateFallbackExplanation(pattern);
   }

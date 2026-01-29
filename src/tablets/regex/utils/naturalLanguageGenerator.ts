@@ -20,12 +20,11 @@ export function generateNaturalLanguage(
   }
 
   // Fallback to semantic analysis
-  return generateFromSemanticUnits(semanticUnits, ast);
+  return generateFromSemanticUnits(semanticUnits);
 }
 
 function generateFromSemanticUnits(
-  units: SemanticUnit[],
-  ast: RegexNode
+  units: SemanticUnit[]
 ): string {
   if (units.length === 0) {
     return "No pattern to explain.";
@@ -55,11 +54,17 @@ function generateFromSemanticUnits(
       ...prohibitions.map((p) => p.description),
     ];
 
-    if (constraints.length > 0) {
-      allReqs.push(...constraints.map((c) => c.description));
-    }
+    const reqPart = formatListNatural(allReqs, "and");
 
-    parts.push(`Checks that the string ${formatListNatural(allReqs, "and")}`);
+    if (constraints.length > 0) {
+      const constraintPart = formatListNatural(constraints.map((c) => c.description), "and");
+      parts.push(`Checks that the string ${reqPart}, and then ensures it ${constraintPart}`);
+    } else if (matches.length > 0) {
+      const matchPart = combineMatchDescriptions(matches.map(m => m.description));
+      parts.push(`Checks that the string ${reqPart}, and then matches ${matchPart}`);
+    } else {
+      parts.push(`Checks that the string ${reqPart}`);
+    }
   } else if (matches.length > 0) {
     // Match-style pattern
     const matchDescs = matches.map((m) => m.description);
@@ -146,16 +151,7 @@ function combineMatchDescriptions(descriptions: string[]): string {
 // Special Case Handlers
 // =============================================================================
 
-function describeOptionalPattern(node: RegexNode): string {
-  const children = node.children || [];
-  if (children.length === 0) return "";
-
-  const child = children[0];
-  if (child.type === "literal") {
-    return `(the '${child.value}' is optional)`;
-  }
-  return "(optional)";
-}
+// (describeOptionalPattern was unused and removed)
 
 // =============================================================================
 // Utility Functions for Common Descriptions
@@ -216,13 +212,13 @@ export function describeCharacterClassHuman(
     const chars = content.split("");
     return negated
       ? `any character except ${formatListNatural(
-          chars.map((c) => `'${c}'`),
-          "or"
-        )}`
+        chars.map((c) => `'${c}'`),
+        "or"
+      )}`
       : formatListNatural(
-          chars.map((c) => `'${c}'`),
-          "or"
-        );
+        chars.map((c) => `'${c}'`),
+        "or"
+      );
   }
 
   return negated ? `any character not in [${content}]` : `character in [${content}]`;
