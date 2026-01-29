@@ -1,7 +1,14 @@
 import { create } from "zustand";
 import { SidebarTabInfo, Tab } from "../types";
-import { StorageProviderFactory } from "../db";
+import { StorageProviderFactory, getSetting, setSetting } from "../db";
 import { useWorkspaceStore } from "./workspaceStore";
+import { debounce } from "../utils/domUtils";
+
+interface SidebarPersistedState {
+    isSidebarExpanded: boolean;
+    sidebarWidth: number;
+    expandedWorkspaceIds: string[];
+}
 
 interface SidebarState {
     // Desktop state
@@ -25,7 +32,38 @@ interface SidebarState {
     setSearchQuery: (query: string) => void;
     refreshWorkspaceMetadata: (workspaceId: string) => Promise<void>;
     handleMetadataUpdate: (workspaceId: string, metadata: SidebarTabInfo[]) => void;
+    initializeSidebarState: () => Promise<void>;
 }
+
+const SIDEBAR_CONFIG_KEY = "sidebar_config";
+
+// Helper function to save sidebar state to IndexedDB
+const saveSidebarState = async (state: Partial<SidebarPersistedState>) => {
+    try {
+        const currentValue = await getSetting(SIDEBAR_CONFIG_KEY);
+        const currentState: SidebarPersistedState = currentValue
+            ? JSON.parse(currentValue)
+            : {
+                isSidebarExpanded: true,
+                sidebarWidth: 288,
+                expandedWorkspaceIds: [],
+            };
+
+        const updatedState: SidebarPersistedState = {
+            ...currentState,
+            ...state,
+        };
+
+        await setSetting(SIDEBAR_CONFIG_KEY, JSON.stringify(updatedState));
+    } catch (error) {
+        console.error("Failed to save sidebar state:", error);
+    }
+};
+
+// Debounced version for width changes
+const debouncedSaveWidth = debounce(async (width: number) => {
+    await saveSidebarState({ sidebarWidth: width });
+}, 1000);
 
 export const useSidebarStore = create<SidebarState>((set, get) => {
     const storage = StorageProviderFactory.getProvider();
@@ -43,11 +81,23 @@ export const useSidebarStore = create<SidebarState>((set, get) => {
         loadingWorkspaceIds: new Set<string>(),
         searchQuery: "",
 
-        toggleSidebar: () => set((state) => ({ isSidebarExpanded: !state.isSidebarExpanded })),
+        toggleSidebar: () => {
+            set((state) => {
+                const newExpanded = !state.isSidebarExpanded;
+                saveSidebarState({ isSidebarExpanded: newExpanded });
+                return { isSidebarExpanded: newExpanded };
+            });
+        },
 
-        setSidebarExpanded: (expanded: boolean) => set({ isSidebarExpanded: expanded }),
+        setSidebarExpanded: (expanded: boolean) => {
+            set({ isSidebarExpanded: expanded });
+            saveSidebarState({ isSidebarExpanded: expanded });
+        },
 
-        setSidebarWidth: (width: number) => set({ sidebarWidth: width }),
+        setSidebarWidth: (width: number) => {
+            set({ sidebarWidth: width });
+            debouncedSaveWidth(width);
+        },
 
         setMobileOpen: (isOpen: boolean) => set({ isMobileOpen: isOpen }),
 
@@ -60,9 +110,13 @@ export const useSidebarStore = create<SidebarState>((set, get) => {
             }
 
             // Optimistically expand the UI
-            set((state) => ({
-                expandedWorkspaceIds: new Set([...state.expandedWorkspaceIds, workspaceId])
-            }));
+            const newExpandedIds = new Set([...expandedWorkspaceIds, workspaceId]);
+            set({ expandedWorkspaceIds: newExpandedIds });
+
+            // Persist to IndexedDB
+            await saveSidebarState({
+                expandedWorkspaceIds: Array.from(newExpandedIds),
+            });
 
             // Check if we need to load metadata
             const activeWorkspaceId = useWorkspaceStore.getState().activeWorkspaceId;
@@ -78,6 +132,12 @@ export const useSidebarStore = create<SidebarState>((set, get) => {
             set((state) => {
                 const next = new Set(state.expandedWorkspaceIds);
                 next.delete(workspaceId);
+
+                // Persist to IndexedDB
+                saveSidebarState({
+                    expandedWorkspaceIds: Array.from(next),
+                });
+
                 return { expandedWorkspaceIds: next };
             });
         },
@@ -156,6 +216,28 @@ export const useSidebarStore = create<SidebarState>((set, get) => {
                 nextMap.set(workspaceId, metadata);
                 return { workspaceTabsMetadata: nextMap };
             });
+        },
+
+        initializeSidebarState: async () => {
+            try {
+                const savedValue = await getSetting(SIDEBAR_CONFIG_KEY);
+
+                if (!savedValue) {
+                    // No saved state, use defaults
+                    return;
+                }
+
+                const savedState: SidebarPersistedState = JSON.parse(savedValue);
+
+                set({
+                    isSidebarExpanded: savedState.isSidebarExpanded ?? true,
+                    sidebarWidth: savedState.sidebarWidth ?? 288,
+                    expandedWorkspaceIds: new Set(savedState.expandedWorkspaceIds ?? []),
+                });
+            } catch (error) {
+                console.error("Failed to initialize sidebar state:", error);
+                // Use defaults on error
+            }
         },
     };
 });

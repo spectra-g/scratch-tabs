@@ -3,10 +3,15 @@ const mockStorageProvider = {
     getSplitViewByWorkspace: jest.fn() as jest.MockedFunction<(workspaceId: string) => Promise<any>>,
 };
 
+const mockGetSetting = jest.fn() as jest.MockedFunction<(key: string) => Promise<string | undefined>>;
+const mockSetSetting = jest.fn() as jest.MockedFunction<(key: string, value: string) => Promise<void>>;
+
 jest.mock("../../db", () => ({
     StorageProviderFactory: {
         getProvider: () => mockStorageProvider,
     },
+    getSetting: mockGetSetting,
+    setSetting: mockSetSetting,
 }));
 
 jest.mock("../workspaceStore", () => ({
@@ -192,6 +197,307 @@ describe("SidebarStore", () => {
 
             expect(useSidebarStore.getState().workspaceTabsMetadata.get(ws1)).toEqual(metadata1);
             expect(useSidebarStore.getState().workspaceTabsMetadata.get(ws2)).toEqual(metadata2);
+        });
+    });
+
+    describe("Persistence - initializeSidebarState", () => {
+        it("should hydrate state from IndexedDB", async () => {
+            const savedState = {
+                isSidebarExpanded: false,
+                sidebarWidth: 350,
+                expandedWorkspaceIds: ["workspace-1", "workspace-2"],
+            };
+
+            mockGetSetting.mockResolvedValue(JSON.stringify(savedState));
+
+            await useSidebarStore.getState().initializeSidebarState();
+
+            expect(mockGetSetting).toHaveBeenCalledWith("sidebar_config");
+            expect(useSidebarStore.getState().isSidebarExpanded).toBe(false);
+            expect(useSidebarStore.getState().sidebarWidth).toBe(350);
+            expect(useSidebarStore.getState().expandedWorkspaceIds).toEqual(
+                new Set(["workspace-1", "workspace-2"])
+            );
+        });
+
+        it("should use defaults when no saved state exists", async () => {
+            mockGetSetting.mockResolvedValue(undefined);
+
+            // Reset to defaults first
+            useSidebarStore.setState({
+                isSidebarExpanded: true,
+                sidebarWidth: 288,
+                expandedWorkspaceIds: new Set(),
+            });
+
+            await useSidebarStore.getState().initializeSidebarState();
+
+            expect(mockGetSetting).toHaveBeenCalledWith("sidebar_config");
+            // Should keep default values
+            expect(useSidebarStore.getState().isSidebarExpanded).toBe(true);
+            expect(useSidebarStore.getState().sidebarWidth).toBe(288);
+            expect(useSidebarStore.getState().expandedWorkspaceIds).toEqual(new Set());
+        });
+
+        it("should handle null expandedWorkspaceIds gracefully", async () => {
+            const savedState = {
+                isSidebarExpanded: false,
+                sidebarWidth: 350,
+                expandedWorkspaceIds: null,
+            };
+
+            mockGetSetting.mockResolvedValue(JSON.stringify(savedState));
+
+            await useSidebarStore.getState().initializeSidebarState();
+
+            expect(useSidebarStore.getState().expandedWorkspaceIds).toEqual(new Set());
+        });
+
+        it("should handle corrupted JSON gracefully", async () => {
+            mockGetSetting.mockResolvedValue("{ invalid json");
+
+            // Set known state before initialization
+            useSidebarStore.setState({
+                isSidebarExpanded: true,
+                sidebarWidth: 288,
+            });
+
+            await useSidebarStore.getState().initializeSidebarState();
+
+            // Should keep defaults on error
+            expect(useSidebarStore.getState().isSidebarExpanded).toBe(true);
+            expect(useSidebarStore.getState().sidebarWidth).toBe(288);
+        });
+    });
+
+    describe("Persistence - toggleSidebar", () => {
+        it("should toggle sidebar and save to IndexedDB", async () => {
+            mockGetSetting.mockResolvedValue(
+                JSON.stringify({
+                    isSidebarExpanded: true,
+                    sidebarWidth: 288,
+                    expandedWorkspaceIds: [],
+                })
+            );
+
+            useSidebarStore.getState().toggleSidebar();
+
+            // Wait for async setSetting to be called
+            await new Promise((resolve) => setTimeout(resolve, 10));
+
+            expect(useSidebarStore.getState().isSidebarExpanded).toBe(false);
+            expect(mockSetSetting).toHaveBeenCalledWith(
+                "sidebar_config",
+                expect.stringContaining('"isSidebarExpanded":false')
+            );
+        });
+    });
+
+    describe("Persistence - setSidebarExpanded", () => {
+        it("should update state and save immediately", async () => {
+            mockGetSetting.mockResolvedValue(
+                JSON.stringify({
+                    isSidebarExpanded: true,
+                    sidebarWidth: 288,
+                    expandedWorkspaceIds: [],
+                })
+            );
+
+            useSidebarStore.getState().setSidebarExpanded(false);
+
+            // Wait for async setSetting to be called
+            await new Promise((resolve) => setTimeout(resolve, 10));
+
+            expect(useSidebarStore.getState().isSidebarExpanded).toBe(false);
+            expect(mockSetSetting).toHaveBeenCalledWith(
+                "sidebar_config",
+                expect.stringContaining('"isSidebarExpanded":false')
+            );
+        });
+    });
+
+    describe("Persistence - setSidebarWidth", () => {
+        beforeEach(() => {
+            jest.useFakeTimers();
+        });
+
+        afterEach(() => {
+            jest.useRealTimers();
+        });
+
+        it("should update state immediately but debounce database save", async () => {
+            mockGetSetting.mockResolvedValue(
+                JSON.stringify({
+                    isSidebarExpanded: true,
+                    sidebarWidth: 288,
+                    expandedWorkspaceIds: [],
+                })
+            );
+
+            useSidebarStore.getState().setSidebarWidth(350);
+
+            // State should update immediately
+            expect(useSidebarStore.getState().sidebarWidth).toBe(350);
+
+            // Database save should not happen yet
+            expect(mockSetSetting).not.toHaveBeenCalled();
+
+            // Fast-forward time
+            jest.advanceTimersByTime(1000);
+
+            // Flush promises
+            await Promise.resolve();
+
+            // Now the database save should have been called
+            expect(mockSetSetting).toHaveBeenCalledWith(
+                "sidebar_config",
+                expect.stringContaining('"sidebarWidth":350')
+            );
+        });
+
+        it("should debounce multiple rapid width changes", async () => {
+            mockGetSetting.mockResolvedValue(
+                JSON.stringify({
+                    isSidebarExpanded: true,
+                    sidebarWidth: 288,
+                    expandedWorkspaceIds: [],
+                })
+            );
+
+            useSidebarStore.getState().setSidebarWidth(300);
+            useSidebarStore.getState().setSidebarWidth(320);
+            useSidebarStore.getState().setSidebarWidth(350);
+
+            expect(useSidebarStore.getState().sidebarWidth).toBe(350);
+            expect(mockSetSetting).not.toHaveBeenCalled();
+
+            jest.advanceTimersByTime(1000);
+
+            await Promise.resolve();
+
+            // Should only save once with the final value
+            expect(mockSetSetting).toHaveBeenCalledTimes(1);
+            expect(mockSetSetting).toHaveBeenCalledWith(
+                "sidebar_config",
+                expect.stringContaining('"sidebarWidth":350')
+            );
+        });
+    });
+
+    describe("Persistence - expandWorkspace", () => {
+        it("should expand workspace and save to IndexedDB", async () => {
+            mockGetSetting.mockResolvedValue(
+                JSON.stringify({
+                    isSidebarExpanded: true,
+                    sidebarWidth: 288,
+                    expandedWorkspaceIds: [],
+                })
+            );
+            mockStorageProvider.getTabsByWorkspace.mockResolvedValue([]);
+            mockStorageProvider.getSplitViewByWorkspace.mockResolvedValue(null);
+
+            await useSidebarStore.getState().expandWorkspace("workspace-2");
+
+            expect(useSidebarStore.getState().expandedWorkspaceIds).toEqual(new Set(["workspace-2"]));
+            expect(mockSetSetting).toHaveBeenCalledWith(
+                "sidebar_config",
+                expect.stringContaining('"expandedWorkspaceIds":["workspace-2"]')
+            );
+        });
+
+        it("should serialize Set to Array for storage", async () => {
+            mockGetSetting.mockResolvedValue(
+                JSON.stringify({
+                    isSidebarExpanded: true,
+                    sidebarWidth: 288,
+                    expandedWorkspaceIds: ["workspace-1"],
+                })
+            );
+            mockStorageProvider.getTabsByWorkspace.mockResolvedValue([]);
+            mockStorageProvider.getSplitViewByWorkspace.mockResolvedValue(null);
+
+            // Initialize with existing expanded workspace
+            await useSidebarStore.getState().initializeSidebarState();
+
+            await useSidebarStore.getState().expandWorkspace("workspace-2");
+
+            // Verify that the saved value contains an array
+            const lastCall = mockSetSetting.mock.calls[mockSetSetting.mock.calls.length - 1];
+            const savedData = JSON.parse(lastCall[1] as string);
+            expect(Array.isArray(savedData.expandedWorkspaceIds)).toBe(true);
+            expect(savedData.expandedWorkspaceIds).toContain("workspace-1");
+            expect(savedData.expandedWorkspaceIds).toContain("workspace-2");
+        });
+
+        it("should not save if already expanded", async () => {
+            mockStorageProvider.getTabsByWorkspace.mockResolvedValue([]);
+            mockStorageProvider.getSplitViewByWorkspace.mockResolvedValue(null);
+
+            await useSidebarStore.getState().expandWorkspace("workspace-1");
+
+            mockSetSetting.mockClear();
+
+            await useSidebarStore.getState().expandWorkspace("workspace-1");
+
+            // Should not save again
+            expect(mockSetSetting).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("Persistence - collapseWorkspace", () => {
+        it("should collapse workspace and save to IndexedDB", async () => {
+            mockGetSetting.mockResolvedValue(
+                JSON.stringify({
+                    isSidebarExpanded: true,
+                    sidebarWidth: 288,
+                    expandedWorkspaceIds: ["workspace-1", "workspace-2"],
+                })
+            );
+
+            await useSidebarStore.getState().initializeSidebarState();
+
+            useSidebarStore.getState().collapseWorkspace("workspace-1");
+
+            // Wait for async setSetting
+            await new Promise((resolve) => setTimeout(resolve, 10));
+
+            expect(useSidebarStore.getState().expandedWorkspaceIds).toEqual(new Set(["workspace-2"]));
+            expect(mockSetSetting).toHaveBeenCalledWith(
+                "sidebar_config",
+                expect.stringContaining('"expandedWorkspaceIds":["workspace-2"]')
+            );
+        });
+    });
+
+    describe("Persistence - integration", () => {
+        it("should maintain state across multiple operations", async () => {
+            mockGetSetting.mockResolvedValue(
+                JSON.stringify({
+                    isSidebarExpanded: true,
+                    sidebarWidth: 288,
+                    expandedWorkspaceIds: [],
+                })
+            );
+            mockStorageProvider.getTabsByWorkspace.mockResolvedValue([]);
+            mockStorageProvider.getSplitViewByWorkspace.mockResolvedValue(null);
+
+            await useSidebarStore.getState().initializeSidebarState();
+            useSidebarStore.getState().setSidebarExpanded(false);
+            await new Promise((resolve) => setTimeout(resolve, 10));
+            await useSidebarStore.getState().expandWorkspace("workspace-1");
+
+            // Verify final state
+            expect(useSidebarStore.getState().isSidebarExpanded).toBe(false);
+            expect(useSidebarStore.getState().expandedWorkspaceIds).toEqual(new Set(["workspace-1"]));
+
+            // Verify all changes were persisted
+            const calls = mockSetSetting.mock.calls;
+            expect(calls.length).toBeGreaterThan(0);
+
+            // Last call should have both changes
+            const lastCall = calls[calls.length - 1];
+            const savedData = JSON.parse(lastCall[1] as string);
+            expect(savedData.expandedWorkspaceIds).toContain("workspace-1");
         });
     });
 });

@@ -76,7 +76,8 @@ export const Sidebar: React.FC = () => {
         refreshWorkspaceMetadata,
         sidebarWidth,
         setSidebarWidth,
-        setSidebarExpanded
+        setSidebarExpanded,
+        initializeSidebarState
     } = useSidebarStore();
 
     const { splitView } = useSplitViewStore();
@@ -114,6 +115,11 @@ export const Sidebar: React.FC = () => {
             coordinateGetter: sortableKeyboardCoordinates
         })
     );
+
+    // Initialize sidebar state from IndexedDB on mount
+    useEffect(() => {
+        initializeSidebarState();
+    }, [initializeSidebarState]);
 
     // Debounced search: separate input value from store query
     const [searchInputValue, setSearchInputValue] = useState(searchQuery);
