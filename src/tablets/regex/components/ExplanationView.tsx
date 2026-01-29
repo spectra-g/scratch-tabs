@@ -1,6 +1,7 @@
 import React from "react";
 import { Book } from "lucide-react";
 import { RegexExplanation } from "../types";
+import { explainRegexNaturally } from "../utils/regexEngine";
 
 interface ExplanationViewProps {
   explanation: RegexExplanation[];
@@ -72,68 +73,12 @@ export function ExplanationView({
   };
 
   const generateHumanReadable = () => {
-    if (explanation.length === 0) {
-      return "No pattern to explain";
+    if (!pattern || explanation.length === 0) {
+      return "No pattern to explain.";
     }
 
-    const parts: string[] = [];
-
-    explanation.forEach((exp) => {
-      switch (exp.type) {
-        case "anchor":
-          if (exp.value === "^") {
-            parts.push("at the start of string/line");
-          } else if (exp.value === "$") {
-            parts.push("at the end of string/line");
-          }
-          break;
-        case "literal":
-          parts.push(`match "${exp.value}"`);
-          break;
-        case "character-class":
-          if (exp.value === ".") {
-            parts.push("match any character");
-          } else {
-            parts.push(`match any character in ${exp.value}`);
-          }
-          break;
-        case "quantifier":
-          if (exp.value === "*") {
-            parts.push("zero or more times");
-          } else if (exp.value === "+") {
-            parts.push("one or more times");
-          } else if (exp.value === "?") {
-            parts.push("zero or one time");
-          } else {
-            parts.push(`repeat ${exp.value}`);
-          }
-          break;
-        case "group":
-          if (exp.value.includes("?<")) {
-            const nameMatch = exp.value.match(/\?\<(\w+)\>/);
-            if (nameMatch) {
-              parts.push(`capture as "${nameMatch[1]}"`);
-            }
-          } else if (exp.value.startsWith("(?:")) {
-            parts.push("group without capturing");
-          } else {
-            parts.push("capture group");
-          }
-          break;
-        case "escape":
-          parts.push(exp.description.toLowerCase());
-          break;
-        case "assertion":
-          if (exp.value === "|") {
-            parts.push("OR");
-          } else {
-            parts.push(exp.description.toLowerCase());
-          }
-          break;
-      }
-    });
-
-    return parts.join(", ");
+    // Use the new semantic natural language generator
+    return explainRegexNaturally(pattern);
   };
 
   return (
