@@ -24,13 +24,6 @@ releases:
           - "**Strict Pattern Matching:** Refined numeric pattern matchers to eliminate false positives in partially alphanumeric strings while maintaining high accuracy for standard formats"
           - "**Curl Smart View Compact Design:** Redesigned with 25-37% tighter spacing for a more professional, scannable interface - card padding reduced from 16px to 12px horizontal and 10px vertical, headers from ~56px to ~48px height"
           - "**Enhanced Visual Hierarchy:** Method badges now larger and bolder (text-sm, font-semibold) with tracking-wide for instant recognition, domain names displayed in bold to stand out from full URLs, and numbered card indexes (#1, #2) for easy reference"
-          - "**Streamlined Curl Builder:** HTTP Method and URL now on a single intuitive line with compact dropdown (no label needed) - users immediately understand the interface, \"Open in Rest Client\" button properly sized to match header buttons, and all tabs/buttons using consistent compact spacing"
-          - "**Better UX Clarity:** Renamed \"Add Curl\" to \"Add Request\" for clearer action description, \"Curl Request Workbench\" shortened to \"Curl Workbench\", and all buttons/icons sized consistently (14px icons, py-1.5 padding)"
-      - name: "🧪 Testing"
-        changes:
-          - "**Regex Interpretation Tests:** Added 15 specialized unit tests covering modern syntax, incomplete patterns, and nested AST fidelity - ensuring high-quality explanations even for complex edge cases"
-          - "**Share Modal Tests:** Added 4 new unit tests covering manual customization workflow, button visibility, trim UI activation, and JSON content support - all 13 ShareModal tests passing"
-          - "**Curl Smart View Tests:** Updated test expectations for new UI labels and verified all 5,599 tests passing across entire codebase"
 
   - version: "1.20.0"
     type: "latest"
