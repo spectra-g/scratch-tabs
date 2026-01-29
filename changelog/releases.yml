@@ -3,6 +3,30 @@ config:
   max_versions: 100  # Maximum number of versions to display
 
 releases:
+  - version: "1.21.0"
+    type: "latest"
+    draft: false
+    date: "2026-01-29"
+    headline: "Share Customization & Curl UI Polish"
+    summary: "Manual content trimming for privacy-safe sharing, plus compact professional Curl Smart View redesign"
+    description: "Enhance your sharing privacy with manual content customization even when content fits, and enjoy a sleeker, more professional Curl Smart View with tightened spacing and better visual hierarchy."
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**Manual Content Customization:** New \"Customize Content\" button in Share modal lets you manually trim content even when it fits within URL limits - exclude sensitive fields from JSON objects, select specific line ranges from text content, or reduce clutter by sharing only relevant data for privacy-safe collaboration"
+          - "**Privacy-First JSON Sharing:** Selectively deselect sensitive fields (passwords, tokens, internal IDs) from JSON before sharing - maintain valid structure while excluding private data"
+          - "**Flexible Line Range Selection:** Choose specific line ranges to share from text content without manually editing - perfect for sharing relevant snippets while excluding debug logs or sensitive information"
+      - name: "🔧 Improvements"
+        changes:
+          - "**Curl Smart View Compact Design:** Redesigned with 25-37% tighter spacing for a more professional, scannable interface - card padding reduced from 16px to 12px horizontal and 10px vertical, headers from ~56px to ~48px height"
+          - "**Enhanced Visual Hierarchy:** Method badges now larger and bolder (text-sm, font-semibold) with tracking-wide for instant recognition, domain names displayed in bold to stand out from full URLs, and numbered card indexes (#1, #2) for easy reference"
+          - "**Streamlined Curl Builder:** HTTP Method and URL now on a single intuitive line with compact dropdown (no label needed) - users immediately understand the interface, \"Open in Rest Client\" button properly sized to match header buttons, and all tabs/buttons using consistent compact spacing"
+          - "**Better UX Clarity:** Renamed \"Add Curl\" to \"Add Request\" for clearer action description, \"Curl Request Workbench\" shortened to \"Curl Workbench\", and all buttons/icons sized consistently (14px icons, py-1.5 padding)"
+      - name: "🧪 Testing"
+        changes:
+          - "**Share Modal Tests:** Added 4 new unit tests covering manual customization workflow, button visibility, trim UI activation, and JSON content support - all 13 ShareModal tests passing"
+          - "**Curl Smart View Tests:** Updated test expectations for new UI labels and verified all 5,599 tests passing across entire codebase"
+
   - version: "1.20.0"
     type: "latest"
     draft: false
