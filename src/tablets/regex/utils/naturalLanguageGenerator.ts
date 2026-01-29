@@ -49,10 +49,10 @@ function generateFromSemanticUnits(
   // Build the sentence
   if (requirements.length > 0 || prohibitions.length > 0) {
     // Validation-style pattern
-    const allReqs = [
+    const allReqs = groupRequirementPhrases([
       ...requirements.map((r) => r.description),
       ...prohibitions.map((p) => p.description),
-    ];
+    ]);
 
     const reqPart = formatListNatural(allReqs, "and");
 
@@ -145,6 +145,34 @@ function combineMatchDescriptions(descriptions: string[]): string {
 
   // Join with appropriate connectors
   return combined.join(" followed by ");
+}
+
+function groupRequirementPhrases(descriptions: string[]): string[] {
+  const result: string[] = [];
+  const containsAtLeastOne: string[] = [];
+  const doesNotContain: string[] = [];
+  const other: string[] = [];
+
+  for (const desc of descriptions) {
+    if (desc.startsWith("contains at least one ")) {
+      containsAtLeastOne.push(desc.replace("contains at least one ", ""));
+    } else if (desc.startsWith("does not contain ")) {
+      doesNotContain.push(desc.replace("does not contain ", ""));
+    } else {
+      other.push(desc);
+    }
+  }
+
+  if (containsAtLeastOne.length > 0) {
+    result.push(`contains at least one ${formatListNatural(containsAtLeastOne, "and")}`);
+  }
+  if (doesNotContain.length > 0) {
+    result.push(`does not contain ${formatListNatural(doesNotContain, "and")}`);
+  }
+
+  result.push(...other);
+
+  return result;
 }
 
 // =============================================================================

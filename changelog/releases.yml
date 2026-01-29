@@ -7,23 +7,28 @@ releases:
     type: "latest"
     draft: false
     date: "2026-01-29"
-    headline: "Share Customization & Curl UI Polish"
-    summary: "Manual content trimming for privacy-safe sharing, plus compact professional Curl Smart View redesign"
-    description: "Enhance your sharing privacy with manual content customization even when content fits, and enjoy a sleeker, more professional Curl Smart View with tightened spacing and better visual hierarchy."
+    headline: "Share Customization, Curl UI Polish & Regex Engine Refined"
+    summary: "Manual content trimming for privacy-safe sharing, compact professional Curl Smart View redesign, and refined Regex Plain English engine"
+    description: "Enhance your sharing privacy with manual content customization, enjoy a sleeker professional Curl Smart View, and experience a significantly improved Regex 'Plain English' engine with modern syntax support and more natural explanations."
     categories:
       - name: "✨ New Features"
         changes:
           - "**Manual Content Customization:** New \"Customize Content\" button in Share modal lets you manually trim content even when it fits within URL limits - exclude sensitive fields from JSON objects, select specific line ranges from text content, or reduce clutter by sharing only relevant data for privacy-safe collaboration"
           - "**Privacy-First JSON Sharing:** Selectively deselect sensitive fields (passwords, tokens, internal IDs) from JSON before sharing - maintain valid structure while excluding private data"
           - "**Flexible Line Range Selection:** Choose specific line ranges to share from text content without manually editing - perfect for sharing relevant snippets while excluding debug logs or sensitive information"
+          - "**Modern Regex Syntax Support:** Added full support for Unicode property escapes (`\\p{...}`), hex escapes (`\\xHH`), and named backreferences (`\\k<name>`) to the Regex Plain English interpreter"
       - name: "🔧 Improvements"
         changes:
+          - "**Advanced Regex Semantic Engine:** Upgraded the \"Plain English\" interpreter to use a sophisticated AST-based parser with literal-aware semantic analysis - provides more robust recognition of complex patterns (emails, dates, SSNs) and gracefully handles incomplete or malformed regexes"
+          - "**Natural Language Flow:** Improved explanation logic with sequential connectors (e.g., \"...and then ensures...\") and deduplicated phrasing for a more human, readable flow in complex validation patterns"
+          - "**Strict Pattern Matching:** Refined numeric pattern matchers to eliminate false positives in partially alphanumeric strings while maintaining high accuracy for standard formats"
           - "**Curl Smart View Compact Design:** Redesigned with 25-37% tighter spacing for a more professional, scannable interface - card padding reduced from 16px to 12px horizontal and 10px vertical, headers from ~56px to ~48px height"
           - "**Enhanced Visual Hierarchy:** Method badges now larger and bolder (text-sm, font-semibold) with tracking-wide for instant recognition, domain names displayed in bold to stand out from full URLs, and numbered card indexes (#1, #2) for easy reference"
           - "**Streamlined Curl Builder:** HTTP Method and URL now on a single intuitive line with compact dropdown (no label needed) - users immediately understand the interface, \"Open in Rest Client\" button properly sized to match header buttons, and all tabs/buttons using consistent compact spacing"
           - "**Better UX Clarity:** Renamed \"Add Curl\" to \"Add Request\" for clearer action description, \"Curl Request Workbench\" shortened to \"Curl Workbench\", and all buttons/icons sized consistently (14px icons, py-1.5 padding)"
       - name: "🧪 Testing"
         changes:
+          - "**Regex Interpretation Tests:** Added 15 specialized unit tests covering modern syntax, incomplete patterns, and nested AST fidelity - ensuring high-quality explanations even for complex edge cases"
           - "**Share Modal Tests:** Added 4 new unit tests covering manual customization workflow, button visibility, trim UI activation, and JSON content support - all 13 ShareModal tests passing"
           - "**Curl Smart View Tests:** Updated test expectations for new UI labels and verified all 5,599 tests passing across entire codebase"
 

@@ -1,4 +1,5 @@
 import { RegexNode, SemanticUnit } from "../types";
+import { describeQuantifierNatural } from "./naturalLanguageGenerator";
 
 // =============================================================================
 // Pattern Templates - Pre-written explanations for common patterns
@@ -63,13 +64,20 @@ function describeLookaheadTarget(node: RegexNode): string {
   // Collect all non-.* elements to describe
   const meaningfulElements: RegexNode[] = [];
 
+  let hadDots = false;
+
   for (const child of children) {
     // Skip .* or .+ patterns (quantified dots)
     if (child.type === "quantified" && child.children) {
       const innerChild = child.children[0];
       if (innerChild?.type === "escape" && innerChild?.value === ".") {
+        hadDots = true;
         continue; // This is .* or .+, skip it
       }
+    }
+    if (child.type === "escape" && child.value === ".") {
+      hadDots = true;
+      continue;
     }
     meaningfulElements.push(child);
   }
@@ -121,7 +129,7 @@ function describeLookaheadTarget(node: RegexNode): string {
     }
   }
 
-  return "the specified pattern";
+  return hadDots ? "any character" : "the specified pattern";
 }
 
 function describeCharacterClassNatural(value: string, negated?: boolean): string {
@@ -133,6 +141,10 @@ function describeCharacterClassNatural(value: string, negated?: boolean): string
   if (content.startsWith("^")) {
     content = content.slice(1);
     negated = true;
+  }
+
+  if (content === "") {
+    return negated ? "any character" : "nothing (empty class)";
   }
 
   const descriptions: Record<string, string> = {
@@ -159,8 +171,9 @@ function describeCharacterClassNatural(value: string, negated?: boolean): string
     return negated ? "non-special character" : "special character";
   }
 
-  // Check for vowels
-  if (content === "aeiou" || content === "aeiouAEIOU") {
+  // Check for vowels (order-independent)
+  const sortedContent = content.split("").sort().join("");
+  if (sortedContent === "aeiou" || sortedContent === "AEIOUaeiou") {
     return negated ? "consonant" : "vowel";
   }
 
@@ -182,13 +195,37 @@ function describeEscapeNatural(value: string): string {
     "\\S": "non-whitespace",
     "\\b": "word boundary",
     "\\B": "non-word boundary",
+    "\\n": "newline",
+    "\\r": "carriage return",
+    "\\t": "tab",
+    "\\v": "vertical tab",
+    "\\f": "form feed",
+    "\\0": "null character",
     ".": "any character",
   };
 
   if (escapes[value]) return escapes[value];
 
+  // Handle control characters \cX
+  if (value.startsWith("\\c") && value.length === 3) {
+    return `control-${value[2].toUpperCase()}`;
+  }
+
   // Handle hex and unicode escapes (simplified)
   if (value.startsWith("\\x") || value.startsWith("\\u")) {
+    try {
+      const hexPart = value.startsWith("\\x") ? value.substring(2) : value.substring(2).replace(/[\{\}]/g, "");
+      const code = parseInt(hexPart, 16);
+      if (!isNaN(code)) {
+        const char = String.fromCharCode(code);
+        // Normalize common printable characters
+        if (/[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(char)) {
+          return `'${char}'`;
+        }
+      }
+    } catch {
+      // Ignore errors in normalization
+    }
     return value;
   }
 
@@ -253,8 +290,15 @@ const patternTemplates: PatternTemplate[] = [
         findLiteralInAST(ast, "\\u0040");
       const hasDot = str.includes(".");
 
+      // Tighten: @ must not be the first thing (basic check for word chars before @)
+      // We look for @ in various forms: @, \@, \x40, \u0040
+      const atMatch = str.match(/@|\\@|\\x40|\\u0040/);
+      const atIndex = atMatch ? atMatch.index || 0 : -1;
+      const hasLeadingContent = atIndex > 0 && /[\w\.%+-]/.test(str.substring(0, atIndex));
+
       return hasAt &&
         hasDot &&
+        hasLeadingContent &&
         (str.includes("\\w") || str.includes("[\\w")) &&
         !str.startsWith("(?<");  // Don't match lookbehinds like (?<=@)
     },
@@ -708,33 +752,64 @@ function analyzeGroup(node: RegexNode): SemanticUnit {
   return { type: "match", description: childDesc };
 }
 
+function analyzeAlternationSequence(nodes: RegexNode[]): string {
+  const descriptions: string[] = [];
+  let currentLiteral = "";
+
+  for (const node of nodes) {
+    if (node.type === "anchor") continue;
+
+    if (node.type === "literal") {
+      currentLiteral += node.value || "";
+    } else {
+      if (currentLiteral) {
+        descriptions.push(`'${currentLiteral}'`);
+        currentLiteral = "";
+      }
+      descriptions.push(describeNodeNatural(node));
+    }
+  }
+
+  if (currentLiteral) {
+    descriptions.push(`'${currentLiteral}'`);
+  }
+
+  if (descriptions.length === 0) return "";
+  if (descriptions.length === 1) return descriptions[0];
+
+  // Join with "followed by" for mixed sequences
+  return descriptions.join(" followed by ");
+}
+
 function analyzeAlternation(node: RegexNode): SemanticUnit {
   const alternatives = (node.children || []).map((seq) => {
     if (seq.type === "sequence" && seq.children) {
-      // Collect literals without extra quotes
-      return seq.children.map((c) => {
-        if (c.type === "literal") {
-          return c.value || "";
-        }
-        return describeNodeNatural(c);
-      }).join("");
+      const startAnchor = seq.children.find(c => c.type === "anchor" && c.value === "^");
+      const endAnchor = seq.children.find(c => c.type === "anchor" && c.value === "$");
+
+      const sequenceDesc = analyzeAlternationSequence(seq.children);
+
+      if (startAnchor && endAnchor) return `${sequenceDesc} (full string match)`;
+      if (startAnchor) return `${sequenceDesc} at the start of the string`;
+      if (endAnchor) return `${sequenceDesc} at the end of the string`;
+      return sequenceDesc;
     }
-    if (seq.type === "literal") {
-      return seq.value || "";
-    }
-    return describeNodeNatural(seq);
+
+    // Fallback for single-node alternatives
+    const desc = describeNodeNatural(seq);
+    return desc.startsWith("'") || desc.includes(" ") ? desc : `'${desc}'`;
   });
 
   if (alternatives.length === 2) {
     return {
       type: "match",
-      description: `'${alternatives[0]}' or '${alternatives[1]}'`,
+      description: `${alternatives[0]} or ${alternatives[1]}`,
     };
   }
 
   return {
     type: "match",
-    description: formatListNatural(alternatives.map((a) => `'${a}'`), "or"),
+    description: formatListNatural(alternatives, "or"),
   };
 }
 
@@ -742,6 +817,10 @@ function describeNodeNatural(node: RegexNode | null | undefined): string {
   if (!node) return "unknown";
 
   switch (node.type) {
+    case "anchor":
+      if (node.value === "^") return "at the start of the string";
+      if (node.value === "$") return "at the end of the string";
+      return "at a boundary";
     case "literal":
       return `'${node.value || ""}'`;
     case "escape":
@@ -749,7 +828,14 @@ function describeNodeNatural(node: RegexNode | null | undefined): string {
     case "character-class":
       return describeCharacterClassNatural(node.value || "", node.negated);
     case "quantified":
-      return describeNodeNatural((node.children || [])[0]);
+      const childDesc = describeNodeNatural((node.children || [])[0]);
+      if (node.quantifier) {
+        const qDesc = describeQuantifierNatural(node.quantifier.min, node.quantifier.max);
+        // If childDesc is already a phrase like "at the start", handle it
+        if (childDesc.startsWith("at the")) return `${childDesc} (${qDesc})`;
+        return `${qDesc} ${childDesc}`;
+      }
+      return childDesc;
     case "group":
       // Handle groups with alternation or sequence inside
       if (node.children && node.children.length > 0) {

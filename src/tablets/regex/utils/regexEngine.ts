@@ -795,6 +795,41 @@ function parseEscape(ctx: ParseContext): RegexNode {
     }
   }
 
+  // Handle \cX control characters
+  if (char === "c" && ctx.pos + 1 < ctx.pattern.length) {
+    const controlChar = ctx.pattern[ctx.pos + 1];
+    if (/[a-zA-Z]/.test(controlChar)) {
+      const value = ctx.pattern.slice(start, ctx.pos + 2);
+      ctx.pos += 2;
+      return {
+        type: "escape",
+        value,
+        position: { start, end: ctx.pos },
+      };
+    }
+  }
+
+  // Handle \0 octal escape (simplified - only \0)
+  if (char === "0") {
+    ctx.pos++;
+    return {
+      type: "escape",
+      value: "\\0",
+      position: { start, end: ctx.pos },
+    };
+  }
+
+  // Explicitly handle common escapes for better downstream description
+  const commonEscapes = "nrtvfbBSwWdD";
+  if (commonEscapes.includes(char)) {
+    ctx.pos++;
+    return {
+      type: "escape",
+      value: "\\" + char,
+      position: { start, end: ctx.pos },
+    };
+  }
+
   ctx.pos++;
   return {
     type: "escape",
