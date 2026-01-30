@@ -75,10 +75,34 @@ export const coreCategories: OperationCategory[] = [
     order: 70,
   },
   {
+    id: "web",
+    name: "Web",
+    icon: "Globe",
+    order: 72,
+  },
+  {
+    id: "parsing",
+    name: "Parsing",
+    icon: "Split",
+    order: 75,
+  },
+  {
+    id: "conversion",
+    name: "Conversion",
+    icon: "ArrowRightLeft",
+    order: 77,
+  },
+  {
     id: "filtering",
     name: "Filtering",
     icon: "Filter",
     order: 80,
+  },
+  {
+    id: "datetime",
+    name: "Date & Time",
+    icon: "Clock",
+    order: 83,
   },
   {
     id: "redaction",
@@ -109,6 +133,12 @@ export const coreCategories: OperationCategory[] = [
     name: "Extraction",
     icon: "Regex",
     order: 85,
+  },
+  {
+    id: "networking",
+    name: "Networking",
+    icon: "Network",
+    order: 87,
   },
   {
     id: "compression",

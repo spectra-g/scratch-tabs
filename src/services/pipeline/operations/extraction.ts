@@ -58,6 +58,78 @@ export const extractionOperations: OperationDefinition[] = [
         },
         keywords: ["email", "mail", "contact"],
         source: "core",
+    },
+    {
+        id: "extract.regex-group",
+        name: "Extract Regex Capture Group",
+        description: "Extract specific capture group content from regex matches",
+        categories: ["extraction", "search"],
+        parameters: [
+            {
+                name: "pattern",
+                label: "Regex Pattern",
+                type: "string",
+                default: "",
+                required: true,
+                description: "Regular expression with capture groups (use parentheses)",
+                placeholder: "e.g. ID:(\\d+) or \\[(.*?)\\]"
+            },
+            {
+                name: "group",
+                label: "Capture Group",
+                type: "number",
+                default: 1,
+                min: 1,
+                max: 9,
+                description: "Which capture group to extract (1-based)"
+            },
+            {
+                name: "flags",
+                label: "Flags",
+                type: "string",
+                default: "g",
+                description: "Regex flags (g=global, i=case-insensitive, m=multiline)"
+            },
+            {
+                name: "unique",
+                label: "Unique Only",
+                type: "boolean",
+                default: false,
+                description: "Remove duplicate matches"
+            }
+        ],
+        execute: (input, params) => {
+            const pattern = params.pattern as string;
+            const groupIndex = (params.group as number) ?? 1;
+            const flags = (params.flags as string) ?? "g";
+            const unique = params.unique ?? false;
+
+            if (!pattern) {
+                throw new Error('Pattern is required');
+            }
+
+            try {
+                const regex = new RegExp(pattern, flags);
+                const matches: string[] = [];
+                let match;
+
+                // Use matchAll for capture groups
+                const allMatches = input.matchAll(new RegExp(pattern, flags));
+
+                for (const m of allMatches) {
+                    if (m[groupIndex] !== undefined) {
+                        matches.push(m[groupIndex]);
+                    }
+                }
+
+                const result = unique ? [...new Set(matches)] : matches;
+                return result.join('\n');
+            } catch (e: any) {
+                throw new Error(`Invalid regex pattern: ${e.message}`);
+            }
+        },
+        keywords: ["regex", "extract", "capture", "group", "match", "pattern"],
+        source: "core",
     }
 ];
 
