@@ -15,6 +15,7 @@ export default {
     "^lowlight$": "<rootDir>/src/__mocks__/lowlight.ts",
     "^react-resizable-panels$": "<rootDir>/src/__mocks__/react-resizable-panels.tsx",
     "^.*tablets/dynamicRegistry$": "<rootDir>/src/tablets/__mocks__/dynamicRegistry.ts",
+    "^.*stores/aiStore$": "<rootDir>/src/__mocks__/aiStore.ts",
     "\\.(css|less|scss|sass)$": "<rootDir>/src/__mocks__/styleMock.js"
   },
   transform: {
@@ -22,12 +23,7 @@ export default {
       "ts-jest",
       {
         useESM: true,
-        tsconfig: {
-          jsx: "react-jsx",
-          resolveJsonModule: true,
-          esModuleInterop: true,
-          types: ["jest", "@testing-library/jest-dom", "node"],
-        },
+        tsconfig: "tsconfig.test.json",
       },
     ],
   },

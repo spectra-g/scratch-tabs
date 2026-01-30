@@ -4,6 +4,7 @@ import { useRootStore } from "../../stores/rootStore";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
 import { useMacroStore } from "../../stores/macroStore";
 import { usePipelineStore } from "../../stores/pipelineStore";
+import { useAIStore } from "../../stores/aiStore";
 import {
   Copy,
   GitCompare,
@@ -25,6 +26,7 @@ import {
   PanelRightClose,
   Download,
   Play,
+  Sparkles,
 } from "../Icons";
 import { FormatSelector } from "./FormatSelector";
 import { formatRegistry } from "../../formats";
@@ -92,6 +94,7 @@ export const useContextMenuConfig = (
   const rootStore = useRootStore();
   const { activeWorkspaceId } = useWorkspaceStore();
   const { setForceShowToolbar } = useMacroStore();
+  const { summarizeTextWithModal, ai } = useAIStore();
 
   const [confirmationState, setConfirmationState] = useState<{
     type: "close" | "closeAllExcept" | "closeTabsToLeft" | "closeTabsToRight";
@@ -276,6 +279,16 @@ Add any other context about the problem here.
     rootStore.setActiveTab(tabId);
     // Show the floating macro toolbar for THIS tab specifically
     setForceShowToolbar(true, tabId, isRightSide ? 'right' : 'left');
+    closeContextMenu();
+  };
+
+  const handleSummarize = () => {
+    if (tab && !tab.isTablet && !tab.isRich) {
+      const content = tab.content || "";
+      if (content.trim().length > 0) {
+        summarizeTextWithModal(content, tabId);
+      }
+    }
     closeContextMenu();
   };
 
@@ -471,6 +484,14 @@ Add any other context about the problem here.
       icon: Circle,
       action: handleMacroRecording,
       condition: !!tab && !tab.isTablet && !tab.isRich,
+    },
+    // Summarize
+    {
+      id: "summarize",
+      label: "Summarize",
+      icon: Sparkles,
+      action: handleSummarize,
+      condition: !!tab && !tab.isTablet && !tab.isRich && ai.isReady && !ai.isLoading,
     },
     // 8. Split Content
     {
