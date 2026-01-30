@@ -137,36 +137,14 @@
           </div>
           <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">PERSISTENT SIDEBAR STATE & PIPELINE OPERATIONS EXPANSION</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">Your sidebar configuration is now remembered across browser sessions. Width adjustments, sidebar visibility, and which workspaces are expanded are automatically saved to IndexedDB and restored when you return. Also introduces 15 new pipeline operations spanning web parsing, code formatting, data conversion, cryptography, and text analysis.</p>
+            <p class="mb-4">Your sidebar configuration is now remembered across browser sessions. Width adjustments, sidebar visibility, and which workspaces are expanded are automatically saved and restored when you return. Also introduces 15 new pipeline operations spanning web parsing, code formatting, data conversion, cryptography, and text analysis.</p>
 
             <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
             <ul class="space-y-2 mb-6">
               <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Persistent Sidebar Width:</strong> Custom sidebar width (150px-600px) is automatically saved and restored on app reload</span></li>
               <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Persistent Sidebar State:</strong> Sidebar expanded/collapsed state persists across sessions - your preferred view mode is remembered</span></li>
               <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Persistent Workspace Expansion:</strong> Workspace expansion states in the sidebar tree are saved - return to find your workspaces exactly as you left them</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Automatic State Restoration:</strong> All sidebar preferences load instantly on app startup from IndexedDB with zero user action required</span></li>
               <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>15 New Pipeline Operations:</strong> Massive expansion of transformation pipeline with web parsing (HTML strip tags, JWT decode), code formatting (SQL/CSS prettify, SQL escape), data conversion (YAMLJSON, CSV column extraction), cryptography (HMAC, base conversion), and text analysis (slugify, frequency analysis, diacritics removal, regex capture groups, quoted-printable decode)</span></li>
-            </ul>
-
-            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># improvements</h4>
-            <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Performance-Optimized Saves:</strong> Sidebar width changes during resize are debounced (1 second) to prevent database thrashing while maintaining immediate visual feedback</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Graceful Error Handling:</strong> Corrupted or missing persistence data falls back to sensible defaults without breaking the UI</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Type-Safe Persistence:</strong> Strongly-typed persistence layer ensures data integrity with proper SetArray serialization for workspace IDs</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>CSV Parsing Enhancement:</strong> CSV column extraction now properly handles quoted fields containing delimiters, escaped quotes, and mixed quoted/unquoted data - fully RFC 4180 compliant parsing with state machine logic</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Universal Crypto Implementation:</strong> HMAC generation uses Web Crypto API (works in modern browsers and Node.js 15+) with automatic fallback to Node.js crypto for legacy test environments</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Modular Pipeline Architecture:</strong> New operations organized by domain (web.ts, code.ts, dataFormats.ts, crypto.ts) for better maintainability and discovery - each module self-registers with comprehensive test coverage (950+ tests across all operations)</span></li>
-            </ul>
-
-            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># pipeline_operations_catalog</h4>
-            <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Web Operations:</strong> HTML strip tags with line break preservation, JWT decode with timestamp conversion and Bearer prefix support</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Code Operations:</strong> SQL escape for safe string insertion, SQL prettify with keyword uppercasing and indentation control, CSS prettify with configurable spacing and comma formatting</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Data Formats:</strong> YAML to JSON conversion with indent control, JSON to YAML with double-quote preference, CSV column extraction by index or header name with multi-delimiter support (comma/tab/semicolon/pipe)</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Text Operations:</strong> Slugify for URL-friendly strings with separator options, remove diacritics for ASCII normalization, frequency analysis for lines/words/characters with CSV/JSON export</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Extraction:</strong> Regex capture group extraction with configurable group index, unique filtering, and full flag support (g/i/m)</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Encoding:</strong> Quoted-printable decoder for MIME email content with soft line break handling and hex character decoding</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Cryptography:</strong> HMAC generation with SHA-1/256/384/512 support and hex/base64 output, base converter for binary/octal/decimal/hexadecimal with prefix options</span></li>
             </ul>
           </div>
         </div>

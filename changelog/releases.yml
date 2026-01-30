@@ -9,32 +9,14 @@ releases:
     date: "2026-01-29"
     headline: "Persistent Sidebar State & Pipeline Operations Expansion"
     summary: "Sidebar preferences now persist across sessions, plus 15 new powerful transformation pipeline operations for data processing workflows"
-    description: "Your sidebar configuration is now remembered across browser sessions. Width adjustments, sidebar visibility, and which workspaces are expanded are automatically saved to IndexedDB and restored when you return. Also introduces 15 new pipeline operations spanning web parsing, code formatting, data conversion, cryptography, and text analysis."
+    description: "Your sidebar configuration is now remembered across browser sessions. Width adjustments, sidebar visibility, and which workspaces are expanded are automatically saved and restored when you return. Also introduces 15 new pipeline operations spanning web parsing, code formatting, data conversion, cryptography, and text analysis."
     categories:
       - name: "✨ New Features"
         changes:
           - "**Persistent Sidebar Width:** Custom sidebar width (150px-600px) is automatically saved and restored on app reload"
           - "**Persistent Sidebar State:** Sidebar expanded/collapsed state persists across sessions - your preferred view mode is remembered"
           - "**Persistent Workspace Expansion:** Workspace expansion states in the sidebar tree are saved - return to find your workspaces exactly as you left them"
-          - "**Automatic State Restoration:** All sidebar preferences load instantly on app startup from IndexedDB with zero user action required"
           - "**15 New Pipeline Operations:** Massive expansion of transformation pipeline with web parsing (HTML strip tags, JWT decode), code formatting (SQL/CSS prettify, SQL escape), data conversion (YAML↔JSON, CSV column extraction), cryptography (HMAC, base conversion), and text analysis (slugify, frequency analysis, diacritics removal, regex capture groups, quoted-printable decode)"
-      - name: "🔧 Improvements"
-        changes:
-          - "**Performance-Optimized Saves:** Sidebar width changes during resize are debounced (1 second) to prevent database thrashing while maintaining immediate visual feedback"
-          - "**Graceful Error Handling:** Corrupted or missing persistence data falls back to sensible defaults without breaking the UI"
-          - "**Type-Safe Persistence:** Strongly-typed persistence layer ensures data integrity with proper Set↔Array serialization for workspace IDs"
-          - "**CSV Parsing Enhancement:** CSV column extraction now properly handles quoted fields containing delimiters, escaped quotes, and mixed quoted/unquoted data - fully RFC 4180 compliant parsing with state machine logic"
-          - "**Universal Crypto Implementation:** HMAC generation uses Web Crypto API (works in modern browsers and Node.js 15+) with automatic fallback to Node.js crypto for legacy test environments"
-          - "**Modular Pipeline Architecture:** New operations organized by domain (web.ts, code.ts, dataFormats.ts, crypto.ts) for better maintainability and discovery - each module self-registers with comprehensive test coverage (950+ tests across all operations)"
-      - name: "🔄 Pipeline Operations Catalog"
-        changes:
-          - "**Web Operations:** HTML strip tags with line break preservation, JWT decode with timestamp conversion and Bearer prefix support"
-          - "**Code Operations:** SQL escape for safe string insertion, SQL prettify with keyword uppercasing and indentation control, CSS prettify with configurable spacing and comma formatting"
-          - "**Data Formats:** YAML to JSON conversion with indent control, JSON to YAML with double-quote preference, CSV column extraction by index or header name with multi-delimiter support (comma/tab/semicolon/pipe)"
-          - "**Text Operations:** Slugify for URL-friendly strings with separator options, remove diacritics for ASCII normalization, frequency analysis for lines/words/characters with CSV/JSON export"
-          - "**Extraction:** Regex capture group extraction with configurable group index, unique filtering, and full flag support (g/i/m)"
-          - "**Encoding:** Quoted-printable decoder for MIME email content with soft line break handling and hex character decoding"
-          - "**Cryptography:** HMAC generation with SHA-1/256/384/512 support and hex/base64 output, base converter for binary/octal/decimal/hexadecimal with prefix options"
 
   - version: "1.21.0"
     type: "release"
