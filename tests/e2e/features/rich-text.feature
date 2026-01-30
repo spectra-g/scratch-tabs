@@ -1,3 +1,4 @@
+@rich
 Feature: Rich Text Editor
 
   Background:

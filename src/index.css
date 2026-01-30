@@ -753,10 +753,14 @@ select::-webkit-scrollbar-thumb:hover {
   background-color: rgb(var(--table-cell-bg));
 }
 
-/* First column gets left border */
+/* First column gets left border and extra left padding for cursor */
 .rich-text-editor .ProseMirror th:first-child,
 .rich-text-editor .ProseMirror td:first-child {
   border-left: 1px solid rgb(var(--table-border));
+}
+
+.rich-text-editor .ProseMirror td:first-child {
+  padding-left: 0.875rem;
 }
 
 /* First row gets top border */
