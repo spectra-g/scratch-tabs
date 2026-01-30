@@ -103,3 +103,36 @@ Feature: Workspace Sidebar
     Then the "Default Tab" tab should not exist on the page
     When I click on workspace icon for "Default Workspace" in icon rail
     Then the "Default Tab" tab should exist on the page
+
+  Scenario: Icon rail mode persists on page refresh
+    When I click the icon for "New tab"
+    Then the sidebar should be visible
+    When I press "Cmd+B" to toggle the sidebar
+    Then the sidebar should be hidden
+    And the icon rail should be visible
+    When I wait for the state to be saved
+    And I refresh the page
+    And I wait for the application to load
+    Then the sidebar should be hidden
+    And the icon rail should be visible
+
+  Scenario: Workspace expand collapse state persists on page refresh
+    When I click the icon for "New tab"
+    Then the sidebar should be visible
+    And workspace "Default Workspace" should be expanded in the sidebar
+    When I click on workspace "Default Workspace" in the sidebar
+    Then workspace "Default Workspace" should be collapsed in the sidebar
+    When I click the create workspace button in sidebar
+    Then workspace "New Workspace" should be expanded in the sidebar
+    When I right-click on workspace "New Workspace" in the sidebar
+    And I select "Rename Workspace" from the context menu
+    And I type "Project Alpha" in the workspace rename input
+    And I press Enter to confirm rename
+    Then the "Project Alpha" workspace should be visible
+    And workspace "Project Alpha" should be expanded in the sidebar
+    When I wait for the state to be saved
+    And I refresh the page
+    And I wait for the application to load
+    Then the sidebar should be visible
+    And workspace "Default Workspace" should be collapsed in the sidebar
+    And workspace "Project Alpha" should be expanded in the sidebar
