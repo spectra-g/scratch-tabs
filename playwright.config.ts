@@ -22,6 +22,9 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+
+    /* Toggle browser visibility - defaults to headless, set HEADED=true to show browser */
+    headless: process.env.HEADED !== 'true',
   },
 
   /* Configure projects for major browsers */

@@ -36,6 +36,7 @@ interface SidebarState {
 }
 
 const SIDEBAR_CONFIG_KEY = "sidebar_config";
+const DEFAULT_SIDEBAR_WIDTH = 225;
 
 // Helper function to save sidebar state to IndexedDB
 const saveSidebarState = async (state: Partial<SidebarPersistedState>) => {
@@ -45,7 +46,7 @@ const saveSidebarState = async (state: Partial<SidebarPersistedState>) => {
             ? JSON.parse(currentValue)
             : {
                 isSidebarExpanded: true,
-                sidebarWidth: 288,
+                sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
                 expandedWorkspaceIds: [],
             };
 
@@ -73,8 +74,8 @@ export const useSidebarStore = create<SidebarState>((set, get) => {
         isSidebarExpanded: true,
         // Mobile: closed by default to maximize editor space
         isMobileOpen: false,
-        // Default width 288px (w-72)
-        sidebarWidth: 288,
+        // Default width 240px
+        sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
 
         expandedWorkspaceIds: new Set<string>(),
         workspaceTabsMetadata: new Map<string, SidebarTabInfo[]>(),
@@ -231,7 +232,7 @@ export const useSidebarStore = create<SidebarState>((set, get) => {
 
                 set({
                     isSidebarExpanded: savedState.isSidebarExpanded ?? true,
-                    sidebarWidth: savedState.sidebarWidth ?? 288,
+                    sidebarWidth: savedState.sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH,
                     expandedWorkspaceIds: new Set(savedState.expandedWorkspaceIds ?? []),
                 });
             } catch (error) {

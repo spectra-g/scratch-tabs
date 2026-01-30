@@ -7,7 +7,9 @@ let browser: any;
 setDefaultTimeout(30 * 1000);
 
 BeforeAll(async function () {
-  browser = await chromium.launch({ headless: false });
+  browser = await chromium.launch({
+    headless: process.env.HEADED !== 'true'
+  });
 });
 
 AfterAll(async function () {
