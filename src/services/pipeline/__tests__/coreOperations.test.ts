@@ -725,4 +725,291 @@ describe("Core Pipeline Operations", () => {
             }
         });
     });
+
+    describe("Text Transformation Operations", () => {
+        describe("text.slugify", () => {
+            it("should convert text to URL-friendly slug with hyphens", async () => {
+                const result = await execute("text.slugify", "Hello World!");
+                expect(result).toBe("hello-world");
+            });
+
+            it("should use underscores when specified", async () => {
+                const result = await execute("text.slugify", "Hello World!", { separator: "_" });
+                expect(result).toBe("hello_world");
+            });
+
+            it("should remove special characters", async () => {
+                const result = await execute("text.slugify", "Hello @#$% World!");
+                expect(result).toBe("hello-world");
+            });
+
+            it("should remove diacritics", async () => {
+                const result = await execute("text.slugify", "Café résumé");
+                expect(result).toBe("cafe-resume");
+            });
+
+            it("should collapse multiple separators", async () => {
+                const result = await execute("text.slugify", "Hello    World");
+                expect(result).toBe("hello-world");
+            });
+
+            it("should trim leading and trailing separators", async () => {
+                const result = await execute("text.slugify", "   Hello World   ");
+                expect(result).toBe("hello-world");
+            });
+
+            it("should handle numbers", async () => {
+                const result = await execute("text.slugify", "Article 123");
+                expect(result).toBe("article-123");
+            });
+
+            it("should handle mixed case", async () => {
+                const result = await execute("text.slugify", "HeLLo WoRLd");
+                expect(result).toBe("hello-world");
+            });
+
+            it("should handle unicode characters", async () => {
+                const result = await execute("text.slugify", "你好世界");
+                expect(result).toBe("");
+            });
+
+            it("should handle empty input", async () => {
+                const result = await execute("text.slugify", "");
+                expect(result).toBe("");
+            });
+
+            it("should handle only special characters", async () => {
+                const result = await execute("text.slugify", "@#$%^&*");
+                expect(result).toBe("");
+            });
+        });
+
+        describe("text.remove-diacritics", () => {
+            it("should remove acute accents", async () => {
+                const result = await execute("text.remove-diacritics", "é á í ó ú");
+                expect(result).toBe("e a i o u");
+            });
+
+            it("should remove grave accents", async () => {
+                const result = await execute("text.remove-diacritics", "è à ì ò ù");
+                expect(result).toBe("e a i o u");
+            });
+
+            it("should remove circumflex accents", async () => {
+                const result = await execute("text.remove-diacritics", "ê â î ô û");
+                expect(result).toBe("e a i o u");
+            });
+
+            it("should remove umlaut/diaeresis", async () => {
+                const result = await execute("text.remove-diacritics", "ë ä ï ö ü");
+                expect(result).toBe("e a i o u");
+            });
+
+            it("should remove tilde", async () => {
+                const result = await execute("text.remove-diacritics", "ñ õ ã");
+                expect(result).toBe("n o a");
+            });
+
+            it("should handle common words with diacritics", async () => {
+                const result = await execute("text.remove-diacritics", "Café résumé naïve");
+                expect(result).toBe("Cafe resume naive");
+            });
+
+            it("should preserve case", async () => {
+                const result = await execute("text.remove-diacritics", "CAFÉ Résumé");
+                expect(result).toBe("CAFE Resume");
+            });
+
+            it("should handle empty input", async () => {
+                const result = await execute("text.remove-diacritics", "");
+                expect(result).toBe("");
+            });
+
+            it("should not affect ASCII characters", async () => {
+                const result = await execute("text.remove-diacritics", "Hello World 123");
+                expect(result).toBe("Hello World 123");
+            });
+
+            it("should handle multiline text", async () => {
+                const result = await execute("text.remove-diacritics", "Café\nrésumé");
+                expect(result).toBe("Cafe\nresume");
+            });
+
+            it("should handle mixed ASCII and accented characters", async () => {
+                const result = await execute("text.remove-diacritics", "The café is très bon");
+                expect(result).toBe("The cafe is tres bon");
+            });
+        });
+
+        describe("text.frequency", () => {
+            describe("Line mode", () => {
+                it("should count line frequencies", async () => {
+                    const input = "apple\nbanana\napple\norange\napple\nbanana";
+                    const result = await execute("text.frequency", input, {
+                        mode: "lines",
+                        sortBy: "frequency",
+                        outputFormat: "text"
+                    });
+
+                    expect(result).toContain("apple: 3");
+                    expect(result).toContain("banana: 2");
+                    expect(result).toContain("orange: 1");
+                });
+
+                it("should sort alphabetically when specified", async () => {
+                    const input = "zebra\napple\nbanana";
+                    const result = await execute("text.frequency", input, {
+                        mode: "lines",
+                        sortBy: "alphabetical",
+                        outputFormat: "text"
+                    });
+
+                    const lines = result.split('\n');
+                    expect(lines[0]).toContain("apple");
+                    expect(lines[1]).toContain("banana");
+                    expect(lines[2]).toContain("zebra");
+                });
+            });
+
+            describe("Word mode", () => {
+                it("should count word frequencies", async () => {
+                    const input = "hello world hello test world hello";
+                    const result = await execute("text.frequency", input, {
+                        mode: "words",
+                        sortBy: "frequency",
+                        outputFormat: "text"
+                    });
+
+                    expect(result).toContain("hello: 3");
+                    expect(result).toContain("world: 2");
+                    expect(result).toContain("test: 1");
+                });
+
+                it("should handle multiple spaces", async () => {
+                    const input = "word1    word2   word1";
+                    const result = await execute("text.frequency", input, {
+                        mode: "words",
+                        sortBy: "frequency",
+                        outputFormat: "text"
+                    });
+
+                    expect(result).toContain("word1: 2");
+                    expect(result).toContain("word2: 1");
+                });
+            });
+
+            describe("Character mode", () => {
+                it("should count character frequencies", async () => {
+                    const input = "hello";
+                    const result = await execute("text.frequency", input, {
+                        mode: "chars",
+                        sortBy: "frequency",
+                        outputFormat: "text"
+                    });
+
+                    expect(result).toContain("l: 2");
+                    expect(result).toContain("h: 1");
+                    expect(result).toContain("e: 1");
+                    expect(result).toContain("o: 1");
+                });
+
+                it("should count spaces and special characters", async () => {
+                    const input = "a b!";
+                    const result = await execute("text.frequency", input, {
+                        mode: "chars",
+                        sortBy: "alphabetical",
+                        outputFormat: "text"
+                    });
+
+                    expect(result).toContain(" : 1");
+                    expect(result).toContain("!: 1");
+                    expect(result).toContain("a: 1");
+                    expect(result).toContain("b: 1");
+                });
+            });
+
+            describe("Output formats", () => {
+                it("should output as JSON", async () => {
+                    const input = "apple\nbanana\napple";
+                    const result = await execute("text.frequency", input, {
+                        mode: "lines",
+                        sortBy: "frequency",
+                        outputFormat: "json"
+                    });
+
+                    const parsed = JSON.parse(result);
+                    expect(parsed.apple).toBe(2);
+                    expect(parsed.banana).toBe(1);
+                });
+
+                it("should output as CSV", async () => {
+                    const input = "apple\nbanana\napple";
+                    const result = await execute("text.frequency", input, {
+                        mode: "lines",
+                        sortBy: "frequency",
+                        outputFormat: "csv"
+                    });
+
+                    expect(result).toContain("Item,Count");
+                    expect(result).toContain("apple,2");
+                    expect(result).toContain("banana,1");
+                });
+
+                it("should handle CSV with commas in items", async () => {
+                    const input = "hello, world\ntest";
+                    const result = await execute("text.frequency", input, {
+                        mode: "lines",
+                        sortBy: "frequency",
+                        outputFormat: "csv"
+                    });
+
+                    expect(result).toContain('"hello, world",1');
+                });
+
+                it("should handle CSV with quotes in items", async () => {
+                    const input = 'say "hello"\ntest';
+                    const result = await execute("text.frequency", input, {
+                        mode: "lines",
+                        sortBy: "frequency",
+                        outputFormat: "csv"
+                    });
+
+                    expect(result).toContain('""hello""');
+                });
+            });
+
+            describe("Edge cases", () => {
+                it("should handle empty input", async () => {
+                    const result = await execute("text.frequency", "", {
+                        mode: "lines",
+                        sortBy: "frequency",
+                        outputFormat: "text"
+                    });
+
+                    expect(result).toBe(": 1");
+                });
+
+                it("should handle single character", async () => {
+                    const result = await execute("text.frequency", "a", {
+                        mode: "chars",
+                        sortBy: "frequency",
+                        outputFormat: "text"
+                    });
+
+                    expect(result).toBe("a: 1");
+                });
+
+                it("should handle all same items", async () => {
+                    const input = "test\ntest\ntest";
+                    const result = await execute("text.frequency", input, {
+                        mode: "lines",
+                        sortBy: "frequency",
+                        outputFormat: "text"
+                    });
+
+                    expect(result).toBe("test: 3");
+                });
+            });
+        });
+    });
 });

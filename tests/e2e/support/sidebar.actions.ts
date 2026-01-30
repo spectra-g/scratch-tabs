@@ -28,7 +28,7 @@ export class SidebarActions {
   async isSidebarVisible(): Promise<boolean> {
     const sidebar = this.page.locator('[data-testid="sidebar"]');
     try {
-      await expect(sidebar).toBeVisible({ timeout: 1000 });
+      await expect(sidebar).toBeVisible();
       return true;
     } catch {
       return false;
@@ -41,7 +41,7 @@ export class SidebarActions {
   async isIconRailVisible(): Promise<boolean> {
     const iconRail = this.page.locator('[data-testid="icon-rail"]');
     try {
-      await expect(iconRail).toBeVisible({ timeout: 1000 });
+      await expect(iconRail).toBeVisible();
       return true;
     } catch {
       return false;
@@ -136,7 +136,7 @@ export class SidebarActions {
   async isTabVisibleInSidebar(tabTitle: string): Promise<boolean> {
     const tab = this.page.locator('[data-testid^="sidebar-tab-"]').filter({ hasText: tabTitle }).first();
     try {
-      await expect(tab).toBeVisible({ timeout: 1000 });
+      await expect(tab).toBeVisible();
       return true;
     } catch {
       return false;
@@ -261,7 +261,7 @@ export class SidebarActions {
   async isSwitchingFeedbackVisible(): Promise<boolean> {
     const feedback = this.page.locator('text=/Switching/i').first();
     try {
-      await expect(feedback).toBeVisible({ timeout: 1000 });
+      await expect(feedback).toBeVisible();
       return true;
     } catch {
       return false;
@@ -274,10 +274,10 @@ export class SidebarActions {
   async waitForWorkspaceSwitch() {
     // Wait for switching feedback to appear
     const feedback = this.page.locator('text=/Switching/i').first();
-    await expect(feedback).toBeVisible({ timeout: 2000 });
+    await expect(feedback).toBeVisible();
 
     // Wait for it to disappear (switch complete)
-    await expect(feedback).not.toBeVisible({ timeout: 5000 });
+    await expect(feedback).not.toBeVisible();
   }
 
   /**

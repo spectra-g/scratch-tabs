@@ -76,6 +76,7 @@ describe("Sidebar Component", () => {
             searchQuery: "",
             setSearchQuery: jest.fn(),
             refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
         });
 
         (useSplitViewStore as any).mockReturnValue({
@@ -136,6 +137,7 @@ describe("Sidebar Component", () => {
             searchQuery: "",
             setSearchQuery: jest.fn(),
             refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
         });
 
         render(<Sidebar />);
@@ -182,6 +184,7 @@ describe("Sidebar Component", () => {
             searchQuery: "",
             setSearchQuery: jest.fn(),
             refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
         });
 
         render(<Sidebar />);
@@ -232,6 +235,7 @@ describe("Sidebar Component", () => {
             searchQuery: "",
             setSearchQuery: jest.fn(),
             refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
         });
 
         const { rerender } = render(<Sidebar />);
@@ -258,6 +262,7 @@ describe("Sidebar Component", () => {
             searchQuery: "",
             setSearchQuery: jest.fn(),
             refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
         });
 
         rerender(<Sidebar />);
@@ -311,6 +316,7 @@ describe("Sidebar Component", () => {
             searchQuery: "",
             setSearchQuery: jest.fn(),
             refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
         });
 
         render(<Sidebar />);
@@ -363,6 +369,7 @@ describe("Sidebar Component", () => {
             searchQuery: "",
             setSearchQuery: jest.fn(),
             refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
         });
 
         render(<Sidebar />);
@@ -418,6 +425,7 @@ describe("Sidebar Component", () => {
             searchQuery: "",
             setSearchQuery: jest.fn(),
             refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
         });
 
         render(<Sidebar />);
@@ -453,6 +461,7 @@ describe("Sidebar Component", () => {
             searchQuery: "",
             setSearchQuery: jest.fn(),
             refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
         });
 
         const { container } = render(<Sidebar />);
@@ -501,6 +510,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             (useSplitViewStore as any).mockReturnValue({
@@ -557,6 +567,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             (useSplitViewStore as any).mockReturnValue({
@@ -602,6 +613,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             (useSplitViewStore as any).mockReturnValue({
@@ -641,6 +653,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "typescript",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             (useSplitViewStore as any).mockReturnValue({
@@ -687,6 +700,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: mockRefreshWorkspaceMetadata,
+                initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             render(<Sidebar />);
@@ -715,6 +729,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: mockSetSearchQuery,
                 refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             render(<Sidebar />);
@@ -761,6 +776,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "test", // Active search query
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             (useSplitViewStore as any).mockReturnValue({
@@ -805,6 +821,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             (useSplitViewStore as any).mockReturnValue({
@@ -847,6 +864,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             (useSplitViewStore as any).mockReturnValue({
@@ -887,6 +905,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             (useSplitViewStore as any).mockReturnValue({
@@ -927,6 +946,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             (useSplitViewStore as any).mockReturnValue({
@@ -968,6 +988,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             (useSplitViewStore as any).mockReturnValue({
@@ -1018,6 +1039,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             render(<Sidebar />);
@@ -1042,6 +1064,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             render(<Sidebar />);
@@ -1068,6 +1091,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             render(<Sidebar />);
@@ -1094,6 +1118,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             render(<Sidebar />);
@@ -1120,6 +1145,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             render(<Sidebar />);
@@ -1161,6 +1187,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             (useSplitViewStore as any).mockReturnValue({
@@ -1212,6 +1239,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             (useSplitViewStore as any).mockReturnValue({
@@ -1247,6 +1275,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             const { container } = render(<Sidebar />);
@@ -1268,6 +1297,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             const { container } = render(<Sidebar />);
@@ -1300,6 +1330,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             const { container } = render(<Sidebar />);
@@ -1344,6 +1375,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             const { container, rerender } = render(<Sidebar />);
@@ -1397,6 +1429,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
+            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             const { container } = render(<Sidebar />);

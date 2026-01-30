@@ -322,6 +322,148 @@ const coreOperations: OperationDefinition[] = [
         source: "core",
     },
 
+    // === TEXT TRANSFORMATIONS ===
+    {
+        id: "text.slugify",
+        name: "Slugify",
+        description: "Convert text to URL-friendly slug (lowercase, hyphens, no special chars)",
+        categories: ["text", "formatting"],
+        parameters: [
+            {
+                name: "separator",
+                label: "Separator",
+                type: "select",
+                default: "-",
+                options: [
+                    { value: "-", label: "Hyphen (-)" },
+                    { value: "_", label: "Underscore (_)" }
+                ]
+            }
+        ],
+        processingMode: "configurable",
+        execute: (input, params) => {
+            const separator = (params.separator as string) ?? "-";
+
+            return input
+                .toLowerCase()
+                // Replace accented characters with ASCII equivalents
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                // Replace spaces and non-alphanumeric with separator
+                .replace(/[^a-z0-9]+/g, separator)
+                // Remove leading/trailing separators
+                .replace(new RegExp(`^${separator}+|${separator}+$`, 'g'), '')
+                // Collapse multiple separators
+                .replace(new RegExp(`${separator}{2,}`, 'g'), separator);
+        },
+        keywords: ["slug", "url", "filename", "kebab", "normalize"],
+        source: "core",
+    },
+    {
+        id: "text.remove-diacritics",
+        name: "Remove Diacritics",
+        description: "Replace accented characters with ASCII equivalents (é → e, ñ → n)",
+        categories: ["text", "cleanup"],
+        parameters: [],
+        processingMode: "entire",
+        execute: (input) => {
+            // Unicode normalization form D separates characters from their diacritics
+            // Then we remove the combining diacritical marks (U+0300 to U+036F)
+            return input
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '');
+        },
+        keywords: ["diacritics", "accents", "normalize", "ascii", "unicode"],
+        source: "core",
+    },
+    {
+        id: "text.frequency",
+        name: "Word/Character Frequency",
+        description: "Count occurrences of unique lines, words, or characters",
+        categories: ["text", "utilities"],
+        parameters: [
+            {
+                name: "mode",
+                label: "Count Mode",
+                type: "select",
+                default: "lines",
+                options: [
+                    { value: "lines", label: "Lines" },
+                    { value: "words", label: "Words" },
+                    { value: "chars", label: "Characters" }
+                ]
+            },
+            {
+                name: "sortBy",
+                label: "Sort By",
+                type: "select",
+                default: "frequency",
+                options: [
+                    { value: "frequency", label: "Frequency (high to low)" },
+                    { value: "alphabetical", label: "Alphabetical" }
+                ]
+            },
+            {
+                name: "outputFormat",
+                label: "Output Format",
+                type: "select",
+                default: "text",
+                options: [
+                    { value: "text", label: "Text (item: count)" },
+                    { value: "csv", label: "CSV" },
+                    { value: "json", label: "JSON" }
+                ]
+            }
+        ],
+        execute: (input, params) => {
+            const mode = (params.mode as string) ?? "lines";
+            const sortBy = (params.sortBy as string) ?? "frequency";
+            const outputFormat = (params.outputFormat as string) ?? "text";
+
+            // Build frequency map
+            const freqMap = new Map<string, number>();
+
+            let items: string[];
+            if (mode === "lines") {
+                items = input.split('\n');
+            } else if (mode === "words") {
+                items = input.split(/\s+/).filter(w => w.trim());
+            } else {
+                items = input.split('');
+            }
+
+            items.forEach(item => {
+                freqMap.set(item, (freqMap.get(item) || 0) + 1);
+            });
+
+            // Sort entries
+            let entries = Array.from(freqMap.entries());
+            if (sortBy === "frequency") {
+                entries.sort((a, b) => b[1] - a[1]);
+            } else {
+                entries.sort((a, b) => a[0].localeCompare(b[0]));
+            }
+
+            // Format output
+            if (outputFormat === "json") {
+                const obj = Object.fromEntries(entries);
+                return JSON.stringify(obj, null, 2);
+            } else if (outputFormat === "csv") {
+                return ['Item,Count', ...entries.map(([item, count]) => {
+                    // Escape CSV values if they contain commas or quotes
+                    const escapedItem = item.includes(',') || item.includes('"')
+                        ? `"${item.replace(/"/g, '""')}"`
+                        : item;
+                    return `${escapedItem},${count}`;
+                })].join('\n');
+            } else {
+                return entries.map(([item, count]) => `${item}: ${count}`).join('\n');
+            }
+        },
+        keywords: ["frequency", "count", "occurrence", "statistics", "histogram", "distribution"],
+        source: "core",
+    },
+
     // === SORTING & LINE ORDER ===
     {
         id: "text.sort",

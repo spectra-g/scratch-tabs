@@ -32,18 +32,13 @@ global.IntersectionObserver = jest.fn().mockImplementation(() => ({
   disconnect: jest.fn(),
 }));
 
-// Mock crypto.randomUUID
-// Object.defineProperty(global, 'crypto', {
-//   value: {
-//     randomUUID: jest.fn(() => 'test-uuid-' + Math.random().toString(36).substr(2, 9)),
-//   },
-// });
-//
-// // Mock navigator.clipboard
-// Object.defineProperty(global, 'navigator', {
-//   value: {
-//     clipboard: {
-//       writeText: jest.fn(() => Promise.resolve()),
-//     },
-//   },
-// });
+// Mock Worker for AI store
+global.Worker = jest.fn().mockImplementation(() => ({
+  postMessage: jest.fn(),
+  terminate: jest.fn(),
+  onmessage: null,
+  onerror: null,
+  addEventListener: jest.fn(),
+  removeEventListener: jest.fn(),
+  dispatchEvent: jest.fn(),
+})) as any;

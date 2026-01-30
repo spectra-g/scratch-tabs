@@ -126,35 +126,40 @@
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
 
-        <!-- Version 1.21.0 -->
+        <!-- Version 1.22.0 -->
         <div class="changelog-entry latest">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-white">V1.21.0</h2>
+              <h2 class="text-2xl font-bold text-white">V1.22.0</h2>
               <span class="badge latest">LATEST</span>
             </div>
             <span class="text-gray-500 text-xs font-mono">01/29/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">SHARE CUSTOMIZATION, CURL UI POLISH & REGEX ENGINE REFINED</h3>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">PERSISTENT SIDEBAR STATE & PIPELINE OPERATIONS EXPANSION</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">Enhance your sharing privacy with manual content customization, enjoy a sleeker professional Curl Smart View, and experience a significantly improved Regex 'Plain English' engine with modern syntax support and more natural explanations.</p>
+            <p class="mb-4">Your sidebar configuration is now remembered across browser sessions. Width adjustments, sidebar visibility, and which workspaces are expanded are automatically saved and restored when you return. Also introduces 15 new pipeline operations spanning web parsing, code formatting, data conversion, cryptography, and text analysis.</p>
 
             <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
             <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Manual Content Customization:</strong> New "Customize Content" button in Share modal lets you manually trim content even when it fits within URL limits - exclude sensitive fields from JSON objects, select specific line ranges from text content, or reduce clutter by sharing only relevant data for privacy-safe collaboration</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Privacy-First JSON Sharing:</strong> Selectively deselect sensitive fields (passwords, tokens, internal IDs) from JSON before sharing - maintain valid structure while excluding private data</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Flexible Line Range Selection:</strong> Choose specific line ranges to share from text content without manually editing - perfect for sharing relevant snippets while excluding debug logs or sensitive information</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Modern Regex Syntax Support:</strong> Added full support for Unicode property escapes (`\p{...}`), hex escapes (`\xHH`), and named backreferences (`\k<name>`) to the Regex Plain English interpreter</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Persistent Sidebar Width:</strong> Custom sidebar width (150px-600px) is automatically saved and restored on app reload</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Persistent Sidebar State:</strong> Sidebar expanded/collapsed state persists across sessions - your preferred view mode is remembered</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Persistent Workspace Expansion:</strong> Workspace expansion states in the sidebar tree are saved - return to find your workspaces exactly as you left them</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>15 New Pipeline Operations:</strong> Massive expansion of transformation pipeline with web parsing (HTML strip tags, JWT decode), code formatting (SQL/CSS prettify, SQL escape), data conversion (YAMLJSON, CSV column extraction), cryptography (HMAC, base conversion), and text analysis (slugify, frequency analysis, diacritics removal, regex capture groups, quoted-printable decode)</span></li>
             </ul>
-
-            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># improvements</h4>
-            <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Advanced Regex Semantic Engine:</strong> Upgraded the "Plain English" interpreter to use a sophisticated AST-based parser with literal-aware semantic analysis - provides more robust recognition of complex patterns (emails, dates, SSNs) and gracefully handles incomplete or malformed regexes</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Natural Language Flow:</strong> Improved explanation logic with sequential connectors (e.g., "...and then ensures...") and deduplicated phrasing for a more human, readable flow in complex validation patterns</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Strict Pattern Matching:</strong> Refined numeric pattern matchers to eliminate false positives in partially alphanumeric strings while maintaining high accuracy for standard formats</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Curl Smart View Compact Design:</strong> Redesigned with 25-37% tighter spacing for a more professional, scannable interface - card padding reduced from 16px to 12px horizontal and 10px vertical, headers from ~56px to ~48px height</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Enhanced Visual Hierarchy:</strong> Method badges now larger and bolder (text-sm, font-semibold) with tracking-wide for instant recognition, domain names displayed in bold to stand out from full URLs, and numbered card indexes (#1, #2) for easy reference</span></li>
-            </ul>
+          </div>
+        </div>
+        <!-- Version 1.21.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.21.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">01/29/2026</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">SHARE CUSTOMIZATION, CURL UI POLISH & REGEX ENGINE REFINED</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p>Manual content trimming for privacy-safe sharing, compact professional Curl Smart View redesign, and refined Regex Plain English engine</p>
           </div>
         </div>
         <!-- Version 1.20.0 -->
@@ -576,7 +581,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.21.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.22.0</span>
         </div>
 
         <div class="flex space-x-8">

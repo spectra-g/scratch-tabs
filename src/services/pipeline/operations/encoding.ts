@@ -219,6 +219,36 @@ export const encodingOperations: OperationDefinition[] = [
         },
         keywords: ["html", "entity", "decode", "web"],
         source: "core",
+    },
+
+    // === QUOTED-PRINTABLE ===
+    {
+        id: "encoding.quoted-printable",
+        name: "Decode Quoted-Printable",
+        description: "Decode MIME Quoted-Printable encoding (e.g., =3D to =)",
+        categories: ["encoding"],
+        parameters: [],
+        processingMode: "entire",
+        execute: (input) => {
+            // Decode quoted-printable encoding
+            let result = input;
+
+            // First, handle soft line breaks (=\r\n or =\n)
+            result = result.replace(/=\r?\n/g, '');
+
+            // Handle edge case of = at end of input BEFORE decoding hex
+            // (a trailing = without two hex digits is just removed)
+            result = result.replace(/=$/g, '');
+
+            // Then decode all hex encoded characters (=XX)
+            result = result.replace(/=([0-9A-F]{2})/gi, (_, hex) =>
+                String.fromCharCode(parseInt(hex, 16))
+            );
+
+            return result;
+        },
+        keywords: ["quoted", "printable", "mime", "email", "decode"],
+        source: "core",
     }
 ];
 

@@ -99,7 +99,7 @@ export class StatusBarActions {
     await this.page.waitForFunction((expectedLanguage) => {
       const languageElement = document.querySelector('[data-testid="status-language"]');
       return languageElement?.textContent === expectedLanguage;
-    }, toLanguage, { timeout: 5000 });
+    }, toLanguage);
 
     // Verify the change
     await this.expectStatusBarLanguage(toLanguage);
@@ -143,11 +143,11 @@ export class StatusBarActions {
     return await closeButton.isVisible();
   }
 
-  async waitForLanguageDetection(expectedLanguage: string, timeout: number = 5000) {
+  async waitForLanguageDetection(expectedLanguage: string) {
     await this.page.waitForFunction((language) => {
       const languageElement = document.querySelector('[data-testid="status-language"]');
       return languageElement?.textContent === language;
-    }, expectedLanguage, { timeout });
+    }, expectedLanguage);
   }
 
   async expectExtendedViewButtonsVisible() {

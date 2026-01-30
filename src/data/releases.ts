@@ -15,12 +15,30 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.21.0';
+export const APP_VERSION = '1.22.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.21.0",
+    "version": "1.22.0",
     "type": "latest",
+    "date": "2026-01-29",
+    "headline": "Persistent Sidebar State & Pipeline Operations Expansion",
+    "summary": "Sidebar preferences now persist across sessions, plus 15 new powerful transformation pipeline operations for data processing workflows",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Persistent Sidebar Width:** Custom sidebar width (150px-600px) is automatically saved and restored on app reload",
+          "**Persistent Sidebar State:** Sidebar expanded/collapsed state persists across sessions - your preferred view mode is remembered",
+          "**Persistent Workspace Expansion:** Workspace expansion states in the sidebar tree are saved - return to find your workspaces exactly as you left them",
+          "**15 New Pipeline Operations:** Massive expansion of transformation pipeline with web parsing (HTML strip tags, JWT decode), code formatting (SQL/CSS prettify, SQL escape), data conversion (YAMLJSON, CSV column extraction), cryptography (HMAC, base conversion), and text analysis (slugify, frequency analysis, diacritics removal, regex capture groups, quoted-printable decode)"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.21.0",
+    "type": "release",
     "date": "2026-01-29",
     "headline": "Share Customization, Curl UI Polish & Regex Engine Refined",
     "summary": "Manual content trimming for privacy-safe sharing, compact professional Curl Smart View redesign, and refined Regex Plain English engine",
