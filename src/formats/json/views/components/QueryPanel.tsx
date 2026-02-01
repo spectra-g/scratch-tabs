@@ -15,7 +15,7 @@ interface QueryPanelProps {
 
 // Constants
 const COPY_FEEDBACK_DURATION_MS = 2000;
-const DEFAULT_QUERY_EDITOR_HEIGHT = 80;
+const DEFAULT_QUERY_EDITOR_HEIGHT = 60;
 
 export const QueryPanel: React.FC<QueryPanelProps> = ({ content, addTab, tabId }) => {
   const [isCopied, setIsCopied] = useState(false);
@@ -23,17 +23,26 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({ content, addTab, tabId }
   const [showInfo, setShowInfo] = useState(false);
   const samplesRef = useRef<HTMLDivElement>(null);
   const infoRef = useRef<HTMLDivElement>(null);
+  const hasInitialized = useRef(false);
   const { getStateForTab, setQuery: setQueryInStore, closePanel } = useQueryPanelStore();
   const { query } = getStateForTab(tabId);
   const { isDarkMode } = useThemeStore();
-
-  // Execute JMESPath query with debouncing
-  const { results, error } = useJmespath(content, query);
 
   // Generate contextual sample queries based on actual JSON content
   const sampleQueries = useMemo(() => {
     return generateContextualSamples(content);
   }, [content]);
+
+  // Initialize with first sample query if empty
+  useEffect(() => {
+    if (!hasInitialized.current && !query && sampleQueries.length > 0) {
+      setQueryInStore(tabId, sampleQueries[0].query);
+      hasInitialized.current = true;
+    }
+  }, [query, sampleQueries, tabId, setQueryInStore]);
+
+  // Execute JMESPath query with debouncing
+  const { results, error } = useJmespath(content, query);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -110,22 +119,22 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({ content, addTab, tabId }
   }, [tabId, setQueryInStore]);
 
   return (
-    <div className="flex flex-col h-full bg-surface border-t border-base">
-      {/* Panel Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-base bg-surface-highlight">
+    <div className="flex flex-col h-full bg-surface-secondary border-t border-base">
+      {/* Panel Header - Compact */}
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-base bg-surface-secondary">
         <div className="flex items-center space-x-2 relative">
-          <h3 className="text-sm font-medium text-secondary">
-            JSON Query (JMESPath)
+          <h3 className="text-xs font-medium text-main">
+            JMESPath Query
           </h3>
 
           {/* Info Icon */}
           <div className="relative" ref={infoRef}>
             <button
               onClick={() => setShowInfo(!showInfo)}
-              className="p-1 rounded hover:bg-element-hover text-secondary hover:text-main transition-colors"
+              className="p-0.5 rounded hover:bg-element-hover text-muted hover:text-main transition-colors"
               title="Learn about JMESPath"
             >
-              <Info size={14} />
+              <Info size={12} />
             </button>
 
             {/* Info Panel */}
@@ -177,15 +186,15 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({ content, addTab, tabId }
             )}
           </div>
         </div>
-        <div className="flex items-center space-x-2 relative">
+        <div className="flex items-center space-x-1 relative">
           {/* Sample Queries Button */}
           <div className="relative" ref={samplesRef}>
             <button
               onClick={() => setShowSamples(!showSamples)}
-              className="flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors hover:bg-element-hover text-secondary"
+              className="flex items-center space-x-1 px-2 py-0.5 rounded text-xs transition-colors hover:bg-element-hover text-secondary"
               title="Sample Queries"
             >
-              <BookOpen size={14} />
+              <BookOpen size={12} />
               <span>Samples</span>
             </button>
 
@@ -215,7 +224,7 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({ content, addTab, tabId }
           <button
             onClick={handleCopyResults}
             disabled={!formattedResults}
-            className={`flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${
+            className={`flex items-center space-x-1 px-2 py-0.5 rounded text-xs transition-colors ${
               isCopied
                 ? 'bg-success-subtle text-success'
                 : formattedResults
@@ -224,38 +233,38 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({ content, addTab, tabId }
             }`}
             title={isCopied ? 'Copied!' : 'Copy Results'}
           >
-            {isCopied ? <Check size={14} /> : <Copy size={14} />}
-            <span>{isCopied ? 'Copied' : 'Copy Results'}</span>
+            {isCopied ? <Check size={12} /> : <Copy size={12} />}
+            <span>{isCopied ? 'Copied' : 'Copy'}</span>
           </button>
           <button
             onClick={handleExportToTab}
             disabled={!formattedResults}
-            className={`flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${
+            className={`flex items-center space-x-1 px-2 py-0.5 rounded text-xs transition-colors ${
               formattedResults
                 ? 'hover:bg-element-hover text-secondary'
                 : 'text-muted cursor-not-allowed'
             }`}
             title="Export to New Tab"
           >
-            <FileText size={14} />
-            <span>Export to Tab</span>
+            <FileText size={12} />
+            <span>Export</span>
           </button>
           <button
             onClick={() => closePanel(tabId)}
-            className="p-1 rounded hover:bg-element-hover text-secondary hover:text-main transition-colors"
+            className="p-0.5 rounded hover:bg-element-hover text-secondary hover:text-main transition-colors"
             title="Close Query Panel"
           >
-            <X size={16} />
+            <X size={14} />
           </button>
         </div>
       </div>
 
-      {/* Query Editor */}
+      {/* Query Editor - Inline label */}
       <div className="flex flex-col border-b border-base">
-        <div className="px-3 py-1 bg-surface-highlight">
-          <span className="text-xs text-secondary">Query Expression:</span>
+        <div className="flex items-center px-2 py-0.5 bg-surface border-b border-base">
+          <span className="text-xs text-muted mr-2">Query:</span>
         </div>
-        <div style={{ height: `${DEFAULT_QUERY_EDITOR_HEIGHT}px` }}>
+        <div style={{ height: `${DEFAULT_QUERY_EDITOR_HEIGHT}px` }} className="bg-surface">
           <Editor
             height="100%"
             language="plaintext"
@@ -281,6 +290,7 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({ content, addTab, tabId }
               suggest: {
                 showKeywords: false,
               },
+              padding: { top: 4, bottom: 4 },
             }}
           />
         </div>
@@ -288,16 +298,12 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({ content, addTab, tabId }
 
       {/* Results Viewer */}
       <div className="flex-1 flex flex-col min-h-0">
-        <div className="px-3 py-1 bg-surface-highlight border-b border-base">
-          <span className="text-xs text-secondary">
-            {error
-              ? 'Error:'
-              : results === null
-              ? 'Results (enter a query above):'
-              : 'Results:'}
+        <div className="px-2 py-0.5 bg-surface border-b border-base">
+          <span className={`text-xs ${error ? 'text-danger' : 'text-muted'}`}>
+            {error ? 'Error' : 'Results'}
           </span>
         </div>
-        <div className="flex-1">
+        <div className="flex-1 bg-surface">
           <Editor
             height="100%"
             language={error ? 'plaintext' : 'json'}
@@ -313,6 +319,7 @@ export const QueryPanel: React.FC<QueryPanelProps> = ({ content, addTab, tabId }
               automaticLayout: true,
               renderValidationDecorations: 'off',
               colorDecorators: false,
+              padding: { top: 4 },
             }}
           />
         </div>

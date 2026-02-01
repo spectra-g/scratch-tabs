@@ -11,6 +11,7 @@ interface ModalState {
     | "extractData"
     | "equalityCheck"
     | "csvExportOptions"
+    | "documentationExport"
     | null;
   props?: any;
 }
@@ -28,6 +29,7 @@ interface JsonModalsStore {
   openExtractDataModal: (jsonString: string, addTab: (tab: Tab) => void) => void;
   openEqualityCheckModal: (sourceJson: string, sourceTabId: string) => void;
   openCsvExportOptionsModal: (jsonString: string) => void;
+  openDocumentationExportModal: (jsonString: string, addTab: (tab: Tab) => void) => void;
   closeModal: () => void;
 }
 
@@ -121,6 +123,18 @@ export const useJsonModalsStore = create<JsonModalsStore>((set) => ({
         type: "csvExportOptions",
         props: {
           jsonString,
+          onClose: () => set({ modalState: { type: null } }),
+        },
+      },
+    }),
+
+  openDocumentationExportModal: (jsonString: string, addTab: (tab: Tab) => void) =>
+    set({
+      modalState: {
+        type: "documentationExport",
+        props: {
+          jsonString,
+          addTab,
           onClose: () => set({ modalState: { type: null } }),
         },
       },
