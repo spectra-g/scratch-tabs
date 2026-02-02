@@ -291,6 +291,10 @@ export const useRootStore = create<RootStore>((set, get) => {
         return undefined;
       }
 
+      // Ensure the workspace is expanded in the sidebar
+      // This is especially important when creating from the welcome screen
+      useSidebarStore.getState().expandWorkspace(ensuredWorkspaceId);
+
       const newTabObject = _createFinalTabObject(tabInput, ensuredWorkspaceId, {
         defaultTitle: tabInput.title || "Populated Tab",
       });
@@ -307,6 +311,11 @@ export const useRootStore = create<RootStore>((set, get) => {
         .getState()
         .ensureWorkspace();
       if (!ensuredWorkspaceId) return;
+
+      // Ensure the workspace is expanded in the sidebar
+      // This is especially important when creating from the welcome screen
+      useSidebarStore.getState().expandWorkspace(ensuredWorkspaceId);
+
       const currentTabs = useTabsStore
         .getState()
         .tabs.filter((t) => t.workspaceId === ensuredWorkspaceId);
