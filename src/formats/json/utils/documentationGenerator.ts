@@ -5,7 +5,7 @@
  * while preserving the JSON structure for documentation purposes.
  */
 
-export type DocExportMode = "keep" | "mask-value" | "mask-type" | "remove";
+export type DocExportMode = "keep" | "keep-one" | "mask-value" | "mask-type" | "remove";
 
 export interface PathConfig {
   path: string;
@@ -157,7 +157,15 @@ export function generateDocumentationJson(
         return maskValue(value, mode);
       }
 
-      // Otherwise recurse into children
+      // If keep-one mode, only keep first item
+      if (mode === "keep-one") {
+        if (value.length === 0) return [];
+        const itemPath = `${currentPath}[0]`;
+        const transformed = transform(value[0], itemPath);
+        return transformed !== undefined ? [transformed] : [];
+      }
+
+      // Otherwise recurse into all children
       const result: unknown[] = [];
       for (let i = 0; i < value.length; i++) {
         const itemPath = `${currentPath}[${i}]`;
@@ -216,7 +224,7 @@ export function createDefaultConfig(
  * Gets the next mode in the cycle for toggling.
  */
 export function getNextMode(currentMode: DocExportMode): DocExportMode {
-  const modes: DocExportMode[] = ["keep", "mask-value", "mask-type", "remove"];
+  const modes: DocExportMode[] = ["keep", "keep-one", "mask-value", "mask-type", "remove"];
   const currentIndex = modes.indexOf(currentMode);
   return modes[(currentIndex + 1) % modes.length];
 }
@@ -235,6 +243,12 @@ export function getModeDisplay(mode: DocExportMode): {
         label: "Keep",
         colorClass: "text-success",
         bgClass: "bg-success/20",
+      };
+    case "keep-one":
+      return {
+        label: "Keep 1",
+        colorClass: "text-success",
+        bgClass: "bg-success/30",
       };
     case "mask-value":
       return {

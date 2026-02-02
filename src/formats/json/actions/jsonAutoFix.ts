@@ -25,6 +25,58 @@ function sanitizeControlCharacters(content: string): string {
 }
 
 /**
+ * Replaces single quotes used as string delimiters with double quotes,
+ * while preserving single quotes that appear inside valid double-quoted strings.
+ *
+ * For example:
+ * - {'key': 'value'} -> {"key": "value"} (replaces delimiter single quotes)
+ * - {"name": "John's car"} -> {"name": "John's car"} (preserves single quote in value)
+ */
+function replaceSingleQuoteDelimiters(content: string): string {
+  let result = '';
+  let inDoubleQuotedString = false;
+  let inSingleQuotedString = false;
+  let escaped = false;
+
+  for (let i = 0; i < content.length; i++) {
+    const char = content[i];
+
+    // Handle escape sequences
+    if (escaped) {
+      result += char;
+      escaped = false;
+      continue;
+    }
+
+    if (char === '\\') {
+      escaped = true;
+      result += char;
+      continue;
+    }
+
+    // Handle double quotes (always valid in JSON)
+    if (char === '"' && !inSingleQuotedString) {
+      inDoubleQuotedString = !inDoubleQuotedString;
+      result += char;
+      continue;
+    }
+
+    // Handle single quotes (only valid inside double-quoted strings)
+    if (char === "'" && !inDoubleQuotedString) {
+      // Single quote used as string delimiter - convert to double quote
+      inSingleQuotedString = !inSingleQuotedString;
+      result += '"';
+      continue;
+    }
+
+    // All other characters
+    result += char;
+  }
+
+  return result;
+}
+
+/**
  * Attempts to automatically fix common JSON syntax errors.
  * This is the primary function to be called for comprehensive JSON fixing.
  * It combines control character sanitization with structural fixes.
@@ -47,9 +99,10 @@ export function autoFixJson(content: string): AutoFixResult {
     // Preliminary Fix: Sanitize problematic control characters first
     fixedContent = sanitizeControlCharacters(fixedContent);
 
-    // Fix 1: Replace single quotes with double quotes (only for keys and values)
-    // More careful regex to avoid replacing single quotes inside strings
-    fixedContent = fixedContent.replace(/'([^']*)'/g, '"$1"');
+    // Fix 1: Replace single quotes with double quotes (only for string delimiters, not inside strings)
+    // More careful approach: only replace single quotes that are used as string delimiters,
+    // not single quotes that appear inside already double-quoted strings
+    fixedContent = replaceSingleQuoteDelimiters(fixedContent);
 
     // Fix 2: Add missing commas between object properties
     // IMPORTANT: Do this BEFORE quoting property names, as the regex expects unquoted names
@@ -138,10 +191,10 @@ export function autoFixJson(content: string): AutoFixResult {
 /**
  * Format fixed JSON content
  */
-export function formatFixedJson(content: string): string {
+export function formatFixedJson(content: string, indentation: number = 2): string {
   try {
     const parsed = JSON.parse(content);
-    return JSON.stringify(parsed, null, 2);
+    return JSON.stringify(parsed, null, indentation);
   } catch {
     return content;
   }

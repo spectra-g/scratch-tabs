@@ -268,6 +268,13 @@ export const DocumentationExportModal: React.FC<DocumentationExportModalProps> =
               Keep
             </button>
             <button
+              onClick={() => setAllPaths("keep-one")}
+              className="px-2 py-1 text-xs rounded bg-success/30 text-success hover:bg-success/40 transition-colors"
+              title="Keep only first item in arrays"
+            >
+              Keep 1
+            </button>
+            <button
               onClick={() => setAllPaths("mask-value")}
               className="px-2 py-1 text-xs rounded bg-warning/20 text-warning hover:bg-warning/30 transition-colors"
             >
@@ -297,7 +304,7 @@ export const DocumentationExportModal: React.FC<DocumentationExportModalProps> =
                 Paths ({allPaths.length})
               </h3>
               <p className="text-xs text-secondary mt-1">
-                Click badges to cycle: Keep &rarr; Mask &rarr; Type &rarr; Remove
+                Click badges to cycle: Keep &rarr; Keep 1 &rarr; Mask &rarr; Type &rarr; Remove
               </p>
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar">
@@ -336,6 +343,13 @@ export const DocumentationExportModal: React.FC<DocumentationExportModalProps> =
                             title="Set all in group to Keep"
                           >
                             K
+                          </button>
+                          <button
+                            onClick={() => setGroupMode(depth, "keep-one")}
+                            className="px-1.5 py-0.5 text-[10px] rounded bg-success/30 text-success hover:bg-success/40"
+                            title="Set all in group to Keep 1"
+                          >
+                            K1
                           </button>
                           <button
                             onClick={() => setGroupMode(depth, "mask-value")}

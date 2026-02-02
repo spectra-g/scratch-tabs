@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState, useRef, useEffect } from "react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import {
   WrapText,
@@ -71,25 +71,47 @@ export const EditorActions: React.FC<EditorActionsProps> = ({
   const { activeWorkspaceId } = useWorkspaceStore();
   const { openDiffModalWithContent } = useDiffModalStore();
 
+  // Indentation preference (default 2 spaces)
+  const [indentation, setIndentation] = useState<2 | 4>(2);
+  const [isIndentDropdownOpen, setIsIndentDropdownOpen] = useState(false);
+  const indentDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (indentDropdownRef.current && !indentDropdownRef.current.contains(event.target as Node)) {
+        setIsIndentDropdownOpen(false);
+      }
+    };
+
+    if (isIndentDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isIndentDropdownOpen]);
+
   // Get all JSON tabs from current workspace
   const recentJsonTabs = getRecentJsonTabs(tabs, tabId, activeWorkspaceId || "");
 
   const executeTransformation = useCallback(
-    (transformFn: (content: string) => string, actionName: string) => {
+    (transformFn: (content: string, indent?: number) => string, actionName: string, useIndent: boolean = false) => {
       if (!editor) return;
       try {
         const content = editor.getValue();
-        const result = transformFn(content);
+        const result = useIndent ? transformFn(content, indentation) : transformFn(content);
         applyEditToEditor(editor, result, actionName);
       } catch (error) {
         console.error(`${actionName} failed:`, error);
       }
     },
-    [editor]
+    [editor, indentation]
   );
 
   const handleFormat = useCallback(() => {
-    executeTransformation(formatJson, "format");
+    executeTransformation(formatJson, "format", true);
   }, [executeTransformation]);
 
   const handleMinify = useCallback(() => {
@@ -104,7 +126,7 @@ export const EditorActions: React.FC<EditorActionsProps> = ({
 
     if (result.success && result.fixedContent) {
       try {
-        const formatted = formatFixedJson(result.fixedContent);
+        const formatted = formatFixedJson(result.fixedContent, indentation);
         applyEditToEditor(editor, formatted, "auto-fix");
       } catch (error) {
         console.error("Failed to format fixed JSON:", error);
@@ -116,10 +138,10 @@ export const EditorActions: React.FC<EditorActionsProps> = ({
         applyEditToEditor(editor, result.fixedContent, "auto-fix");
       }
     }
-  }, [editor]);
+  }, [editor, indentation]);
 
   const handleSortKeys = useCallback(() => {
-    executeTransformation(sortJsonKeys, "sort-keys");
+    executeTransformation(sortJsonKeys, "sort-keys", true);
   }, [executeTransformation]);
 
   const handleStringify = useCallback(() => {
@@ -216,6 +238,43 @@ export const EditorActions: React.FC<EditorActionsProps> = ({
           label="Format"
           title="Format JSON (Pretty Print)"
         />
+        {/* Indentation Dropdown */}
+        <div className="relative" ref={indentDropdownRef}>
+          <button
+            onClick={() => setIsIndentDropdownOpen(!isIndentDropdownOpen)}
+            className="flex items-center gap-1 px-2 py-1 text-xs bg-element hover:bg-element-hover text-main rounded transition-colors"
+            title="Select indentation"
+          >
+            <span>{indentation}</span>
+            <ChevronDown size={12} />
+          </button>
+          {isIndentDropdownOpen && (
+            <div className="absolute top-full left-0 mt-1 bg-surface border border-base rounded shadow-lg z-50 min-w-[60px]">
+              <button
+                onClick={() => {
+                  setIndentation(2);
+                  setIsIndentDropdownOpen(false);
+                }}
+                className={`w-full px-3 py-2 text-xs hover:bg-element-hover transition-colors text-left whitespace-nowrap ${
+                  indentation === 2 ? "text-info font-medium" : "text-main"
+                }`}
+              >
+                2 spaces
+              </button>
+              <button
+                onClick={() => {
+                  setIndentation(4);
+                  setIsIndentDropdownOpen(false);
+                }}
+                className={`w-full px-3 py-2 text-xs hover:bg-element-hover transition-colors text-left whitespace-nowrap ${
+                  indentation === 4 ? "text-info font-medium" : "text-main"
+                }`}
+              >
+                4 spaces
+              </button>
+            </div>
+          )}
+        </div>
         <ActionButton
           onClick={handleMinify}
           icon={<Minimize2 size={14} />}

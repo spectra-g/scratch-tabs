@@ -28,9 +28,9 @@ export const applyEditToEditor = (
   }, 1);
 };
 
-export const formatJson = (content: string): string => {
+export const formatJson = (content: string, indentation: number = 2): string => {
   const json = JSON.parse(content);
-  return JSON.stringify(json, null, 2);
+  return JSON.stringify(json, null, indentation);
 };
 
 export const minifyJson = (content: string): string => {
@@ -38,7 +38,7 @@ export const minifyJson = (content: string): string => {
   return JSON.stringify(json);
 };
 
-export const sortJsonKeys = (content: string): string => {
+export const sortJsonKeys = (content: string, indentation: number = 2): string => {
   const json = JSON.parse(content);
 
   const sortObjectKeys = (obj: any): any => {
@@ -58,10 +58,10 @@ export const sortJsonKeys = (content: string): string => {
   };
 
   const sorted = sortObjectKeys(json);
-  return JSON.stringify(sorted, null, 2);
+  return JSON.stringify(sorted, null, indentation);
 };
 
-export const flattenJson = (content: string): string => {
+export const flattenJson = (content: string, indentation: number = 2): string => {
   const json = JSON.parse(content);
   if (typeof json !== "object" || json === null || Array.isArray(json)) {
     throw new Error("Flatten requires a JSON object.");
@@ -84,10 +84,10 @@ export const flattenJson = (content: string): string => {
   };
 
   const flattened = flatten(json);
-  return JSON.stringify(flattened, null, 2);
+  return JSON.stringify(flattened, null, indentation);
 };
 
-export const unflattenJson = (content: string): string => {
+export const unflattenJson = (content: string, indentation: number = 2): string => {
   const json = JSON.parse(content);
   if (typeof json !== "object" || json === null || Array.isArray(json)) {
     throw new Error("Unflatten requires a flat JSON object.");
@@ -111,10 +111,10 @@ export const unflattenJson = (content: string): string => {
   };
 
   const unflattened = unflatten(json);
-  return JSON.stringify(unflattened, null, 2);
+  return JSON.stringify(unflattened, null, indentation);
 };
 
-export const removeEmptyValues = (content: string): string => {
+export const removeEmptyValues = (content: string, indentation: number = 2): string => {
   const json = JSON.parse(content);
 
   const removeEmpty = (obj: any): any => {
@@ -151,7 +151,7 @@ export const removeEmptyValues = (content: string): string => {
   };
 
   const cleaned = removeEmpty(json) ?? {};
-  return JSON.stringify(cleaned, null, 2);
+  return JSON.stringify(cleaned, null, indentation);
 };
 
 export const removeComments = (content: string): string => {
