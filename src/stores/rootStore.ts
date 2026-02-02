@@ -697,8 +697,18 @@ export const useRootStore = create<RootStore>((set, get) => {
             }
           );
         } else {
-          // Target is inactive workspace - save to IndexedDB
+          // Target is inactive workspace - save to IndexedDB AND update split view
           await storage.saveTabNow(updatedTab);
+
+          // CRITICAL FIX: Update the split view for the inactive workspace
+          const targetSplitView = await storage.getSplitViewByWorkspace(targetWorkspaceId);
+          if (targetSplitView) {
+            // Add tab to left side (default)
+            targetSplitView.leftTabs = [...targetSplitView.leftTabs, updatedTab.id];
+            targetSplitView.lastModified = Date.now();
+            await storage.saveSplitViewNow(targetSplitView);
+          }
+
           // Refresh sidebar metadata for target workspace
           await useSidebarStore.getState().refreshWorkspaceMetadata(targetWorkspaceId);
           // Broadcast metadata update for cross-window sync
@@ -722,8 +732,28 @@ export const useRootStore = create<RootStore>((set, get) => {
             }
           );
         } else {
-          // Source is inactive workspace - delete from IndexedDB
+          // Source is inactive workspace - delete from IndexedDB AND update split view
           await storage.deleteTab(tabId);
+
+          // CRITICAL FIX: Update the split view for the inactive workspace to remove the tab
+          const sourceSplitView = await storage.getSplitViewByWorkspace(sourceWorkspaceId);
+          if (sourceSplitView) {
+            // Remove tab from both left and right sides
+            sourceSplitView.leftTabs = sourceSplitView.leftTabs.filter(id => id !== tabId);
+            sourceSplitView.rightTabs = sourceSplitView.rightTabs.filter(id => id !== tabId);
+            sourceSplitView.lastModified = Date.now();
+
+            // Clear active tab IDs if they reference the removed tab
+            if (sourceSplitView.activeLeftTabId === tabId) {
+              sourceSplitView.activeLeftTabId = sourceSplitView.leftTabs[0] || null;
+            }
+            if (sourceSplitView.activeRightTabId === tabId) {
+              sourceSplitView.activeRightTabId = sourceSplitView.rightTabs[0] || null;
+            }
+
+            await storage.saveSplitViewNow(sourceSplitView);
+          }
+
           // Refresh sidebar metadata for source workspace
           await useSidebarStore.getState().refreshWorkspaceMetadata(sourceWorkspaceId);
           // Broadcast metadata update for cross-window sync

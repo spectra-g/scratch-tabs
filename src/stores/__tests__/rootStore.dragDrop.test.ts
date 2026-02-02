@@ -163,11 +163,23 @@ describe("RootStore - Drag and Drop", () => {
                 cursorPosition: { lineNumber: 1, column: 1 },
             };
 
+            const mockSourceSplitView = {
+                id: "split1",
+                workspaceId: "inactive-ws",
+                leftTabs: ["tab1", "other-tab"],
+                rightTabs: [],
+                isSplit: false,
+                activeLeftTabId: "tab1",
+                activeRightTabId: null,
+                lastModified: Date.now(),
+            };
+
             const addTabMock = jest.fn();
             const addTabToSideMock = jest.fn();
             const refreshMetadataMock = jest.fn();
 
             mockStorageProvider.getTabsByWorkspace.mockResolvedValue([mockTab]);
+            mockStorageProvider.getSplitViewByWorkspace.mockResolvedValue(mockSourceSplitView);
             mockTabsStore.getState.mockReturnValue({
                 tabs: [],
                 addTab: addTabMock,
@@ -199,6 +211,15 @@ describe("RootStore - Drag and Drop", () => {
             // Verify tab was deleted from source
             expect(mockStorageProvider.deleteTab).toHaveBeenCalledWith("tab1");
 
+            // NEW: Verify source workspace split view was updated to remove the tab
+            expect(mockStorageProvider.saveSplitViewNow).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    workspaceId: "inactive-ws",
+                    leftTabs: ["other-tab"], // tab1 removed
+                    activeLeftTabId: "other-tab", // Active tab updated since we removed the previously active tab
+                })
+            );
+
             // Verify metadata was refreshed
             expect(refreshMetadataMock).toHaveBeenCalledWith("inactive-ws");
 
@@ -217,6 +238,15 @@ describe("RootStore - Drag and Drop", () => {
                 dateCreated: Date.now(),
                 languageLocked: false,
                 cursorPosition: { lineNumber: 1, column: 1 },
+            };
+
+            const mockTargetSplitView = {
+                id: "split2",
+                workspaceId: "inactive-ws",
+                leftTabs: ["existing-tab"],
+                rightTabs: [],
+                isSplit: false,
+                lastModified: Date.now(),
             };
 
             const removeTabMock = jest.fn();
@@ -238,6 +268,7 @@ describe("RootStore - Drag and Drop", () => {
                 refreshWorkspaceMetadata: refreshMetadataMock,
             });
             mockStorageProvider.getTabsByWorkspace.mockResolvedValue([mockTab]);
+            mockStorageProvider.getSplitViewByWorkspace.mockResolvedValue(mockTargetSplitView);
 
             await useRootStore.getState().moveTabBetweenWorkspaces("tab1", "active-ws", "inactive-ws");
 
@@ -246,6 +277,14 @@ describe("RootStore - Drag and Drop", () => {
                 expect.objectContaining({
                     id: "tab1",
                     workspaceId: "inactive-ws",
+                })
+            );
+
+            // NEW: Verify target workspace split view was updated
+            expect(mockStorageProvider.saveSplitViewNow).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    workspaceId: "inactive-ws",
+                    leftTabs: ["existing-tab", "tab1"], // Tab added to leftTabs
                 })
             );
 
@@ -261,6 +300,109 @@ describe("RootStore - Drag and Drop", () => {
 
             // Verify broadcast was called
             expect(mockBroadcastManager.broadcastWorkspaceState).toHaveBeenCalled();
+        });
+
+        it("should move tab between two inactive workspaces", async () => {
+            const mockTab = {
+                id: "tab1",
+                title: "Test Tab",
+                content: "test content",
+                language: "javascript",
+                workspaceId: "inactive-ws-1",
+                lastModified: Date.now(),
+                dateCreated: Date.now(),
+                languageLocked: false,
+                cursorPosition: { lineNumber: 1, column: 1 },
+            };
+
+            const mockSourceSplitView = {
+                id: "split1",
+                workspaceId: "inactive-ws-1",
+                leftTabs: ["tab1", "tab2"],
+                rightTabs: [],
+                isSplit: false,
+                activeLeftTabId: "tab1",
+                activeRightTabId: null,
+                lastModified: Date.now(),
+            };
+
+            const mockTargetSplitView = {
+                id: "split2",
+                workspaceId: "inactive-ws-2",
+                leftTabs: ["tab3"],
+                rightTabs: [],
+                isSplit: false,
+                activeLeftTabId: "tab3",
+                activeRightTabId: null,
+                lastModified: Date.now(),
+            };
+
+            const refreshMetadataMock = jest.fn();
+
+            // Mock getting tab from source workspace
+            mockStorageProvider.getTabsByWorkspace.mockImplementation(async (wsId: string) => {
+                if (wsId === "inactive-ws-1") return [mockTab];
+                return [];
+            });
+
+            // Mock getting split views for both workspaces
+            mockStorageProvider.getSplitViewByWorkspace.mockImplementation(async (wsId: string) => {
+                if (wsId === "inactive-ws-1") return mockSourceSplitView;
+                if (wsId === "inactive-ws-2") return mockTargetSplitView;
+                return null;
+            });
+
+            mockSidebarStore.getState.mockReturnValue({
+                refreshWorkspaceMetadata: refreshMetadataMock,
+            });
+
+            mockWorkspaceStore.getState.mockReturnValue({
+                activeWorkspaceId: "active-ws",
+                workspaces: [
+                    { id: "active-ws", name: "Active" },
+                    { id: "inactive-ws-1", name: "Inactive 1" },
+                    { id: "inactive-ws-2", name: "Inactive 2" },
+                ],
+                deleteWorkspace: jest.fn(),
+                switchWorkspace: jest.fn(),
+            });
+
+            await useRootStore.getState().moveTabBetweenWorkspaces("tab1", "inactive-ws-1", "inactive-ws-2");
+
+            // Verify tab was saved with new workspaceId
+            expect(mockStorageProvider.saveTabNow).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    id: "tab1",
+                    workspaceId: "inactive-ws-2",
+                })
+            );
+
+            // Verify target workspace split view was updated to include the tab
+            expect(mockStorageProvider.saveSplitViewNow).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    workspaceId: "inactive-ws-2",
+                    leftTabs: ["tab3", "tab1"], // tab1 added
+                })
+            );
+
+            // Verify tab was deleted from source
+            expect(mockStorageProvider.deleteTab).toHaveBeenCalledWith("tab1");
+
+            // Verify source workspace split view was updated to remove the tab
+            expect(mockStorageProvider.saveSplitViewNow).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    workspaceId: "inactive-ws-1",
+                    leftTabs: ["tab2"], // tab1 removed
+                    activeLeftTabId: "tab2", // Active tab updated
+                })
+            );
+
+            // Verify metadata was refreshed for both workspaces
+            expect(refreshMetadataMock).toHaveBeenCalledWith("inactive-ws-2");
+            expect(refreshMetadataMock).toHaveBeenCalledWith("inactive-ws-1");
+
+            // Verify broadcast metadata was called for both workspaces
+            expect(mockBroadcastManager.broadcastWorkspaceTabsMetadata).toHaveBeenCalled();
         });
 
         it("should allow empty workspaces after moving last tab", async () => {
