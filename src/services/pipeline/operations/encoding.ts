@@ -2,11 +2,59 @@ import { OperationDefinition } from "../types";
 
 /**
  * Encoding Pipeline Operations
- * 
+ *
  * Operations for converting between different string encodings and formats.
  */
 export const encodingOperations: OperationDefinition[] = [
     // === HEX & BINARY ===
+    {
+        id: "encoding.to-hex",
+        name: "To Hex",
+        description: "Convert text to hexadecimal representation",
+        categories: ["encoding", "binary"],
+        parameters: [
+            {
+                name: "delimiter",
+                label: "Delimiter",
+                type: "select",
+                default: "none",
+                options: [
+                    { value: "none", label: "None (4142)" },
+                    { value: "space", label: "Space (41 42)" },
+                    { value: "colon", label: "Colon (41:42)" },
+                    { value: "comma", label: "Comma (41,42)" },
+                    { value: "0x", label: "0x Prefix (0x41 0x42)" },
+                ]
+            },
+            {
+                name: "uppercase",
+                label: "Uppercase",
+                type: "boolean",
+                default: true,
+                description: "Use uppercase hex letters (A-F vs a-f)"
+            }
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const delimiter = (params.delimiter as string) || "none";
+            const uppercase = params.uppercase ?? true;
+
+            const hexChars = Array.from(input).map(char => {
+                let hex = char.charCodeAt(0).toString(16).padStart(2, '0');
+                return uppercase ? hex.toUpperCase() : hex;
+            });
+
+            switch (delimiter) {
+                case "space": return hexChars.join(' ');
+                case "colon": return hexChars.join(':');
+                case "comma": return hexChars.join(',');
+                case "0x": return hexChars.map(h => '0x' + h).join(' ');
+                default: return hexChars.join('');
+            }
+        },
+        keywords: ["hex", "encode", "binary", "convert", "hexadecimal"],
+        source: "core",
+    },
     {
         id: "encoding.from-hex",
         name: "From Hex",
@@ -64,6 +112,57 @@ export const encodingOperations: OperationDefinition[] = [
             return output;
         },
         keywords: ["hex", "decode", "binary", "convert"],
+        source: "core",
+    },
+    {
+        id: "encoding.to-charcode",
+        name: "To Charcode",
+        description: "Convert text to character codes (decimal, hex, binary)",
+        categories: ["encoding"],
+        parameters: [
+            {
+                name: "base",
+                label: "Output Base",
+                type: "select",
+                default: "10",
+                options: [
+                    { value: "10", label: "Decimal (65, 66)" },
+                    { value: "16", label: "Hexadecimal (41, 42)" },
+                    { value: "2", label: "Binary (01000001)" },
+                ]
+            },
+            {
+                name: "delimiter",
+                label: "Delimiter",
+                type: "string",
+                default: " ",
+                description: "Character separating the codes"
+            },
+            {
+                name: "padding",
+                label: "Pad Output",
+                type: "boolean",
+                default: true,
+                description: "Pad numbers to consistent width"
+            }
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const base = parseInt((params.base as string) || "10");
+            const delim = (params.delimiter as string) ?? " ";
+            const padding = params.padding ?? true;
+
+            const padWidth = base === 2 ? 8 : (base === 16 ? 2 : 0);
+
+            return Array.from(input).map(char => {
+                let code = char.charCodeAt(0).toString(base);
+                if (padding && padWidth > 0) {
+                    code = code.padStart(padWidth, '0');
+                }
+                return base === 16 ? code.toUpperCase() : code;
+            }).join(delim);
+        },
+        keywords: ["charcode", "decimal", "ascii", "convert", "unicode"],
         source: "core",
     },
     {
@@ -197,6 +296,112 @@ export const encodingOperations: OperationDefinition[] = [
     },
 
     // === HTML ENTITIES ===
+    {
+        id: "encoding.to-html-entity",
+        name: "To HTML Entity",
+        description: "Encode special characters as HTML entities",
+        categories: ["encoding", "web"],
+        parameters: [
+            {
+                name: "mode",
+                label: "Encoding Mode",
+                type: "select",
+                default: "special",
+                options: [
+                    { value: "special", label: "Special chars only (<>&\"')" },
+                    { value: "named", label: "All named entities" },
+                    { value: "numeric", label: "Numeric (&#65;)" },
+                    { value: "hex", label: "Hex (&#x41;)" },
+                ]
+            },
+            {
+                name: "encodeNonAscii",
+                label: "Encode Non-ASCII",
+                type: "boolean",
+                default: false,
+                description: "Also encode characters outside ASCII range"
+            }
+        ],
+        execute: (input, params) => {
+            const mode = (params.mode as string) || "special";
+            const encodeNonAscii = params.encodeNonAscii ?? false;
+
+            // Named entity map (common entities)
+            const namedEntities: Record<string, string> = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&apos;',
+                ' ': '&nbsp;',
+                '¢': '&cent;',
+                '£': '&pound;',
+                '¥': '&yen;',
+                '€': '&euro;',
+                '©': '&copy;',
+                '®': '&reg;',
+                '™': '&trade;',
+                '—': '&mdash;',
+                '–': '&ndash;',
+                '…': '&hellip;',
+                '•': '&bull;',
+                '°': '&deg;',
+                '±': '&plusmn;',
+                '×': '&times;',
+                '÷': '&divide;',
+                '≠': '&ne;',
+                '≤': '&le;',
+                '≥': '&ge;',
+                '∞': '&infin;',
+            };
+
+            // Special chars that must always be encoded
+            const specialChars = new Set(['&', '<', '>', '"', "'"]);
+
+            return Array.from(input).map(char => {
+                const code = char.charCodeAt(0);
+
+                if (mode === "special") {
+                    // Only encode the 5 special HTML chars
+                    if (specialChars.has(char)) {
+                        return namedEntities[char] || `&#${code};`;
+                    }
+                    if (encodeNonAscii && code > 127) {
+                        return `&#${code};`;
+                    }
+                    return char;
+                }
+
+                if (mode === "named") {
+                    if (namedEntities[char]) {
+                        return namedEntities[char];
+                    }
+                    if (encodeNonAscii && code > 127) {
+                        return `&#${code};`;
+                    }
+                    return char;
+                }
+
+                if (mode === "numeric") {
+                    if (specialChars.has(char) || (encodeNonAscii && code > 127)) {
+                        return `&#${code};`;
+                    }
+                    return char;
+                }
+
+                if (mode === "hex") {
+                    if (specialChars.has(char) || (encodeNonAscii && code > 127)) {
+                        return `&#x${code.toString(16).toUpperCase()};`;
+                    }
+                    return char;
+                }
+
+                return char;
+            }).join('');
+        },
+        keywords: ["html", "entity", "encode", "web", "escape"],
+        source: "core",
+    },
     {
         id: "encoding.from-html-entity",
         name: "From HTML Entity",

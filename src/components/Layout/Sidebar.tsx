@@ -77,7 +77,8 @@ export const Sidebar: React.FC = () => {
         sidebarWidth,
         setSidebarWidth,
         setSidebarExpanded,
-        initializeSidebarState
+        initializeSidebarState,
+        isHydrated
     } = useSidebarStore();
 
     const { splitView } = useSplitViewStore();
@@ -679,6 +680,12 @@ export const Sidebar: React.FC = () => {
         if (typeof window !== 'undefined' && window.innerWidth < 768) return {}; // Mobile default
         return isSidebarExpanded ? { width: `${sidebarWidth}px` } : {};
     }, [isSidebarExpanded, sidebarWidth]);
+
+    // Don't render on desktop until hydrated to prevent flash
+    // Mobile is fine since isMobileOpen defaults to false (sidebar hidden)
+    if (!isHydrated && typeof window !== 'undefined' && window.innerWidth >= 768) {
+        return null;
+    }
 
     return (
         <>

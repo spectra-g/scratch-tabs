@@ -126,26 +126,56 @@
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
 
-        <!-- Version 1.22.0 -->
+        <!-- Version 1.23.0 -->
         <div class="changelog-entry latest">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-white">V1.22.0</h2>
+              <h2 class="text-2xl font-bold text-white">V1.23.0</h2>
               <span class="badge latest">LATEST</span>
             </div>
-            <span class="text-gray-500 text-xs font-mono">01/29/2026</span>
+            <span class="text-gray-500 text-xs font-mono">02/01/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">PERSISTENT SIDEBAR STATE & PIPELINE OPERATIONS EXPANSION</h3>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">JSON SMART VIEW ENHANCEMENTS & 25 NEW PIPELINE OPERATIONS</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">Your sidebar configuration is now remembered across browser sessions. Width adjustments, sidebar visibility, and which workspaces are expanded are automatically saved and restored when you return. Also introduces 15 new pipeline operations spanning web parsing, code formatting, data conversion, cryptography, and text analysis.</p>
+            <p class="mb-4">Major JSON Smart View update featuring a new Documentation Export tool for privacy-safe JSON sharing, toolbar reorganization with quick-access string tools, and a redesigned JMESPath Query Panel that auto-runs contextual samples. Also introduces 25 powerful new pipeline operations for encoding, data conversion, text manipulation, and utility generation.</p>
 
             <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
             <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Persistent Sidebar Width:</strong> Custom sidebar width (150px-600px) is automatically saved and restored on app reload</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Persistent Sidebar State:</strong> Sidebar expanded/collapsed state persists across sessions - your preferred view mode is remembered</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Persistent Workspace Expansion:</strong> Workspace expansion states in the sidebar tree are saved - return to find your workspaces exactly as you left them</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>15 New Pipeline Operations:</strong> Massive expansion of transformation pipeline with web parsing (HTML strip tags, JWT decode), code formatting (SQL/CSS prettify, SQL escape), data conversion (YAMLJSON, CSV column extraction), cryptography (HMAC, base conversion), and text analysis (slugify, frequency analysis, diacritics removal, regex capture groups, quoted-printable decode)</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Documentation Export Modal:</strong> New 'Export Docs' button in JSON toolbar opens a powerful privacy tool for sharing JSON in documentation - mask sensitive values, replace with type placeholders, or remove fields entirely before sharing</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Path-Level Privacy Control:</strong> Configure each JSON path individually with four modes: Keep (original value), Mask (replace with ***), Type (show data type like <string>), or Remove (delete from output)</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Depth-Grouped Path Browser:</strong> Paths organized by nesting depth (Top Level, Level 2, etc.) with bulk actions per group - quickly mask all deeply nested fields while keeping top-level structure</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Live Documentation Preview:</strong> Side-by-side view with instant preview of masked JSON, click any path to navigate to its location in the preview editor</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Quick-Access Stringify/Unstringify:</strong> Moved from Toolbox menu to main Editor Actions toolbar - escape and unescape JSON strings with one click without navigating menus</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Auto-Populated Query Panel:</strong> JMESPath Query Panel now automatically populates and runs the first contextual sample query when opened - see results immediately without typing</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>25 New Pipeline Operations:</strong> Major expansion of transformation pipeline capabilities across multiple categories</span></li>
             </ul>
+
+            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># pipeline_operations</h4>
+            <ul class="space-y-2 mb-6">
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Encoding Operations:</strong> To Hex (with delimiter options), To Charcode (decimal/hex/binary output), HTML Entity Encode (special chars, named entities, numeric/hex modes)</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Compression:</strong> Gzip Compress (outputs Base64, completes the gunzip pair)</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Data Conversion:</strong> CSV to JSON (with number/boolean parsing), JSON to CSV (with nested object flattening), CSV to Markdown Table, JSON to Markdown Table (perfect for documentation)</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>XML Operations:</strong> Format XML (pretty-print), Minify XML, XML to JSON, JSON to XML (bidirectional conversion with attribute support)</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>URL Operations:</strong> JSON to Query String (with array format options: repeat, brackets, indices, comma), Query String to JSON (with type parsing)</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>DateTime Operations:</strong> To Unix Timestamp (parse dates or get current time in seconds/milliseconds)</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Text Operations:</strong> Reverse Text (entire text, per-line, or per-word modes), Text Statistics (character, word, line, sentence, paragraph counts with JSON output)</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Extraction Operations:</strong> Extract Numbers (integers, decimals, with negative number support), Extract Phone Numbers (US, international, all formats), Extract Dates (ISO, US, EU formats)</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Utility Generators:</strong> Generate UUID (v4 random, v7 time-ordered with format options), Generate Random String (alphanumeric, hex, URL-safe, with symbols), Lorem Ipsum Generator (paragraphs, sentences, words), Generate Sequence (numbers, letters, Roman numerals with custom ranges)</span></li>
+            </ul>
+          </div>
+        </div>
+        <!-- Version 1.22.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.22.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">01/29/2026</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">PERSISTENT SIDEBAR STATE & PIPELINE OPERATIONS EXPANSION</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p>Sidebar preferences now persist across sessions, plus 15 new powerful transformation pipeline operations for data processing workflows</p>
           </div>
         </div>
         <!-- Version 1.21.0 -->
@@ -167,7 +197,7 @@
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
               <h2 class="text-xl font-bold text-white uppercase">V1.20.0</h2>
-              <span class="badge latest">LATEST</span>
+              <span class="badge release">RELEASE</span>
             </div>
             <span class="text-gray-500 text-xs font-mono">01/27/2026</span>
           </div>
@@ -581,7 +611,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.22.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.23.0</span>
         </div>
 
         <div class="flex space-x-8">
