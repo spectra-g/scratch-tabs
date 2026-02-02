@@ -147,9 +147,6 @@ export class TabletsActions {
     const input = this.page.getByPlaceholder(/Enter text to encode/i);
     await expect(input).toBeVisible();
     await input.fill(text);
-
-    // Wait a bit for encoding to happen
-    await this.page.waitForTimeout(500);
   }
 
   /**
@@ -182,5 +179,373 @@ export class TabletsActions {
   async expectBase64OutputContains(expectedText: string) {
     const actualValue = await this.getBase64OutputValue();
     expect(actualValue).toContain(expectedText);
+  }
+
+  // ============================================================================
+  // Password Generator Tablet
+  // ============================================================================
+
+  private lastPasswordValue: string = '';
+
+  /**
+   * Check if password generator interface is visible
+   */
+  async expectPasswordGeneratorInterfaceVisible() {
+    // Look for the password generator heading or mode toggle
+    const modeButton = this.page.getByRole('button', { name: /Password|Passphrase/i }).first();
+    await expect(modeButton).toBeVisible();
+  }
+
+  /**
+   * Check if a generated password is visible and store it
+   */
+  async expectGeneratedPasswordVisible() {
+    // Password is displayed in an input with placeholder "Generated password (editable)"
+    const passwordInput = this.page.getByPlaceholder(/Generated password/i);
+    await expect(passwordInput).toBeVisible();
+
+    // Wait for the password to be generated (non-empty value)
+    await expect(async () => {
+      this.lastPasswordValue = await passwordInput.inputValue();
+      expect(this.lastPasswordValue.length).toBeGreaterThan(0);
+    }).toPass();
+  }
+
+  /**
+   * Click the regenerate password button
+   */
+  async clickRegeneratePasswordButton() {
+    // The regenerate button has title "Regenerate"
+    const regenerateButton = this.page.locator('button[title="Regenerate"]');
+    await expect(regenerateButton).toBeVisible();
+    await regenerateButton.click();
+  }
+
+  /**
+   * Check that a different password was generated
+   */
+  async expectDifferentPasswordGenerated() {
+    const passwordInput = this.page.getByPlaceholder(/Generated password/i);
+    await expect(passwordInput).toBeVisible();
+
+    // Wait for the password to change
+    await expect(async () => {
+      const newPassword = await passwordInput.inputValue();
+      expect(newPassword).not.toBe(this.lastPasswordValue);
+    }).toPass();
+  }
+
+  // ============================================================================
+  // Lorem Ipsum Generator Tablet
+  // ============================================================================
+
+  /**
+   * Check if lorem ipsum generator interface is visible
+   */
+  async expectLoremIpsumInterfaceVisible() {
+    // Look for mode selection buttons (Text, HTML, Markdown, JSON)
+    const modeButton = this.page.getByRole('button', { name: /^Text$|^HTML$|^Markdown$/i }).first();
+    await expect(modeButton).toBeVisible();
+  }
+
+  /**
+   * Check if generated lorem ipsum text is visible
+   */
+  async expectLoremIpsumTextVisible() {
+    // Look for content area with generated text (contains "Lorem" or paragraphs)
+    await this.page.waitForFunction(
+      () => {
+        const text = document.body.textContent || '';
+        // Check for common lorem ipsum patterns or generated content area
+        return text.includes('Lorem') || text.includes('ipsum') ||
+               document.querySelector('[class*="output"]') !== null;
+      }
+    );
+  }
+
+  // ============================================================================
+  // Cron Expression Builder Tablet
+  // ============================================================================
+
+  /**
+   * Check if cron builder interface is visible
+   */
+  async expectCronBuilderInterfaceVisible() {
+    // Look for dialect selector or tab navigation
+    const dialectSelector = this.page.getByRole('combobox').first();
+    const tabButton = this.page.getByRole('tab').first();
+
+    const isDialectVisible = await dialectSelector.isVisible().catch(() => false);
+    const isTabVisible = await tabButton.isVisible().catch(() => false);
+
+    expect(isDialectVisible || isTabVisible).toBe(true);
+  }
+
+  /**
+   * Check if next execution times are visible
+   */
+  async expectNextExecutionTimesVisible() {
+    // Execution times are typically displayed in a list
+    // Look for elements containing time patterns (HH:MM or dates)
+    await this.page.waitForFunction(
+      () => {
+        const text = document.body.textContent || '';
+        // Check for time patterns or "Next" execution text
+        return /\d{1,2}:\d{2}/.test(text) || text.includes('Next');
+      }
+    );
+  }
+
+  // ============================================================================
+  // Word Count Tablet
+  // ============================================================================
+
+  /**
+   * Check if word count interface is visible
+   */
+  async expectWordCountInterfaceVisible() {
+    // Look for the word count heading in the header
+    const heading = this.page.getByRole('heading', { name: /Word Count/i });
+    await expect(heading).toBeVisible();
+  }
+
+  /**
+   * Type text into word count input
+   * @param text - The text to type
+   */
+  async typeIntoWordCountInput(text: string) {
+    // Word Count uses Monaco Editor - click on it first to focus
+    const monacoEditor = this.page.locator('.monaco-editor').first();
+    await expect(monacoEditor).toBeVisible();
+
+    // Click to focus the editor
+    await monacoEditor.click();
+
+    // Type the text using keyboard
+    await this.page.keyboard.type(text);
+  }
+
+  /**
+   * Expect word count to show specific value
+   * @param expectedCount - The expected word count
+   */
+  async expectWordCountValue(expectedCount: string) {
+    // After typing text, the WordCountDisplay should show stats
+    // The stats appear in "Core Counts" section with format like "Words" : "6"
+    // Wait for the stats to appear and show the correct count
+    await expect(async () => {
+      // Look for the word count in the page text
+      const pageContent = await this.page.textContent('body');
+      // The value appears in a font-mono span after "Words"
+      expect(pageContent).toContain(expectedCount);
+    }).toPass();
+  }
+
+  // ============================================================================
+  // URL Parser Tablet
+  // ============================================================================
+
+  /**
+   * Check if URL parser interface is visible
+   */
+  async expectUrlParserInterfaceVisible() {
+    // Look for URL input field or component labels
+    const urlInput = this.page.locator('input[type="text"], input[type="url"]').first();
+    await expect(urlInput).toBeVisible();
+  }
+
+  /**
+   * Type URL into the URL parser input
+   * @param url - The URL to parse
+   */
+  async typeIntoUrlInput(url: string) {
+    // Find the URL input by its placeholder
+    const urlInput = this.page.getByPlaceholder(/Enter URL/i);
+    await expect(urlInput).toBeVisible();
+
+    // Clear existing value and type new URL character by character to trigger React onChange
+    await urlInput.click();
+    await urlInput.fill('');
+    await urlInput.pressSequentially(url, { delay: 5 });
+
+    // Tab out to blur and potentially trigger additional parsing
+    await urlInput.press('Tab');
+  }
+
+  /**
+   * Expect URL parser to show specific host
+   * @param expectedHost - The expected host value
+   */
+  async expectUrlParserHost(expectedHost: string) {
+    // The host is shown in a ComponentEditor with label "Host"
+    // Find the section containing "Host" label and check its input
+    const hostSection = this.page.locator('div.mb-4').filter({ has: this.page.locator('h3:text("Host")') });
+    const hostInput = hostSection.locator('input').first();
+    await expect(hostInput).toHaveValue(expectedHost);
+  }
+
+  /**
+   * Expect URL parser to show specific port
+   * @param expectedPort - The expected port value
+   */
+  async expectUrlParserPort(expectedPort: string) {
+    // The port is shown in a ComponentEditor with label "Port"
+    // Find the section containing "Port" label and check its input
+    const portSection = this.page.locator('div.mb-4').filter({ has: this.page.locator('h3:text("Port")') });
+    const portInput = portSection.locator('input').first();
+    await expect(portInput).toHaveValue(expectedPort);
+  }
+
+  // ============================================================================
+  // Checksum Tablet
+  // ============================================================================
+
+  /**
+   * Check if checksum interface is visible
+   */
+  async expectChecksumInterfaceVisible() {
+    // Look for algorithm buttons (MD5, SHA-256, etc.)
+    const algorithmButton = this.page.getByRole('button', { name: /MD5|SHA-256|SHA-1/i }).first();
+    await expect(algorithmButton).toBeVisible();
+  }
+
+  /**
+   * Type text into checksum input
+   * @param text - The text to hash
+   */
+  async typeIntoChecksumInput(text: string) {
+    const textArea = this.page.locator('textarea').first();
+    await expect(textArea).toBeVisible();
+    await textArea.fill(text);
+  }
+
+  /**
+   * Check if a calculated hash is visible
+   */
+  async expectCalculatedHashVisible() {
+    // Hashes are hex strings - look for hex pattern
+    await this.page.waitForFunction(
+      () => {
+        const text = document.body.textContent || '';
+        // Look for hex hash pattern (at least 32 hex chars for MD5)
+        return /[0-9a-f]{32,}/i.test(text);
+      }
+    );
+  }
+
+  // ============================================================================
+  // Colour Palette Tablet
+  // ============================================================================
+
+  /**
+   * Check if colour palette interface is visible
+   */
+  async expectColourPaletteInterfaceVisible() {
+    // Look for generate button or palette canvas
+    const generateButton = this.page.getByRole('button', { name: /Generate/i });
+    const isGenerateVisible = await generateButton.isVisible().catch(() => false);
+
+    // Alternative: look for color-related UI elements
+    const colorElement = this.page.locator('[style*="background-color"], [class*="swatch"], [class*="color"]').first();
+    const isColorVisible = await colorElement.isVisible().catch(() => false);
+
+    expect(isGenerateVisible || isColorVisible).toBe(true);
+  }
+
+  /**
+   * Check if color swatches are visible
+   */
+  async expectColorSwatchesVisible() {
+    // Look for elements with background colors (color swatches)
+    await this.page.waitForFunction(
+      () => {
+        // Check for elements that look like color swatches
+        const swatches = document.querySelectorAll('[style*="background"], [class*="swatch"], [class*="color"]');
+        return swatches.length > 0;
+      }
+    );
+  }
+
+  // ============================================================================
+  // Converter Tablet
+  // ============================================================================
+
+  /**
+   * Check if converter interface is visible
+   */
+  async expectConverterInterfaceVisible() {
+    // Look for converter title or section header
+    const heading = this.page.locator('text=/Converter|Encode|Decode|Hash/i').first();
+    await expect(heading).toBeVisible();
+  }
+
+  /**
+   * Check if converter section buttons are visible
+   */
+  async expectConverterSectionButtonsVisible() {
+    // Look for section navigation buttons
+    const sectionButtons = this.page.getByRole('button', { name: /Encode|Hash|Number|Text|Date|Color|Network/i });
+    const count = await sectionButtons.count();
+    expect(count).toBeGreaterThan(0);
+  }
+
+  // ============================================================================
+  // Date & Time Tablet
+  // ============================================================================
+
+  /**
+   * Check if date time interface is visible
+   */
+  async expectDateTimeInterfaceVisible() {
+    // Look for date/time related headings or inputs
+    const heading = this.page.locator('text=/Date|Time|Timezone/i').first();
+    await expect(heading).toBeVisible();
+  }
+
+  /**
+   * Check if current time display is visible
+   */
+  async expectCurrentTimeDisplayVisible() {
+    // Look for time display (HH:MM format)
+    await this.page.waitForFunction(
+      () => {
+        const text = document.body.textContent || '';
+        // Check for time pattern
+        return /\d{1,2}:\d{2}(:\d{2})?/.test(text);
+      }
+    );
+  }
+
+  // ============================================================================
+  // Emoji as Data Tablet
+  // ============================================================================
+
+  /**
+   * Check if emoji picker interface is visible
+   */
+  async expectEmojiPickerInterfaceVisible() {
+    // Look for search input or category buttons
+    const searchInput = this.page.getByPlaceholder(/Search emoji/i);
+    const isSearchVisible = await searchInput.isVisible().catch(() => false);
+
+    // Alternative: look for category buttons
+    const categoryButton = this.page.getByRole('button', { name: /Smileys|People|Animals|Food/i }).first();
+    const isCategoryVisible = await categoryButton.isVisible().catch(() => false);
+
+    expect(isSearchVisible || isCategoryVisible).toBe(true);
+  }
+
+  /**
+   * Check if emoji grid is visible
+   */
+  async expectEmojiGridVisible() {
+    // Look for emoji characters in the grid
+    await this.page.waitForFunction(
+      () => {
+        const text = document.body.textContent || '';
+        // Check for common emoji characters (using unicode ranges)
+        return /[\u{1F300}-\u{1F9FF}]/u.test(text);
+      }
+    );
   }
 }

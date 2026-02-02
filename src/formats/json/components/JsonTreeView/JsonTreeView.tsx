@@ -826,7 +826,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect, t
     return (
       <div className="flex flex-col h-full bg-surface text-main p-4">
         <h3 className="text-danger font-semibold mb-2">Error Parsing JSON</h3>
-        <pre className="text-danger text-sm bg-danger-subtle p-2 rounded overflow-auto custom-scrollbar">
+        <pre className="text-danger text-sm bg-danger-subtle p-2 rounded whitespace-pre-wrap break-words">
           {parseError}
         </pre>
       </div>

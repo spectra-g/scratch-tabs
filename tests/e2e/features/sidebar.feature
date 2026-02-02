@@ -19,6 +19,7 @@ Feature: Workspace Sidebar
     Scenario: Click workspace to expand and collapse tabs
     When I click the icon for "New tab"
     Then the sidebar should be visible
+    And I type "AAA" into the editor
     And workspace "Default Workspace" should be expanded in the sidebar
     And I should see tabs in the expanded workspace
     When I click on workspace "Default Workspace" in the sidebar
@@ -119,6 +120,7 @@ Feature: Workspace Sidebar
   Scenario: Workspace expand collapse state persists on page refresh
     When I click the icon for "New tab"
     Then the sidebar should be visible
+    And I type "AAA" into the editor
     And workspace "Default Workspace" should be expanded in the sidebar
     When I click on workspace "Default Workspace" in the sidebar
     Then workspace "Default Workspace" should be collapsed in the sidebar

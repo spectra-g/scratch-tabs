@@ -15,12 +15,47 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.22.0';
+export const APP_VERSION = '1.23.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.22.0",
+    "version": "1.23.0",
     "type": "latest",
+    "date": "2026-02-01",
+    "headline": "JSON Smart View Enhancements & 25 New Pipeline Operations",
+    "summary": "Streamlined JSON toolbar with quick-access Stringify/Unstringify, redesigned JMESPath Query Panel, plus 25 new transformation pipeline operations",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Documentation Export Modal:** New 'Export Docs' button in JSON toolbar opens a powerful privacy tool for sharing JSON in documentation - mask sensitive values, replace with type placeholders, or remove fields entirely before sharing",
+          "**Path-Level Privacy Control:** Configure each JSON path individually with four modes: Keep (original value), Mask (replace with ***), Type (show data type like <string>), or Remove (delete from output)",
+          "**Depth-Grouped Path Browser:** Paths organized by nesting depth (Top Level, Level 2, etc.) with bulk actions per group - quickly mask all deeply nested fields while keeping top-level structure",
+          "**Live Documentation Preview:** Side-by-side view with instant preview of masked JSON, click any path to navigate to its location in the preview editor",
+          "**Quick-Access Stringify/Unstringify:** Moved from Toolbox menu to main Editor Actions toolbar - escape and unescape JSON strings with one click without navigating menus",
+          "**Auto-Populated Query Panel:** JMESPath Query Panel now automatically populates and runs the first contextual sample query when opened - see results immediately without typing",
+          "**25 New Pipeline Operations:** Major expansion of transformation pipeline capabilities across multiple categories"
+        ]
+      },
+      {
+        "name": "Pipeline Operations",
+        "changes": [
+          "**Encoding Operations:** To Hex (with delimiter options), To Charcode (decimal/hex/binary output), HTML Entity Encode (special chars, named entities, numeric/hex modes)",
+          "**Compression:** Gzip Compress (outputs Base64, completes the gunzip pair)",
+          "**Data Conversion:** CSV to JSON (with number/boolean parsing), JSON to CSV (with nested object flattening), CSV to Markdown Table, JSON to Markdown Table (perfect for documentation)",
+          "**XML Operations:** Format XML (pretty-print), Minify XML, XML to JSON, JSON to XML (bidirectional conversion with attribute support)",
+          "**URL Operations:** JSON to Query String (with array format options: repeat, brackets, indices, comma), Query String to JSON (with type parsing)",
+          "**DateTime Operations:** To Unix Timestamp (parse dates or get current time in seconds/milliseconds)",
+          "**Text Operations:** Reverse Text (entire text, per-line, or per-word modes), Text Statistics (character, word, line, sentence, paragraph counts with JSON output)",
+          "**Extraction Operations:** Extract Numbers (integers, decimals, with negative number support), Extract Phone Numbers (US, international, all formats), Extract Dates (ISO, US, EU formats)",
+          "**Utility Generators:** Generate UUID (v4 random, v7 time-ordered with format options), Generate Random String (alphanumeric, hex, URL-safe, with symbols), Lorem Ipsum Generator (paragraphs, sentences, words), Generate Sequence (numbers, letters, Roman numerals with custom ranges)"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.22.0",
+    "type": "release",
     "date": "2026-01-29",
     "headline": "Persistent Sidebar State & Pipeline Operations Expansion",
     "summary": "Sidebar preferences now persist across sessions, plus 15 new powerful transformation pipeline operations for data processing workflows",
@@ -66,7 +101,7 @@ export const RELEASES: Release[] = [
   },
   {
     "version": "1.20.0",
-    "type": "latest",
+    "type": "release",
     "date": "2026-01-27",
     "headline": "Navigation History & Welcome Screen Redesign",
     "summary": "VS Code-style back/forward navigation with persistence, plus modernized welcome screen with enhanced onboarding",

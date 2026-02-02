@@ -246,17 +246,6 @@ export class PipelineActions {
   }
 
   /**
-   * Wait for the pipeline to finish executing
-   */
-  async waitForPipelineExecution(): Promise<void> {
-    // Wait for the loading spinner to disappear
-    const spinner = this.page.locator('.animate-spin');
-    await expect(spinner).not.toBeVisible();
-  }
-
-  // ========== ERROR HANDLING ==========
-
-  /**
    * Expect an error to be displayed
    */
   async expectError(errorMessage?: string): Promise<void> {
@@ -444,5 +433,15 @@ export class PipelineActions {
   async expectPipelineName(name: string): Promise<void> {
     const nameDisplay = this.page.locator(`.bg-element:has-text("${name}")`);
     await expect(nameDisplay).toBeVisible();
+  }
+
+  // ========== NEW OPERATIONS ASSERTIONS ==========
+
+  /**
+   * Expect the output to not be empty
+   */
+  async expectOutputNotEmpty(): Promise<void> {
+    const output = await this.getOutput();
+    expect(output.trim().length).toBeGreaterThan(0);
   }
 }

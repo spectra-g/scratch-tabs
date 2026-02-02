@@ -17,6 +17,8 @@ interface SidebarState {
     isMobileOpen: boolean;
     // Width state for resizing
     sidebarWidth: number;
+    // Hydration state - true once persisted state is loaded
+    isHydrated: boolean;
 
     expandedWorkspaceIds: Set<string>;
     workspaceTabsMetadata: Map<string, SidebarTabInfo[]>;
@@ -76,6 +78,8 @@ export const useSidebarStore = create<SidebarState>((set, get) => {
         isMobileOpen: false,
         // Default width 240px
         sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
+        // Not hydrated until initializeSidebarState completes
+        isHydrated: false,
 
         expandedWorkspaceIds: new Set<string>(),
         workspaceTabsMetadata: new Map<string, SidebarTabInfo[]>(),
@@ -225,6 +229,7 @@ export const useSidebarStore = create<SidebarState>((set, get) => {
 
                 if (!savedValue) {
                     // No saved state, use defaults
+                    set({ isHydrated: true });
                     return;
                 }
 
@@ -234,10 +239,12 @@ export const useSidebarStore = create<SidebarState>((set, get) => {
                     isSidebarExpanded: savedState.isSidebarExpanded ?? true,
                     sidebarWidth: savedState.sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH,
                     expandedWorkspaceIds: new Set(savedState.expandedWorkspaceIds ?? []),
+                    isHydrated: true,
                 });
             } catch (error) {
                 console.error("Failed to initialize sidebar state:", error);
-                // Use defaults on error
+                // Use defaults on error, but still mark as hydrated
+                set({ isHydrated: true });
             }
         },
     };

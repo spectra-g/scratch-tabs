@@ -71,9 +71,9 @@ describe('QueryPanel', () => {
 
     render(<QueryPanel content={sampleContent} addTab={mockAddTab} tabId={testTabId} />);
 
-    expect(screen.getByText('JSON Query (JMESPath)')).toBeInTheDocument();
-    expect(screen.getByText('Copy Results')).toBeInTheDocument();
-    expect(screen.getByText('Export to Tab')).toBeInTheDocument();
+    expect(screen.getByText('JMESPath Query')).toBeInTheDocument();
+    expect(screen.getByText('Copy')).toBeInTheDocument();
+    expect(screen.getByText('Export')).toBeInTheDocument();
     expect(screen.getByTitle('Close Query Panel')).toBeInTheDocument();
   });
 
@@ -99,7 +99,7 @@ describe('QueryPanel', () => {
 
     render(<QueryPanel content={sampleContent} addTab={mockAddTab} tabId={testTabId} />);
 
-    expect(screen.getByText('Error:')).toBeInTheDocument();
+    expect(screen.getByText('Error')).toBeInTheDocument();
   });
 
   it('should call closePanel when close button is clicked', () => {
@@ -200,33 +200,33 @@ describe('QueryPanel', () => {
   });
 
   it('should show appropriate message for different result states', () => {
-    // No results
+    // No results - shows "Results" label
     mockUseJmespath.mockReturnValue({ results: null, error: null });
-    const { rerender, unmount } = render(
+    const { unmount } = render(
       <QueryPanel content={sampleContent} addTab={mockAddTab} tabId={testTabId} />
     );
 
-    expect(screen.getByText('Results (enter a query above):')).toBeInTheDocument();
+    expect(screen.getByText('Results')).toBeInTheDocument();
     unmount();
 
-    // With error
+    // With error - shows "Error" label
     mockUseJmespath.mockReturnValue({
       results: null,
       error: 'Test error',
     });
     const { unmount: unmount2 } = render(<QueryPanel content={sampleContent} addTab={mockAddTab} tabId={testTabId} />);
 
-    expect(screen.getByText('Error:')).toBeInTheDocument();
+    expect(screen.getByText('Error')).toBeInTheDocument();
     unmount2();
 
-    // With results
+    // With results - shows "Results" label
     mockUseJmespath.mockReturnValue({
       results: { data: 'test' },
       error: null,
     });
     render(<QueryPanel content={sampleContent} addTab={mockAddTab} tabId={testTabId} />);
 
-    expect(screen.getByText('Results:')).toBeInTheDocument();
+    expect(screen.getByText('Results')).toBeInTheDocument();
   });
 
   it('should handle primitive result values', () => {
@@ -272,11 +272,11 @@ describe('QueryPanel', () => {
       expect(screen.getByText('Copied')).toBeInTheDocument();
     });
 
-    // Fast-forward time
-    jest.advanceTimersByTime(2000);
+    // Fast-forward time - wrap in act to handle state update
+    await jest.advanceTimersByTimeAsync(2000);
 
     await waitFor(() => {
-      expect(screen.getByText('Copy Results')).toBeInTheDocument();
+      expect(screen.getByText('Copy')).toBeInTheDocument();
     });
 
     jest.useRealTimers();

@@ -13,6 +13,75 @@ import { OperationDefinition } from "../../services/pipeline/types";
  */
 const dateTimeOperations: OperationDefinition[] = [
     {
+        id: "datetime.to-unix",
+        name: "To Unix Timestamp",
+        description: "Convert date strings to Unix timestamp",
+        categories: ["utilities", "datetime"],
+        parameters: [
+            {
+                name: "units",
+                label: "Output Units",
+                type: "select",
+                default: "seconds",
+                options: [
+                    { value: "seconds", label: "Seconds" },
+                    { value: "milliseconds", label: "Milliseconds" }
+                ]
+            },
+            {
+                name: "mode",
+                label: "Mode",
+                type: "select",
+                default: "parse",
+                options: [
+                    { value: "parse", label: "Parse date strings" },
+                    { value: "now", label: "Current time (ignore input)" }
+                ]
+            }
+        ],
+        execute: (input, params) => {
+            const units = (params.units as string) || "seconds";
+            const mode = (params.mode as string) || "parse";
+
+            if (mode === "now") {
+                const now = Date.now();
+                return units === "seconds" ? Math.floor(now / 1000).toString() : now.toString();
+            }
+
+            // Try to parse the input as a date
+            // Handle common formats
+            const trimmed = input.trim();
+
+            // Check if input is already a number (might be trying to convert timestamp)
+            if (/^\d+$/.test(trimmed)) {
+                // Already a number, return as-is or convert units
+                const num = parseInt(trimmed);
+                if (units === "seconds" && trimmed.length > 10) {
+                    // Looks like milliseconds, convert to seconds
+                    return Math.floor(num / 1000).toString();
+                } else if (units === "milliseconds" && trimmed.length <= 10) {
+                    // Looks like seconds, convert to milliseconds
+                    return (num * 1000).toString();
+                }
+                return trimmed;
+            }
+
+            // Try to parse as date
+            const date = new Date(trimmed);
+            if (isNaN(date.getTime())) {
+                throw new Error(`Could not parse date: "${trimmed}"`);
+            }
+
+            const timestamp = date.getTime();
+            return units === "seconds"
+                ? Math.floor(timestamp / 1000).toString()
+                : timestamp.toString();
+        },
+        keywords: ["date", "time", "timestamp", "epoch", "convert", "unix"],
+        icon: "Clock",
+        source: "tablet",
+    },
+    {
         id: "datetime.from-unix",
         name: "From Unix Timestamp",
         description: "Convert Unix timestamp to readable date",

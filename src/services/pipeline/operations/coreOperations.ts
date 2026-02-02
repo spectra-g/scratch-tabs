@@ -531,6 +531,107 @@ const coreOperations: OperationDefinition[] = [
         source: "core",
     },
     {
+        id: "text.reverse",
+        name: "Reverse Text",
+        description: "Reverse the characters in the text",
+        categories: ["text"],
+        parameters: [
+            {
+                name: "mode",
+                label: "Mode",
+                type: "select",
+                default: "all",
+                options: [
+                    { value: "all", label: "Entire text" },
+                    { value: "per-line", label: "Each line separately" },
+                    { value: "words", label: "Each word separately" },
+                ]
+            }
+        ],
+        execute: (input, params) => {
+            const mode = (params.mode as string) ?? "all";
+
+            const reverseString = (str: string) => [...str].reverse().join('');
+
+            switch (mode) {
+                case "per-line":
+                    return input.split('\n').map(reverseString).join('\n');
+                case "words":
+                    return input.split(/(\s+)/).map(part => {
+                        // Only reverse non-whitespace parts
+                        return /\s/.test(part) ? part : reverseString(part);
+                    }).join('');
+                default: // all
+                    return reverseString(input);
+            }
+        },
+        keywords: ["reverse", "flip", "backwards", "mirror"],
+        source: "core",
+    },
+    {
+        id: "text.statistics",
+        name: "Text Statistics",
+        description: "Count characters, words, lines, and other statistics",
+        categories: ["text", "utilities"],
+        parameters: [
+            {
+                name: "outputFormat",
+                label: "Output Format",
+                type: "select",
+                default: "text",
+                options: [
+                    { value: "text", label: "Plain Text" },
+                    { value: "json", label: "JSON" },
+                ]
+            }
+        ],
+        execute: (input, params) => {
+            const outputFormat = (params.outputFormat as string) ?? "text";
+
+            const chars = input.length;
+            const charsNoSpaces = input.replace(/\s/g, '').length;
+            const words = input.split(/\s+/).filter(w => w.trim().length > 0).length;
+            const lines = input.split('\n').length;
+            const nonBlankLines = input.split('\n').filter(l => l.trim().length > 0).length;
+            const sentences = (input.match(/[.!?]+/g) || []).length;
+            const paragraphs = input.split(/\n\s*\n/).filter(p => p.trim().length > 0).length;
+
+            // Calculate average word length
+            const wordList = input.split(/\s+/).filter(w => w.trim().length > 0);
+            const avgWordLength = wordList.length > 0
+                ? (wordList.reduce((sum, w) => sum + w.length, 0) / wordList.length).toFixed(1)
+                : 0;
+
+            const stats = {
+                characters: chars,
+                charactersNoSpaces: charsNoSpaces,
+                words,
+                lines,
+                nonBlankLines,
+                sentences,
+                paragraphs,
+                averageWordLength: parseFloat(avgWordLength as string),
+            };
+
+            if (outputFormat === "json") {
+                return JSON.stringify(stats, null, 2);
+            }
+
+            return [
+                `Characters: ${chars}`,
+                `Characters (no spaces): ${charsNoSpaces}`,
+                `Words: ${words}`,
+                `Lines: ${lines}`,
+                `Non-blank lines: ${nonBlankLines}`,
+                `Sentences: ${sentences}`,
+                `Paragraphs: ${paragraphs}`,
+                `Avg word length: ${avgWordLength}`,
+            ].join('\n');
+        },
+        keywords: ["count", "statistics", "words", "characters", "lines", "length"],
+        source: "core",
+    },
+    {
         id: "text.shuffle-lines",
         name: "Shuffle Lines",
         description: "Randomly reorder all lines",

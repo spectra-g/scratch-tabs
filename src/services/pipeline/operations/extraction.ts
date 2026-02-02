@@ -130,6 +130,192 @@ export const extractionOperations: OperationDefinition[] = [
         },
         keywords: ["regex", "extract", "capture", "group", "match", "pattern"],
         source: "core",
+    },
+    {
+        id: "extract.numbers",
+        name: "Extract Numbers",
+        description: "Extract all numbers (integers and decimals) from text",
+        categories: ["extraction"],
+        parameters: [
+            {
+                name: "type",
+                label: "Number Type",
+                type: "select",
+                default: "all",
+                options: [
+                    { value: "all", label: "All Numbers" },
+                    { value: "integers", label: "Integers Only" },
+                    { value: "decimals", label: "Decimals Only" },
+                ]
+            },
+            {
+                name: "includeNegative",
+                label: "Include Negative",
+                type: "boolean",
+                default: true,
+                description: "Include negative numbers"
+            },
+            {
+                name: "unique",
+                label: "Unique Only",
+                type: "boolean",
+                default: false
+            }
+        ],
+        execute: (input, params) => {
+            const type = (params.type as string) ?? "all";
+            const includeNegative = params.includeNegative ?? true;
+            const unique = params.unique ?? false;
+
+            let regex: RegExp;
+            const negPrefix = includeNegative ? '-?' : '';
+
+            switch (type) {
+                case "integers":
+                    regex = new RegExp(`${negPrefix}\\b\\d+\\b`, 'g');
+                    break;
+                case "decimals":
+                    regex = new RegExp(`${negPrefix}\\d+\\.\\d+`, 'g');
+                    break;
+                default: // all
+                    regex = new RegExp(`${negPrefix}\\d+(?:\\.\\d+)?`, 'g');
+            }
+
+            const matches = input.match(regex) || [];
+            const result = unique ? [...new Set(matches)] : matches;
+            return result.join('\n');
+        },
+        keywords: ["numbers", "digits", "extract", "integers", "decimals"],
+        source: "core",
+    },
+    {
+        id: "extract.phone",
+        name: "Extract Phone Numbers",
+        description: "Extract phone numbers in various formats",
+        categories: ["extraction"],
+        parameters: [
+            {
+                name: "format",
+                label: "Format",
+                type: "select",
+                default: "all",
+                options: [
+                    { value: "all", label: "All Formats" },
+                    { value: "us", label: "US Format" },
+                    { value: "international", label: "International (+XX)" },
+                ]
+            },
+            {
+                name: "unique",
+                label: "Unique Only",
+                type: "boolean",
+                default: true
+            }
+        ],
+        execute: (input, params) => {
+            const format = (params.format as string) ?? "all";
+            const unique = params.unique ?? true;
+
+            let regex: RegExp;
+
+            switch (format) {
+                case "us":
+                    // US formats: (123) 456-7890, 123-456-7890, 123.456.7890, 1234567890
+                    regex = /\b(?:\(\d{3}\)\s?|\d{3}[-.]?)\d{3}[-.]?\d{4}\b/g;
+                    break;
+                case "international":
+                    // International: +1 234 567 8900, +44 20 7123 4567
+                    regex = /\+\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}/g;
+                    break;
+                default: // all
+                    // Comprehensive pattern for various formats
+                    regex = /(?:\+?\d{1,3}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{2,4}[-.\s]?\d{2,4}(?:[-.\s]?\d{1,4})?/g;
+            }
+
+            const matches = input.match(regex) || [];
+            // Filter out matches that are too short (less than 7 digits)
+            const filtered = matches.filter(m => {
+                const digits = m.replace(/\D/g, '');
+                return digits.length >= 7 && digits.length <= 15;
+            });
+
+            const result = unique ? [...new Set(filtered)] : filtered;
+            return result.join('\n');
+        },
+        keywords: ["phone", "telephone", "mobile", "number", "contact"],
+        source: "core",
+    },
+    {
+        id: "extract.dates",
+        name: "Extract Dates",
+        description: "Extract date strings in various formats",
+        categories: ["extraction", "datetime"],
+        parameters: [
+            {
+                name: "format",
+                label: "Format to Find",
+                type: "select",
+                default: "all",
+                options: [
+                    { value: "all", label: "All Formats" },
+                    { value: "iso", label: "ISO (2024-01-15)" },
+                    { value: "us", label: "US (01/15/2024, Jan 15, 2024)" },
+                    { value: "eu", label: "EU (15/01/2024, 15 Jan 2024)" },
+                ]
+            },
+            {
+                name: "unique",
+                label: "Unique Only",
+                type: "boolean",
+                default: true
+            }
+        ],
+        execute: (input, params) => {
+            const format = (params.format as string) ?? "all";
+            const unique = params.unique ?? true;
+
+            const patterns: RegExp[] = [];
+
+            // ISO format: 2024-01-15, 2024-01-15T10:30:00
+            const isoPattern = /\b\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])(?:T\d{2}:\d{2}(?::\d{2})?(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?)?\b/g;
+
+            // US numeric: 01/15/2024, 1/15/24
+            const usNumericPattern = /\b(?:0?[1-9]|1[0-2])\/(?:0?[1-9]|[12]\d|3[01])\/(?:\d{4}|\d{2})\b/g;
+
+            // US text: Jan 15, 2024 or January 15, 2024
+            const usTextPattern = /\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2}(?:st|nd|rd|th)?[,\s]+\d{4}\b/gi;
+
+            // EU numeric: 15/01/2024, 15-01-2024
+            const euNumericPattern = /\b(?:0?[1-9]|[12]\d|3[01])[\/\-](?:0?[1-9]|1[0-2])[\/\-](?:\d{4}|\d{2})\b/g;
+
+            // EU text: 15 Jan 2024, 15 January 2024
+            const euTextPattern = /\b\d{1,2}(?:st|nd|rd|th)?\s+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)[,\s]+\d{4}\b/gi;
+
+            switch (format) {
+                case "iso":
+                    patterns.push(isoPattern);
+                    break;
+                case "us":
+                    patterns.push(usNumericPattern, usTextPattern);
+                    break;
+                case "eu":
+                    patterns.push(euNumericPattern, euTextPattern);
+                    break;
+                default: // all
+                    patterns.push(isoPattern, usNumericPattern, usTextPattern, euNumericPattern, euTextPattern);
+            }
+
+            const allMatches: string[] = [];
+            patterns.forEach(pattern => {
+                const matches = input.match(pattern) || [];
+                allMatches.push(...matches);
+            });
+
+            const result = unique ? [...new Set(allMatches)] : allMatches;
+            return result.join('\n');
+        },
+        keywords: ["date", "time", "extract", "datetime", "calendar"],
+        source: "core",
     }
 ];
 

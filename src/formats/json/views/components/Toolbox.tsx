@@ -4,15 +4,11 @@ import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { useJsonModals } from "../../hooks/useJsonModals";
 import { Tab } from "../../../../types";
 import {
-  sortJsonKeys,
   flattenJson,
   unflattenJson,
   removeEmptyValues,
   removeComments,
-  stringifyJson,
-  unstringifyJsonContent,
   extractJsonFromContent,
-  minifyJson,
   applyEditToEditor,
 } from "../../actions/jsonOperations";
 import {
@@ -255,10 +251,6 @@ export const Toolbox: React.FC<ToolboxProps> = ({
     }
   };
 
-  const handleStringify = () => {
-    executeTransformation(stringifyJson);
-  };
-
   const handleExtractJson = () => {
     if (!editor) return;
     try {
@@ -311,12 +303,6 @@ export const Toolbox: React.FC<ToolboxProps> = ({
         isExpanded={expandedSection === "Transformations"}
         onToggle={() => setExpandedSection(expandedSection === "Transformations" ? "" : "Transformations")}
       >
-        <ActionButton onClick={() => executeTransformation(sortJsonKeys)}>
-          Sort Keys
-        </ActionButton>
-        <ActionButton onClick={() => executeTransformation(minifyJson)}>
-          Minify
-        </ActionButton>
         <ActionButton onClick={handleExtractJson}>
           Extract JSON
         </ActionButton>
@@ -331,12 +317,6 @@ export const Toolbox: React.FC<ToolboxProps> = ({
         </ActionButton>
         <ActionButton onClick={() => executeTransformation(removeComments)}>
           Remove Comments
-        </ActionButton>
-        <ActionButton onClick={handleStringify}>
-          Stringify
-        </ActionButton>
-        <ActionButton onClick={() => executeTransformation(unstringifyJsonContent)}>
-          Un-stringify
         </ActionButton>
         <ActionButton onClick={() => executeTransformation(transformToCamelCase)}>
           Keys to camelCase

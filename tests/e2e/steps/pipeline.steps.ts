@@ -103,58 +103,42 @@ When('I set the pipeline input to:', async function (content: string) {
 });
 
 Then('the pipeline output should contain {string}', async function (expectedText: string) {
-  await this.pipeline.waitForPipelineExecution();
   await this.pipeline.expectOutputContains(expectedText);
 });
 
 Then('the pipeline output should contain "{string}"', async function (expectedText: string) {
-  await this.pipeline.waitForPipelineExecution();
   await this.pipeline.expectOutputContains(expectedText);
 });
 
 Then('the pipeline output should be {string}', async function (expectedText: string) {
-  await this.pipeline.waitForPipelineExecution();
   await this.pipeline.expectOutputEquals(expectedText);
 });
 
 Then('the pipeline output should be "{string}"', async function (expectedText: string) {
-  await this.pipeline.waitForPipelineExecution();
   await this.pipeline.expectOutputEquals(expectedText);
 });
 
 Then('the pipeline output should be:', async function (expectedText: string) {
-  await this.pipeline.waitForPipelineExecution();
   await this.pipeline.expectOutputEquals(expectedText);
 });
 
 Then('the pipeline output should show as modified', async function () {
-  await this.pipeline.waitForPipelineExecution();
   await this.pipeline.expectOutputModified();
 });
 
-When('I wait for the pipeline to execute', async function () {
-  await this.pipeline.waitForPipelineExecution();
-});
-
-// ========== ERROR HANDLING ==========
-
 Then('the pipeline should show an error', async function () {
-  await this.pipeline.waitForPipelineExecution();
   await this.pipeline.expectError();
 });
 
 Then('the pipeline should show error {string}', async function (errorMessage: string) {
-  await this.pipeline.waitForPipelineExecution();
   await this.pipeline.expectError(errorMessage);
 });
 
 Then('the pipeline should show error "{string}"', async function (errorMessage: string) {
-  await this.pipeline.waitForPipelineExecution();
   await this.pipeline.expectError(errorMessage);
 });
 
 Then('the pipeline footer should show error state', async function () {
-  await this.pipeline.waitForPipelineExecution();
   await this.pipeline.expectFooterShowsError();
 });
 
@@ -223,12 +207,11 @@ Then('the Apply Changes button should be disabled', async function () {
 // ========== EXECUTION STATS ==========
 
 Then('the execution time should be displayed', async function () {
-  await this.pipeline.waitForPipelineExecution();
+  //await this.pipeline.waitForPipelineExecution();
   await this.pipeline.expectExecutionTimeDisplayed();
 });
 
 Then('the pipeline should show success message', async function () {
-  await this.pipeline.waitForPipelineExecution();
   await this.pipeline.expectSuccessMessage();
 });
 
@@ -240,4 +223,8 @@ Then('the pipeline name should be displayed as {string}', async function (name: 
 
 Then('the pipeline name should be displayed as "{string}"', async function (name: string) {
   await this.pipeline.expectPipelineName(name);
+});
+
+Then('the pipeline output should not be empty', async function () {
+  await this.pipeline.expectOutputNotEmpty();
 });

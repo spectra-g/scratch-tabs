@@ -5,6 +5,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { parse as parseWithSourceMap } from "json-source-map";
 import { SmartViewProps } from "../../../views/registry";
 import { Toolbar } from "./components/Toolbar";
+import { EditorActions } from "./components/EditorActions";
 import { Navigator } from "./components/Navigator";
 import { Toolbox } from "./components/Toolbox";
 import { Insights } from "./components/Insights";
@@ -49,6 +50,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [currentPath, setCurrentPath] = useState("");
+  const [searchText, setSearchText] = useState("");
   const [isValid, setIsValid] = useState(true);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [activeRightTab, setActiveRightTab] = useState<'toolbox' | 'insights'>('toolbox');
@@ -207,7 +209,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
         editor.setPosition({ lineNumber: targetLine, column: targetColumn });
         editor.revealLineInCenter(targetLine);
         editor.setSelection(range);
-        editor.focus();
+        // Don't focus editor - let user continue typing in search
       } else {
         // If no key (e.g., root or array item), use value position
         if (location && location.value) {
@@ -224,7 +226,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
           editor.setPosition({ lineNumber: targetLine, column: targetColumn });
           editor.revealLineInCenter(targetLine);
           editor.setSelection(range);
-          editor.focus();
+          // Don't focus editor - let user continue typing in search
         } else {
           console.warn(`Path not found in JSON structure: ${path} (pointer: ${jsonPointer})`);
         }
@@ -243,7 +245,58 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
   const handleNodeSelect = useCallback((path: string) => {
     setCurrentPath(path);
     navigateToPath(path);
-  }, [navigateToPath]);
+    // Focus editor when clicking from Navigator
+    editor?.focus();
+  }, [navigateToPath, editor]);
+
+  // Find text functionality
+  const handleSearchTextChange = useCallback((text: string) => {
+    setSearchText(text);
+  }, []);
+
+  const handleFindNext = useCallback(() => {
+    if (!editor || !searchText.trim()) return;
+    const findController = editor.getContribution('editor.contrib.findController') as any;
+    if (findController) {
+      // Start the find widget with our search string
+      findController.start({
+        forceRevealReplace: false,
+        seedSearchStringFromSelection: 'none',
+        seedSearchStringFromNonEmptySelection: false,
+        seedSearchStringFromGlobalClipboard: false,
+        shouldFocus: 0, // Don't focus the find widget input
+        shouldAnimate: true,
+        updateSearchScope: false,
+        loop: true,
+      });
+      // Set our search string after starting
+      findController.setSearchString(searchText);
+      // Now trigger find next
+      editor.trigger('keyboard', 'editor.action.nextMatchFindAction', null);
+    }
+  }, [editor, searchText]);
+
+  const handleFindPrevious = useCallback(() => {
+    if (!editor || !searchText.trim()) return;
+    const findController = editor.getContribution('editor.contrib.findController') as any;
+    if (findController) {
+      // Start the find widget with our search string
+      findController.start({
+        forceRevealReplace: false,
+        seedSearchStringFromSelection: 'none',
+        seedSearchStringFromNonEmptySelection: false,
+        seedSearchStringFromGlobalClipboard: false,
+        shouldFocus: 0,
+        shouldAnimate: true,
+        updateSearchScope: false,
+        loop: true,
+      });
+      // Set our search string after starting
+      findController.setSearchString(searchText);
+      // Now trigger find previous
+      editor.trigger('keyboard', 'editor.action.previousMatchFindAction', null);
+    }
+  }, [editor, searchText]);
 
   return (
     <div className="flex flex-col h-full bg-canvas text-main" data-testid="json-smart-view-container">
@@ -260,6 +313,10 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
         editor={editor}
         onContentChange={onContentChange}
         tabId={tabId}
+        searchText={searchText}
+        onSearchTextChange={handleSearchTextChange}
+        onFindNext={handleFindNext}
+        onFindPrevious={handleFindPrevious}
       />
 
       {/* Main Content Area with Query Panel */}
@@ -295,6 +352,12 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
                 <div className="p-3 border-b border-base bg-surface-secondary">
                   <h3 className="text-sm font-medium text-main">Editor</h3>
                 </div>
+                {/* Action Ribbon */}
+                <EditorActions
+                  editor={editor}
+                  tabId={tabId}
+                  addTab={addTab}
+                />
                 <div className="flex-1">
                   <Editor
                     key={`json-editor-${tabId}-${side}`}
