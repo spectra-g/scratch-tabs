@@ -21,7 +21,6 @@ Feature: Transformations Pipeline
     And I right-click the "Scratch 1" tab
     And I select "Transformation Pipeline" from the context menu
     And I add the "Uppercase" operation
-    And I wait for the pipeline to execute
     Then the pipeline should have 1 steps
     And the pipeline output should be "HELLO WORLD"
     And the pipeline output should show as modified
@@ -32,7 +31,6 @@ Feature: Transformations Pipeline
     And I right-click the "Scratch 1" tab
     And I select "Transformation Pipeline" from the context menu
     And I add the "Trim Lines" operation
-    And I wait for the pipeline to execute
     Then the pipeline output should be "hello world"
 
   Scenario: Use a JSON format operation - Format JSON
@@ -44,7 +42,6 @@ Feature: Transformations Pipeline
     And I right-click the "Scratch 1" tab
     And I select "Transformation Pipeline" from the context menu
     And I add the "Format JSON" operation
-    And I wait for the pipeline to execute
     Then the pipeline output should contain "name"
     And the pipeline output should show as modified
 
@@ -60,7 +57,6 @@ Feature: Transformations Pipeline
     And I right-click the "Scratch 1" tab
     And I select "Transformation Pipeline" from the context menu
     And I add the "Minify JSON" operation
-    And I wait for the pipeline to execute
     Then the pipeline output should contain "{"
     And the pipeline output should show as modified
 
@@ -70,7 +66,6 @@ Feature: Transformations Pipeline
     And I right-click the "Scratch 1" tab
     And I select "Transformation Pipeline" from the context menu
     And I add the "Base64 Encode" operation
-    And I wait for the pipeline to execute
     Then the pipeline output should be "aGVsbG8="
     And the pipeline output should show as modified
 
@@ -80,7 +75,6 @@ Feature: Transformations Pipeline
     And I right-click the "Scratch 1" tab
     And I select "Transformation Pipeline" from the context menu
     And I add the "Base64 Decode" operation
-    And I wait for the pipeline to execute
     Then the pipeline output should be "hello"
 
   Scenario: Apply operation per line ON - Base64 encode each line separately
@@ -94,7 +88,6 @@ Feature: Transformations Pipeline
     And I select "Transformation Pipeline" from the context menu
     And I add the "Base64 Encode" operation
     And I toggle Apply per line for the current step
-    And I wait for the pipeline to execute
     Then the pipeline output should contain "aGVsbG8="
     And the pipeline output should contain "d29ybGQ="
 
@@ -108,7 +101,6 @@ Feature: Transformations Pipeline
     And I right-click the "Scratch 1" tab
     And I select "Transformation Pipeline" from the context menu
     And I add the "Base64 Encode" operation
-    And I wait for the pipeline to execute
     Then the pipeline output should contain "aGVsbG8Kd29ybGQ="
 
   Scenario: Save a pipeline and load it on another tab
@@ -119,7 +111,6 @@ Feature: Transformations Pipeline
     And I select "Transformation Pipeline" from the context menu
     And I add the "Uppercase" operation
     And I add the "Trim Lines" operation
-    And I wait for the pipeline to execute
     And I save the pipeline as "My Test Pipeline"
     Then the pipeline name should be displayed as "My Test Pipeline"
     When I close the Pipeline modal
@@ -130,7 +121,6 @@ Feature: Transformations Pipeline
     And I right-click the "Scratch 2" tab
     And I select "Transformation Pipeline" from the context menu
     And I load the saved pipeline "My Test Pipeline"
-    And I wait for the pipeline to execute
     # Verify the loaded pipeline works - output proves both operations loaded
     Then the pipeline output should be "ANOTHER TEST"
 
@@ -165,7 +155,6 @@ Feature: Transformations Pipeline
     And I add the "Uppercase" operation
     And I add the "Lowercase" operation
     And I add the "Trim Lines" operation
-    And I wait for the pipeline to execute
     Then the pipeline should have 10 steps
     And the pipeline should show success message
 
@@ -177,7 +166,6 @@ Feature: Transformations Pipeline
     And I add the "Trim Lines" operation
     And I add the "Uppercase" operation
     And I add the "Base64 Encode" operation
-    And I wait for the pipeline to execute
     Then the pipeline should have 3 steps
     # "HELLO WORLD" in Base64
     And the pipeline output should be "SEVMTE8gV09STEQ="
@@ -192,7 +180,6 @@ Feature: Transformations Pipeline
     And I select "Transformation Pipeline" from the context menu
     And I add the "Minify JSON" operation
     And I add the "Base64 Encode" operation
-    And I wait for the pipeline to execute
     Then the pipeline should have 2 steps
     And the pipeline output should show as modified
 
@@ -202,7 +189,6 @@ Feature: Transformations Pipeline
     And I right-click the "Scratch 1" tab
     And I select "Transformation Pipeline" from the context menu
     And I add the "Format JSON" operation
-    And I wait for the pipeline to execute
     Then the pipeline should show an error
     And the pipeline footer should show error state
 
@@ -212,7 +198,6 @@ Feature: Transformations Pipeline
     And I right-click the "Scratch 1" tab
     And I select "Transformation Pipeline" from the context menu
     And I add the "Base64 Decode" operation
-    And I wait for the pipeline to execute
     Then the pipeline should show an error
 
   Scenario: JavaScript snippet with syntax error shows error in output
@@ -222,7 +207,6 @@ Feature: Transformations Pipeline
     And I select "Transformation Pipeline" from the context menu
     And I add the "JavaScript Snippet" operation
     And I set parameter "JavaScript Code" to "return invalid syntax {"
-    And I wait for the pipeline to execute
     # JavaScript errors are caught and returned as output, not pipeline errors
     Then the pipeline output should contain "Error in script"
 
@@ -233,12 +217,10 @@ Feature: Transformations Pipeline
     And I select "Transformation Pipeline" from the context menu
     And I add the "Uppercase" operation
     And I add the "Base64 Encode" operation
-    And I wait for the pipeline to execute
     # Both steps enabled - output is Base64 of "HELLO"
     Then the pipeline output should be "SEVMTE8="
     # Disable the first step
     When I toggle step 1 enabled state
-    And I wait for the pipeline to execute
     # Only Base64 encode runs on "hello"
     Then the pipeline output should be "aGVsbG8="
 
@@ -249,7 +231,6 @@ Feature: Transformations Pipeline
     And I select "Transformation Pipeline" from the context menu
     And I add the "Uppercase" operation
     And I add the "Trim Lines" operation
-    And I wait for the pipeline to execute
     Then the pipeline should have 2 steps
     When I remove step 2
     Then the pipeline should have 1 steps
@@ -272,7 +253,6 @@ Feature: Transformations Pipeline
     And I right-click the "Scratch 1" tab
     And I select "Transformation Pipeline" from the context menu
     And I add the "Uppercase" operation
-    And I wait for the pipeline to execute
     Then the Apply Changes button should be enabled
     When I apply the pipeline changes
     Then the Pipeline modal should not be visible
@@ -293,7 +273,6 @@ Feature: Transformations Pipeline
     And I select "Transformation Pipeline" from the context menu
     And I add the "Uppercase" operation
     And I set the pipeline input to "new content"
-    And I wait for the pipeline to execute
     Then the pipeline output should be "NEW CONTENT"
 
   Scenario: Search for operations filters the list
@@ -303,7 +282,6 @@ Feature: Transformations Pipeline
     And I select "Transformation Pipeline" from the context menu
     And I search for operation "base64"
     And I add the "Base64 Encode" operation
-    And I wait for the pipeline to execute
     Then the pipeline output should be "aGVsbG8="
 
   Scenario: Operation with parameters - Keep First N Lines
@@ -320,7 +298,6 @@ Feature: Transformations Pipeline
     And I select "Transformation Pipeline" from the context menu
     And I add the "Keep First N Lines" operation
     And I set number parameter "Number of lines" to 2
-    And I wait for the pipeline to execute
     Then the pipeline output should contain "line1"
     And the pipeline output should contain "line2"
 
@@ -336,7 +313,6 @@ Feature: Transformations Pipeline
     And I add the "Add Prefix" operation
     And I set parameter "Prefix" to ">> "
     And I toggle Apply per line for the current step
-    And I wait for the pipeline to execute
     Then the pipeline output should contain ">> line1"
     And the pipeline output should contain ">> line2"
 
@@ -351,7 +327,6 @@ Feature: Transformations Pipeline
     And I right-click the "Scratch 1" tab
     And I select "Transformation Pipeline" from the context menu
     And I add the "Sort Lines" operation
-    And I wait for the pipeline to execute
     Then the pipeline output should be:
       """
       apple
@@ -365,7 +340,6 @@ Feature: Transformations Pipeline
     And I right-click the "Scratch 1" tab
     And I select "Transformation Pipeline" from the context menu
     And I add the "Uppercase" operation
-    And I wait for the pipeline to execute
     When I click Cancel in the Pipeline modal
     Then the Pipeline modal should not be visible
     # Original content unchanged
@@ -379,6 +353,178 @@ Feature: Transformations Pipeline
     And I add the "Uppercase" operation
     And I add the "Trim Lines" operation
     And I add the "Base64 Encode" operation
-    And I wait for the pipeline to execute
     Then the execution time should be displayed
     And the pipeline should show success message
+
+  Scenario: XML to JSON conversion
+    When I click the icon for "New tab"
+    And I type the following content into the active editor:
+      """
+      <root><name>John</name><age>30</age></root>
+      """
+    And I right-click the "Scratch 1" tab
+    And I select "Transformation Pipeline" from the context menu
+    And I add the "XML to JSON" operation
+    Then the pipeline output should contain "name"
+    And the pipeline output should contain "John"
+    And the pipeline output should show as modified
+
+  Scenario: JSON to XML conversion
+    When I click the icon for "New tab"
+    And I type the following content into the active editor:
+      """
+      {"person":{"name":"Jane","city":"NYC"}}
+      """
+    And I right-click the "Scratch 1" tab
+    And I select "Transformation Pipeline" from the context menu
+    And I add the "JSON to XML" operation
+    Then the pipeline output should contain "<person>"
+    And the pipeline output should contain "<name>Jane</name>"
+    And the pipeline output should show as modified
+
+  Scenario: CSV to JSON conversion
+    When I click the icon for "New tab"
+    And I type the following content into the active editor:
+      """
+      name,age,city
+      John,30,NYC
+      Jane,25,LA
+      """
+    And I right-click the "Scratch 1" tab
+    And I select "Transformation Pipeline" from the context menu
+    And I add the "CSV to JSON" operation
+    Then the pipeline output should contain "name"
+    And the pipeline output should contain "John"
+    And the pipeline output should contain "NYC"
+
+  Scenario: JSON to CSV conversion
+    When I click the icon for "New tab"
+    And I type the following content into the active editor:
+      """
+      [{"name":"John","age":30},{"name":"Jane","age":25}]
+      """
+    And I right-click the "Scratch 1" tab
+    And I select "Transformation Pipeline" from the context menu
+    And I add the "JSON to CSV" operation
+    Then the pipeline output should contain "name"
+    And the pipeline output should contain "John"
+    And the pipeline output should contain "Jane"
+
+  Scenario: CSV to Markdown Table conversion
+    When I click the icon for "New tab"
+    And I type the following content into the active editor:
+      """
+      name,score
+      Alice,95
+      Bob,87
+      """
+    And I right-click the "Scratch 1" tab
+    And I select "Transformation Pipeline" from the context menu
+    And I add the "CSV to Markdown" operation
+    Then the pipeline output should contain "| name | score |"
+    And the pipeline output should contain "| --- | --- |"
+    And the pipeline output should contain "| Alice | 95 |"
+
+  Scenario: Generate UUID
+    When I click the icon for "New tab"
+    And I type "placeholder" into the editor
+    And I right-click the "Scratch 1" tab
+    And I select "Transformation Pipeline" from the context menu
+    And I add the "Generate UUID" operation
+    # UUID format: 8-4-4-4-12 hex characters
+    Then the pipeline output should contain "-"
+    And the pipeline output should show as modified
+
+  Scenario: Generate Random String
+    When I click the icon for "New tab"
+    And I type "placeholder" into the editor
+    And I right-click the "Scratch 1" tab
+    And I select "Transformation Pipeline" from the context menu
+    And I add the "Generate Random String" operation
+    Then the pipeline output should not be empty
+    And the pipeline output should show as modified
+
+  Scenario: Text Statistics operation
+    When I click the icon for "New tab"
+    And I type the following content into the active editor:
+      """
+      Hello World.
+      This is a test.
+      """
+    And I right-click the "Scratch 1" tab
+    And I select "Transformation Pipeline" from the context menu
+    And I add the "Text Statistics" operation
+    Then the pipeline output should contain "Characters:"
+    And the pipeline output should contain "Words:"
+    And the pipeline output should contain "Lines:"
+
+  Scenario: Extract Numbers operation
+    When I click the icon for "New tab"
+    And I type the following content into the active editor:
+      """
+      Price: $50.99
+      Quantity: 10
+      Tax: 4.50
+      """
+    And I right-click the "Scratch 1" tab
+    And I select "Transformation Pipeline" from the context menu
+    And I add the "Extract Numbers" operation
+    Then the pipeline output should contain "50.99"
+    And the pipeline output should contain "10"
+    And the pipeline output should contain "4.50"
+
+  Scenario: Reverse Text operation - entire text
+    When I click the icon for "New tab"
+    And I type "Hello World" into the editor
+    And I right-click the "Scratch 1" tab
+    And I select "Transformation Pipeline" from the context menu
+    And I add the "Reverse Text" operation
+    Then the pipeline output should be "dlroW olleH"
+
+  Scenario: To Hex encoding operation
+    When I click the icon for "New tab"
+    And I type "ABC" into the editor
+    And I right-click the "Scratch 1" tab
+    And I select "Transformation Pipeline" from the context menu
+    And I add the "To Hex" operation
+    Then the pipeline output should contain "41"
+    And the pipeline output should contain "42"
+    And the pipeline output should contain "43"
+
+  Scenario: Generate Sequence operation
+    When I click the icon for "New tab"
+    And I type "placeholder" into the editor
+    And I right-click the "Scratch 1" tab
+    And I select "Transformation Pipeline" from the context menu
+    And I add the "Generate Sequence" operation
+    And I set number parameter "Start" to 1
+    And I set number parameter "End" to 5
+    Then the pipeline output should contain "1"
+    And the pipeline output should contain "2"
+    And the pipeline output should contain "3"
+    And the pipeline output should contain "4"
+    And the pipeline output should contain "5"
+
+  Scenario: Lorem Ipsum Generator
+    When I click the icon for "New tab"
+    And I type "placeholder" into the editor
+    And I right-click the "Scratch 1" tab
+    And I select "Transformation Pipeline" from the context menu
+    And I add the "Generate Lorem Ipsum" operation
+    Then the pipeline output should not be empty
+    And the pipeline output should show as modified
+
+  Scenario: Chain new operations - CSV to JSON to XML
+    When I click the icon for "New tab"
+    And I type the following content into the active editor:
+      """
+      name,value
+      test,123
+      """
+    And I right-click the "Scratch 1" tab
+    And I select "Transformation Pipeline" from the context menu
+    And I add the "CSV to JSON" operation
+    And I add the "JSON to XML" operation
+    Then the pipeline should have 2 steps
+    And the pipeline output should contain "<name>test</name>"
+    And the pipeline output should contain "<value>123</value>"

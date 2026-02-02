@@ -64,6 +64,7 @@ describe("Sidebar Component", () => {
         // Updated Mock for new Store Properties (width, setWidth, etc)
         (useSidebarStore as any).mockReturnValue({
             isSidebarExpanded: true,
+            isHydrated: true,
             sidebarWidth: 288,
             setSidebarWidth: jest.fn(),
             setSidebarExpanded: jest.fn(),
@@ -125,6 +126,7 @@ describe("Sidebar Component", () => {
 
         (useSidebarStore as any).mockReturnValue({
             isSidebarExpanded: true,
+            isHydrated: true,
             sidebarWidth: 288,
             setSidebarWidth: jest.fn(),
             setSidebarExpanded: jest.fn(),
@@ -172,6 +174,7 @@ describe("Sidebar Component", () => {
 
         (useSidebarStore as any).mockReturnValue({
             isSidebarExpanded: true,
+            isHydrated: true,
             sidebarWidth: 288,
             setSidebarWidth: jest.fn(),
             setSidebarExpanded: jest.fn(),
@@ -223,6 +226,7 @@ describe("Sidebar Component", () => {
         // Test expanding a collapsed workspace
         (useSidebarStore as any).mockReturnValue({
             isSidebarExpanded: true,
+            isHydrated: true,
             sidebarWidth: 288,
             setSidebarWidth: jest.fn(),
             setSidebarExpanded: jest.fn(),
@@ -250,6 +254,7 @@ describe("Sidebar Component", () => {
         jest.clearAllMocks();
         (useSidebarStore as any).mockReturnValue({
             isSidebarExpanded: true,
+            isHydrated: true,
             sidebarWidth: 288,
             setSidebarWidth: jest.fn(),
             setSidebarExpanded: jest.fn(),
@@ -304,6 +309,7 @@ describe("Sidebar Component", () => {
 
         (useSidebarStore as any).mockReturnValue({
             isSidebarExpanded: true,
+            isHydrated: true,
             sidebarWidth: 288,
             setSidebarWidth: jest.fn(),
             setSidebarExpanded: jest.fn(),
@@ -357,6 +363,7 @@ describe("Sidebar Component", () => {
 
         (useSidebarStore as any).mockReturnValue({
             isSidebarExpanded: true,
+            isHydrated: true,
             sidebarWidth: 288,
             setSidebarWidth: jest.fn(),
             setSidebarExpanded: jest.fn(),
@@ -413,6 +420,7 @@ describe("Sidebar Component", () => {
 
         (useSidebarStore as any).mockReturnValue({
             isSidebarExpanded: true,
+            isHydrated: true,
             sidebarWidth: 288,
             setSidebarWidth: jest.fn(),
             setSidebarExpanded: jest.fn(),
@@ -449,6 +457,7 @@ describe("Sidebar Component", () => {
 
         (useSidebarStore as any).mockReturnValue({
             isSidebarExpanded: false,
+            isHydrated: true,
             sidebarWidth: 288,
             setSidebarWidth: jest.fn(),
             setSidebarExpanded: jest.fn(),
@@ -498,6 +507,7 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isHydrated: true,
                 sidebarWidth: 288,
                 setSidebarWidth: jest.fn(),
                 setSidebarExpanded: jest.fn(),
@@ -555,6 +565,7 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isHydrated: true,
                 sidebarWidth: 288,
                 setSidebarWidth: jest.fn(),
                 setSidebarExpanded: jest.fn(),
@@ -601,6 +612,7 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isHydrated: true,
                 sidebarWidth: 288,
                 setSidebarWidth: jest.fn(),
                 setSidebarExpanded: jest.fn(),
@@ -643,6 +655,7 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isHydrated: true,
                 sidebarWidth: 288,
                 setSidebarWidth: jest.fn(),
                 setSidebarExpanded: jest.fn(),
@@ -690,6 +703,7 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isHydrated: true,
                 sidebarWidth: 288,
                 setSidebarWidth: jest.fn(),
                 setSidebarExpanded: jest.fn(),
@@ -719,6 +733,7 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isHydrated: true,
                 sidebarWidth: 288,
                 setSidebarWidth: jest.fn(),
                 setSidebarExpanded: jest.fn(),
@@ -766,6 +781,7 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isHydrated: true,
                 sidebarWidth: 288,
                 setSidebarWidth: jest.fn(),
                 setSidebarExpanded: jest.fn(),
@@ -811,6 +827,7 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isHydrated: true,
                 sidebarWidth: 288,
                 setSidebarWidth: jest.fn(),
                 setSidebarExpanded: jest.fn(),
@@ -852,6 +869,7 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isHydrated: true,
                 sidebarWidth: 288,
                 setSidebarWidth: jest.fn(),
                 setSidebarExpanded: jest.fn(),
@@ -895,6 +913,7 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isHydrated: true,
                 sidebarWidth: 288,
                 setSidebarWidth: jest.fn(),
                 setSidebarExpanded: jest.fn(),
@@ -934,6 +953,7 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isHydrated: true,
                 sidebarWidth: 288,
                 setSidebarWidth: jest.fn(),
                 setSidebarExpanded: jest.fn(),
@@ -976,6 +996,7 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isHydrated: true,
                 sidebarWidth: 288,
                 setSidebarWidth: jest.fn(),
                 setSidebarExpanded: jest.fn(),
@@ -1027,6 +1048,7 @@ describe("Sidebar Component", () => {
         it("should render mobile backdrop when isMobileOpen is true", () => {
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isHydrated: true,
                 sidebarWidth: 288,
                 setSidebarWidth: jest.fn(),
                 setSidebarExpanded: jest.fn(),
@@ -1052,6 +1074,7 @@ describe("Sidebar Component", () => {
         it("should not render backdrop when isMobileOpen is false", () => {
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isHydrated: true,
                 sidebarWidth: 288,
                 setSidebarWidth: jest.fn(),
                 setSidebarExpanded: jest.fn(),
@@ -1079,6 +1102,7 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isHydrated: true,
                 sidebarWidth: 288,
                 setSidebarWidth: jest.fn(),
                 setSidebarExpanded: jest.fn(),
@@ -1106,6 +1130,7 @@ describe("Sidebar Component", () => {
         it("should render close button on mobile", () => {
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isHydrated: true,
                 sidebarWidth: 288,
                 setSidebarWidth: jest.fn(),
                 setSidebarExpanded: jest.fn(),
@@ -1133,6 +1158,7 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isHydrated: true,
                 sidebarWidth: 288,
                 setSidebarWidth: jest.fn(),
                 setSidebarExpanded: jest.fn(),
@@ -1175,6 +1201,7 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isHydrated: true,
                 sidebarWidth: 288,
                 setSidebarWidth: jest.fn(),
                 setSidebarExpanded: jest.fn(),
@@ -1227,6 +1254,7 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isHydrated: true,
                 sidebarWidth: 288,
                 setSidebarWidth: jest.fn(),
                 setSidebarExpanded: jest.fn(),
@@ -1265,6 +1293,7 @@ describe("Sidebar Component", () => {
         it("should render resize handle when expanded", () => {
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isHydrated: true,
                 sidebarWidth: 288,
                 setSidebarWidth: jest.fn(),
                 setSidebarExpanded: jest.fn(),
@@ -1287,6 +1316,7 @@ describe("Sidebar Component", () => {
             const mockSetSidebarWidth = jest.fn();
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isHydrated: true,
                 sidebarWidth: 288,
                 setSidebarWidth: mockSetSidebarWidth,
                 setSidebarExpanded: jest.fn(),
@@ -1320,6 +1350,7 @@ describe("Sidebar Component", () => {
             const mockSetSidebarWidth = jest.fn();
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isHydrated: true,
                 sidebarWidth: 288,
                 setSidebarWidth: mockSetSidebarWidth,
                 setSidebarExpanded: mockSetSidebarExpanded,
@@ -1365,6 +1396,7 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isHydrated: true,
                 sidebarWidth: 288,
                 setSidebarWidth: mockSetSidebarWidth,
                 setSidebarExpanded: mockSetSidebarExpanded,
@@ -1419,6 +1451,7 @@ describe("Sidebar Component", () => {
 
             (useSidebarStore as any).mockReturnValue({
                 isSidebarExpanded: true,
+                isHydrated: true,
                 sidebarWidth: 288,
                 setSidebarWidth: mockSetSidebarWidth,
                 setSidebarExpanded: mockSetSidebarExpanded,
