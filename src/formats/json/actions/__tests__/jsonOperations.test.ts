@@ -15,19 +15,59 @@ describe('JSON Operations', () => {
     it('should format minified JSON with proper indentation', () => {
       const input = '{"name":"test","value":123}';
       const result = formatJson(input);
-      
+
       expect(result).toBe('{\n  "name": "test",\n  "value": 123\n}');
     });
 
     it('should format already formatted JSON', () => {
       const input = '{\n  "name": "test",\n  "value": 123\n}';
       const result = formatJson(input);
-      
+
       expect(result).toBe('{\n  "name": "test",\n  "value": 123\n}');
     });
 
     it('should throw error for invalid JSON', () => {
       expect(() => formatJson('invalid json')).toThrow();
+    });
+
+    it('should format JSON with 2 spaces indentation by default', () => {
+      const input = '{"name":"test","nested":{"value":123}}';
+      const result = formatJson(input);
+
+      expect(result).toContain('  "name"');
+      expect(result).toContain('  "nested"');
+      expect(result).toContain('    "value"');
+    });
+
+    it('should format JSON with 4 spaces indentation when specified', () => {
+      const input = '{"name":"test","nested":{"value":123}}';
+      const result = formatJson(input, 4);
+
+      // Check for 4-space indentation (should start with exactly 4 spaces)
+      const lines = result.split('\n');
+      expect(lines[1]).toMatch(/^    "name":/); // First level: 4 spaces
+      expect(lines[2]).toMatch(/^    "nested":/); // First level: 4 spaces
+      expect(lines[3]).toMatch(/^        "value":/); // Second level: 8 spaces
+    });
+
+    it('should format nested objects with correct indentation (2 spaces)', () => {
+      const input = '{"a":{"b":{"c":1}}}';
+      const result = formatJson(input, 2);
+
+      const lines = result.split('\n');
+      expect(lines[1]).toMatch(/^  "a":/);
+      expect(lines[2]).toMatch(/^    "b":/);
+      expect(lines[3]).toMatch(/^      "c":/);
+    });
+
+    it('should format nested objects with correct indentation (4 spaces)', () => {
+      const input = '{"a":{"b":{"c":1}}}';
+      const result = formatJson(input, 4);
+
+      const lines = result.split('\n');
+      expect(lines[1]).toMatch(/^    "a":/);
+      expect(lines[2]).toMatch(/^        "b":/);
+      expect(lines[3]).toMatch(/^            "c":/);
     });
   });
 
@@ -56,7 +96,7 @@ describe('JSON Operations', () => {
       const input = '{"zebra": 1, "apple": 2, "banana": 3}';
       const result = sortJsonKeys(input);
       const parsed = JSON.parse(result);
-      
+
       expect(Object.keys(parsed)).toEqual(['apple', 'banana', 'zebra']);
     });
 
@@ -64,7 +104,7 @@ describe('JSON Operations', () => {
       const input = '{"zebra": {"delta": 1, "alpha": 2}, "apple": 3}';
       const result = sortJsonKeys(input);
       const parsed = JSON.parse(result);
-      
+
       expect(Object.keys(parsed)).toEqual(['apple', 'zebra']);
       expect(Object.keys(parsed.zebra)).toEqual(['alpha', 'delta']);
     });
@@ -73,7 +113,7 @@ describe('JSON Operations', () => {
       const input = '[{"zebra": 1, "apple": 2}, {"delta": 3, "beta": 4}]';
       const result = sortJsonKeys(input);
       const parsed = JSON.parse(result);
-      
+
       expect(Object.keys(parsed[0])).toEqual(['apple', 'zebra']);
       expect(Object.keys(parsed[1])).toEqual(['beta', 'delta']);
     });
@@ -82,9 +122,27 @@ describe('JSON Operations', () => {
       const input = '{"zebra": null, "apple": 2}';
       const result = sortJsonKeys(input);
       const parsed = JSON.parse(result);
-      
+
       expect(Object.keys(parsed)).toEqual(['apple', 'zebra']);
       expect(parsed.zebra).toBe(null);
+    });
+
+    it('should sort keys with 2 spaces indentation by default', () => {
+      const input = '{"zebra": 1, "apple": 2}';
+      const result = sortJsonKeys(input);
+
+      expect(result).toContain('  "apple"');
+      expect(result).toContain('  "zebra"');
+    });
+
+    it('should sort keys with 4 spaces indentation when specified', () => {
+      const input = '{"zebra": 1, "apple": 2}';
+      const result = sortJsonKeys(input, 4);
+
+      // Check for 4-space indentation
+      const lines = result.split('\n');
+      expect(lines[1]).toMatch(/^    "apple":/); // 4 spaces
+      expect(lines[2]).toMatch(/^    "zebra":/); // 4 spaces
     });
   });
 
@@ -93,7 +151,7 @@ describe('JSON Operations', () => {
       const input = '{"user": {"name": "John", "age": 30}, "active": true}';
       const result = flattenJson(input);
       const parsed = JSON.parse(result);
-      
+
       expect(parsed).toEqual({
         'user.name': 'John',
         'user.age': 30,
@@ -105,7 +163,7 @@ describe('JSON Operations', () => {
       const input = '{"level1": {"level2": {"level3": {"value": "deep"}}}}';
       const result = flattenJson(input);
       const parsed = JSON.parse(result);
-      
+
       expect(parsed).toEqual({
         'level1.level2.level3.value': 'deep'
       });
@@ -115,7 +173,7 @@ describe('JSON Operations', () => {
       const input = '{"user": {"tags": ["admin", "user"]}, "count": 2}';
       const result = flattenJson(input);
       const parsed = JSON.parse(result);
-      
+
       expect(parsed).toEqual({
         'user.tags': ['admin', 'user'],
         'count': 2
@@ -127,6 +185,15 @@ describe('JSON Operations', () => {
       expect(() => flattenJson('"string"')).toThrow('Flatten requires a JSON object.');
       expect(() => flattenJson('123')).toThrow('Flatten requires a JSON object.');
     });
+
+    it('should flatten with 4 spaces indentation when specified', () => {
+      const input = '{"user": {"name": "John"}}';
+      const result = flattenJson(input, 4);
+
+      // Check for 4-space indentation
+      const lines = result.split('\n');
+      expect(lines[1]).toMatch(/^    "user\.name":/); // 4 spaces
+    });
   });
 
   describe('unflattenJson', () => {
@@ -134,7 +201,7 @@ describe('JSON Operations', () => {
       const input = '{"user.name": "John", "user.age": 30, "active": true}';
       const result = unflattenJson(input);
       const parsed = JSON.parse(result);
-      
+
       expect(parsed).toEqual({
         user: { name: 'John', age: 30 },
         active: true
@@ -145,7 +212,7 @@ describe('JSON Operations', () => {
       const input = '{"level1.level2.level3.value": "deep"}';
       const result = unflattenJson(input);
       const parsed = JSON.parse(result);
-      
+
       expect(parsed).toEqual({
         level1: { level2: { level3: { value: 'deep' } } }
       });
@@ -155,7 +222,7 @@ describe('JSON Operations', () => {
       const input = '{"user.name": "John", "tags": ["admin"], "config.debug": true}';
       const result = unflattenJson(input);
       const parsed = JSON.parse(result);
-      
+
       expect(parsed).toEqual({
         user: { name: 'John' },
         tags: ['admin'],
@@ -166,6 +233,14 @@ describe('JSON Operations', () => {
     it('should throw error for non-object input', () => {
       expect(() => unflattenJson('[1, 2, 3]')).toThrow('Unflatten requires a flat JSON object.');
     });
+
+    it('should unflatten with 4 spaces indentation when specified', () => {
+      const input = '{"user.name": "John"}';
+      const result = unflattenJson(input, 4);
+
+      expect(result).toContain('    "user"');
+      expect(result).toContain('        "name"');
+    });
   });
 
   describe('removeEmptyValues', () => {
@@ -173,7 +248,7 @@ describe('JSON Operations', () => {
       const input = '{"name": "John", "age": null, "active": true}';
       const result = removeEmptyValues(input);
       const parsed = JSON.parse(result);
-      
+
       expect(parsed).toEqual({ name: 'John', active: true });
     });
 
@@ -181,7 +256,7 @@ describe('JSON Operations', () => {
       const input = '{"name": "John", "nickname": "", "active": true}';
       const result = removeEmptyValues(input);
       const parsed = JSON.parse(result);
-      
+
       expect(parsed).toEqual({ name: 'John', active: true });
     });
 
@@ -189,7 +264,7 @@ describe('JSON Operations', () => {
       const input = '{"name": "John", "metadata": {}, "tags": [], "active": true}';
       const result = removeEmptyValues(input);
       const parsed = JSON.parse(result);
-      
+
       expect(parsed).toEqual({ name: 'John', active: true });
     });
 
@@ -197,7 +272,7 @@ describe('JSON Operations', () => {
       const input = '{"user": {"name": "John", "temp": null}, "config": {"debug": true}}';
       const result = removeEmptyValues(input);
       const parsed = JSON.parse(result);
-      
+
       expect(parsed).toEqual({
         user: { name: 'John' },
         config: { debug: true }
@@ -208,8 +283,17 @@ describe('JSON Operations', () => {
       const input = '[{"name": "John"}, {"name": null}, {"active": true}]';
       const result = removeEmptyValues(input);
       const parsed = JSON.parse(result);
-      
+
       expect(parsed).toEqual([{ name: 'John' }, { active: true }]);
+    });
+
+    it('should remove empty values with 4 spaces indentation when specified', () => {
+      const input = '{"name": "John", "age": null}';
+      const result = removeEmptyValues(input, 4);
+
+      // Check for 4-space indentation
+      const lines = result.split('\n');
+      expect(lines[1]).toMatch(/^    "name":/); // 4 spaces
     });
   });
 

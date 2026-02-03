@@ -407,6 +407,144 @@ describe("documentationGenerator", () => {
       });
     });
 
+    describe("keep-one mode", () => {
+      it("should keep only first item in array", () => {
+        const json = {
+          users: [
+            { name: "John", age: 30 },
+            { name: "Jane", age: 25 },
+            { name: "Bob", age: 35 },
+          ],
+        };
+
+        const config = {
+          users: "keep-one" as DocExportMode,
+        };
+
+        const result = generateDocumentationJson(json, config) as {
+          users: Array<{ name: string; age: number }>;
+        };
+
+        expect(result.users).toHaveLength(1);
+        expect(result.users[0]).toEqual({ name: "John", age: 30 });
+      });
+
+      it("should handle empty arrays", () => {
+        const json = {
+          tags: [] as string[],
+        };
+
+        const config = {
+          tags: "keep-one" as DocExportMode,
+        };
+
+        const result = generateDocumentationJson(json, config);
+        expect(result).toEqual({ tags: [] });
+      });
+
+      it("should keep first item with nested structure", () => {
+        const json = {
+          items: [
+            { id: 1, details: { name: "Item 1", price: 10 } },
+            { id: 2, details: { name: "Item 2", price: 20 } },
+            { id: 3, details: { name: "Item 3", price: 30 } },
+          ],
+        };
+
+        const config = {
+          items: "keep-one" as DocExportMode,
+        };
+
+        const result = generateDocumentationJson(json, config) as {
+          items: Array<{ id: number; details: { name: string; price: number } }>;
+        };
+
+        expect(result.items).toHaveLength(1);
+        expect(result.items[0]).toEqual({
+          id: 1,
+          details: { name: "Item 1", price: 10 },
+        });
+      });
+
+      it("should apply keep-one to nested arrays", () => {
+        const json = {
+          data: {
+            items: [
+              { tags: ["a", "b", "c"] },
+              { tags: ["d", "e", "f"] },
+            ],
+          },
+        };
+
+        const config = {
+          "data.items": "keep-one" as DocExportMode,
+        };
+
+        const result = generateDocumentationJson(json, config) as {
+          data: { items: Array<{ tags: string[] }> };
+        };
+
+        expect(result.data.items).toHaveLength(1);
+        expect(result.data.items[0]).toEqual({ tags: ["a", "b", "c"] });
+      });
+
+      it("should allow masking child properties while using keep-one on array", () => {
+        const json = {
+          users: [
+            { name: "John", password: "secret1" },
+            { name: "Jane", password: "secret2" },
+          ],
+        };
+
+        const config = {
+          users: "keep-one" as DocExportMode,
+          "users[0].password": "mask-value" as DocExportMode,
+        };
+
+        const result = generateDocumentationJson(json, config) as {
+          users: Array<{ name: string; password: string }>;
+        };
+
+        expect(result.users).toHaveLength(1);
+        expect(result.users[0].name).toBe("John");
+        expect(result.users[0].password).toBe("...");
+      });
+
+      it("should handle primitive arrays", () => {
+        const json = {
+          tags: ["javascript", "typescript", "react", "vue"],
+        };
+
+        const config = {
+          tags: "keep-one" as DocExportMode,
+        };
+
+        const result = generateDocumentationJson(json, config) as {
+          tags: string[];
+        };
+
+        expect(result.tags).toHaveLength(1);
+        expect(result.tags[0]).toBe("javascript");
+      });
+
+      it("should handle single-item arrays", () => {
+        const json = {
+          items: [{ id: 1 }],
+        };
+
+        const config = {
+          items: "keep-one" as DocExportMode,
+        };
+
+        const result = generateDocumentationJson(json, config) as {
+          items: Array<{ id: number }>;
+        };
+
+        expect(result.items).toHaveLength(1);
+        expect(result.items[0]).toEqual({ id: 1 });
+      });
+    });
+
     describe("edge cases", () => {
       it("should handle empty object", () => {
         const result = generateDocumentationJson({}, {});
@@ -450,7 +588,8 @@ describe("documentationGenerator", () => {
 
   describe("getNextMode", () => {
     it("should cycle through modes correctly", () => {
-      expect(getNextMode("keep")).toBe("mask-value");
+      expect(getNextMode("keep")).toBe("keep-one");
+      expect(getNextMode("keep-one")).toBe("mask-value");
       expect(getNextMode("mask-value")).toBe("mask-type");
       expect(getNextMode("mask-type")).toBe("remove");
       expect(getNextMode("remove")).toBe("keep");
@@ -461,6 +600,12 @@ describe("documentationGenerator", () => {
     it("should return correct display for keep", () => {
       const display = getModeDisplay("keep");
       expect(display.label).toBe("Keep");
+      expect(display.colorClass).toContain("success");
+    });
+
+    it("should return correct display for keep-one", () => {
+      const display = getModeDisplay("keep-one");
+      expect(display.label).toBe("Keep 1");
       expect(display.colorClass).toContain("success");
     });
 

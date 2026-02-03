@@ -22,10 +22,63 @@ describe('JSON Auto-Fix', () => {
     it('should fix single quotes to double quotes', () => {
       const invalidJson = "{'name': 'John', 'age': 30}";
       const result = autoFixJson(invalidJson);
-      
+
       expect(result.success).toBe(true);
       expect(result.fixedContent).toContain('"name"');
       expect(result.fixedContent).toContain('"John"');
+    });
+
+    it('should preserve single quotes inside valid double-quoted strings', () => {
+      const validJson = '{"name": "John\'s car", "city": "New York"}';
+      const result = autoFixJson(validJson);
+
+      expect(result.success).toBe(true);
+      expect(result.fixedContent).toContain("John's car");
+      expect(result.fixedContent).not.toContain("John\"s car");
+    });
+
+    it('should preserve single quotes in values when fixing trailing comma', () => {
+      const invalidJson = '{"name": "John\'s car",}';
+      const result = autoFixJson(invalidJson);
+
+      expect(result.success).toBe(true);
+      // Should remove trailing comma
+      expect(() => JSON.parse(result.fixedContent!)).not.toThrow();
+      // Should preserve single quote in value
+      expect(result.fixedContent).toContain("John's car");
+      expect(result.fixedContent).not.toContain("John\"s car");
+    });
+
+    it('should convert single-quote delimiters but preserve single quotes in double-quoted values', () => {
+      const mixedJson = "{'name': \"John's car\", 'city': 'New York'}";
+      const result = autoFixJson(mixedJson);
+
+      expect(result.success).toBe(true);
+      expect(() => JSON.parse(result.fixedContent!)).not.toThrow();
+      // Should have converted single quote delimiters to double quotes
+      expect(result.fixedContent).toContain('"name"');
+      expect(result.fixedContent).toContain('"city"');
+      // Should preserve single quote in the value
+      expect(result.fixedContent).toContain("John's car");
+    });
+
+    it('should handle multiple single quotes in string values', () => {
+      const validJson = '{"text": "It\'s John\'s and Mary\'s car"}';
+      const result = autoFixJson(validJson);
+
+      expect(result.success).toBe(true);
+      expect(result.fixedContent).toContain("It's John's and Mary's car");
+      // Should not convert these single quotes to double quotes
+      expect(result.fixedContent).not.toContain("It\"s");
+      expect(result.fixedContent).not.toContain("Mary\"s");
+    });
+
+    it('should handle escaped single quotes in string values', () => {
+      const validJson = '{"name": "John\\"s car"}';
+      const result = autoFixJson(validJson);
+
+      expect(result.success).toBe(true);
+      expect(() => JSON.parse(result.fixedContent!)).not.toThrow();
     });
 
     it('should fix missing commas between properties', () => {
@@ -187,6 +240,26 @@ describe('JSON Auto-Fix', () => {
       const result = formatFixedJson(invalidJson);
 
       expect(result).toBe(invalidJson);
+    });
+
+    it('should format JSON with 2 spaces indentation by default', () => {
+      const json = '{"name":"John","nested":{"value":123}}';
+      const formatted = formatFixedJson(json);
+
+      expect(formatted).toContain('  "name"');
+      expect(formatted).toContain('  "nested"');
+      expect(formatted).toContain('    "value"');
+    });
+
+    it('should format JSON with 4 spaces indentation when specified', () => {
+      const json = '{"name":"John","nested":{"value":123}}';
+      const formatted = formatFixedJson(json, 4);
+
+      // Check for 4-space indentation
+      const lines = formatted.split('\n');
+      expect(lines[1]).toMatch(/^    "name":/); // First level: 4 spaces
+      expect(lines[2]).toMatch(/^    "nested":/); // First level: 4 spaces
+      expect(lines[3]).toMatch(/^        "value":/); // Second level: 8 spaces
     });
   });
 
