@@ -167,7 +167,7 @@ export class SidebarActions {
    * @param workspaceName - The name of the workspace
    */
   async expectWorkspaceActive(workspaceName: string) {
-    const workspace = this.page.locator('[data-testid^="sidebar-workspace-"]').filter({ hasText: workspaceName }).first();
+    const workspace = this.page.locator('div[data-testid^="sidebar-workspace-"]').filter({ hasText: workspaceName }).first();
     await expect(workspace).toHaveAttribute('aria-selected', 'true');
   }
 
@@ -176,7 +176,7 @@ export class SidebarActions {
    * @param workspaceName - The name of the workspace
    */
   async expectWorkspaceInactive(workspaceName: string) {
-    const workspace = this.page.locator('[data-testid^="sidebar-workspace-"]').filter({ hasText: workspaceName }).first();
+    const workspace = this.page.locator('div[data-testid^="sidebar-workspace-"]').filter({ hasText: workspaceName }).first();
     await expect(workspace).toHaveAttribute('aria-selected', 'false');
   }
 
@@ -311,6 +311,10 @@ export class SidebarActions {
     const createButton = this.page.locator('[data-testid="sidebar-create-workspace"]');
     await expect(createButton).toBeVisible();
     await createButton.click();
+
+    const input = this.page.getByTestId('workspace-rename-input');
+    await expect(input).toBeVisible();
+    await this.page.keyboard.press('Enter');
   }
 
   /**

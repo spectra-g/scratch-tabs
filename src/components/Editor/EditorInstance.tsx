@@ -23,6 +23,7 @@ import { useClipboardStore } from "../../stores/clipboardStore";
 import { useCalloutStore } from "../../stores/calloutStore";
 import { SmartViewCalloutWidget } from "./SmartViewCalloutWidget";
 import { useThemeStore } from "../../stores/themeStore";
+import { useSidebarStore } from "../../stores/sidebarStore";
 
 interface EditorInstanceProps {
   side: "left" | "right";
@@ -115,6 +116,9 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
 
   // Theme Store
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
+
+  // Sidebar Store (for focus management)
+  const sidebarEditingId = useSidebarStore((state) => state.editingId);
 
   // --- Ref to hold the latest activeTab data ---
   const latestActiveTabRef = useRef(activeTab);
@@ -227,8 +231,10 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
           });
         }
 
-        // Focus the editor
-        editor.focus();
+        // Focus the editor only if sidebar is not in editing mode
+        if (!useSidebarStore.getState().editingId) {
+          editor.focus();
+        }
 
         currentTabIdRef.current = activeTabWithoutCursor.id;
       } catch (error) {
@@ -267,7 +273,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
       ((side === "left" && activeTabId === splitView.activeLeftTabId) ||
         (side === "right" && activeTabId === splitView.activeRightTabId));
 
-    if (shouldFocus) {
+    if (shouldFocus && !sidebarEditingId) {
       const timer = setTimeout(() => {
         try {
           if (
@@ -283,7 +289,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [side, activeTabId, activeEditorSide]);
+  }, [side, activeTabId, activeEditorSide, sidebarEditingId]);
 
 
   // Image paste handler - extracted to custom hook

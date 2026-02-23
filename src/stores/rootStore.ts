@@ -31,8 +31,8 @@ interface RootStore {
   addTab: (tab: Tab, toRightSide?: boolean) => void;
   handleNewPopulatedTab: (tab: Partial<Tab>, toRightSide?: boolean) => Promise<string | undefined>;
   addBackgroundTab: (tab: Tab, toRightSide?: boolean) => void;
-  handleNewTab: (isRightSide: boolean, content?: string) => void;
-  handleNewTabFromPaste: (isRightSide: boolean) => void;
+  handleNewTab: (isRightSide: boolean, content?: string) => Promise<string | undefined>;
+  handleNewTabFromPaste: (isRightSide: boolean) => Promise<string | undefined>;
   removeTab: (id: string) => void;
   setActiveTab: (id: string) => void;
   updateTabContent: (id: string, content: string) => void;
@@ -177,12 +177,15 @@ const _createImageTab = async (
   const newTabObject = createFinalTabObjectFn({
     isRich: true,
     content: '', // Rich text tabs use richContent, not content
-    richContent: null, // Will be initialized by the editor with the pending image
+    richContent: undefined, // Will be initialized by the editor with the pending image
   }, ensuredWorkspaceId, {
     defaultTitle,
   });
 
   addTab(newTabObject, isRightSide);
+
+  // Trigger inline editing in sidebar
+  useSidebarStore.getState().setEditingId(newTabObject.id, newTabObject.title);
 };
 
 export const useRootStore = create<RootStore>((set, get) => {
@@ -209,7 +212,7 @@ export const useRootStore = create<RootStore>((set, get) => {
       id: partialInputTab.id || crypto.randomUUID(),
       title: partialInputTab.title || options.defaultTitle,
       content: content,
-      richContent: partialInputTab.richContent || null,
+      richContent: partialInputTab.richContent || undefined,
       language: partialInputTab.language || language,
       languageLocked: partialInputTab.languageLocked ?? languageLocked,
       isRich: partialInputTab.isRich ?? false,
@@ -301,16 +304,19 @@ export const useRootStore = create<RootStore>((set, get) => {
 
       addTab(newTabObject, toRightSide);
 
+      // Trigger inline editing in sidebar
+      useSidebarStore.getState().setEditingId(newTabObject.id, newTabObject.title);
+
       return newTabObject.id;
     },
 
     handleNewTab: async (isRightSide, content) => {
       const { canAddNewTab, addTab } = get();
-      if (!canAddNewTab(isRightSide)) return;
+      if (!canAddNewTab(isRightSide)) return undefined;
       const ensuredWorkspaceId = await useWorkspaceStore
         .getState()
         .ensureWorkspace();
-      if (!ensuredWorkspaceId) return;
+      if (!ensuredWorkspaceId) return undefined;
 
       // Ensure the workspace is expanded in the sidebar
       // This is especially important when creating from the welcome screen
@@ -328,29 +334,37 @@ export const useRootStore = create<RootStore>((set, get) => {
         initialContent: content,
       });
       addTab(newTabObject, isRightSide);
+
+      // Trigger inline editing in sidebar
+      useSidebarStore.getState().setEditingId(newTabObject.id, newTabObject.title);
+
+      return newTabObject.id;
     },
 
     handleNewTabFromPaste: async (isRightSide) => {
       try {
         const imageDataUrl = await _extractImageFromClipboard();
         if (imageDataUrl) {
+          // Note: _createImageTab doesn't return the ID yet, but for now we follow the existing pattern
           await _createImageTab(imageDataUrl, isRightSide, get(), _createFinalTabObject);
-          return;
+          // We can't easily get the ID from _createImageTab without refactoring it too
+          // but handleNewTab below returns it.
+          return undefined;
         }
 
         // No images found, fall back to text content
         const content = await navigator.clipboard.readText();
-        get().handleNewTab(isRightSide, content);
+        return get().handleNewTab(isRightSide, content);
       } catch (error) {
         // Fallback to text-only if clipboard API fails
         console.warn('Clipboard API failed, falling back to text:', error);
-        navigator.clipboard
-          .readText()
-          .then((content) => get().handleNewTab(isRightSide, content))
-          .catch(() => {
-            // If even text reading fails, create an empty tab
-            get().handleNewTab(isRightSide, '');
-          });
+        try {
+          const content = await navigator.clipboard.readText();
+          return get().handleNewTab(isRightSide, content);
+        } catch {
+          // If even text reading fails, create an empty tab
+          return get().handleNewTab(isRightSide, '');
+        }
       }
     },
 

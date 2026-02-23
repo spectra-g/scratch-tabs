@@ -48,38 +48,122 @@ import { IconRail } from "./IconRail";
 import { SidebarDraggableTab } from "./SidebarDraggableTab";
 import { SidebarDraggableWorkspace } from "./SidebarDraggableWorkspace";
 
-const ROW_HEIGHT = 32;
-const MIN_WIDTH = 150;
+const ROW_HEIGHT = 28;
+const MIN_WIDTH = 120;
 const MAX_WIDTH = 600;
-const SNAP_THRESHOLD = 100;
+const SNAP_THRESHOLD = 80;
 
 type TreeItem =
     | { type: 'workspace'; id: string; name: string; isExpanded: boolean; isActive: boolean; tabCount: number }
     | { type: 'tab'; id: string; title: string; language: string; workspaceId: string; isActive: boolean; isPinned?: boolean; isTablet?: boolean; isRich?: boolean };
 
-export const Sidebar: React.FC = () => {
-    const { workspaces, activeWorkspaceId, switchWorkspace, createWorkspace } = useWorkspaceStore();
-    const { tabs: activeTabs } = useTabsStore();
-    const { setActiveTab, moveTabBetweenWorkspaces, reorderTabsInWorkspace, navigateBack, navigateForward } = useRootStore();
-    const { canGoBack, canGoForward } = useNavigationStore();
+interface SidebarRowData {
+    treeItems: TreeItem[];
+    switchingToWorkspaceId: string | null;
+    searchQuery: string;
+    handleWorkspaceClick: (wsId: string, isExpanded: boolean, tabCount: number) => Promise<void>;
+    switchWorkspace: (workspaceId: string) => Promise<void>;
+    handleWorkspaceContextMenu: (e: React.MouseEvent, workspaceId: string) => void;
+    handleTabClick: (tabId: string, workspaceId: string) => Promise<void>;
+    handleTabContextMenu: (e: React.MouseEvent, tabId: string, workspaceId: string) => void;
+}
+
+const SidebarRow = React.memo(({ index, style, data }: { index: number; style: React.CSSProperties; data: SidebarRowData }) => {
     const {
-        isSidebarExpanded,
-        isMobileOpen,
-        setMobileOpen,
-        toggleSidebar,
-        expandedWorkspaceIds,
-        workspaceTabsMetadata,
-        expandWorkspace,
-        collapseWorkspace,
+        treeItems,
+        switchingToWorkspaceId,
         searchQuery,
-        setSearchQuery,
-        refreshWorkspaceMetadata,
-        sidebarWidth,
-        setSidebarWidth,
-        setSidebarExpanded,
-        initializeSidebarState,
-        isHydrated
-    } = useSidebarStore();
+        handleWorkspaceClick,
+        switchWorkspace,
+        handleWorkspaceContextMenu,
+        handleTabClick,
+        handleTabContextMenu
+    } = data;
+
+    const item = treeItems[index];
+    if (!item) return null;
+
+    if (item.type === 'workspace') {
+        const isSwitching = switchingToWorkspaceId === item.id;
+        const isVisuallyExpanded = item.isExpanded || !!searchQuery;
+
+        return (
+            <SidebarDraggableWorkspace
+                key={item.id}
+                id={item.id}
+                name={item.name}
+                isExpanded={item.isExpanded}
+                isActive={item.isActive}
+                tabCount={item.tabCount}
+                isSwitching={isSwitching}
+                isVisuallyExpanded={isVisuallyExpanded}
+                style={style}
+                onClick={() => handleWorkspaceClick(item.id, item.isExpanded, item.tabCount)}
+                onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    if (item.isActive) {
+                        useSidebarStore.getState().setEditingId(item.id, item.name);
+                    } else {
+                        switchWorkspace(item.id);
+                    }
+                }}
+                onContextMenu={(e) => handleWorkspaceContextMenu(e, item.id)}
+            />
+        );
+    }
+
+    return (
+        <SidebarDraggableTab
+            key={item.id}
+            id={item.id}
+            title={item.title}
+            language={item.language}
+            workspaceId={item.workspaceId}
+            isActive={item.isActive}
+            isPinned={item.isPinned}
+            isTablet={item.isTablet}
+            isRich={item.isRich}
+            style={style}
+            onClick={() => handleTabClick(item.id, item.workspaceId)}
+            onContextMenu={(e) => handleTabContextMenu(e, item.id, item.workspaceId)}
+        />
+    );
+});
+
+SidebarRow.displayName = 'SidebarRow';
+
+export const Sidebar: React.FC = () => {
+    const workspaces = useWorkspaceStore(s => s.workspaces);
+    const activeWorkspaceId = useWorkspaceStore(s => s.activeWorkspaceId);
+    const switchWorkspace = useWorkspaceStore(s => s.switchWorkspace);
+    const createWorkspace = useWorkspaceStore(s => s.createWorkspace);
+
+    const activeTabs = useTabsStore(s => s.tabs);
+
+    const setActiveTab = useRootStore(s => s.setActiveTab);
+    const moveTabBetweenWorkspaces = useRootStore(s => s.moveTabBetweenWorkspaces);
+    const reorderTabsInWorkspace = useRootStore(s => s.reorderTabsInWorkspace);
+    const navigateBack = useRootStore(s => s.navigateBack);
+    const navigateForward = useRootStore(s => s.navigateForward);
+
+    const canGoBack = useNavigationStore(s => s.canGoBack);
+    const canGoForward = useNavigationStore(s => s.canGoForward);
+    const isSidebarExpanded = useSidebarStore(s => s.isSidebarExpanded);
+    const isMobileOpen = useSidebarStore(s => s.isMobileOpen);
+    const setMobileOpen = useSidebarStore(s => s.setMobileOpen);
+    const toggleSidebar = useSidebarStore(s => s.toggleSidebar);
+    const expandedWorkspaceIds = useSidebarStore(s => s.expandedWorkspaceIds);
+    const workspaceTabsMetadata = useSidebarStore(s => s.workspaceTabsMetadata);
+    const expandWorkspace = useSidebarStore(s => s.expandWorkspace);
+    const collapseWorkspace = useSidebarStore(s => s.collapseWorkspace);
+    const searchQuery = useSidebarStore(s => s.searchQuery);
+    const setSearchQuery = useSidebarStore(s => s.setSearchQuery);
+    const refreshWorkspaceMetadata = useSidebarStore(s => s.refreshWorkspaceMetadata);
+    const sidebarWidth = useSidebarStore(s => s.sidebarWidth);
+    const setSidebarWidth = useSidebarStore(s => s.setSidebarWidth);
+    const setSidebarExpanded = useSidebarStore(s => s.setSidebarExpanded);
+    const initializeSidebarState = useSidebarStore(s => s.initializeSidebarState);
+    const isHydrated = useSidebarStore(s => s.isHydrated);
 
     const { splitView } = useSplitViewStore();
     const activeTabId = splitView?.activeSide === 'right' ? splitView?.activeRightTabId : splitView?.activeLeftTabId;
@@ -100,7 +184,6 @@ export const Sidebar: React.FC = () => {
     const { isImportModalActive, openImportModal, closeImportModal } = useModalStore();
 
     // Drag and drop state
-    const [activeId, setActiveId] = useState<string | null>(null);
     const [draggedTab, setDraggedTab] = useState<SidebarTabInfo | null>(null);
     const [draggedWorkspace, setDraggedWorkspace] = useState<{ id: string, name: string } | null>(null);
 
@@ -407,7 +490,6 @@ export const Sidebar: React.FC = () => {
     // Drag and drop handlers
     const handleDragStart = (event: DragStartEvent) => {
         const { active } = event;
-        setActiveId(active.id as string);
 
         // Find the dragged tab info
         if (active.data.current?.type === "tab") {
@@ -443,7 +525,6 @@ export const Sidebar: React.FC = () => {
     const handleDragEnd = async (event: DragEndEvent) => {
         const { active, over } = event;
 
-        setActiveId(null);
         setDraggedTab(null);
         setDraggedWorkspace(null);
 
@@ -572,51 +653,20 @@ export const Sidebar: React.FC = () => {
         }
     };
 
-    const renderRow = ({ index, style }: { index: number; style: React.CSSProperties }) => {
-        const item = treeItems[index];
-        if (!item) return null;
+    const itemData = useMemo((): SidebarRowData => ({
+        treeItems,
+        switchingToWorkspaceId,
+        searchQuery,
+        handleWorkspaceClick,
+        switchWorkspace,
+        handleWorkspaceContextMenu,
+        handleTabClick,
+        handleTabContextMenu
+    }), [treeItems, switchingToWorkspaceId, searchQuery, handleWorkspaceClick, switchWorkspace, handleWorkspaceContextMenu, handleTabClick, handleTabContextMenu]);
 
-        if (item.type === 'workspace') {
-            const isSwitching = switchingToWorkspaceId === item.id;
-            // If we have a search query, visually force expand indicator
-            const isVisuallyExpanded = item.isExpanded || !!searchQuery;
-
-            return (
-                <SidebarDraggableWorkspace
-                    id={item.id}
-                    name={item.name}
-                    isExpanded={item.isExpanded}
-                    isActive={item.isActive}
-                    tabCount={item.tabCount}
-                    isSwitching={isSwitching}
-                    isVisuallyExpanded={isVisuallyExpanded}
-                    style={style}
-                    onClick={() => handleWorkspaceClick(item.id, item.isExpanded, item.tabCount)}
-                    onDoubleClick={(e) => {
-                        e.stopPropagation();
-                        switchWorkspace(item.id);
-                    }}
-                    onContextMenu={(e) => handleWorkspaceContextMenu(e, item.id)}
-                />
-            );
-        }
-
-        return (
-            <SidebarDraggableTab
-                id={item.id}
-                title={item.title}
-                language={item.language}
-                workspaceId={item.workspaceId}
-                isActive={item.isActive}
-                isPinned={item.isPinned}
-                isTablet={item.isTablet}
-                isRich={item.isRich}
-                style={style}
-                onClick={() => handleTabClick(item.id, item.workspaceId)}
-                onContextMenu={(e) => handleTabContextMenu(e, item.id, item.workspaceId)}
-            />
-        );
-    };
+    const itemKey = useCallback((index: number) => {
+        return treeItems[index]?.id || index;
+    }, [treeItems]);
 
     const listContainerRef = useRef<HTMLDivElement>(null);
     const listRef = useRef<List>(null);
@@ -743,16 +793,24 @@ export const Sidebar: React.FC = () => {
                                         <ArrowRight size={14} />
                                     </button>
                                 </div>
-                                <h2 className="text-xs font-bold uppercase tracking-wider text-secondary">Explorer</h2>
+                                <h2 className="text-[11px] font-bold uppercase tracking-wider text-secondary">Explorer</h2>
                             </div>
                             <div className="flex gap-1">
                                 <button
-                                    onClick={() => createWorkspace("New Workspace")}
+                                    onClick={async () => {
+                                        const { createWorkspace } = useWorkspaceStore.getState();
+                                        const newId = await createWorkspace("New Workspace");
+                                        if (newId) {
+                                            const { setEditingId, expandWorkspace } = useSidebarStore.getState();
+                                            expandWorkspace(newId);
+                                            setEditingId(newId, "New Workspace");
+                                        }
+                                    }}
                                     className="p-1 hover:bg-element-hover rounded text-secondary hover:text-main"
                                     title="New Workspace"
                                     data-testid="sidebar-create-workspace"
                                 >
-                                    <Plus size={16} />
+                                    <Plus size={14} />
                                 </button>
                                 {/* Desktop only: collapse button */}
                                 <button
@@ -779,7 +837,7 @@ export const Sidebar: React.FC = () => {
                             <input
                                 type="text"
                                 placeholder="Filter tabs..."
-                                className="w-full bg-canvas border border-base rounded py-1 pl-8 pr-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                className="w-full bg-canvas border border-base rounded py-0.5 pl-7 pr-2 text-[12px] focus:outline-none focus:ring-1 focus:ring-primary"
                                 value={searchInputValue}
                                 onChange={(e) => setSearchInputValue(e.target.value)}
                                 data-testid="sidebar-search"
@@ -794,10 +852,12 @@ export const Sidebar: React.FC = () => {
                                 height={listHeight}
                                 itemCount={treeItems.length}
                                 itemSize={ROW_HEIGHT}
+                                itemKey={itemKey}
                                 width="100%"
                                 className="custom-scrollbar"
+                                itemData={itemData}
                             >
-                                {renderRow}
+                                {SidebarRow}
                             </List>
                         ) : (
                             <div className="p-4 text-center text-secondary text-sm italic">
@@ -810,7 +870,7 @@ export const Sidebar: React.FC = () => {
                     <div className="px-2 h-[29px] border-t border-base flex items-center justify-between gap-1 flex-shrink-0">
                         <button
                             onClick={() => openImportModal()}
-                            className="flex-1 flex items-center justify-center gap-1.5 px-2 h-full text-[11px] text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
+                            className="flex-1 flex items-center justify-center gap-1.5 px-2 h-full text-[12px] text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
                             title="Import Workspaces"
                         >
                             <Upload size={12} />
@@ -819,7 +879,7 @@ export const Sidebar: React.FC = () => {
                         <div className="w-px h-3 bg-base self-center" />
                         <button
                             onClick={() => setIsExportModalOpen(true)}
-                            className="flex-1 flex items-center justify-center gap-1.5 px-2 h-full text-[11px] text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
+                            className="flex-1 flex items-center justify-center gap-1.5 px-2 h-full text-[12px] text-secondary hover:text-main hover:bg-element-hover rounded transition-colors"
                             title="Export Workspaces"
                         >
                             <Download size={12} />

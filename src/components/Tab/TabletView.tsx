@@ -10,7 +10,6 @@ import { tabletRegistry } from "../../tablets";
 import { Tab } from "../../types.ts";
 import { TabletErrorBoundary } from "../Tablet/TabletErrorBoundary";
 import { useRootStore } from "../../stores";
-import { useTabletCounting } from "../../tablets/utils/useTabletCounting";
 import { TabletContextProvider } from "../../tablets/bridge/context";
 import { isChunkLoadError, handleChunkLoadError } from "../../utils/chunkLoadUtils";
 
@@ -50,10 +49,6 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
       return null;
     }
   }, [tab.tabletState, tab.isTablet]);
-
-  // Count tablet usage (production only, privacy-respecting)
-  // Pass tab.id as uniqueKey to ensure tracking fires for each new tab instance
-  useTabletCounting(tabletType || '', tab.id);
 
   // Parse state only when needed for rendering
   const state = useMemo(() => {

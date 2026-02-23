@@ -25,6 +25,10 @@ interface SidebarState {
     loadingWorkspaceIds: Set<string>;
     searchQuery: string;
 
+    // Inline editing state
+    editingId: string | null;
+    editingValue: string;
+
     toggleSidebar: () => void;
     setSidebarExpanded: (expanded: boolean) => void;
     setSidebarWidth: (width: number) => void;
@@ -35,10 +39,14 @@ interface SidebarState {
     refreshWorkspaceMetadata: (workspaceId: string) => Promise<void>;
     handleMetadataUpdate: (workspaceId: string, metadata: SidebarTabInfo[]) => void;
     initializeSidebarState: () => Promise<void>;
+
+    // Inline editing actions
+    setEditingId: (id: string | null, initialValue?: string) => void;
+    setEditingValue: (value: string) => void;
 }
 
 const SIDEBAR_CONFIG_KEY = "sidebar_config";
-const DEFAULT_SIDEBAR_WIDTH = 225;
+const DEFAULT_SIDEBAR_WIDTH = 200;
 
 // Helper function to save sidebar state to IndexedDB
 const saveSidebarState = async (state: Partial<SidebarPersistedState>) => {
@@ -76,7 +84,7 @@ export const useSidebarStore = create<SidebarState>((set, get) => {
         isSidebarExpanded: true,
         // Mobile: closed by default to maximize editor space
         isMobileOpen: false,
-        // Default width 240px
+        // Default width 200px
         sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
         // Not hydrated until initializeSidebarState completes
         isHydrated: false,
@@ -85,6 +93,9 @@ export const useSidebarStore = create<SidebarState>((set, get) => {
         workspaceTabsMetadata: new Map<string, SidebarTabInfo[]>(),
         loadingWorkspaceIds: new Set<string>(),
         searchQuery: "",
+
+        editingId: null,
+        editingValue: "",
 
         toggleSidebar: () => {
             set((state) => {
@@ -247,5 +258,8 @@ export const useSidebarStore = create<SidebarState>((set, get) => {
                 set({ isHydrated: true });
             }
         },
+
+        setEditingId: (id, initialValue = "") => set({ editingId: id, editingValue: initialValue }),
+        setEditingValue: (value) => set({ editingValue: value }),
     };
 });

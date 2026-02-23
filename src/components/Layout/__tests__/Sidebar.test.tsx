@@ -24,6 +24,13 @@ jest.mock("../../../stores/splitViewStore", () => ({
     useSplitViewStore: jest.fn(),
 }));
 
+// Helper to handle selector-based store mocks
+const mockStore = (hook: any, state: any) => {
+    (hook as any).mockImplementation((selector?: (s: any) => any) =>
+        selector ? selector(state) : state
+    );
+};
+
 // Mock IconRail component
 jest.mock("../IconRail", () => ({
     IconRail: () => <div className="hidden md:flex flex-col w-[42px]" data-testid="icon-rail">IconRail</div>,
@@ -46,23 +53,23 @@ describe("Sidebar Component", () => {
     beforeEach(() => {
         jest.clearAllMocks();
 
-        (useWorkspaceStore as any).mockReturnValue({
+        mockStore(useWorkspaceStore, {
             workspaces: mockWorkspaces,
             activeWorkspaceId: "ws-1",
             switchWorkspace: jest.fn(),
             createWorkspace: jest.fn(),
         });
 
-        (useTabsStore as any).mockReturnValue({
+        mockStore(useTabsStore, {
             tabs: [],
         });
 
-        (useRootStore as any).mockReturnValue({
+        mockStore(useRootStore, {
             setActiveTab: jest.fn(),
         });
 
         // Updated Mock for new Store Properties (width, setWidth, etc)
-        (useSidebarStore as any).mockReturnValue({
+        mockStore(useSidebarStore, {
             isSidebarExpanded: true,
             isHydrated: true,
             sidebarWidth: 288,
@@ -78,9 +85,13 @@ describe("Sidebar Component", () => {
             setSearchQuery: jest.fn(),
             refreshWorkspaceMetadata: jest.fn(),
             initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+            editingId: null,
+            editingValue: "",
+            setEditingId: jest.fn(),
+            setEditingValue: jest.fn(),
         });
 
-        (useSplitViewStore as any).mockReturnValue({
+        mockStore(useSplitViewStore, {
             splitView: {
                 activeSide: "left",
                 activeLeftTabId: null,
@@ -111,11 +122,11 @@ describe("Sidebar Component", () => {
             { id: "tab-1", title: "Test Tab", language: "typescript", lastModified: 0, workspaceId: "ws-1", dateCreated: 0, content: "", languageLocked: false, cursorPosition: { lineNumber: 1, column: 1 } }
         ];
 
-        (useTabsStore as any).mockReturnValue({
+        mockStore(useTabsStore, {
             tabs: mockTabsWithContent,
         });
 
-        (useSplitViewStore as any).mockReturnValue({
+        mockStore(useSplitViewStore, {
             splitView: {
                 activeSide: "left",
                 activeLeftTabId: "tab-1",
@@ -124,7 +135,7 @@ describe("Sidebar Component", () => {
             },
         });
 
-        (useSidebarStore as any).mockReturnValue({
+        mockStore(useSidebarStore, {
             isSidebarExpanded: true,
             isHydrated: true,
             sidebarWidth: 288,
@@ -140,6 +151,10 @@ describe("Sidebar Component", () => {
             setSearchQuery: jest.fn(),
             refreshWorkspaceMetadata: jest.fn(),
             initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+            editingId: null,
+            editingValue: "",
+            setEditingId: jest.fn(),
+            setEditingValue: jest.fn(),
         });
 
         render(<Sidebar />);
@@ -152,18 +167,18 @@ describe("Sidebar Component", () => {
 
     it("calls switchWorkspace when an empty workspace is clicked and not active", async () => {
         const switchWorkspace = jest.fn().mockResolvedValue(undefined);
-        (useWorkspaceStore as any).mockReturnValue({
+        mockStore(useWorkspaceStore, {
             workspaces: mockWorkspaces,
             activeWorkspaceId: "ws-2", // Different active workspace
             switchWorkspace,
             createWorkspace: jest.fn(),
         });
 
-        (useTabsStore as any).mockReturnValue({
+        mockStore(useTabsStore, {
             tabs: [], // Empty workspace
         });
 
-        (useSplitViewStore as any).mockReturnValue({
+        mockStore(useSplitViewStore, {
             splitView: {
                 activeSide: "left",
                 activeLeftTabId: null,
@@ -172,7 +187,7 @@ describe("Sidebar Component", () => {
             },
         });
 
-        (useSidebarStore as any).mockReturnValue({
+        mockStore(useSidebarStore, {
             isSidebarExpanded: true,
             isHydrated: true,
             sidebarWidth: 288,
@@ -188,6 +203,10 @@ describe("Sidebar Component", () => {
             setSearchQuery: jest.fn(),
             refreshWorkspaceMetadata: jest.fn(),
             initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+            editingId: null,
+            editingValue: "",
+            setEditingId: jest.fn(),
+            setEditingValue: jest.fn(),
         });
 
         render(<Sidebar />);
@@ -203,18 +222,18 @@ describe("Sidebar Component", () => {
         const collapseWorkspace = jest.fn();
         const switchWorkspace = jest.fn().mockResolvedValue(undefined);
 
-        (useWorkspaceStore as any).mockReturnValue({
+        mockStore(useWorkspaceStore, {
             workspaces: mockWorkspaces,
             activeWorkspaceId: "ws-1", // Same workspace is active
             switchWorkspace,
             createWorkspace: jest.fn(),
         });
 
-        (useTabsStore as any).mockReturnValue({
+        mockStore(useTabsStore, {
             tabs: [], // Empty workspace
         });
 
-        (useSplitViewStore as any).mockReturnValue({
+        mockStore(useSplitViewStore, {
             splitView: {
                 activeSide: "left",
                 activeLeftTabId: null,
@@ -224,7 +243,7 @@ describe("Sidebar Component", () => {
         });
 
         // Test expanding a collapsed workspace
-        (useSidebarStore as any).mockReturnValue({
+        mockStore(useSidebarStore, {
             isSidebarExpanded: true,
             isHydrated: true,
             sidebarWidth: 288,
@@ -252,7 +271,7 @@ describe("Sidebar Component", () => {
 
         // Now test collapsing an expanded workspace
         jest.clearAllMocks();
-        (useSidebarStore as any).mockReturnValue({
+        mockStore(useSidebarStore, {
             isSidebarExpanded: true,
             isHydrated: true,
             sidebarWidth: 288,
@@ -286,11 +305,11 @@ describe("Sidebar Component", () => {
             { id: "tab-1", title: "Test Tab", language: "typescript", lastModified: 0, workspaceId: "ws-1", dateCreated: 0, content: "", languageLocked: false, cursorPosition: { lineNumber: 1, column: 1 } }
         ];
 
-        (useTabsStore as any).mockReturnValue({
+        mockStore(useTabsStore, {
             tabs: mockTabsWithContent,
         });
 
-        (useSplitViewStore as any).mockReturnValue({
+        mockStore(useSplitViewStore, {
             splitView: {
                 activeSide: "left",
                 activeLeftTabId: "tab-1",
@@ -300,14 +319,14 @@ describe("Sidebar Component", () => {
         });
 
         // Test with workspace not active and collapsed
-        (useWorkspaceStore as any).mockReturnValue({
+        mockStore(useWorkspaceStore, {
             workspaces: mockWorkspaces,
             activeWorkspaceId: "ws-2", // Different workspace is active
             switchWorkspace: jest.fn(),
             createWorkspace: jest.fn(),
         });
 
-        (useSidebarStore as any).mockReturnValue({
+        mockStore(useSidebarStore, {
             isSidebarExpanded: true,
             isHydrated: true,
             sidebarWidth: 288,
@@ -341,18 +360,18 @@ describe("Sidebar Component", () => {
             { id: "tab-1", title: "Test Tab", language: "typescript", lastModified: 0, workspaceId: "ws-1", dateCreated: 0, content: "", languageLocked: false, cursorPosition: { lineNumber: 1, column: 1 } }
         ];
 
-        (useWorkspaceStore as any).mockReturnValue({
+        mockStore(useWorkspaceStore, {
             workspaces: mockWorkspaces,
             activeWorkspaceId: "ws-1", // This workspace IS active
             switchWorkspace,
             createWorkspace: jest.fn(),
         });
 
-        (useTabsStore as any).mockReturnValue({
+        mockStore(useTabsStore, {
             tabs: mockTabsWithContent,
         });
 
-        (useSplitViewStore as any).mockReturnValue({
+        mockStore(useSplitViewStore, {
             splitView: {
                 activeSide: "left",
                 activeLeftTabId: "tab-1",
@@ -361,7 +380,7 @@ describe("Sidebar Component", () => {
             },
         });
 
-        (useSidebarStore as any).mockReturnValue({
+        mockStore(useSidebarStore, {
             isSidebarExpanded: true,
             isHydrated: true,
             sidebarWidth: 288,
@@ -398,18 +417,18 @@ describe("Sidebar Component", () => {
             { id: "tab-1", title: "Test Tab", language: "typescript", lastModified: 0, workspaceId: "ws-1", dateCreated: 0, content: "", languageLocked: false, cursorPosition: { lineNumber: 1, column: 1 } }
         ];
 
-        (useWorkspaceStore as any).mockReturnValue({
+        mockStore(useWorkspaceStore, {
             workspaces: mockWorkspaces,
             activeWorkspaceId: "ws-1", // This workspace IS active
             switchWorkspace,
             createWorkspace: jest.fn(),
         });
 
-        (useTabsStore as any).mockReturnValue({
+        mockStore(useTabsStore, {
             tabs: mockTabsWithContent,
         });
 
-        (useSplitViewStore as any).mockReturnValue({
+        mockStore(useSplitViewStore, {
             splitView: {
                 activeSide: "left",
                 activeLeftTabId: "tab-1",
@@ -418,7 +437,7 @@ describe("Sidebar Component", () => {
             },
         });
 
-        (useSidebarStore as any).mockReturnValue({
+        mockStore(useSidebarStore, {
             isSidebarExpanded: true,
             isHydrated: true,
             sidebarWidth: 288,
@@ -455,7 +474,7 @@ describe("Sidebar Component", () => {
             value: 1024,
         });
 
-        (useSidebarStore as any).mockReturnValue({
+        mockStore(useSidebarStore, {
             isSidebarExpanded: false,
             isHydrated: true,
             sidebarWidth: 288,
@@ -501,11 +520,11 @@ describe("Sidebar Component", () => {
                 { id: "tab-1", title: "Test Tab", language: "typescript", lastModified: 0, workspaceId: "ws-1" }
             ];
 
-            (useTabsStore as any).mockReturnValue({
+            mockStore(useTabsStore, {
                 tabs: mockTabs,
             });
 
-            (useSidebarStore as any).mockReturnValue({
+            mockStore(useSidebarStore, {
                 isSidebarExpanded: true,
                 isHydrated: true,
                 sidebarWidth: 288,
@@ -520,10 +539,10 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
-            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+                initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
-            (useSplitViewStore as any).mockReturnValue({
+            mockStore(useSplitViewStore, {
                 splitView: {
                     activeSide: "left",
                     activeLeftTabId: "tab-1",
@@ -559,11 +578,11 @@ describe("Sidebar Component", () => {
                 { id: "tab-3", title: "Tab 3", language: "python", lastModified: 0, workspaceId: "ws-1" }
             ];
 
-            (useTabsStore as any).mockReturnValue({
+            mockStore(useTabsStore, {
                 tabs: mockTabs,
             });
 
-            (useSidebarStore as any).mockReturnValue({
+            mockStore(useSidebarStore, {
                 isSidebarExpanded: true,
                 isHydrated: true,
                 sidebarWidth: 288,
@@ -578,10 +597,10 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
-            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+                initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
-            (useSplitViewStore as any).mockReturnValue({
+            mockStore(useSplitViewStore, {
                 splitView: {
                     activeSide: "left",
                     activeLeftTabId: "tab-2",
@@ -606,11 +625,11 @@ describe("Sidebar Component", () => {
                 { id: "tab-1", title: "Active Tab", language: "typescript", lastModified: 0, workspaceId: "ws-1" }
             ];
 
-            (useTabsStore as any).mockReturnValue({
+            mockStore(useTabsStore, {
                 tabs: mockTabs,
             });
 
-            (useSidebarStore as any).mockReturnValue({
+            mockStore(useSidebarStore, {
                 isSidebarExpanded: true,
                 isHydrated: true,
                 sidebarWidth: 288,
@@ -625,10 +644,10 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
-            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+                initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
-            (useSplitViewStore as any).mockReturnValue({
+            mockStore(useSplitViewStore, {
                 splitView: {
                     activeSide: "left",
                     activeLeftTabId: "tab-1",
@@ -639,7 +658,7 @@ describe("Sidebar Component", () => {
 
             const { container } = render(<Sidebar />);
 
-            const activeTab = screen.getByText("Active Tab").closest('.flex');
+            const activeTab = screen.getByText("Active Tab").closest('.cursor-pointer');
             expect(activeTab).toHaveClass("bg-primary-subtle");
         });
 
@@ -649,11 +668,11 @@ describe("Sidebar Component", () => {
                 { id: "tab-2", title: "JavaScript File", language: "javascript", lastModified: 0, workspaceId: "ws-1" }
             ];
 
-            (useTabsStore as any).mockReturnValue({
+            mockStore(useTabsStore, {
                 tabs: mockTabs,
             });
 
-            (useSidebarStore as any).mockReturnValue({
+            mockStore(useSidebarStore, {
                 isSidebarExpanded: true,
                 isHydrated: true,
                 sidebarWidth: 288,
@@ -666,10 +685,10 @@ describe("Sidebar Component", () => {
                 searchQuery: "typescript",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
-            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+                initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
-            (useSplitViewStore as any).mockReturnValue({
+            mockStore(useSplitViewStore, {
                 splitView: {
                     activeSide: "left",
                     activeLeftTabId: "tab-1",
@@ -694,14 +713,14 @@ describe("Sidebar Component", () => {
                 { id: "ws-2", name: "Inactive Workspace", createdAt: 0, lastAccessed: 0, links: [] }
             ];
 
-            (useWorkspaceStore as any).mockReturnValue({
+            mockStore(useWorkspaceStore, {
                 workspaces: mockWorkspaces,
                 activeWorkspaceId: "ws-1",
                 switchWorkspace: jest.fn(),
                 createWorkspace: jest.fn(),
             });
 
-            (useSidebarStore as any).mockReturnValue({
+            mockStore(useSidebarStore, {
                 isSidebarExpanded: true,
                 isHydrated: true,
                 sidebarWidth: 288,
@@ -731,7 +750,7 @@ describe("Sidebar Component", () => {
             jest.useFakeTimers();
             const mockSetSearchQuery = jest.fn();
 
-            (useSidebarStore as any).mockReturnValue({
+            mockStore(useSidebarStore, {
                 isSidebarExpanded: true,
                 isHydrated: true,
                 sidebarWidth: 288,
@@ -744,7 +763,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: mockSetSearchQuery,
                 refreshWorkspaceMetadata: jest.fn(),
-            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+                initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             render(<Sidebar />);
@@ -775,11 +794,11 @@ describe("Sidebar Component", () => {
                 { id: "tab-1", title: "Test Tab", language: "typescript", lastModified: 0, workspaceId: "ws-1" }
             ];
 
-            (useTabsStore as any).mockReturnValue({
+            mockStore(useTabsStore, {
                 tabs: mockTabs,
             });
 
-            (useSidebarStore as any).mockReturnValue({
+            mockStore(useSidebarStore, {
                 isSidebarExpanded: true,
                 isHydrated: true,
                 sidebarWidth: 288,
@@ -792,10 +811,10 @@ describe("Sidebar Component", () => {
                 searchQuery: "test", // Active search query
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
-            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+                initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
-            (useSplitViewStore as any).mockReturnValue({
+            mockStore(useSplitViewStore, {
                 splitView: {
                     activeSide: "left",
                     activeLeftTabId: "tab-1",
@@ -807,7 +826,7 @@ describe("Sidebar Component", () => {
             render(<Sidebar />);
 
             // The workspace should appear expanded (chevron down) even though it's collapsed
-            const workspace = screen.getByText("Workspace 1").closest('.flex');
+            const workspace = screen.getByText("Workspace 1").closest('.cursor-pointer');
 
             // We can't easily check the icon itself, but we can verify the tab is visible
             expect(screen.getByText("Test Tab")).toBeInTheDocument();
@@ -821,11 +840,11 @@ describe("Sidebar Component", () => {
                 { id: "tab-1", title: "Tab 1", language: "typescript", lastModified: 0, workspaceId: "ws-1" }
             ];
 
-            (useTabsStore as any).mockReturnValue({
+            mockStore(useTabsStore, {
                 tabs: mockTabs,
             });
 
-            (useSidebarStore as any).mockReturnValue({
+            mockStore(useSidebarStore, {
                 isSidebarExpanded: true,
                 isHydrated: true,
                 sidebarWidth: 288,
@@ -838,10 +857,10 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
-            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+                initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
-            (useSplitViewStore as any).mockReturnValue({
+            mockStore(useSplitViewStore, {
                 splitView: {
                     activeSide: "left",
                     activeLeftTabId: "tab-1", // Active tab is tab-1
@@ -863,11 +882,11 @@ describe("Sidebar Component", () => {
                 { id: "tab-3", title: "Tab 3", language: "python", lastModified: 0, workspaceId: "ws-1" }
             ];
 
-            (useTabsStore as any).mockReturnValue({
+            mockStore(useTabsStore, {
                 tabs: mockTabs,
             });
 
-            (useSidebarStore as any).mockReturnValue({
+            mockStore(useSidebarStore, {
                 isSidebarExpanded: true,
                 isHydrated: true,
                 sidebarWidth: 288,
@@ -882,10 +901,10 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
-            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+                initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
-            (useSplitViewStore as any).mockReturnValue({
+            mockStore(useSplitViewStore, {
                 splitView: {
                     activeSide: "left",
                     activeLeftTabId: "tab-2", // Active tab is tab-2
@@ -897,7 +916,7 @@ describe("Sidebar Component", () => {
             const { container } = render(<Sidebar />);
 
             // The active tab should be highlighted
-            const activeTab = screen.getByText("Tab 2").closest('.flex');
+            const activeTab = screen.getByText("Tab 2").closest('.cursor-pointer');
             expect(activeTab).toHaveClass("bg-primary-subtle");
         });
 
@@ -907,11 +926,11 @@ describe("Sidebar Component", () => {
                 { id: "tab-1", title: "Tab 1", language: "typescript", lastModified: 0, workspaceId: "ws-1" }
             ];
 
-            (useTabsStore as any).mockReturnValue({
+            mockStore(useTabsStore, {
                 tabs: mockTabs,
             });
 
-            (useSidebarStore as any).mockReturnValue({
+            mockStore(useSidebarStore, {
                 isSidebarExpanded: true,
                 isHydrated: true,
                 sidebarWidth: 288,
@@ -924,10 +943,10 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
-            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+                initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
-            (useSplitViewStore as any).mockReturnValue({
+            mockStore(useSplitViewStore, {
                 splitView: {
                     activeSide: "left",
                     activeLeftTabId: "tab-999", // Non-existent tab
@@ -947,11 +966,11 @@ describe("Sidebar Component", () => {
                 { id: "tab-1", title: "Tab 1", language: "typescript", lastModified: 0, workspaceId: "ws-1" }
             ];
 
-            (useTabsStore as any).mockReturnValue({
+            mockStore(useTabsStore, {
                 tabs: mockTabs,
             });
 
-            (useSidebarStore as any).mockReturnValue({
+            mockStore(useSidebarStore, {
                 isSidebarExpanded: true,
                 isHydrated: true,
                 sidebarWidth: 288,
@@ -966,10 +985,10 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
-            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+                initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
-            (useSplitViewStore as any).mockReturnValue({
+            mockStore(useSplitViewStore, {
                 splitView: {
                     activeSide: "left",
                     activeLeftTabId: null, // No active tab
@@ -990,11 +1009,11 @@ describe("Sidebar Component", () => {
                 { id: "tab-2", title: "Tab 2", language: "javascript", lastModified: 0, workspaceId: "ws-1" }
             ];
 
-            (useTabsStore as any).mockReturnValue({
+            mockStore(useTabsStore, {
                 tabs: mockTabs,
             });
 
-            (useSidebarStore as any).mockReturnValue({
+            mockStore(useSidebarStore, {
                 isSidebarExpanded: true,
                 isHydrated: true,
                 sidebarWidth: 288,
@@ -1009,10 +1028,10 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
-            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+                initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
-            (useSplitViewStore as any).mockReturnValue({
+            mockStore(useSplitViewStore, {
                 splitView: {
                     activeSide: "right", // Active side is right
                     activeLeftTabId: "tab-1",
@@ -1025,7 +1044,7 @@ describe("Sidebar Component", () => {
             render(<Sidebar />);
 
             // The active tab (tab-2) should be highlighted
-            const activeTab = screen.getByText("Tab 2").closest('.flex');
+            const activeTab = screen.getByText("Tab 2").closest('.cursor-pointer');
             expect(activeTab).toHaveClass("bg-primary-subtle");
         });
     });
@@ -1046,7 +1065,7 @@ describe("Sidebar Component", () => {
         });
 
         it("should render mobile backdrop when isMobileOpen is true", () => {
-            (useSidebarStore as any).mockReturnValue({
+            mockStore(useSidebarStore, {
                 isSidebarExpanded: true,
                 isHydrated: true,
                 sidebarWidth: 288,
@@ -1061,7 +1080,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
-            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+                initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             render(<Sidebar />);
@@ -1072,7 +1091,7 @@ describe("Sidebar Component", () => {
         });
 
         it("should not render backdrop when isMobileOpen is false", () => {
-            (useSidebarStore as any).mockReturnValue({
+            mockStore(useSidebarStore, {
                 isSidebarExpanded: true,
                 isHydrated: true,
                 sidebarWidth: 288,
@@ -1087,7 +1106,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
-            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+                initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             render(<Sidebar />);
@@ -1100,7 +1119,7 @@ describe("Sidebar Component", () => {
         it("should close sidebar on backdrop click", () => {
             const mockSetMobileOpen = jest.fn();
 
-            (useSidebarStore as any).mockReturnValue({
+            mockStore(useSidebarStore, {
                 isSidebarExpanded: true,
                 isHydrated: true,
                 sidebarWidth: 288,
@@ -1115,7 +1134,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
-            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+                initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             render(<Sidebar />);
@@ -1128,7 +1147,7 @@ describe("Sidebar Component", () => {
         });
 
         it("should render close button on mobile", () => {
-            (useSidebarStore as any).mockReturnValue({
+            mockStore(useSidebarStore, {
                 isSidebarExpanded: true,
                 isHydrated: true,
                 sidebarWidth: 288,
@@ -1143,7 +1162,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
-            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+                initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             render(<Sidebar />);
@@ -1156,7 +1175,7 @@ describe("Sidebar Component", () => {
         it("should close sidebar when close button is clicked", () => {
             const mockSetMobileOpen = jest.fn();
 
-            (useSidebarStore as any).mockReturnValue({
+            mockStore(useSidebarStore, {
                 isSidebarExpanded: true,
                 isHydrated: true,
                 sidebarWidth: 288,
@@ -1171,7 +1190,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
-            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+                initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             render(<Sidebar />);
@@ -1191,15 +1210,15 @@ describe("Sidebar Component", () => {
                 { id: "tab-1", title: "Tab 1", language: "typescript", lastModified: 0, workspaceId: "ws-1" }
             ];
 
-            (useTabsStore as any).mockReturnValue({
+            mockStore(useTabsStore, {
                 tabs: mockTabs,
             });
 
-            (useRootStore as any).mockReturnValue({
+            mockStore(useRootStore, {
                 setActiveTab: mockSetActiveTab,
             });
 
-            (useSidebarStore as any).mockReturnValue({
+            mockStore(useSidebarStore, {
                 isSidebarExpanded: true,
                 isHydrated: true,
                 sidebarWidth: 288,
@@ -1214,10 +1233,10 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
-            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+                initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
-            (useSplitViewStore as any).mockReturnValue({
+            mockStore(useSplitViewStore, {
                 splitView: {
                     activeSide: "left",
                     activeLeftTabId: "tab-1",
@@ -1244,15 +1263,15 @@ describe("Sidebar Component", () => {
                 { id: "tab-1", title: "Tab 1", language: "typescript", lastModified: 0, workspaceId: "ws-1" }
             ];
 
-            (useTabsStore as any).mockReturnValue({
+            mockStore(useTabsStore, {
                 tabs: mockTabs,
             });
 
-            (useRootStore as any).mockReturnValue({
+            mockStore(useRootStore, {
                 setActiveTab: mockSetActiveTab,
             });
 
-            (useSidebarStore as any).mockReturnValue({
+            mockStore(useSidebarStore, {
                 isSidebarExpanded: true,
                 isHydrated: true,
                 sidebarWidth: 288,
@@ -1267,10 +1286,10 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
-            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+                initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
-            (useSplitViewStore as any).mockReturnValue({
+            mockStore(useSplitViewStore, {
                 splitView: {
                     activeSide: "left",
                     activeLeftTabId: "tab-1",
@@ -1291,7 +1310,7 @@ describe("Sidebar Component", () => {
 
     describe("Resizing Behavior", () => {
         it("should render resize handle when expanded", () => {
-            (useSidebarStore as any).mockReturnValue({
+            mockStore(useSidebarStore, {
                 isSidebarExpanded: true,
                 isHydrated: true,
                 sidebarWidth: 288,
@@ -1304,7 +1323,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
-            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+                initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             const { container } = render(<Sidebar />);
@@ -1314,7 +1333,7 @@ describe("Sidebar Component", () => {
 
         it("should call setSidebarWidth on mouseUp after resizing", () => {
             const mockSetSidebarWidth = jest.fn();
-            (useSidebarStore as any).mockReturnValue({
+            mockStore(useSidebarStore, {
                 isSidebarExpanded: true,
                 isHydrated: true,
                 sidebarWidth: 288,
@@ -1327,7 +1346,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
-            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+                initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             const { container } = render(<Sidebar />);
@@ -1348,7 +1367,7 @@ describe("Sidebar Component", () => {
         it("should snap to collapse when resized below threshold", () => {
             const mockSetSidebarExpanded = jest.fn();
             const mockSetSidebarWidth = jest.fn();
-            (useSidebarStore as any).mockReturnValue({
+            mockStore(useSidebarStore, {
                 isSidebarExpanded: true,
                 isHydrated: true,
                 sidebarWidth: 288,
@@ -1361,7 +1380,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
-            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+                initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             const { container } = render(<Sidebar />);
@@ -1387,14 +1406,14 @@ describe("Sidebar Component", () => {
                 { id: "ws-2", name: "Workspace 2", createdAt: 0, lastAccessed: 0, links: [] },
             ];
 
-            (useWorkspaceStore as any).mockReturnValue({
+            mockStore(useWorkspaceStore, {
                 workspaces: mockWorkspaces,
                 activeWorkspaceId: "ws-1",
                 switchWorkspace: jest.fn(),
                 createWorkspace: jest.fn(),
             });
 
-            (useSidebarStore as any).mockReturnValue({
+            mockStore(useSidebarStore, {
                 isSidebarExpanded: true,
                 isHydrated: true,
                 sidebarWidth: 288,
@@ -1407,7 +1426,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
-            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+                initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             const { container, rerender } = render(<Sidebar />);
@@ -1442,14 +1461,14 @@ describe("Sidebar Component", () => {
                 { id: "ws-1", name: "Workspace 1", createdAt: 0, lastAccessed: 0, links: [] },
             ];
 
-            (useWorkspaceStore as any).mockReturnValue({
+            mockStore(useWorkspaceStore, {
                 workspaces: mockWorkspaces,
                 activeWorkspaceId: "ws-1",
                 switchWorkspace: jest.fn(),
                 createWorkspace: jest.fn(),
             });
 
-            (useSidebarStore as any).mockReturnValue({
+            mockStore(useSidebarStore, {
                 isSidebarExpanded: true,
                 isHydrated: true,
                 sidebarWidth: 288,
@@ -1462,7 +1481,7 @@ describe("Sidebar Component", () => {
                 searchQuery: "",
                 setSearchQuery: jest.fn(),
                 refreshWorkspaceMetadata: jest.fn(),
-            initializeSidebarState: jest.fn().mockResolvedValue(undefined),
+                initializeSidebarState: jest.fn().mockResolvedValue(undefined),
             });
 
             const { container } = render(<Sidebar />);

@@ -15,12 +15,35 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.23.0';
+export const APP_VERSION = '1.23.1';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.23.0",
+    "version": "1.23.1",
     "type": "latest",
+    "date": "2026-02-23",
+    "headline": "Sidebar Polish & Inline Renaming",
+    "summary": "Introducing inline renaming for workspaces and tabs directly in the sidebar, plus performance and UX improvements",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Inline Sidebar Renaming:** Rename workspaces and tabs directly in the sidebar tree without opening separate modals. Simply double-click or use the context menu to enter edit mode."
+        ]
+      },
+      {
+        "name": "Improvements",
+        "changes": [
+          "**E2E Execution Stability:** Optimized timing for sidebar creation and renaming actions to ensure more reliable automated test runs.",
+          "**Sidebar State Management:** Improved workspace expansion logic to ensure new workspaces are automatically revealed and expanded in the explorer.",
+          "**Data-Driven Assertions:** Added dedicated test identifiers to sidebar inputs for better observability and testability."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.23.0",
+    "type": "release",
     "date": "2026-02-01",
     "headline": "JSON Smart View Enhancements & 25 New Pipeline Operations",
     "summary": "Streamlined JSON toolbar with quick-access Stringify/Unstringify, redesigned JMESPath Query Panel, plus 25 new transformation pipeline operations",

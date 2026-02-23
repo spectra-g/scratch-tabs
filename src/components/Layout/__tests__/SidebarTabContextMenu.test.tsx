@@ -25,6 +25,7 @@ describe("SidebarTabContextMenu", () => {
     const mockToggleTabPin = jest.fn();
     const mockDuplicateTab = jest.fn();
     const mockUpdateTabTitle = jest.fn();
+    const mockSetEditingId = jest.fn();
     const mockOnClose = jest.fn();
 
     const mockTab = {
@@ -77,6 +78,7 @@ describe("SidebarTabContextMenu", () => {
 
         mockUseSidebarStore.mockReturnValue({
             workspaceTabsMetadata: new Map(),
+            setEditingId: mockSetEditingId,
         } as any);
     });
 
@@ -115,7 +117,7 @@ describe("SidebarTabContextMenu", () => {
     });
 
     describe("Rename Action", () => {
-        it("should open rename dialog when Rename is clicked", () => {
+        it("should call setEditingId and onClose when Rename is clicked", () => {
             render(
                 <SidebarTabContextMenu
                     tabId={mockTab.id}
@@ -127,86 +129,8 @@ describe("SidebarTabContextMenu", () => {
 
             fireEvent.click(screen.getByText("Rename"));
 
-            expect(screen.getByText("Rename Tab")).toBeInTheDocument();
-            expect(screen.getByPlaceholderText("Tab name")).toBeInTheDocument();
-        });
-
-        it("should prepopulate input with current tab name for active workspace", () => {
-            render(
-                <SidebarTabContextMenu
-                    tabId={mockTab.id}
-                    workspaceId="ws-1"
-                    position={{ x: 100, y: 100 }}
-                    onClose={mockOnClose}
-                />
-            );
-
-            fireEvent.click(screen.getByText("Rename"));
-
-            const input = screen.getByPlaceholderText("Tab name") as HTMLInputElement;
-            expect(input.value).toBe(mockTab.title);
-        });
-
-        it("should call updateTabTitle with new name when confirmed", async () => {
-            render(
-                <SidebarTabContextMenu
-                    tabId={mockTab.id}
-                    workspaceId="ws-1"
-                    position={{ x: 100, y: 100 }}
-                    onClose={mockOnClose}
-                />
-            );
-
-            fireEvent.click(screen.getByText("Rename"));
-
-            const input = screen.getByPlaceholderText("Tab name");
-            fireEvent.change(input, { target: { value: "New Tab Name" } });
-
-            const renameButton = screen.getByRole("button", { name: /rename/i });
-            fireEvent.click(renameButton);
-
-            await waitFor(() => {
-                expect(mockUpdateTabTitle).toHaveBeenCalledWith(mockTab.id, "New Tab Name");
-                expect(mockOnClose).toHaveBeenCalled();
-            });
-        });
-
-        it("should not rename when name is empty or whitespace", () => {
-            render(
-                <SidebarTabContextMenu
-                    tabId={mockTab.id}
-                    workspaceId="ws-1"
-                    position={{ x: 100, y: 100 }}
-                    onClose={mockOnClose}
-                />
-            );
-
-            fireEvent.click(screen.getByText("Rename"));
-
-            const input = screen.getByPlaceholderText("Tab name");
-            fireEvent.change(input, { target: { value: "   " } });
-
-            const renameButton = screen.getByRole("button", { name: /rename/i });
-            expect(renameButton).toBeDisabled();
-        });
-
-        it("should cancel rename on Cancel button", () => {
-            render(
-                <SidebarTabContextMenu
-                    tabId={mockTab.id}
-                    workspaceId="ws-1"
-                    position={{ x: 100, y: 100 }}
-                    onClose={mockOnClose}
-                />
-            );
-
-            fireEvent.click(screen.getByText("Rename"));
-
-            const cancelButton = screen.getByRole("button", { name: /cancel/i });
-            fireEvent.click(cancelButton);
-
-            expect(mockUpdateTabTitle).not.toHaveBeenCalled();
-            expect(screen.queryByPlaceholderText("Tab name")).not.toBeInTheDocument();
+            expect(mockSetEditingId).toHaveBeenCalledWith(mockTab.id, mockTab.title);
+            expect(mockOnClose).toHaveBeenCalled();
         });
     });
 
@@ -247,7 +171,7 @@ describe("SidebarTabContextMenu", () => {
     });
 
     describe("Move to Workspace", () => {
-        it("should show submenu with other workspaces", () => {
+        it("should show submenu with other workspaces", async () => {
             render(
                 <SidebarTabContextMenu
                     tabId={mockTab.id}
@@ -261,7 +185,7 @@ describe("SidebarTabContextMenu", () => {
             fireEvent.mouseEnter(moveToWorkspaceItem.closest("div")!);
 
             // Wait for submenu to appear
-            waitFor(() => {
+            await waitFor(() => {
                 expect(screen.getByText("Other Workspace")).toBeInTheDocument();
             });
         });
@@ -343,13 +267,14 @@ describe("SidebarTabContextMenu", () => {
     });
 
     describe("Inactive Workspace Tab", () => {
-        it("should get tab title from metadata for inactive workspace", () => {
+        it("should call setEditingId with title from metadata for inactive workspace", () => {
             const metadata = new Map([
                 ["ws-2", [{ id: "tab-2", title: "Inactive Tab", language: "javascript", lastModified: Date.now(), workspaceId: "ws-2" }]]
             ]);
 
             mockUseSidebarStore.mockReturnValue({
                 workspaceTabsMetadata: metadata,
+                setEditingId: mockSetEditingId,
             } as any);
 
             render(
@@ -363,29 +288,12 @@ describe("SidebarTabContextMenu", () => {
 
             fireEvent.click(screen.getByText("Rename"));
 
-            const input = screen.getByPlaceholderText("Tab name") as HTMLInputElement;
-            expect(input.value).toBe("Inactive Tab");
+            expect(mockSetEditingId).toHaveBeenCalledWith("tab-2", "Inactive Tab");
+            expect(mockOnClose).toHaveBeenCalled();
         });
     });
 
     describe("Menu Visibility", () => {
-        it("should hide menu when rename dialog is open", () => {
-            render(
-                <SidebarTabContextMenu
-                    tabId={mockTab.id}
-                    workspaceId="ws-1"
-                    position={{ x: 100, y: 100 }}
-                    onClose={mockOnClose}
-                />
-            );
-
-            fireEvent.click(screen.getByText("Rename"));
-
-            // Menu is now portaled to document.body
-            const menu = document.querySelector(".fixed.bg-surface.rounded.shadow-lg");
-            expect(menu).not.toBeInTheDocument();
-        });
-
         it("should hide menu when confirmation dialog is open", () => {
             render(
                 <SidebarTabContextMenu

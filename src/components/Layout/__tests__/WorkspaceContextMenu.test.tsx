@@ -2,20 +2,24 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { WorkspaceContextMenu } from "../WorkspaceContextMenu";
 import { useWorkspaceStore } from "../../../stores/workspaceStore";
 import { useRootStore } from "../../../stores/rootStore";
+import { useSidebarStore } from "../../../stores/sidebarStore";
 
 // Mock stores
 jest.mock("../../../stores/workspaceStore");
+jest.mock("../../../stores/sidebarStore");
 jest.mock("../../../hooks/useClickOutside", () => ({
     useClickOutside: jest.fn(),
 }));
 jest.mock("../../../stores/rootStore");
 
 const mockUseWorkspaceStore = useWorkspaceStore as jest.MockedFunction<typeof useWorkspaceStore>;
+const mockUseSidebarStore = useSidebarStore as jest.MockedFunction<typeof useSidebarStore>;
 
 describe("WorkspaceContextMenu", () => {
     const mockCreateWorkspace = jest.fn();
     const mockRenameWorkspace = jest.fn();
     const mockDeleteWorkspace = jest.fn();
+    const mockSetEditingId = jest.fn();
     const mockOnClose = jest.fn();
 
     const mockWorkspace = {
@@ -51,6 +55,10 @@ describe("WorkspaceContextMenu", () => {
         mockUseWorkspaceStore.mockReturnValue(mockState);
         // Mock getState for non-hook usage
         (useWorkspaceStore as any).getState = jest.fn().mockReturnValue(mockState);
+
+        mockUseSidebarStore.mockReturnValue({
+            setEditingId: mockSetEditingId,
+        } as any);
 
         // Mock RootStore
         (useRootStore as any).getState = jest.fn().mockReturnValue({
@@ -108,7 +116,7 @@ describe("WorkspaceContextMenu", () => {
     });
 
     describe("Rename Workspace", () => {
-        it("should open rename dialog when Rename is clicked", () => {
+        it("should call setEditingId and onClose when Rename is clicked", () => {
             render(
                 <WorkspaceContextMenu
                     workspaceId={mockWorkspace.id}
@@ -119,119 +127,8 @@ describe("WorkspaceContextMenu", () => {
 
             fireEvent.click(screen.getByText("Rename Workspace"));
 
-            expect(screen.getByText("Rename Workspace")).toBeInTheDocument();
-            expect(screen.getByPlaceholderText("Workspace name")).toBeInTheDocument();
-        });
-
-        it("should prepopulate input with current workspace name", () => {
-            render(
-                <WorkspaceContextMenu
-                    workspaceId={mockWorkspace.id}
-                    position={{ x: 100, y: 100 }}
-                    onClose={mockOnClose}
-                />
-            );
-
-            fireEvent.click(screen.getByText("Rename Workspace"));
-
-            const input = screen.getByPlaceholderText("Workspace name") as HTMLInputElement;
-            expect(input.value).toBe(mockWorkspace.name);
-        });
-
-        it("should call renameWorkspace with new name when confirmed", async () => {
-            render(
-                <WorkspaceContextMenu
-                    workspaceId={mockWorkspace.id}
-                    position={{ x: 100, y: 100 }}
-                    onClose={mockOnClose}
-                />
-            );
-
-            fireEvent.click(screen.getByText("Rename Workspace"));
-
-            const input = screen.getByPlaceholderText("Workspace name");
-            fireEvent.change(input, { target: { value: "New Name" } });
-
-            const renameButton = screen.getByRole("button", { name: /rename/i });
-            fireEvent.click(renameButton);
-
-            await waitFor(() => {
-                expect(mockRenameWorkspace).toHaveBeenCalledWith(mockWorkspace.id, "New Name");
-                expect(mockOnClose).toHaveBeenCalled();
-            });
-        });
-
-        it("should not rename when name is empty", () => {
-            render(
-                <WorkspaceContextMenu
-                    workspaceId={mockWorkspace.id}
-                    position={{ x: 100, y: 100 }}
-                    onClose={mockOnClose}
-                />
-            );
-
-            fireEvent.click(screen.getByText("Rename Workspace"));
-
-            const input = screen.getByPlaceholderText("Workspace name");
-            fireEvent.change(input, { target: { value: "" } });
-
-            const renameButton = screen.getByRole("button", { name: /rename/i });
-            expect(renameButton).toBeDisabled();
-        });
-
-        it("should cancel rename on Cancel button", () => {
-            render(
-                <WorkspaceContextMenu
-                    workspaceId={mockWorkspace.id}
-                    position={{ x: 100, y: 100 }}
-                    onClose={mockOnClose}
-                />
-            );
-
-            fireEvent.click(screen.getByText("Rename Workspace"));
-
-            const cancelButton = screen.getByRole("button", { name: /cancel/i });
-            fireEvent.click(cancelButton);
-
-            expect(mockRenameWorkspace).not.toHaveBeenCalled();
-            expect(screen.queryByPlaceholderText("Workspace name")).not.toBeInTheDocument();
-        });
-
-        it("should rename on Enter key", async () => {
-            render(
-                <WorkspaceContextMenu
-                    workspaceId={mockWorkspace.id}
-                    position={{ x: 100, y: 100 }}
-                    onClose={mockOnClose}
-                />
-            );
-
-            fireEvent.click(screen.getByText("Rename Workspace"));
-
-            const input = screen.getByPlaceholderText("Workspace name");
-            fireEvent.change(input, { target: { value: "Enter Name" } });
-            fireEvent.keyDown(input, { key: "Enter" });
-
-            await waitFor(() => {
-                expect(mockRenameWorkspace).toHaveBeenCalledWith(mockWorkspace.id, "Enter Name");
-            });
-        });
-
-        it("should cancel on Escape key", () => {
-            render(
-                <WorkspaceContextMenu
-                    workspaceId={mockWorkspace.id}
-                    position={{ x: 100, y: 100 }}
-                    onClose={mockOnClose}
-                />
-            );
-
-            fireEvent.click(screen.getByText("Rename Workspace"));
-
-            const input = screen.getByPlaceholderText("Workspace name");
-            fireEvent.keyDown(input, { key: "Escape" });
-
-            expect(screen.queryByPlaceholderText("Workspace name")).not.toBeInTheDocument();
+            expect(mockSetEditingId).toHaveBeenCalledWith(mockWorkspace.id, mockWorkspace.name);
+            expect(mockOnClose).toHaveBeenCalled();
         });
     });
 
@@ -289,22 +186,6 @@ describe("WorkspaceContextMenu", () => {
     });
 
     describe("Menu Visibility", () => {
-        it("should hide menu when rename dialog is open", () => {
-            render(
-                <WorkspaceContextMenu
-                    workspaceId={mockWorkspace.id}
-                    position={{ x: 100, y: 100 }}
-                    onClose={mockOnClose}
-                />
-            );
-
-            fireEvent.click(screen.getByText("Rename Workspace"));
-
-            // Menu is now portaled to document.body
-            const menu = document.querySelector(".fixed.bg-surface.rounded.shadow-lg");
-            expect(menu).not.toBeInTheDocument();
-        });
-
         it("should hide menu when delete confirmation is open", () => {
             render(
                 <WorkspaceContextMenu

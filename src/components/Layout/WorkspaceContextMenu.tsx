@@ -6,11 +6,10 @@ import { MenuItem } from "../Tab/types";
 import {
     Plus,
     Edit,
-    Trash2,
-    Copy,
-    FolderOpen
+    Trash2
 } from "../Icons";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
+import { useSidebarStore } from "../../stores/sidebarStore";
 import { ConfirmationDialog } from "../Tab/ConfirmationDialog";
 
 interface WorkspaceContextMenuProps {
@@ -25,23 +24,15 @@ export const WorkspaceContextMenu: React.FC<WorkspaceContextMenuProps> = ({
     onClose
 }) => {
     const menuRef = useRef<HTMLDivElement>(null);
-    const renameDialogRef = useRef<HTMLDivElement>(null);
-    const { workspaces, createWorkspace, renameWorkspace, deleteWorkspace } = useWorkspaceStore();
+    const { workspaces, deleteWorkspace } = useWorkspaceStore();
+    const { setEditingId } = useSidebarStore();
     const [confirmDelete, setConfirmDelete] = useState(false);
-    const [renameDialogOpen, setRenameDialogOpen] = useState(false);
-    const [newName, setNewName] = useState("");
 
     const workspace = workspaces.find(w => w.id === workspaceId);
 
     useClickOutside(menuRef, () => {
-        if (!confirmDelete && !renameDialogOpen) {
+        if (!confirmDelete) {
             onClose();
-        }
-    });
-
-    useClickOutside(renameDialogRef, () => {
-        if (renameDialogOpen) {
-            handleRenameCancel();
         }
     });
 
@@ -55,41 +46,22 @@ export const WorkspaceContextMenu: React.FC<WorkspaceContextMenuProps> = ({
 
         // Import rootStore and create a new tab
         const { useRootStore } = await import("../../stores/rootStore");
-        useRootStore.getState().handleNewTab(false);
+        const newId = await useRootStore.getState().handleNewTab(false);
+
+        if (newId) {
+            setEditingId(newId, "");
+        }
 
         onClose();
     };
 
     const handleRename = () => {
         if (workspace) {
-            setNewName(workspace.name);
-            setRenameDialogOpen(true);
-            // Don't call onClose() here - keep component mounted for dialog
+            setEditingId(workspaceId, workspace.name);
+            onClose();
         }
     };
 
-    const handleRenameConfirm = () => {
-        if (newName.trim() && workspace) {
-            renameWorkspace(workspaceId, newName.trim());
-        }
-        setRenameDialogOpen(false);
-        onClose();
-    };
-
-    const handleRenameCancel = () => {
-        setRenameDialogOpen(false);
-        setNewName("");
-        onClose();
-    };
-
-    const handleDuplicate = () => {
-        // TODO: Implement proper workspace duplication with tab content copying
-        // For now, this just creates an empty workspace
-        if (workspace) {
-            createWorkspace(`${workspace.name} (Copy)`);
-        }
-        onClose();
-    };
 
     const handleDelete = () => {
         setConfirmDelete(true);
@@ -138,7 +110,7 @@ export const WorkspaceContextMenu: React.FC<WorkspaceContextMenuProps> = ({
 
     return (
         <>
-            {!confirmDelete && !renameDialogOpen && createPortal(
+            {!confirmDelete && createPortal(
                 <div
                     ref={menuRef}
                     data-testid="workspace-context-menu"
@@ -173,46 +145,6 @@ export const WorkspaceContextMenu: React.FC<WorkspaceContextMenuProps> = ({
                     onConfirm={handleDeleteConfirm}
                     onCancel={handleDeleteCancel}
                 />
-            )}
-
-            {renameDialogOpen && createPortal(
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[110]">
-                    <div ref={renameDialogRef} className="bg-surface border border-base rounded-lg shadow-xl p-6 w-96">
-                        <h3 className="text-lg font-semibold text-main mb-4">Rename Workspace</h3>
-                        <input
-                            type="text"
-                            data-testid="workspace-rename-input"
-                            value={newName}
-                            onChange={(e) => setNewName(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                    handleRenameConfirm();
-                                } else if (e.key === "Escape") {
-                                    handleRenameCancel();
-                                }
-                            }}
-                            className="w-full px-3 py-2 bg-canvas border border-base rounded text-main focus:outline-none focus:ring-2 focus:ring-primary"
-                            placeholder="Workspace name"
-                            autoFocus
-                        />
-                        <div className="flex justify-end gap-2 mt-4">
-                            <button
-                                onClick={handleRenameCancel}
-                                className="px-4 py-2 bg-element hover:bg-element-hover border border-base rounded text-main transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleRenameConfirm}
-                                disabled={!newName.trim()}
-                                className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                Rename
-                            </button>
-                        </div>
-                    </div>
-                </div>,
-                document.body
             )}
         </>
     );

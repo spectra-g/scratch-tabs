@@ -30,15 +30,11 @@ export const SidebarTabContextMenu: React.FC<SidebarTabContextMenuProps> = ({
     onClose
 }) => {
     const menuRef = useRef<HTMLDivElement>(null);
-    const renameDialogRef = useRef<HTMLDivElement>(null);
-    const { removeTab, toggleTabPin, duplicateTab, updateTabTitle } = useRootStore();
+    const { removeTab, toggleTabPin, duplicateTab } = useRootStore();
     const { activeWorkspaceId, workspaces } = useWorkspaceStore();
     const { tabs: activeTabs } = useTabsStore();
-    const { workspaceTabsMetadata } = useSidebarStore();
+    const { workspaceTabsMetadata, setEditingId } = useSidebarStore();
     const [confirmDelete, setConfirmDelete] = useState(false);
-    const [renameDialogOpen, setRenameDialogOpen] = useState(false);
-    const [newTitle, setNewTitle] = useState("");
-    const [moveToWorkspaceMenuOpen, setMoveToWorkspaceMenuOpen] = useState(false);
 
     const isActiveWorkspace = workspaceId === activeWorkspaceId;
     const otherWorkspaces = workspaces.filter(w => w.id !== workspaceId);
@@ -56,34 +52,13 @@ export const SidebarTabContextMenu: React.FC<SidebarTabContextMenuProps> = ({
     };
 
     useClickOutside(menuRef, () => {
-        if (!confirmDelete && !renameDialogOpen) {
+        if (!confirmDelete) {
             onClose();
         }
     });
 
-    useClickOutside(renameDialogRef, () => {
-        if (renameDialogOpen) {
-            handleRenameCancel();
-        }
-    });
-
     const handleRename = () => {
-        setNewTitle(getTabTitle());
-        setRenameDialogOpen(true);
-        // Don't call onClose() here - keep component mounted for dialog
-    };
-
-    const handleRenameConfirm = () => {
-        if (newTitle.trim()) {
-            updateTabTitle(tabId, newTitle.trim());
-        }
-        setRenameDialogOpen(false);
-        onClose();
-    };
-
-    const handleRenameCancel = () => {
-        setRenameDialogOpen(false);
-        setNewTitle("");
+        setEditingId(tabId, getTabTitle());
         onClose();
     };
 
@@ -129,7 +104,7 @@ export const SidebarTabContextMenu: React.FC<SidebarTabContextMenuProps> = ({
                     className="w-full text-left px-3 py-1.5 hover:bg-element-hover flex items-center text-xs text-main transition-colors"
                 >
                     <FolderOpen size={14} className="mr-2 flex-shrink-0" />
-                    <span className="flex-1 truncate">{workspace.name}</span>
+                    <span className="flex-1 truncate text-[11px]">{workspace.name}</span>
                 </button>
             ))}
         </div>
@@ -183,7 +158,7 @@ export const SidebarTabContextMenu: React.FC<SidebarTabContextMenuProps> = ({
 
     return (
         <>
-            {!confirmDelete && !renameDialogOpen && createPortal(
+            {!confirmDelete && createPortal(
                 <div
                     ref={menuRef}
                     className="fixed bg-surface border border-base rounded shadow-lg z-[100] py-1"
@@ -217,45 +192,6 @@ export const SidebarTabContextMenu: React.FC<SidebarTabContextMenuProps> = ({
                     onConfirm={handleDeleteConfirm}
                     onCancel={handleDeleteCancel}
                 />
-            )}
-
-            {renameDialogOpen && createPortal(
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[110]">
-                    <div ref={renameDialogRef} className="bg-surface border border-base rounded-lg shadow-xl p-6 w-96">
-                        <h3 className="text-lg font-semibold text-main mb-4">Rename Tab</h3>
-                        <input
-                            type="text"
-                            value={newTitle}
-                            onChange={(e) => setNewTitle(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                    handleRenameConfirm();
-                                } else if (e.key === "Escape") {
-                                    handleRenameCancel();
-                                }
-                            }}
-                            className="w-full px-3 py-2 bg-canvas border border-base rounded text-main focus:outline-none focus:ring-2 focus:ring-primary"
-                            placeholder="Tab name"
-                            autoFocus
-                        />
-                        <div className="flex justify-end gap-2 mt-4">
-                            <button
-                                onClick={handleRenameCancel}
-                                className="px-4 py-2 bg-element hover:bg-element-hover border border-base rounded text-main transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleRenameConfirm}
-                                disabled={!newTitle.trim()}
-                                className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                Rename
-                            </button>
-                        </div>
-                    </div>
-                </div>,
-                document.body
             )}
         </>
     );

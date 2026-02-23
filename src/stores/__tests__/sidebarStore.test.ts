@@ -141,10 +141,15 @@ describe("SidebarStore", () => {
             mockStorageProvider.getTabsByWorkspace.mockRejectedValue(new Error("DB Error"));
             mockStorageProvider.getSplitViewByWorkspace.mockRejectedValue(new Error("DB Error"));
 
+            // Suppress expected console.error
+            const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
+
             await useSidebarStore.getState().refreshWorkspaceMetadata(wsId);
 
             expect(useSidebarStore.getState().loadingWorkspaceIds.has(wsId)).toBe(false);
             expect(useSidebarStore.getState().workspaceTabsMetadata.has(wsId)).toBe(false);
+            expect(consoleSpy).toHaveBeenCalled();
+            consoleSpy.mockRestore();
         });
     });
 
@@ -262,11 +267,16 @@ describe("SidebarStore", () => {
                 sidebarWidth: 288,
             });
 
+            // Suppress expected console.error
+            const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
+
             await useSidebarStore.getState().initializeSidebarState();
 
             // Should keep defaults on error
             expect(useSidebarStore.getState().isSidebarExpanded).toBe(true);
             expect(useSidebarStore.getState().sidebarWidth).toBe(288);
+            expect(consoleSpy).toHaveBeenCalled();
+            consoleSpy.mockRestore();
         });
     });
 

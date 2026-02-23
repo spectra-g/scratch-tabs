@@ -3,8 +3,20 @@ config:
   max_versions: 100  # Maximum number of versions to display
 
 releases:
-  - version: "1.23.0"
+  - version: "1.23.1"
     type: "latest"
+    draft: false
+    date: "2026-02-23"
+    headline: "Sidebar Polish & Inline Renaming"
+    summary: "Introducing inline renaming for workspaces and tabs directly in the sidebar, plus performance and UX improvements"
+    description: "Refined the sidebar experience with a more intuitive inline renaming flow for both workspaces and tabs."
+    categories:
+      - name: "🔧 Improvements"
+        changes:
+          - "**Inline Sidebar Renaming:** Rename workspaces and tabs directly in the sidebar tree without opening separate modals. Simply double-click or use the context menu to enter edit mode."
+
+  - version: "1.23.0"
+    type: "release"
     draft: false
     date: "2026-02-01"
     headline: "JSON Smart View Enhancements & 25 New Pipeline Operations"
