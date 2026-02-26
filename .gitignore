@@ -10,6 +10,9 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+temp
+reports
+coverage
 *.local
 .vite
 
@@ -18,6 +21,9 @@ dist-ssr
 !.vscode/extensions.json
 .idea
 .DS_Store
+.bolt
+.claude
+.engram
 *.suo
 *.ntvs*
 *.njsproj

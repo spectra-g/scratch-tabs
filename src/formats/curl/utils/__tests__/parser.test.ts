@@ -77,11 +77,11 @@ That's all for now.`;
     });
 
     it('should parse complex multi-line curl with URL at the end', () => {
-      const content = `curl -X POST -H "x-skyott-provider: NOWTV" -H "x-skyott-proposition: NOWTV" \\
-  -H "x-skyott-territory: GB" -H \\
+      const content = `curl -X POST -H "x-client-provider: EXAMPLE_APP" -H "x-client-channel: EXAMPLE_APP" \\
+  -H "x-client-region: GB" -H \\
   "content-type: application/x-www-form-urlencoded" -d \\
-  'userIdentifier=girish@test.com' -v \\
-  https://skyidappintl.sky.com/signin/otp`;
+  'userIdentifier=test.user@example.com' -v \\
+  https://api.example.com/signin/otp`;
 
       const result = parseCurlDocument(content);
 
@@ -90,17 +90,17 @@ That's all for now.`;
 
       if (result[0].type === 'curl') {
         expect(result[0].request.method).toBe('POST');
-        expect(result[0].request.url).toBe('https://skyidappintl.sky.com/signin/otp');
+        expect(result[0].request.url).toBe('https://api.example.com/signin/otp');
         expect(result[0].request.headers).toHaveLength(4);
-        expect(result[0].request.headers[0].key).toBe('x-skyott-provider');
-        expect(result[0].request.headers[0].value).toBe('NOWTV');
-        expect(result[0].request.headers[1].key).toBe('x-skyott-proposition');
-        expect(result[0].request.headers[1].value).toBe('NOWTV');
-        expect(result[0].request.headers[2].key).toBe('x-skyott-territory');
+        expect(result[0].request.headers[0].key).toBe('x-client-provider');
+        expect(result[0].request.headers[0].value).toBe('EXAMPLE_APP');
+        expect(result[0].request.headers[1].key).toBe('x-client-channel');
+        expect(result[0].request.headers[1].value).toBe('EXAMPLE_APP');
+        expect(result[0].request.headers[2].key).toBe('x-client-region');
         expect(result[0].request.headers[2].value).toBe('GB');
         expect(result[0].request.headers[3].key).toBe('content-type');
         expect(result[0].request.headers[3].value).toBe('application/x-www-form-urlencoded');
-        expect(result[0].request.body).toBe('userIdentifier=girish@test.com');
+        expect(result[0].request.body).toBe('userIdentifier=test.user@example.com');
         expect(result[0].request.otherOptions).toContainEqual({ flag: '-v' });
       }
     });

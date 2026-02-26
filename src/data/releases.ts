@@ -15,28 +15,39 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.23.1';
+export const APP_VERSION = '1.24.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.23.1",
+    "version": "1.24.0",
     "type": "latest",
+    "date": "2026-02-26",
+    "headline": "Open-Source Readiness",
+    "summary": "Prepared the project for open-source release with repository hygiene, public docs, and contributor-facing updates",
+    "categories": [
+      {
+        "name": "Open Source",
+        "changes": [
+          "**Repository hygiene:** Removed internal-only notes/scripts and cleaned ignored local artifacts",
+          "**Public docs added:** Added README, LICENSE, CONTRIBUTING, CODE_OF_CONDUCT, and SECURITY policies",
+          "**Content sanitization:** Replaced organization-specific test fixtures and headers with neutral generic examples",
+          "**Landing updates:** Added concise open-source mentions in key landing pages and FAQ",
+          "**Changelog refresh:** Added this release and regenerated changelog outputs"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.23.1",
+    "type": "release",
     "date": "2026-02-23",
     "headline": "Sidebar Polish & Inline Renaming",
     "summary": "Introducing inline renaming for workspaces and tabs directly in the sidebar, plus performance and UX improvements",
     "categories": [
       {
-        "name": "New Features",
-        "changes": [
-          "**Inline Sidebar Renaming:** Rename workspaces and tabs directly in the sidebar tree without opening separate modals. Simply double-click or use the context menu to enter edit mode."
-        ]
-      },
-      {
         "name": "Improvements",
         "changes": [
-          "**E2E Execution Stability:** Optimized timing for sidebar creation and renaming actions to ensure more reliable automated test runs.",
-          "**Sidebar State Management:** Improved workspace expansion logic to ensure new workspaces are automatically revealed and expanded in the explorer.",
-          "**Data-Driven Assertions:** Added dedicated test identifiers to sidebar inputs for better observability and testability."
+          "**Inline Sidebar Renaming:** Rename workspaces and tabs directly in the sidebar tree without opening separate modals. Simply double-click or use the context menu to enter edit mode."
         ]
       }
     ]

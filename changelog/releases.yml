@@ -3,8 +3,24 @@ config:
   max_versions: 100  # Maximum number of versions to display
 
 releases:
-  - version: "1.23.1"
+  - version: "1.24.0"
     type: "latest"
+    draft: false
+    date: "2026-02-26"
+    headline: "Open-Source Readiness"
+    summary: "Prepared the project for open-source release with repository hygiene, public docs, and contributor-facing updates"
+    description: "This release focuses on making Scratch Tabs open-source ready: cleaned repository artifacts, added standard open-source documentation, generalized internal examples, and updated public-facing pages and changelog workflows."
+    categories:
+      - name: "🛠️ Open Source"
+        changes:
+          - "**Repository hygiene:** Removed internal-only notes/scripts and cleaned ignored local artifacts"
+          - "**Public docs added:** Added README, LICENSE, CONTRIBUTING, CODE_OF_CONDUCT, and SECURITY policies"
+          - "**Content sanitization:** Replaced organization-specific test fixtures and headers with neutral generic examples"
+          - "**Landing updates:** Added concise open-source mentions in key landing pages and FAQ"
+          - "**Changelog refresh:** Added this release and regenerated changelog outputs"
+
+  - version: "1.23.1"
+    type: "release"
     draft: false
     date: "2026-02-23"
     headline: "Sidebar Polish & Inline Renaming"

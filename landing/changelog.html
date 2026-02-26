@@ -25,7 +25,7 @@
      Built with care for developers who care about privacy.
 
   💡 Contribute:
-     github.com/spectra-g/scratch-tabs-feedback
+     github.com/spectra-g/scratch-tabs
 
   ⚡ Made with code and coffee by developers, for developers.
 -->
@@ -118,6 +118,9 @@
       <p class="text-lg md:text-xl text-gray-400 mb-8 max-w-3xl mx-auto leading-relaxed">
         The complete history of Scratch Tabs. From minor utility tweaks to major architectural shifts, every change is documented here.
       </p>
+      <p class="text-base text-gray-500 max-w-2xl mx-auto">
+        Scratch Tabs is open-source and developed in the open.
+      </p>
     </div>
   </section>
 
@@ -126,30 +129,41 @@
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
 
-        <!-- Version 1.23.1 -->
+        <!-- Version 1.24.0 -->
         <div class="changelog-entry latest">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-white">V1.23.1</h2>
+              <h2 class="text-2xl font-bold text-white">V1.24.0</h2>
               <span class="badge latest">LATEST</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">02/26/2026</span>
+          </div>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">OPEN-SOURCE READINESS</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p class="mb-4">This release focuses on making Scratch Tabs open-source ready: cleaned repository artifacts, added standard open-source documentation, generalized internal examples, and updated public-facing pages and changelog workflows.</p>
+
+            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># open_source</h4>
+            <ul class="space-y-2 mb-6">
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Repository hygiene:</strong> Removed internal-only notes/scripts and cleaned ignored local artifacts</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Public docs added:</strong> Added README, LICENSE, CONTRIBUTING, CODE_OF_CONDUCT, and SECURITY policies</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Content sanitization:</strong> Replaced organization-specific test fixtures and headers with neutral generic examples</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Landing updates:</strong> Added concise open-source mentions in key landing pages and FAQ</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Changelog refresh:</strong> Added this release and regenerated changelog outputs</span></li>
+            </ul>
+          </div>
+        </div>
+        <!-- Version 1.23.1 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.23.1</h2>
+              <span class="badge release">RELEASE</span>
             </div>
             <span class="text-gray-500 text-xs font-mono">02/23/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">SIDEBAR POLISH & INLINE RENAMING</h3>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">SIDEBAR POLISH & INLINE RENAMING</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">Refined the sidebar experience with a more intuitive inline renaming flow for both workspaces and tabs. This update also includes timing optimizations for E2E tests and minor UI polish to ensure a smoother, more professional interface.</p>
-
-            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
-            <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Inline Sidebar Renaming:</strong> Rename workspaces and tabs directly in the sidebar tree without opening separate modals. Simply double-click or use the context menu to enter edit mode.</span></li>
-            </ul>
-
-            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># improvements</h4>
-            <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>E2E Execution Stability:</strong> Optimized timing for sidebar creation and renaming actions to ensure more reliable automated test runs.</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Sidebar State Management:</strong> Improved workspace expansion logic to ensure new workspaces are automatically revealed and expanded in the explorer.</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Data-Driven Assertions:</strong> Added dedicated test identifiers to sidebar inputs for better observability and testability.</span></li>
-            </ul>
+            <p>Introducing inline renaming for workspaces and tabs directly in the sidebar, plus performance and UX improvements</p>
           </div>
         </div>
         <!-- Version 1.23.0 -->
@@ -552,7 +566,7 @@
             Want to suggest a feature or report a bug? Join the conversation on GitHub or Discord.
           </p>
           <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <a href="https://github.com/spectra-g/scratch-tabs-feedback/issues" target="_blank"
+            <a href="https://github.com/spectra-g/scratch-tabs/issues" target="_blank"
               class="terminal-button px-6 py-2">
               <span class="text-gray-500 mr-2">$</span> open_github_issue<span class="cursor-blink">|</span>
             </a>
@@ -613,11 +627,11 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.23.1</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.24.0</span>
         </div>
 
         <div class="flex space-x-8">
-          <a href="https://github.com/spectra-g/scratch-tabs-feedback/issues" target="_blank"
+          <a href="https://github.com/spectra-g/scratch-tabs/issues" target="_blank"
             class="text-gray-500 hover:text-emerald-500 font-mono text-xs">GITHUB_ISSUES</a>
           <a href="https://discord.gg/HwsfpTzMVS" target="_blank"
             class="text-gray-500 hover:text-emerald-500 font-mono text-xs">DISCORD</a>
