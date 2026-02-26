@@ -2,13 +2,15 @@
 
 Scratch Tabs is a local-first developer workspace for exploring, transforming, and validating text/data formats directly in the browser.
 
+Website: https://scratchtabs.com
+
 ## Highlights
 
 - Local-first persistence with IndexedDB (no server required for core workflows)
 - Monaco-powered editor with many format/tool integrations
 - Smart Views for structured content (JSON, CSV, and more)
 - Transformation Pipeline system for repeatable data operations
-- Utility tablets (JWT, regex, REST client, converter, checksums, etc.)
+- Dev tools ("tablets") (JWT, regex, REST client, converter, checksums, etc.)
 
 ## Tech Stack
 
