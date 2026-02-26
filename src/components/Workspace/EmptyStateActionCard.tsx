@@ -58,13 +58,6 @@ const colorSchemeMap: Record<ColorScheme, { bg: string; hoverBg: string; border:
  *
  * Displays a single action card for the WorkspaceEmptyState.
  * Follows SRP by handling only the rendering of one action option.
- *
- * Design follows LAYOUT_GUIDELINES.md:
- * - Uses semantic color tokens (bg-surface, bg-primary/10, etc.)
- * - Applies consistent hover states
- * - Provides visual feedback on interaction
- *
- * @see LAYOUT_GUIDELINES.md - State and Status Coloring
  */
 export const EmptyStateActionCard: React.FC<EmptyStateActionCardProps> = ({
   label,

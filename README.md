@@ -59,6 +59,10 @@ The app starts on `http://localhost:5173`.
 - `landing/`: Landing site assets/pages
 - `changelog/`: Changelog generation scripts
 
+## Developer Guidance
+
+Coding-agent and implementation guidance is in [CLAUDE.md](./CLAUDE.md).
+
 ## Privacy Model
 
 Scratch Tabs is designed to keep data client-side. Core app workflows run in the browser and persist locally.

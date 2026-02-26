@@ -17,8 +17,6 @@ import { toolService, ToolItem } from "../../services/toolService";
  * - Open file from disk
  *
  * Following the "empty folder" UX pattern - workspaces persist when empty.
- *
- * @see LAYOUT_GUIDELINES.md - Uses bg-canvas for root container
  */
 export const WorkspaceEmptyState: React.FC = () => {
   const { handleNewTab, handleNewTabFromPaste, handleNewPopulatedTab } = useRootStore();
@@ -26,7 +24,7 @@ export const WorkspaceEmptyState: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [showToolSelector, setShowToolSelector] = useState(false);
 
-  // Memoize workspace lookup (performance best practice per LAYOUT_GUIDELINES.md)
+  // Memoize workspace lookup to avoid unnecessary recomputation on render.
   const currentWorkspace = useMemo(
     () => workspaces.find((w) => w.id === activeWorkspaceId),
     [workspaces, activeWorkspaceId]

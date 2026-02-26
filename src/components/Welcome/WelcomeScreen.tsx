@@ -9,10 +9,7 @@ import { ImportExportService } from "../../features/import-export/ImportExportSe
 import { getJSONDemoContent } from "./utils/welcomeUtils";
 import type { LucideProps } from "lucide-react";
 
-/**
- * HeroActionCard - Enhanced action card for primary welcome actions
- * Follows LAYOUT_GUIDELINES.md for semantic theming
- */
+/** HeroActionCard - Enhanced action card for primary welcome actions. */
 interface HeroActionCardProps {
   icon: React.ComponentType<LucideProps>;
   title: string;

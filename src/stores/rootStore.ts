@@ -654,7 +654,6 @@ export const useRootStore = create<RootStore>((set, get) => {
 
     /**
      * Moves a tab from one workspace to another using the Copy-then-Delete pattern.
-     * Follows the architecture described in WORKSPACE_VISIBILITY.md Section 12.2.
      *
      * @param tabId - ID of the tab to move
      * @param sourceWorkspaceId - Source workspace ID
