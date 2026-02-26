@@ -2,7 +2,19 @@
   "name": "scratch-tabs",
   "private": true,
   "version": "0.1.0",
+  "description": "A privacy-first, local-first developer workspace with smart views, transformation pipelines, and utility tools.",
+  "license": "MIT",
+  "homepage": "https://scratchtabs.com",
   "type": "module",
+  "keywords": [
+    "developer-tools",
+    "json",
+    "editor",
+    "offline",
+    "privacy",
+    "react",
+    "typescript"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -12,7 +24,7 @@
     "e2e": "./run-e2e-tests.sh",
     "e2e:full": "./run-e2e-full.sh",
     "e2e:compile": "tsc -p tests/e2e/tsconfig.json",
-    "e2e:report": "open reports/cucumber-report.html",
+    "e2e:report": "echo \"Open reports/cucumber-report.html in your browser\"",
     "tsc": "tsc --noEmit",
     "coverage": "npm test -- --coverage",
     "test:watch": "jest --watch",

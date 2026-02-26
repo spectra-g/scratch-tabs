@@ -135,14 +135,14 @@ describe('RestClientTablet', () => {
     it('should preserve all headers from curl request and parse form-encoded body', () => {
       const curlRequest: CurlRequestImport = {
         method: 'POST',
-        url: 'https://skyidappintl.sky.com/signin/otp',
+        url: 'https://api.example.com/signin/otp',
         headers: [
-          { key: 'x-skyott-provider', value: 'NOWTV' },
-          { key: 'x-skyott-proposition', value: 'NOWTV' },
-          { key: 'x-skyott-territory', value: 'GB' },
+          { key: 'x-client-provider', value: 'EXAMPLE_APP' },
+          { key: 'x-client-channel', value: 'EXAMPLE_APP' },
+          { key: 'x-client-region', value: 'GB' },
           { key: 'content-type', value: 'application/x-www-form-urlencoded' }
         ],
-        body: 'userIdentifier=girish@test.com'
+        body: 'userIdentifier=test.user@example.com'
       };
 
       const state = RestClientTablet.createInitialState(curlRequest);
@@ -152,9 +152,9 @@ describe('RestClientTablet', () => {
       expect(state.data.request.headers.every(h => h.enabled)).toBe(true);
       
       const headerKeys = state.data.request.headers.map(h => h.key);
-      expect(headerKeys).toContain('x-skyott-provider');
-      expect(headerKeys).toContain('x-skyott-proposition');
-      expect(headerKeys).toContain('x-skyott-territory');
+      expect(headerKeys).toContain('x-client-provider');
+      expect(headerKeys).toContain('x-client-channel');
+      expect(headerKeys).toContain('x-client-region');
       expect(headerKeys).toContain('content-type');
       
       // Check body parsing
@@ -162,7 +162,7 @@ describe('RestClientTablet', () => {
       expect(state.data.request.body.params).toHaveLength(1);
       expect(state.data.request.body.params[0]).toEqual({
         key: 'userIdentifier',
-        value: 'girish@test.com',
+        value: 'test.user@example.com',
         enabled: true
       });
     });
