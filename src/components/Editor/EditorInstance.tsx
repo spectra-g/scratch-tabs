@@ -8,6 +8,7 @@ import { useSplitViewStore } from "../../stores/splitViewStore";
 import { useEditorScrollManager } from "../../hooks/useEditorScrollManager";
 import { useToolSelector } from "../../hooks/useToolSelector";
 import { useEditorActions } from "../../hooks/useEditorActions";
+import { useClipboardActions } from "../../hooks/useClipboardActions";
 import { useEditorAI } from "../../hooks/useEditorAI";
 import { useImagePasteHandler } from "../../hooks/useImagePasteHandler";
 import { useAutoFormatOnLoad } from "../../hooks/useAutoFormatOnLoad";
@@ -150,6 +151,9 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
     isCodegenReady,
     isCodegenGenerating,
   });
+
+  // Clipboard Actions Hook
+  useClipboardActions(editorRef.current);
 
   // Editor AI Hook
   useEditorAI({
