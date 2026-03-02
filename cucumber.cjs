@@ -3,7 +3,6 @@
  */
 module.exports = {
   default: {
-    paths: ['tests/e2e/features/**/*.feature'],
     require: ['dist/e2e/steps/**/*.cjs', 'dist/e2e/support/**/*.cjs'],
     format: [
       'summary',

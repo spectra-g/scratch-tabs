@@ -23,6 +23,11 @@ if [[ -f dist/e2e/steps/interaction.steps.cjs ]]; then
 fi
 
 echo "🧪 Running E2E tests..."
-node run-cucumber.cjs "$@"
+# If no positional path argument is given, default to all feature files
+if [[ $# -eq 0 ]] || [[ "$1" == --* ]]; then
+  node run-cucumber.cjs tests/e2e/features/**/*.feature "$@"
+else
+  node run-cucumber.cjs "$@"
+fi
 
 echo "✅ E2E test run completed"

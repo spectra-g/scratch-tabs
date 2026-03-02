@@ -71,6 +71,14 @@ cd changelog && npm run generate
 - Add/update tests for behavior changes.
 - For public-facing text/docs, avoid internal notes or plan-heavy content.
 
+## Outside-in TDD
+
+- If you want to write an e2e test you can start by writing a test in tests/e2e
+- Pick an existing or create a new feature file
+- Full test run takes 13 minutes, so may be better to run just your feature file
+- Use command `npm run e2e -- tests/e2e/features/undo.feature`
+- See [E2E README.md](tests/e2e/README.md)
+
 ## Docs Policy
 
 - Keep top-level docs minimal:
