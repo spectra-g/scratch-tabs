@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
+import { safeCopy, safePaste } from "../utils/clipboard";
 
 export const useClipboardActions = (
   editor: Monaco.editor.IStandaloneCodeEditor | null,
@@ -31,7 +32,7 @@ export const useClipboardActions = (
           }
 
           const selectedText = model.getValueInRange(selection);
-          await navigator.clipboard.writeText(selectedText);
+          await safeCopy(selectedText);
         } catch (error) {
           console.warn("[useClipboardActions] Failed to copy text:", error);
         }
@@ -51,7 +52,7 @@ export const useClipboardActions = (
             return;
           }
 
-          const clipboardText = await navigator.clipboard.readText();
+          const clipboardText = await safePaste();
           if (clipboardText == null) {
             return;
           }

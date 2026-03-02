@@ -74,6 +74,24 @@ describe("useClipboardActions", () => {
     expect(writeTextMock).toHaveBeenCalledWith("test");
   });
 
+  it("does not copy when selection is empty", async () => {
+    getSelectionMock.mockReturnValue({
+      startLineNumber: 1,
+      startColumn: 1,
+      endLineNumber: 1,
+      endColumn: 1,
+      isEmpty: () => true,
+    });
+    const editor = makeEditor();
+
+    renderHook(() => useClipboardActions(editor as any));
+
+    const copyAction = addActionMock.mock.calls[0][0];
+    await copyAction.run(editor);
+
+    expect(writeTextMock).not.toHaveBeenCalled();
+  });
+
   it("reads clipboard text and inserts it at cursor/selection on paste", async () => {
     const editor = makeEditor();
 
