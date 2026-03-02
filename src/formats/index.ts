@@ -36,6 +36,7 @@ import "./stacktrace";
 import "./stacktrace/index";
 import "./diff/index";
 import "./svg";
+import "./toml";
 import "./vhost";
 import "./xml";
 import "./yaml";

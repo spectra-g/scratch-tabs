@@ -434,4 +434,21 @@ describe("Registry Format Detection", () => {
       expect(matchingFormats[0].id).toBe('json');
     });
   });
+
+  describe("Startup Registration", () => {
+    test("includes TOML module after formats index bootstrap import", async () => {
+      const { formatRegistry: startupRegistry } = await import("../index");
+      const registeredIds = startupRegistry.getAll().map((module) => module.id);
+
+      expect(registeredIds).toContain("toml");
+      expect(startupRegistry.getById("toml")).toBeDefined();
+    });
+
+    test("detects TOML content via startup-registered modules", async () => {
+      const { detectFormat: startupDetectFormat } = await import("../index");
+      const content = '[server]\nport = 8080\nenabled = true';
+
+      expect(startupDetectFormat(content)).toBe("toml");
+    });
+  });
 });
