@@ -45,6 +45,62 @@ export class EditorActions {
     }, content);
   }
 
+  async setMonacoContent(content: string, side: 'left' | 'right' = 'left') {
+    const editorInstance = await this.getVisibleEditorInstance(side);
+
+    await editorInstance.evaluate((editor, text) => {
+      editor.setValue(text);
+      editor.focus();
+    }, content);
+  }
+
+  async setMonacoSelection(
+    startLineNumber: number,
+    startColumn: number,
+    endLineNumber: number,
+    endColumn: number,
+    side: 'left' | 'right' = 'left',
+  ) {
+    const editorInstance = await this.getVisibleEditorInstance(side);
+
+    await editorInstance.evaluate(
+      (editor, { sLine, sCol, eLine, eCol }) => {
+        const selection = new (window as any).monaco.Selection(sLine, sCol, eLine, eCol);
+        editor.setSelection(selection);
+        editor.focus();
+      },
+      {
+        sLine: startLineNumber,
+        sCol: startColumn,
+        eLine: endLineNumber,
+        eCol: endColumn,
+      },
+    );
+  }
+
+  async setMonacoCursor(lineNumber: number, column: number, side: 'left' | 'right' = 'left') {
+    await this.setMonacoSelection(lineNumber, column, lineNumber, column, side);
+  }
+
+  async openMonacoContextMenu(side: 'left' | 'right' = 'left') {
+    const editorSurface = this.page.locator(
+      `[data-editor-pane-side="${side}"] [data-testid="monaco-editor-container"] .view-lines`,
+    );
+    await expect(editorSurface).toBeVisible();
+    await editorSurface.click({ button: 'right', position: { x: 20, y: 12 } });
+    await expect(this.page.locator('.monaco-menu-container')).toBeVisible();
+  }
+
+  async clickMonacoContextMenuItem(label: 'Copy' | 'Paste') {
+    const menuItem = this.page
+      .locator('.monaco-menu-container .action-label')
+      .filter({ hasText: new RegExp(`^${label}$`) })
+      .first();
+
+    await expect(menuItem).toBeVisible();
+    await menuItem.click();
+  }
+
   async rightClickEditor() {
     const editorInstance = await this.getVisibleEditorInstance();
     const domNodeHandle = await editorInstance.evaluateHandle((e: any) => e.getDomNode());
