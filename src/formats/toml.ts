@@ -10,7 +10,7 @@ export class TomlFormatDetector extends BaseFormatDetector implements FormatModu
   id = "toml";
   name = "TOML";
   extensions = ["toml"];
-  priority = 5;
+  priority = 6;
 
   sampleContent(): string {
     return `# TOML configuration
@@ -52,38 +52,80 @@ published_at = 1979-05-27T07:32:00Z
 
     const tableRegex = /^\[[A-Za-z0-9_.-]+\]$/;
     const arrayTableRegex = /^\[\[[A-Za-z0-9_.-]+\]\]$/;
-    const keyValueWithSpacesRegex = /^[A-Za-z0-9_.-]+\s+=\s+.+$/;
-    const inlineTableRegex = /^[A-Za-z0-9_.-]+\s+=\s+\{.*=.*\}$/;
-    const arrayValueRegex = /^[A-Za-z0-9_.-]+\s+=\s+\[.*\]$/;
+    const keyValueRegex = /^([A-Za-z0-9_.-]+)\s*=\s*(.+)$/;
+    const yamlKeyValueRegex = /^[A-Za-z0-9_.-]+\s*:\s+.+$/;
+    const inlineTableValueRegex = /^\{.*=.*\}$/;
+    const arrayValueRegex = /^\[.*\]$/;
+    const quotedStringRegex = /^"(?:[^"\\]|\\.)*"$/;
+    const literalStringRegex = /^'(?:[^'\\]|\\.)*'$/;
+    const boolRegex = /^(true|false)$/;
+    const numberRegex = /^[+-]?\d+(?:\.\d+)?$/;
     const isoDateValueRegex =
-      /^[A-Za-z0-9_.-]+\s+=\s+\d{4}-\d{2}-\d{2}(?:[Tt ][0-9:.+-Zz]+)?$/;
+      /^\d{4}-\d{2}-\d{2}(?:[Tt ][0-9:.+-Zz]+)?$/;
+    const bareWordValueRegex = /^[A-Za-z_][A-Za-z0-9_./-]*$/;
 
     let tableCount = 0;
     let arrayTableCount = 0;
     let keyValueCount = 0;
-    let tomlFeatureCount = 0;
+    let tomlSpecificFeatureCount = 0;
     let invalidLineCount = 0;
+    let bareWordValueCount = 0;
+    let yamlLikeLineCount = 0;
+    let noSpaceEqualsCount = 0;
+    let hasStrongTomlSyntax = false;
 
     for (const line of lines) {
       if (tableRegex.test(line)) {
         tableCount++;
+        tomlSpecificFeatureCount++;
         continue;
       }
 
       if (arrayTableRegex.test(line)) {
         arrayTableCount++;
-        tomlFeatureCount++;
+        tomlSpecificFeatureCount += 2;
+        hasStrongTomlSyntax = true;
         continue;
       }
 
-      if (keyValueWithSpacesRegex.test(line)) {
+      if (yamlKeyValueRegex.test(line)) {
+        yamlLikeLineCount++;
+        invalidLineCount++;
+        continue;
+      }
+
+      const keyValueMatch = line.match(keyValueRegex);
+      if (keyValueMatch) {
         keyValueCount++;
-        if (
-          inlineTableRegex.test(line) ||
-          arrayValueRegex.test(line) ||
-          isoDateValueRegex.test(line)
+        if (!line.includes(" = ") && !line.includes("= ")) {
+          noSpaceEqualsCount++;
+        }
+
+        const value = keyValueMatch[2].trim();
+
+        if (inlineTableValueRegex.test(value)) {
+          tomlSpecificFeatureCount += 2;
+          hasStrongTomlSyntax = true;
+        } else if (arrayValueRegex.test(value)) {
+          tomlSpecificFeatureCount++;
+          hasStrongTomlSyntax = true;
+        } else if (
+          quotedStringRegex.test(value) ||
+          literalStringRegex.test(value) ||
+          boolRegex.test(value) ||
+          numberRegex.test(value) ||
+          isoDateValueRegex.test(value)
         ) {
-          tomlFeatureCount++;
+          tomlSpecificFeatureCount++;
+          if (
+            quotedStringRegex.test(value) ||
+            literalStringRegex.test(value) ||
+            isoDateValueRegex.test(value)
+          ) {
+            hasStrongTomlSyntax = true;
+          }
+        } else if (bareWordValueRegex.test(value)) {
+          bareWordValueCount++;
         }
         continue;
       }
@@ -96,40 +138,48 @@ published_at = 1979-05-27T07:32:00Z
       return this.noMatch();
     }
 
-    let confidence = 0.7;
+    let confidence = 0.2;
 
     const totalLines = lines.length;
     const validTomlLines = tableCount + arrayTableCount + keyValueCount;
     const validRatio = validTomlLines / totalLines;
 
-    if (validRatio >= 0.9) {
-      confidence += 0.15;
-    } else if (validRatio >= 0.75) {
-      confidence += 0.08;
-    } else if (validRatio < 0.6) {
-      confidence -= 0.2;
+    confidence += validRatio * 0.45;
+    confidence += Math.min(0.32, tomlSpecificFeatureCount * 0.05);
+
+    if (tableCount + arrayTableCount > 0) {
+      confidence += 0.12;
     }
 
-    if (tomlFeatureCount > 0) {
-      confidence += Math.min(0.1, tomlFeatureCount * 0.03);
+    if (invalidLineCount > 0 || yamlLikeLineCount > 0) {
+      confidence -= Math.min(0.2, invalidLineCount * 0.05);
+      confidence -= Math.min(0.25, yamlLikeLineCount * 0.08);
     }
 
-    if (invalidLineCount > 0) {
-      confidence -= Math.min(0.15, invalidLineCount * 0.05);
+    if (bareWordValueCount > 0) {
+      const bareWordRatio = bareWordValueCount / Math.max(1, keyValueCount);
+      confidence -= Math.min(0.45, bareWordRatio * 0.6);
+      if (bareWordRatio >= 0.4 && !hasStrongTomlSyntax) {
+        confidence -= 0.35;
+      }
+    }
+
+    if (noSpaceEqualsCount > 0) {
+      confidence -= Math.min(0.1, noSpaceEqualsCount * 0.03);
     }
 
     // Anti-patterns for non-TOML formats.
     if (/^\s*---\s*$/m.test(content)) {
-      confidence -= 0.35; // YAML front matter/doc marker
+      confidence -= 0.4; // YAML front matter/doc marker
     }
     if (/<[A-Za-z][^>]*>/.test(content)) {
       confidence -= 0.4; // XML/HTML tags
     }
     if (/^\s*[A-Za-z0-9_.-]+\s*:\s+.+$/m.test(content)) {
-      confidence -= 0.25; // YAML-like key: value
+      confidence -= 0.3; // YAML-like key: value
     }
     if (/^\s*[A-Za-z0-9_.-]+=.+$/m.test(content)) {
-      confidence -= 0.08; // INI/properties no-space style key=value
+      confidence -= 0.12; // INI/properties no-space style key=value
     }
 
     confidence = Math.max(0, Math.min(1, confidence));
@@ -138,7 +188,7 @@ published_at = 1979-05-27T07:32:00Z
     return {
       match: isMatch,
       confidence: isMatch ? confidence : 0,
-      matchedDefinitive: isMatch && confidence >= 0.8,
+      matchedDefinitive: isMatch && confidence >= 0.82 && tomlSpecificFeatureCount > 0,
     };
   }
 

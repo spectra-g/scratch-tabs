@@ -42,6 +42,42 @@ count = 42`;
       expect(result.match).toBe(true);
       expect(result.confidence).toBeGreaterThan(0.6);
     });
+
+    test("should reward TOML-specific syntax like array tables and inline tables", () => {
+      const content = `title = "Example"
+
+[[products]]
+name = "Hammer"
+sku = 738594937
+meta = { enabled = true, retries = 3 }`;
+
+      const result = detector.detect(content);
+      expect(result.match).toBe(true);
+      expect(result.confidence).toBeGreaterThan(0.75);
+    });
+
+    test("should apply INI-style ambiguity penalty for bare key=value table content", () => {
+      const content = `[database]
+host=localhost
+port=5432
+enabled=true`;
+
+      const result = detector.detect(content);
+      expect(result.match).toBe(false);
+      expect(result.confidence).toBe(0);
+    });
+
+    test("should apply YAML anti-pattern penalties for colon-style mappings", () => {
+      const content = `---
+database:
+  host: localhost
+  port: 5432
+  enabled: true`;
+
+      const result = detector.detect(content);
+      expect(result.match).toBe(false);
+      expect(result.confidence).toBe(0);
+    });
   });
 
   describe("Monaco Provider Registration", () => {

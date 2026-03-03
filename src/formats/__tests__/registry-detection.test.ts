@@ -424,6 +424,52 @@ describe("Registry Format Detection", () => {
   });
 
   describe("Cross-Format Detection Issues", () => {
+    test("YAML-like content should not rank TOML above YAML", () => {
+      const yamlContent = `---
+service:
+  name: api
+  host: localhost
+  port: 8080
+features:
+  - auth
+  - metrics`;
+
+      const results = getAllDetectionResults(yamlContent);
+      const yamlResult = results.find((r) => r.id === "yaml");
+      const tomlResult = results.find((r) => r.id === "toml");
+
+      expect(yamlResult).toBeDefined();
+      expect(yamlResult!.match).toBe(true);
+
+      if (tomlResult) {
+        expect(tomlResult.confidence).toBeLessThan(yamlResult!.confidence);
+      }
+    });
+
+    test("TOML sample should keep parity against neighboring config formats in matrix ranking", () => {
+      const tomlDetector = new TomlFormatDetector();
+      const sampleContent = tomlDetector.sampleContent();
+      const results = getAllDetectionResults(sampleContent);
+      const tomlResult = results.find((r) => r.id === "toml");
+      const iniResult = results.find((r) => r.id === "ini");
+      const propertiesResult = results.find((r) => r.id === "properties");
+      const yamlResult = results.find((r) => r.id === "yaml");
+
+      expect(tomlResult).toBeDefined();
+      expect(tomlResult!.match).toBe(true);
+      expect(tomlResult!.confidence).toBeGreaterThan(0.7);
+
+      if (iniResult) {
+        expect(tomlResult!.confidence).toBeGreaterThan(iniResult.confidence);
+      }
+      if (propertiesResult) {
+        expect(tomlResult!.confidence).toBeGreaterThan(propertiesResult.confidence);
+      }
+      if (yamlResult) {
+        expect(tomlResult!.confidence).toBeGreaterThan(yamlResult.confidence);
+      }
+    });
+
     test("R and CSV should NOT detect JSON with dot notation properties", () => {
       const jsonContent = `{"event.id":"evt-000001","service.id":"svc-0001","service.name":"sample-service","request.id":"req-0001","request.path":"/api/v1/resource","request.method":"GET","url.scheme":"https","url.domain":"api.example.test","url.query":"mode=test&source=sample","client.ip":"192.0.2.10","server.ip":"198.51.100.20","response.status_code":"200","response.time_ms":42,"environment.name":"test-env","region.name":"region-a","tenant.name":"tenant-sample","host.name":"ingest.example.test","log.level":"INFO","message":"sample request processed","@timestamp":"2026-01-01T00:00:00.000Z","payload":{"result":"ok","count":1}}`;
       

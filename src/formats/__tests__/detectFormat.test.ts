@@ -80,6 +80,63 @@ app.version =1.0.0`;
       expect(result).toBe('toml');
     });
 
+    test("ranks TOML above INI/Properties for canonical TOML with table-specific features", () => {
+      const content = `title = "TOML Example"
+
+[database]
+host = "localhost"
+port = 5432
+enabled = true
+published_at = 1979-05-27T07:32:00Z
+tags = ["primary", "prod"]
+inline = { env = "dev", retries = 3 }
+
+[[products]]
+name = "Hammer"
+sku = 738594937`;
+
+      const result = detectFormat(content);
+      const matches = getPotentialFormatMatches(content, 5);
+      const tomlMatch = matches.find((match) => match.id === "toml");
+      const iniMatch = matches.find((match) => match.id === "ini");
+      const propertiesMatch = matches.find((match) => match.id === "properties");
+
+      expect(result).toBe("toml");
+      expect(matches[0].id).toBe("toml");
+      expect(tomlMatch).toBeDefined();
+
+      if (iniMatch) {
+        expect(tomlMatch!.score).toBeGreaterThan(iniMatch.score);
+      }
+      if (propertiesMatch) {
+        expect(tomlMatch!.score).toBeGreaterThan(propertiesMatch.score);
+      }
+    });
+
+    test("keeps TOML confidence low for INI-like content so INI/Properties can outrank it", () => {
+      const content = `[database]
+host = localhost
+port = 5432
+enabled = true
+
+[logging]
+level = INFO
+file = /var/log/app.log`;
+
+      const result = detectFormat(content);
+      const matches = getPotentialFormatMatches(content, 5);
+      const top = matches[0];
+      const tomlMatch = matches.find((match) => match.id === "toml");
+
+      expect(["ini", "properties"]).toContain(result);
+      expect(["ini", "properties"]).toContain(top.id);
+
+      if (tomlMatch) {
+        expect(tomlMatch.score).toBeLessThan(0.6);
+        expect(tomlMatch.score).toBeLessThan(top.score);
+      }
+    });
+
 //     test('correctly identifies CSV content', () => {
 //       const content = 'name,age,city\nJohn,30,New York\nJane,25,Boston';
 //       const result = detectFormat(content);
