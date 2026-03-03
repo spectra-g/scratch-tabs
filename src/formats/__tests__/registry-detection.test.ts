@@ -34,6 +34,7 @@ import { SvgFormatDetector } from "../svg";
 import { VhostFormatDetector } from "../vhost";
 import { XmlFormatDetector } from "../xml";
 import { YamlFormatDetector } from "../yaml";
+import { TomlFormatDetector } from "../toml/toml-detector";
 
 /**
  * High-level registry tests that verify each format's sample content
@@ -293,6 +294,13 @@ describe("Registry Format Detection", () => {
       name: "YAML",
       detectorClass: YamlFormatDetector,
       expectedMinConfidence: 0.6,
+      expectedDefinitive: undefined,
+    },
+    {
+      id: "toml",
+      name: "TOML",
+      detectorClass: TomlFormatDetector,
+      expectedMinConfidence: 0.5,
       expectedDefinitive: undefined,
     },
   ];

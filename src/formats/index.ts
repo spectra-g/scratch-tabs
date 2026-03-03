@@ -41,6 +41,7 @@ import "./xml";
 import "./yaml";
 import "./yaml/index";
 import "./ndjson/index";
+import "./toml/index";
 
 // Export the registry for use in the application
 export { formatRegistry };
