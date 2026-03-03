@@ -73,6 +73,13 @@ app.version =1.0.0`;
       expect(result).toBe(matches[0].id);
     });
 
+    test('detects canonical TOML content', () => {
+      const content = `[section]\nkey = "value"`;
+      const result = detectFormat(content);
+
+      expect(result).toBe('toml');
+    });
+
 //     test('correctly identifies CSV content', () => {
 //       const content = 'name,age,city\nJohn,30,New York\nJane,25,Boston';
 //       const result = detectFormat(content);

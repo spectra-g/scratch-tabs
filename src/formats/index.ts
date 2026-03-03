@@ -32,6 +32,7 @@ import "./ruby";
 import "./rust";
 import "./scala";
 import "./sql";
+import "./toml";
 import "./stacktrace";
 import "./stacktrace/index";
 import "./diff/index";
