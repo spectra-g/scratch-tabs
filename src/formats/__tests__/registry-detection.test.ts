@@ -31,6 +31,7 @@ import { ScalaFormatDetector } from "../scala";
 import { SqlFormatDetector } from "../sql";
 import { StacktraceFormatDetector } from "../stacktrace";
 import { SvgFormatDetector } from "../svg";
+import { TomlFormatDetector } from "../toml";
 import { VhostFormatDetector } from "../vhost";
 import { XmlFormatDetector } from "../xml";
 import { YamlFormatDetector } from "../yaml";
@@ -254,6 +255,13 @@ describe("Registry Format Detection", () => {
       expectedDefinitive: undefined,
     },
     {
+      id: "toml",
+      name: "TOML",
+      detectorClass: TomlFormatDetector,
+      expectedMinConfidence: 0.6,
+      expectedDefinitive: undefined,
+    },
+    {
       id: "stacktrace",
       name: "Stacktrace",
       detectorClass: StacktraceFormatDetector,
@@ -401,6 +409,18 @@ describe("Registry Format Detection", () => {
   // Generate tests for each configured format
   formatTestConfigs.forEach(config => {
     createFormatTest(config);
+  });
+
+  describe("Registry Metadata", () => {
+    test("should include TOML metadata in format registry", () => {
+      const allModules = formatRegistry.getAll();
+      const tomlModule = allModules.find((module) => module.id === "toml");
+
+      expect(tomlModule).toBeDefined();
+      expect(tomlModule!.id).toBe("toml");
+      expect(tomlModule!.name).toBe("TOML");
+      expect(tomlModule!.extensions).toEqual(["toml"]);
+    });
   });
 
   describe("Cross-Format Detection Issues", () => {
