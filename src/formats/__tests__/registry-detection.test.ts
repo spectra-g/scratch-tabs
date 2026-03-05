@@ -31,6 +31,7 @@ import { ScalaFormatDetector } from "../scala";
 import { SqlFormatDetector } from "../sql";
 import { StacktraceFormatDetector } from "../stacktrace";
 import { SvgFormatDetector } from "../svg";
+import { TomlFormatDetector } from "../toml";
 import { VhostFormatDetector } from "../vhost";
 import { XmlFormatDetector } from "../xml";
 import { YamlFormatDetector } from "../yaml";
@@ -259,6 +260,13 @@ describe("Registry Format Detection", () => {
       detectorClass: StacktraceFormatDetector,
       expectedMinConfidence: 0.6,
       expectedDefinitive: undefined,
+    },
+    {
+      id: "toml",
+      name: "TOML",
+      detectorClass: TomlFormatDetector,
+      expectedMinConfidence: 0.8,
+      expectedDefinitive: true,
     },
     {
       id: "xml",
