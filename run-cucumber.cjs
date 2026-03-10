@@ -15,6 +15,15 @@ const cucumber = spawn('npx', ['cucumber-js', ...args], {
   env: { ...process.env }
 });
 
+// Forward signals so that AfterAll hooks in hooks.ts (which kill the dev server) still run
+function forwardSignal(signal) {
+  if (!cucumber.killed) {
+    cucumber.kill(signal);
+  }
+}
+process.on('SIGINT', () => forwardSignal('SIGINT'));
+process.on('SIGTERM', () => forwardSignal('SIGTERM'));
+
 cucumber.on('close', (code) => {
   process.exit(code);
 }); 

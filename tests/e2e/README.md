@@ -66,11 +66,44 @@ The file has been **streamlined** to its essential purpose, removing 50+ legacy 
 
 This process is automated by the build scripts but can cause issues if not run properly.
 
+## Dev Server Lifecycle
+
+The test suite automatically manages a Vite dev server — **you do not need to pre-start one**.
+
+### How it works
+
+1. **BeforeAll** (`hooks.ts`): the framework finds a free OS-assigned port, spawns `vite --port <port> --strictPort`, and polls `http://localhost:<port>` until the server responds (up to 30 seconds).
+2. The port is stored in `process.env.BASE_URL` so all `page.goto` calls use the correct ephemeral URL.
+3. **AfterAll** (`hooks.ts`): the server process is sent `SIGTERM` (then `SIGKILL` after 5 seconds if needed) and the port is released.
+
+### Skipping auto-start
+
+If you want to test against an already-running server (e.g. a production build or a custom port), set `BASE_URL` before running:
+
+```bash
+BASE_URL=http://localhost:5173 npm run e2e
+```
+
+When `BASE_URL` is set, the framework skips spawning a new server entirely.
+
+### Ctrl-C / SIGINT handling
+
+Pressing Ctrl-C during a test run sends `SIGINT` to the `run-cucumber.cjs` wrapper, which forwards it to the `cucumber-js` process. Cucumber's `AfterAll` hook fires, killing the dev server cleanly before exit. No orphaned processes.
+
+### Startup timeout
+
+If the dev server does not respond within **30 seconds**, `BeforeAll` throws an error and the run aborts. If this happens:
+- Check that `vite` can be found via `npx` (i.e. `node_modules/.bin/vite` exists).
+- Run `npm install` to ensure dependencies are installed.
+- Look for `[vite]` prefixed lines in the output for Vite's own error messages.
+
+---
+
 ## Commands
 
 ### Full Test Execution
 ```bash
-# Run all tests (excluding @wip scenarios)
+# Run all tests (excluding @wip scenarios) — dev server starts automatically
 npm run e2e
 
 # Run all tests (including @wip scenarios)

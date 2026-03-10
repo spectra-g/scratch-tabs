@@ -4,7 +4,7 @@ export class NavigationActions {
   constructor(private page: Page) { }
 
   async navigateToHome() {
-    await this.page.goto('http://localhost:5173/');
+    await this.page.goto(process.env.BASE_URL ?? 'http://localhost:5173/');
     await this.page.waitForLoadState('domcontentloaded');
     await expect(this.page.getByText('SCRATCH_TABS')).toBeVisible();
     await this.waitForPageStabilization();
