@@ -34,6 +34,7 @@ import { SvgFormatDetector } from "../svg";
 import { VhostFormatDetector } from "../vhost";
 import { XmlFormatDetector } from "../xml";
 import { YamlFormatDetector } from "../yaml";
+import { TomlFormatDetector } from "../toml";
 
 /**
  * High-level registry tests that verify each format's sample content
@@ -47,6 +48,16 @@ import { YamlFormatDetector } from "../yaml";
  * 4. Tests will be automatically generated
  */
 describe("Registry Format Detection", () => {
+  test("AC-003: TOML is registered after format bootstrap side-effect import", async () => {
+    jest.resetModules();
+
+    const { formatRegistry: freshRegistry } = await import("../registry");
+    await import("../index");
+
+    const hasToml = freshRegistry.getAll().some((module) => module.id === "toml");
+    expect(hasToml).toBe(true);
+  });
+
   // Test configuration for each format
   const formatTestConfigs = [
     {
@@ -292,6 +303,13 @@ describe("Registry Format Detection", () => {
       id: "yaml",
       name: "YAML",
       detectorClass: YamlFormatDetector,
+      expectedMinConfidence: 0.6,
+      expectedDefinitive: undefined,
+    },
+    {
+      id: "toml",
+      name: "TOML",
+      detectorClass: TomlFormatDetector,
       expectedMinConfidence: 0.6,
       expectedDefinitive: undefined,
     },

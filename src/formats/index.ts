@@ -33,6 +33,7 @@ import "./rust";
 import "./scala";
 import "./sql";
 import "./stacktrace";
+import "./toml/index";
 import "./stacktrace/index";
 import "./diff/index";
 import "./svg";
