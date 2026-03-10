@@ -2,6 +2,51 @@ import { detectFormat, getPotentialFormatMatches } from '../index';
 
 describe('Format Detection', () => {
   describe('detectFormat function', () => {
+    describe('TOML acceptance (STORY-012)', () => {
+      const canonicalToml = `# App configuration
+title = "Scratch Tabs"
+enabled = true
+retry_count = 3
+
+[server]
+host = "localhost"
+port = 3000
+
+[database]
+ports = [ 8001, 8001, 8002 ]
+connection_max = 5000
+enabled = true
+
+[[users]]
+name = "Alice"
+role = "admin"
+
+[[users]]
+name = "Bob"
+role = "viewer"`;
+
+      test('AC-001: detectFormat returns toml for canonical TOML content', () => {
+        const detectedId = detectFormat(canonicalToml);
+        const matches = getPotentialFormatMatches(canonicalToml, 5);
+
+        expect(detectedId).toBe('toml');
+        expect(matches[0].id).toBe('toml');
+        expect(matches[0].score).toBeGreaterThanOrEqual(0.95);
+      });
+
+      test('AC-002: getPotentialFormatMatches ranks toml first', () => {
+        const matches = getPotentialFormatMatches(canonicalToml, 5);
+
+        expect(matches.length).toBeGreaterThan(0);
+        expect(matches[0].id).toBe('toml');
+      });
+
+      test('AC-003: TOML module is present in public registry flow', () => {
+        const matches = getPotentialFormatMatches(canonicalToml, 20);
+        expect(matches.some((match) => match.id === 'toml')).toBe(true);
+      });
+    });
+
     test('detects regular JSON object', () => {
       const content = '{"name": "John", "age": 30}';
       const result = detectFormat(content);

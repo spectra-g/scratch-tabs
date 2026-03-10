@@ -34,6 +34,7 @@ import "./scala";
 import "./sql";
 import "./stacktrace";
 import "./stacktrace/index";
+import "./toml";
 import "./diff/index";
 import "./svg";
 import "./vhost";

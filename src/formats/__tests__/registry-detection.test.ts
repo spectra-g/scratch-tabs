@@ -31,6 +31,7 @@ import { ScalaFormatDetector } from "../scala";
 import { SqlFormatDetector } from "../sql";
 import { StacktraceFormatDetector } from "../stacktrace";
 import { SvgFormatDetector } from "../svg";
+import { TomlFormatDetector } from "../toml";
 import { VhostFormatDetector } from "../vhost";
 import { XmlFormatDetector } from "../xml";
 import { YamlFormatDetector } from "../yaml";
@@ -268,6 +269,13 @@ describe("Registry Format Detection", () => {
       expectedDefinitive: undefined,
     },
     {
+      id: "toml",
+      name: "TOML",
+      detectorClass: TomlFormatDetector,
+      expectedMinConfidence: 0.7,
+      expectedDefinitive: undefined,
+    },
+    {
       id: "typescript",
       name: "TypeScript",
       detectorClass: TypeScriptFormatDetector,
@@ -404,6 +412,42 @@ describe("Registry Format Detection", () => {
   });
 
   describe("Cross-Format Detection Issues", () => {
+    test("TOML should win against INI, Properties, and YAML for canonical TOML", () => {
+      const tomlContent = `# App configuration
+title = "Scratch Tabs"
+enabled = true
+retry_count = 3
+
+[server]
+host = "localhost"
+port = 3000
+
+[database]
+ports = [ 8001, 8001, 8002 ]
+connection_max = 5000
+enabled = true
+
+[[users]]
+name = "Alice"
+role = "admin"`;
+
+      const detectedFormat = formatRegistry.detectFormat(tomlContent);
+      expect(detectedFormat).toBe("toml");
+
+      const results = getAllDetectionResults(tomlContent);
+      const toml = results.find((r) => r.id === "toml");
+      const ini = results.find((r) => r.id === "ini");
+      const properties = results.find((r) => r.id === "properties");
+      const yaml = results.find((r) => r.id === "yaml");
+
+      expect(toml).toBeDefined();
+      expect(toml!.match).toBe(true);
+      expect(toml!.confidence).toBeGreaterThanOrEqual(0.9);
+      expect(ini?.confidence ?? 0).toBeLessThan(toml!.confidence);
+      expect(properties?.confidence ?? 0).toBeLessThan(toml!.confidence);
+      expect(yaml?.confidence ?? 0).toBeLessThan(toml!.confidence);
+    });
+
     test("R and CSV should NOT detect JSON with dot notation properties", () => {
       const jsonContent = `{"event.id":"evt-000001","service.id":"svc-0001","service.name":"sample-service","request.id":"req-0001","request.path":"/api/v1/resource","request.method":"GET","url.scheme":"https","url.domain":"api.example.test","url.query":"mode=test&source=sample","client.ip":"192.0.2.10","server.ip":"198.51.100.20","response.status_code":"200","response.time_ms":42,"environment.name":"test-env","region.name":"region-a","tenant.name":"tenant-sample","host.name":"ingest.example.test","log.level":"INFO","message":"sample request processed","@timestamp":"2026-01-01T00:00:00.000Z","payload":{"result":"ok","count":1}}`;
       
