@@ -1,12 +1,100 @@
 import { BeforeAll, AfterAll, Before, After, setDefaultTimeout } from '@cucumber/cucumber';
 import { chromium } from '@playwright/test';
 import { E2EWorld } from './world.js';
+import * as net from 'net';
+import * as http from 'http';
+import { spawn, ChildProcess } from 'child_process';
 
 let browser: any;
+let devServer: ChildProcess | null = null;
 
 setDefaultTimeout(30 * 1000);
 
+function findFreePort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address() as net.AddressInfo;
+      const port = address.port;
+      server.close((err) => {
+        if (err) reject(err);
+        else resolve(port);
+      });
+    });
+    server.on('error', reject);
+  });
+}
+
+function waitForServer(url: string, timeoutMs = 30000): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const deadline = Date.now() + timeoutMs;
+    function poll() {
+      http.get(url, (res) => {
+        res.resume();
+        resolve();
+      }).on('error', () => {
+        if (Date.now() >= deadline) {
+          reject(new Error(`Dev server at ${url} did not become ready within ${timeoutMs}ms`));
+        } else {
+          setTimeout(poll, 500);
+        }
+      });
+    }
+    poll();
+  });
+}
+
+function killServer(proc: ChildProcess): Promise<void> {
+  return new Promise((resolve) => {
+    if (!proc || proc.exitCode !== null) {
+      resolve();
+      return;
+    }
+    proc.once('exit', () => resolve());
+    proc.kill('SIGTERM');
+    // Force-kill after 5 seconds if SIGTERM is ignored
+    setTimeout(() => {
+      try { proc.kill('SIGKILL'); } catch (_) { /* already dead */ }
+    }, 5000);
+  });
+}
+
 BeforeAll(async function () {
+  // Allow opting out of auto-server when BASE_URL is already set (e.g. developer testing against a specific server)
+  if (!process.env.BASE_URL) {
+    const port = await findFreePort();
+    const baseUrl = `http://localhost:${port}`;
+
+    devServer = spawn('npx', ['vite', '--port', String(port), '--strictPort'], {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: { ...process.env }
+    });
+
+    devServer.stdout?.on('data', (chunk: Buffer) => {
+      process.stdout.write(`[vite] ${chunk}`);
+    });
+    devServer.stderr?.on('data', (chunk: Buffer) => {
+      process.stderr.write(`[vite] ${chunk}`);
+    });
+
+    devServer.on('error', (err) => {
+      console.error('[vite] Failed to start dev server:', err);
+    });
+
+    // Register signal handlers so Ctrl-C or SIGTERM also kills the dev server
+    const cleanup = () => {
+      if (devServer) killServer(devServer).finally(() => process.exit(1));
+    };
+    process.once('SIGINT', cleanup);
+    process.once('SIGTERM', cleanup);
+
+    await waitForServer(baseUrl);
+    process.env.BASE_URL = baseUrl;
+    console.log(`[hooks] Dev server ready at ${baseUrl}`);
+  } else {
+    console.log(`[hooks] Using existing server at ${process.env.BASE_URL}`);
+  }
+
   browser = await chromium.launch({
     headless: process.env.HEADED !== 'true'
   });
@@ -14,6 +102,11 @@ BeforeAll(async function () {
 
 AfterAll(async function () {
   await browser.close();
+  if (devServer) {
+    await killServer(devServer);
+    devServer = null;
+    console.log('[hooks] Dev server stopped');
+  }
 });
 
 Before(async function () {
