@@ -109,6 +109,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         {showLanguagePopup && (
           <FormatSelectionPopup
             formats={getPopupLanguages(showLanguagePopup)}
+            selectedFormatId={activeTab.language}
             onSelectFormat={handleSelectLanguage}
             onClose={() => setShowLanguagePopup(false)}
             title={

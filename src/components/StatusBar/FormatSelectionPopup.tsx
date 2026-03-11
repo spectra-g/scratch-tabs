@@ -3,6 +3,7 @@ import type { PopupMenuItem } from "./types";
 
 interface FormatSelectionPopupProps {
   formats: PopupMenuItem[];
+  selectedFormatId?: string;
   onSelectFormat: (formatId: string) => void;
   onClose: () => void;
   title?: string;
@@ -10,6 +11,7 @@ interface FormatSelectionPopupProps {
 
 export const FormatSelectionPopup: React.FC<FormatSelectionPopupProps> = ({
   formats,
+  selectedFormatId,
   onSelectFormat,
   onClose,
   title,
@@ -91,9 +93,15 @@ export const FormatSelectionPopup: React.FC<FormatSelectionPopupProps> = ({
           return (
             <button
               key={item.id}
-              className="w-full text-left px-3 py-1.5 hover:bg-element-hover text-xs text-main transition-colors block"
+              className={`w-full text-left px-3 py-1.5 text-xs text-main transition-colors block ${
+                item.id === selectedFormatId
+                  ? "bg-element-hover font-medium"
+                  : "hover:bg-element-hover"
+              }`}
               onClick={() => handleSelectFormat(item.id)}
               title={`Select ${item.name}`}
+              data-selected={item.id === selectedFormatId ? "true" : "false"}
+              aria-current={item.id === selectedFormatId ? "true" : undefined}
             >
               <span>{item.name}</span>
             </button>

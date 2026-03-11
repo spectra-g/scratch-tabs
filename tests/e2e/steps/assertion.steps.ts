@@ -267,6 +267,22 @@ Then('I should see "{string}" message', async function(message) {
   }
 });
 
+Then('I should see {string} in the format results', async function(formatName) {
+  await this.statusBar.expectFormatOptionVisible(formatName);
+});
+
+Then('I should see "{string}" in the format results', async function(formatName) {
+  await this.statusBar.expectFormatOptionVisible(formatName);
+});
+
+Then('{string} should be marked as the selected format', async function(formatName) {
+  await this.statusBar.expectFormatOptionSelected(formatName);
+});
+
+Then('"{string}" should be marked as the selected format', async function(formatName) {
+  await this.statusBar.expectFormatOptionSelected(formatName);
+});
+
 Then('I should not see any format options', async function() {
   // This is verified by the "No formats found" message being visible
 });
