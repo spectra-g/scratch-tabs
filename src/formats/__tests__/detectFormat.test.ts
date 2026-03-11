@@ -73,6 +73,27 @@ app.version =1.0.0`;
       expect(result).toBe(matches[0].id);
     });
 
+    test('detects TOML as the top match with high confidence for well-formed content', () => {
+      const content = `# Application configuration
+title = "Scratch Tabs"
+
+[database]
+server = "localhost"
+ports = [8000, 8001, 8002]
+enabled = true
+
+[[service.instances]]
+name = "api"
+priority = 1`;
+
+      const result = detectFormat(content);
+      const matches = getPotentialFormatMatches(content, 5);
+
+      expect(result).toBe('toml');
+      expect(matches[0].id).toBe('toml');
+      expect(matches[0].score).toBeGreaterThan(0.9);
+    });
+
 //     test('correctly identifies CSV content', () => {
 //       const content = 'name,age,city\nJohn,30,New York\nJane,25,Boston';
 //       const result = detectFormat(content);
