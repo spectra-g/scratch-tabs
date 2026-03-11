@@ -7,8 +7,32 @@ export class TomlFormatDetector extends BaseFormatDetector implements FormatModu
   extensions = ["toml"];
   priority = 3;
 
-  detect(_content: string): DetectionResult {
-    return this.noMatch();
+  detect(content: string): DetectionResult {
+    const trimmed = content.trim();
+
+    if (!trimmed) {
+      return this.noMatch();
+    }
+
+    const hasSection = /^\s*\[[^\]\n]+\]\s*$/m.test(content);
+    const hasAssignment = /^\s*[A-Za-z0-9_.-]+\s*=\s*.+$/m.test(content);
+    const hasComment = /^\s*#.*$/m.test(content);
+
+    if (!hasAssignment) {
+      return this.noMatch();
+    }
+
+    if (hasSection || hasComment) {
+      return {
+        match: true,
+        confidence: 0.6,
+      };
+    }
+
+    return {
+      match: true,
+      confidence: 0.4,
+    };
   }
 
   sampleContent(): string {
