@@ -1,10 +1,13 @@
 import { IniFormatDetector } from "../ini";
+import { TomlFormatDetector } from "../toml";
 
 describe("IniFormatDetector", () => {
   let detector: IniFormatDetector;
+  let tomlDetector: TomlFormatDetector;
 
   beforeEach(() => {
     detector = new IniFormatDetector();
+    tomlDetector = new TomlFormatDetector();
   });
 
   describe("Basic Properties", () => {
@@ -53,6 +56,35 @@ debug = false`;
       const result = detector.detect(standardIni);
       expect(result.match).toBe(true);
       expect(result.confidence).toBeGreaterThan(0.5);
+    });
+
+    test("ranks INI section-based content above TOML", () => {
+      const iniContent = `[database]
+host = localhost
+port = 5432
+
+[application]
+debug = false`;
+
+      const iniResult = detector.detect(iniContent);
+      const tomlResult = tomlDetector.detect(iniContent);
+
+      expect(iniResult.match).toBe(true);
+      expect(iniResult.confidence).toBeGreaterThan(tomlResult.confidence);
+    });
+
+    test("ranks TOML-specific constructs above INI", () => {
+      const tomlContent = `title = "Scratch Tabs"
+
+[[service.instances]]
+name = "api"
+server.host = "localhost"`;
+
+      const iniResult = detector.detect(tomlContent);
+      const tomlResult = tomlDetector.detect(tomlContent);
+
+      expect(tomlResult.match).toBe(true);
+      expect(tomlResult.confidence).toBeGreaterThan(iniResult.confidence);
     });
 
     test("should REJECT Java-style properties file with no sections", () => {

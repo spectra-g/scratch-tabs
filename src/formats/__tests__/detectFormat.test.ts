@@ -94,6 +94,41 @@ priority = 1`;
       expect(matches[0].score).toBeGreaterThan(0.9);
     });
 
+    test('ranks YAML nested list content above TOML', () => {
+      const content = `services:
+  api:
+    ports:
+      - 8080
+      - 8081
+    enabled: true`;
+
+      const result = detectFormat(content);
+      const matches = getPotentialFormatMatches(content, 5);
+
+      expect(result).toBe('yaml');
+      expect(matches[0].id).toBe('yaml');
+      expect(matches.find((match) => match.id === 'toml')?.score ?? 0).toBeLessThan(
+        matches[0].score,
+      );
+    });
+
+    test('ranks TOML-specific syntax above YAML', () => {
+      const content = `title = "Scratch Tabs"
+
+[[services]]
+name = "api"
+metadata = { owner = "ops", region = "eu-west-2" }`;
+
+      const result = detectFormat(content);
+      const matches = getPotentialFormatMatches(content, 5);
+
+      expect(result).toBe('toml');
+      expect(matches[0].id).toBe('toml');
+      expect(matches.find((match) => match.id === 'yaml')?.score ?? 0).toBeLessThan(
+        matches[0].score,
+      );
+    });
+
 //     test('correctly identifies CSV content', () => {
 //       const content = 'name,age,city\nJohn,30,New York\nJane,25,Boston';
 //       const result = detectFormat(content);

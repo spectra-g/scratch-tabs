@@ -31,6 +31,14 @@ export class TomlFormatDetector extends BaseFormatDetector implements FormatModu
     const arrayTableMatches = content.match(arrayTableHeaderPattern) ?? [];
     const hashComments = content.match(/^\s*#.*$/gm) ?? [];
     const semicolonComments = content.match(/^\s*;.*$/gm) ?? [];
+    const dottedKeyPattern =
+      /^\s*(?:"[^"\n]*\.[^"\n]*"|'[^'\n]*\.[^'\n]*'|[A-Za-z0-9_-]+\.[A-Za-z0-9_.-]+)\s*=\s*.+$/m;
+    const inlineTablePattern = /\{[^}\n]*\b[A-Za-z0-9_-]+\s*=\s*[^}\n]+\}/;
+    const datetimeLiteralPattern =
+      /=\s*\d{4}-\d{2}-\d{2}(?:[T ][0-9:.+-]+Z?)?/m;
+    const tomlLiteralValuePattern =
+      /=\s*(?:"[^"\n]*"|'[^'\n]*'|\d{4}-\d{2}-\d{2}(?:[T ][0-9:.+-]+Z?)?|\d+(?:\.\d+)?|\[.*\]|true|false)/m;
+    const bareWordValuePattern = /^\s*[^=\n]+\s*=\s*[A-Za-z_][\w-]*\s*(?:#.*)?$/gm;
 
     if (keyValueMatches.length === 0) {
       return this.noMatch();
@@ -42,23 +50,22 @@ export class TomlFormatDetector extends BaseFormatDetector implements FormatModu
       confidence += 0.35;
     }
     if (arrayTableMatches.length > 0) {
-      confidence += 0.2;
+      confidence += 0.35;
     }
     confidence += Math.min(keyValueMatches.length, 4) * 0.1;
     confidence += Math.min(hashComments.length, 2) * 0.05;
 
-    if (/\{[^}\n]*\b[A-Za-z0-9_-]+\s*=\s*[^}\n]+\}/.test(content)) {
-      confidence += 0.1;
+    if (inlineTablePattern.test(content)) {
+      confidence += 0.15;
     }
-    if (/^\s*[A-Za-z0-9_-]+\.[A-Za-z0-9_.-]+\s*=\s*.+$/m.test(content)) {
+    if (dottedKeyPattern.test(content)) {
+      confidence += 0.25;
+    }
+    if (tomlLiteralValuePattern.test(content)) {
       confidence += 0.05;
     }
-    if (
-      /=\s*(?:\d{4}-\d{2}-\d{2}[T ][0-9:.+-]+Z?|\[.*\]|true|false|".*"|'.*')/m.test(
-        content,
-      )
-    ) {
-      confidence += 0.05;
+    if (datetimeLiteralPattern.test(content)) {
+      confidence += 0.15;
     }
 
     if (semicolonComments.length > 0) {
@@ -67,27 +74,32 @@ export class TomlFormatDetector extends BaseFormatDetector implements FormatModu
     if (/^\s*\[[^\]\n]+\]\s*=\s*.+$/m.test(content)) {
       confidence -= 0.15;
     }
+    confidence -= Math.min((content.match(bareWordValuePattern) ?? []).length, 3) * 0.15;
 
     confidence = Math.max(0, Math.min(1, confidence));
 
     const hasTomlSpecificStructure =
       arrayTableMatches.length > 0 ||
-      /\{[^}\n]*\b[A-Za-z0-9_-]+\s*=\s*[^}\n]+\}/.test(content) ||
-      /^\s*[A-Za-z0-9_-]+\.[A-Za-z0-9_.-]+\s*=\s*.+$/m.test(content);
+      inlineTablePattern.test(content) ||
+      dottedKeyPattern.test(content) ||
+      datetimeLiteralPattern.test(content);
     const isTomlLike =
       (tableMatches.length > 0 || arrayTableMatches.length > 0) &&
       keyValueMatches.length > 0 &&
       nonEmptyLines.length >= 3 &&
       !(semicolonComments.length > 0 && !hasTomlSpecificStructure);
+    const isConfidentTomlCandidate =
+      confidence >= 0.65 &&
+      (hasTomlSpecificStructure || nonEmptyLines.length >= 3);
     const matchedDefinitive =
-      isTomlLike &&
+      (isTomlLike || hasTomlSpecificStructure) &&
       confidence >= 0.9 &&
       semicolonComments.length === 0 &&
       hasTomlSpecificStructure;
 
     return {
-      match: isTomlLike || confidence >= 0.65,
-      confidence: isTomlLike || confidence >= 0.65 ? confidence : 0,
+      match: isTomlLike || isConfidentTomlCandidate,
+      confidence: isTomlLike || isConfidentTomlCandidate ? confidence : 0,
       matchedDefinitive,
     };
   }
