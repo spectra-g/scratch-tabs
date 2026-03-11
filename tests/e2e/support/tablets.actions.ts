@@ -8,6 +8,24 @@ import { Page, expect } from '@playwright/test';
 export class TabletsActions {
   constructor(private page: Page) { }
 
+  async expectPersonalKanbanColumnVisible(columnTitle: string) {
+    const columnHeader = this.page
+      .locator('[data-testid^="personal-kanban-column-"] h2')
+      .filter({ hasText: new RegExp(`^${columnTitle}$`) });
+    await expect(columnHeader).toBeVisible();
+  }
+
+  async expectPersonalKanbanEmptyStateVisibleInEachColumn() {
+    const columns = this.page.locator('[data-testid^="personal-kanban-column-"]');
+    await expect(columns).toHaveCount(3);
+
+    const emptyStateTitles = this.page.getByText('No cards yet', { exact: true });
+    const emptyStateDescriptions = this.page.getByText('Add a card to get started', { exact: true });
+
+    await expect(emptyStateTitles).toHaveCount(3);
+    await expect(emptyStateDescriptions).toHaveCount(3);
+  }
+
   // ============================================================================
   // Calculator Tablet
   // ============================================================================

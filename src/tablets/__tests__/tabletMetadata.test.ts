@@ -153,6 +153,17 @@ describe('Tablet Metadata Actions', () => {
         }
       });
     });
+
+    it('should include Personal Kanban with the expected registration contract', () => {
+      const personalKanbanMetadata = tabletMetadata.find(meta => meta.id === 'personalkanban');
+
+      expect(personalKanbanMetadata).toEqual({
+        id: 'personalkanban',
+        label: 'Personal Kanban',
+        description: expect.any(String),
+        keywords: expect.arrayContaining(['kanban', 'board', 'tasks']),
+      });
+    });
   });
 
   describe('Dynamic action discovery', () => {

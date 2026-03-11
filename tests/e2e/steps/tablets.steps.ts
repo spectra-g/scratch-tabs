@@ -223,3 +223,15 @@ Then('I should see the emoji picker interface', async function () {
 Then('I should see emoji grid', async function () {
   await this.tablets.expectEmojiGridVisible();
 });
+
+// ============================================================================
+// Personal Kanban Tablet Steps
+// ============================================================================
+
+Then('I should see the Personal Kanban column {string}', async function (columnTitle: string) {
+  await this.tablets.expectPersonalKanbanColumnVisible(columnTitle);
+});
+
+Then('each Personal Kanban column should show the empty state', async function () {
+  await this.tablets.expectPersonalKanbanEmptyStateVisibleInEachColumn();
+});

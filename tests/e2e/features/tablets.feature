@@ -132,3 +132,28 @@ Feature: Tablets Smoke Tests
     Then the "Emoji as Data" tab should exist on the page
     And I should see the emoji picker interface
     And I should see emoji grid
+
+  Scenario: Personal Kanban opens from the tool selector
+    When I click the icon for "New tab"
+    And I click the icon for "New tablet"
+    And I select "Personal Kanban" from the tablet selector
+    And I wait for the tablet to be ready
+    Then the "Personal Kanban" tab should exist on the page
+
+  Scenario: Personal Kanban shows the default board columns
+    When I click the icon for "New tab"
+    And I click the icon for "New tablet"
+    And I select "Personal Kanban" from the tablet selector
+    And I wait for the tablet to be ready
+    Then the "Personal Kanban" tab should exist on the page
+    And I should see the Personal Kanban column "To Do"
+    And I should see the Personal Kanban column "In Progress"
+    And I should see the Personal Kanban column "Done"
+
+  Scenario: Personal Kanban shows empty state placeholders in each column
+    When I click the icon for "New tab"
+    And I click the icon for "New tablet"
+    And I select "Personal Kanban" from the tablet selector
+    And I wait for the tablet to be ready
+    Then the "Personal Kanban" tab should exist on the page
+    And each Personal Kanban column should show the empty state

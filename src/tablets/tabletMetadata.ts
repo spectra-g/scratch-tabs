@@ -99,6 +99,12 @@ export const tabletMetadata: TabletMetadata[] = [
     keywords: ["password", "generator", "secure", "random", "crypto"],
   },
   {
+    id: "personalkanban",
+    label: "Personal Kanban",
+    description: "A lightweight personal board with To Do, In Progress, and Done columns.",
+    keywords: ["kanban", "board", "tasks", "todo", "productivity"],
+  },
+  {
     id: "pomodoro",
     label: "Pomodoro Timer",
     description: "A simple productivity timer based on the Pomodoro Technique with work/break sessions.",
