@@ -35,6 +35,7 @@ import { TomlFormatDetector } from "../toml";
 import { VhostFormatDetector } from "../vhost";
 import { XmlFormatDetector } from "../xml";
 import { YamlFormatDetector } from "../yaml";
+import { TomlFormatDetector } from "../toml";
 
 /**
  * High-level registry tests that verify each format's sample content
@@ -304,6 +305,32 @@ describe("Registry Format Detection", () => {
       expectedDefinitive: undefined,
     },
   ];
+
+  test("keeps ambiguous short key-value content from being confidently classified as TOML", () => {
+    const tomlDetector = new TomlFormatDetector();
+    const content = `key=value
+other=123`;
+
+    const result = tomlDetector.detect(content);
+    const matches = formatRegistry.getPotentialMatches(content, 5);
+
+    expect(result.match).toBe(false);
+    expect(result.confidence).toBe(0);
+    expect(matches.some((match) => match.id === "toml")).toBe(false);
+  });
+
+  test("keeps short sectioned content from claiming TOML without TOML-specific syntax", () => {
+    const tomlDetector = new TomlFormatDetector();
+    const content = `[database]
+server = "localhost"`;
+
+    const result = tomlDetector.detect(content);
+    const matches = formatRegistry.getPotentialMatches(content, 5);
+
+    expect(result.match).toBe(false);
+    expect(result.confidence).toBe(0);
+    expect(matches.some((match) => match.id === "toml")).toBe(false);
+  });
   // Helper function to get all detection results for content
   function getAllDetectionResults(content: string) {
     const results: Array<{

@@ -1,13 +1,19 @@
 import "../index";
 import { formatRegistry } from "../registry";
+import { HclFormatDetector } from "../hcl";
+import { IniFormatDetector } from "../ini";
 import { TomlFormatDetector } from "../toml";
 import { TomlFormatModule } from "../toml/index";
 
 describe("TomlFormatDetector", () => {
   let detector: TomlFormatDetector;
+  let iniDetector: IniFormatDetector;
+  let hclDetector: HclFormatDetector;
 
   beforeEach(() => {
     detector = new TomlFormatDetector();
+    iniDetector = new IniFormatDetector();
+    hclDetector = new HclFormatDetector();
   });
 
   test("registers TOML in the format registry", () => {
@@ -84,6 +90,60 @@ started_at = 2026-03-11T09:00:00Z`;
       }),
     );
     expect(result.confidence).toBeGreaterThan(0.9);
+  });
+
+  test("treats array-of-tables as a decisive TOML signal", () => {
+    const content = `title = "Services"
+
+[[services]]
+name = "api"
+
+[[services]]
+name = "worker"`;
+
+    const tomlResult = detector.detect(content);
+    const iniResult = iniDetector.detect(content);
+    const hclResult = hclDetector.detect(content);
+
+    expect(tomlResult.match).toBe(true);
+    expect(tomlResult.confidence).toBeGreaterThan(0.9);
+    expect(iniResult.confidence).toBeLessThan(0.5);
+    expect(hclResult.confidence).toBeLessThan(0.5);
+  });
+
+  test("elevates dotted keys above INI-style ambiguity", () => {
+    const content = `title = "Server config"
+server.host = "localhost"
+server.port = 8080`;
+
+    const tomlResult = detector.detect(content);
+    const iniResult = iniDetector.detect(content);
+
+    expect(tomlResult.match).toBe(true);
+    expect(tomlResult.confidence).toBeGreaterThan(iniResult.confidence);
+  });
+
+  test("treats quoted dotted keys as TOML-specific structure", () => {
+    const content = `"server.host" = "localhost"
+"server.port" = 8080
+title = "Scratch Tabs"`;
+
+    const result = detector.detect(content);
+
+    expect(result.match).toBe(true);
+    expect(result.confidence).toBeGreaterThan(0.8);
+  });
+
+  test("treats inline tables and datetime literals as strong TOML evidence", () => {
+    const content = `title = "Release"
+metadata = { owner = "ops", region = "eu-west-2" }
+released_at = 2026-03-11T09:00:00Z`;
+
+    const result = detector.detect(content);
+
+    expect(result.match).toBe(true);
+    expect(result.matchedDefinitive).toBe(true);
+    expect(result.confidence).toBeGreaterThan(0.85);
   });
 
   test("does not treat INI-style semicolon comments as a TOML match", () => {
