@@ -73,6 +73,38 @@ app.version =1.0.0`;
       expect(result).toBe(matches[0].id);
     });
 
+    test('detects TOML sample content with toml as the top match', () => {
+      const content = `title = "TOML Example"
+
+[database]
+server = "192.168.1.1"
+ports = [ 8001, 8001, 8002 ]
+enabled = true
+`;
+
+      const result = detectFormat(content);
+      const matches = getPotentialFormatMatches(content, 5);
+
+      expect(result).toBe('toml');
+      expect(matches[0].id).toBe('toml');
+      expect(matches[0].score).toBeGreaterThan(0.5);
+    });
+
+    test('exposes TOML through full format initialization and detects TOML content', () => {
+      const content = `title = "Release"
+
+[owner]
+name = "Tom Preston-Werner"
+dob = 1979-05-27T07:32:00Z
+`;
+
+      const result = detectFormat(content);
+      const matches = getPotentialFormatMatches(content, 5);
+
+      expect(result).toBe('toml');
+      expect(matches.some((match) => match.id === 'toml')).toBe(true);
+    });
+
 //     test('correctly identifies CSV content', () => {
 //       const content = 'name,age,city\nJohn,30,New York\nJane,25,Boston';
 //       const result = detectFormat(content);

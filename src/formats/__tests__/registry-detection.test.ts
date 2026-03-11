@@ -30,6 +30,7 @@ import { RustFormatDetector } from "../rust";
 import { ScalaFormatDetector } from "../scala";
 import { SqlFormatDetector } from "../sql";
 import { StacktraceFormatDetector } from "../stacktrace";
+import { TomlFormatDetector } from "../toml";
 import { SvgFormatDetector } from "../svg";
 import { VhostFormatDetector } from "../vhost";
 import { XmlFormatDetector } from "../xml";
@@ -261,6 +262,13 @@ describe("Registry Format Detection", () => {
       expectedDefinitive: undefined,
     },
     {
+      id: "toml",
+      name: "TOML",
+      detectorClass: TomlFormatDetector,
+      expectedMinConfidence: 0.6,
+      expectedDefinitive: true,
+    },
+    {
       id: "xml",
       name: "SVG",
       detectorClass: SvgFormatDetector,
@@ -404,6 +412,27 @@ describe("Registry Format Detection", () => {
   });
 
   describe("Cross-Format Detection Issues", () => {
+    test("TOML sample content should rank TOML ahead of INI and Properties", () => {
+      const content = `title = "TOML Example"
+
+[database]
+server = "192.168.1.1"
+ports = [8001, 8001, 8002]
+enabled = true
+`;
+
+      const results = getAllDetectionResults(content);
+      const matchingFormats = results.filter((result) => result.match);
+
+      expect(matchingFormats[0].id).toBe("toml");
+      expect(matchingFormats.find((result) => result.id === "ini")?.confidence ?? 0).toBeLessThan(
+        matchingFormats[0].confidence,
+      );
+      expect(
+        matchingFormats.find((result) => result.id === "properties")?.confidence ?? 0,
+      ).toBeLessThan(matchingFormats[0].confidence);
+    });
+
     test("R and CSV should NOT detect JSON with dot notation properties", () => {
       const jsonContent = `{"event.id":"evt-000001","service.id":"svc-0001","service.name":"sample-service","request.id":"req-0001","request.path":"/api/v1/resource","request.method":"GET","url.scheme":"https","url.domain":"api.example.test","url.query":"mode=test&source=sample","client.ip":"192.0.2.10","server.ip":"198.51.100.20","response.status_code":"200","response.time_ms":42,"environment.name":"test-env","region.name":"region-a","tenant.name":"tenant-sample","host.name":"ingest.example.test","log.level":"INFO","message":"sample request processed","@timestamp":"2026-01-01T00:00:00.000Z","payload":{"result":"ok","count":1}}`;
       
