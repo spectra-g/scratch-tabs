@@ -219,6 +219,7 @@ export function useStatusBarLogic({
         : [];
       const isLocked = activeTab.languageLocked;
       const currentLanguageId = activeTab.language;
+      const currentLanguageEntry = allLangs.find((l) => l.id === currentLanguageId);
       const popupList: PopupMenuItem[] = [];
 
       // Manually ensure plaintext is always available
@@ -236,6 +237,10 @@ export function useStatusBarLogic({
         potentialMatches.length === 0 ||
         (potentialMatches.length === 1 && potentialMatches[0].id === "plaintext")
       ) {
+        if (currentLanguageEntry) {
+          popupList.push(currentLanguageEntry);
+        }
+
         // Add plaintext first if it's not the current language
         if (plaintextEntry && !isCurrentlyPlaintext) {
           popupList.push(plaintextEntry);

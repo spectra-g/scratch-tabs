@@ -217,6 +217,14 @@ export class StatusBarActions {
     await option.click();
   }
 
+  async expectFormatOptionSelected(formatName: string) {
+    const popup = this.getFormatSelectionPopup();
+    const option = popup
+      .locator('button')
+      .filter({ hasText: new RegExp(`^${formatName}$`) });
+    await expect(option).toHaveAttribute('data-selected', 'true');
+  }
+
   async expectNoFormatsFoundMessage() {
     const popup = this.getFormatSelectionPopup();
     const message = popup.locator('text=No formats found');
