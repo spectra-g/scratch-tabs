@@ -58,7 +58,7 @@ describe('Tablet Metadata Actions', () => {
       const mockTab: Tab = {
         id: 'test-tab-id',
         title: 'Test Document',
-        content: 'Short', // Less than 50 characters
+        content: 'Short',
         language: 'plaintext',
         languageLocked: false,
         workspaceId: 'test-workspace',
@@ -139,6 +139,21 @@ describe('Tablet Metadata Actions', () => {
       });
     });
 
+    it('should include Personal Kanban for tool discovery', () => {
+      const personalKanbanMetadata = tabletMetadata.find(
+        meta => meta.id === 'personalkanban',
+      );
+
+      expect(personalKanbanMetadata).toEqual({
+        id: 'personalkanban',
+        label: 'Personal Kanban',
+        description: expect.any(String),
+        keywords: expect.arrayContaining([
+          'kanban', 'board', 'tasks', 'workflow', 'productivity'
+        ]),
+      });
+    });
+
     it('should maintain metadata structure integrity', () => {
       tabletMetadata.forEach(meta => {
         expect(meta).toHaveProperty('id');
@@ -147,7 +162,6 @@ describe('Tablet Metadata Actions', () => {
         expect(meta).toHaveProperty('keywords');
         expect(Array.isArray(meta.keywords)).toBe(true);
 
-        // getActionsForContext is optional, but if present should be a function
         if (meta.getActionsForContext) {
           expect(typeof meta.getActionsForContext).toBe('function');
         }
@@ -161,7 +175,6 @@ describe('Tablet Metadata Actions', () => {
         typeof meta.getActionsForContext === 'function'
       );
 
-      // At minimum, WordCount should have actions
       expect(tabletsWithActions.length).toBeGreaterThanOrEqual(1);
 
       const wordCountMeta = tabletsWithActions.find(meta => meta.id === 'wordcount');
@@ -173,7 +186,6 @@ describe('Tablet Metadata Actions', () => {
         !meta.getActionsForContext
       );
 
-      // This should not fail - tablets can exist without actions
       expect(Array.isArray(tabletsWithoutActions)).toBe(true);
     });
 
@@ -199,7 +211,7 @@ describe('Tablet Metadata Actions', () => {
       const invalidContext: TabletActionContext = {
         source: 'editor-tab',
         tab: mockTab,
-        content: 'Short', // Insufficient content
+        content: 'Short',
       };
 
       const allValidActions = tabletMetadata.flatMap(meta =>

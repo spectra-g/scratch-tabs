@@ -223,3 +223,31 @@ Then('I should see the emoji picker interface', async function () {
 Then('I should see emoji grid', async function () {
   await this.tablets.expectEmojiGridVisible();
 });
+
+// ============================================================================
+// Personal Kanban Tablet Steps
+// ============================================================================
+
+When('the user views the tablet content', async function () {
+  await this.navigation.waitForPageStabilization();
+});
+
+Then('the user should see a column labeled {string}', async function (columnLabel: string) {
+  await this.tablets.expectPersonalKanbanColumnVisible(columnLabel);
+});
+
+Then('the user should still see all three columns', async function () {
+  await this.tablets.expectPersonalKanbanColumnsVisible();
+});
+
+Then('the Personal Kanban board shell should be visible', async function () {
+  await this.tablets.expectPersonalKanbanBoardShellVisible();
+});
+
+Then('each Personal Kanban column should show empty-state guidance', async function () {
+  await this.tablets.expectPersonalKanbanEmptyStateGuidanceVisible();
+});
+
+Then('the Personal Kanban shell subtitle should remain visible', async function () {
+  await this.tablets.expectPersonalKanbanSubtitleVisible();
+});

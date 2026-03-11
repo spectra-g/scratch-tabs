@@ -548,4 +548,51 @@ export class TabletsActions {
       }
     );
   }
+
+  // ============================================================================
+  // Personal Kanban Tablet
+  // ============================================================================
+
+  async expectPersonalKanbanColumnVisible(columnLabel: string) {
+    const column = this.page.getByTestId(`kanban-column-${this.getPersonalKanbanColumnId(columnLabel)}`);
+    await expect(column).toBeVisible();
+    await expect(column).toContainText(columnLabel);
+  }
+
+  async expectPersonalKanbanBoardShellVisible() {
+    await expect(this.page.getByTestId('personal-kanban-board')).toBeVisible();
+    await expect(
+      this.page.getByRole('heading', { level: 1, name: 'Personal Kanban' }),
+    ).toBeVisible();
+  }
+
+  async expectPersonalKanbanEmptyStateGuidanceVisible() {
+    const emptyStateMessages = this.page.getByText('No cards yet');
+    await expect(emptyStateMessages).toHaveCount(3);
+  }
+
+  async expectPersonalKanbanSubtitleVisible() {
+    await expect(
+      this.page.getByText('Capture tasks as they appear and move them across the board.'),
+    ).toBeVisible();
+  }
+
+  async expectPersonalKanbanColumnsVisible() {
+    await this.expectPersonalKanbanColumnVisible('To Do');
+    await this.expectPersonalKanbanColumnVisible('In Progress');
+    await this.expectPersonalKanbanColumnVisible('Done');
+  }
+
+  private getPersonalKanbanColumnId(columnLabel: string) {
+    switch (columnLabel) {
+      case 'To Do':
+        return 'todo';
+      case 'In Progress':
+        return 'inprogress';
+      case 'Done':
+        return 'done';
+      default:
+        throw new Error(`Unknown Personal Kanban column label: ${columnLabel}`);
+    }
+  }
 }

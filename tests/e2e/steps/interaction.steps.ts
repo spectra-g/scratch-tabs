@@ -1,6 +1,21 @@
-const { When } = require('@cucumber/cucumber');
+const { Given, When } = require('@cucumber/cucumber');
 const { expect } = require('@playwright/test');
 import { waitForSaveIndicator, waitForCursorIndicator } from '../support/testIndicator.utils';
+
+Given('the user has opened the tool selector modal', async function () {
+  await this.navigation.clickIcon('New tab');
+  await this.navigation.clickIcon('New tablet');
+
+  const toolSelector = this.page.getByRole('dialog', { name: 'Tool Selector' });
+  await expect(toolSelector).toBeVisible();
+});
+
+Given('the user has a {string} tablet tab open', async function (tabletName) {
+  await this.navigation.clickIcon('New tab');
+  await this.navigation.clickIcon('New tablet');
+  await this.tabBar.selectTablet(tabletName);
+  await this.navigation.waitForPageStabilization();
+});
 
 // Updated to use action classes directly instead of delegate methods
 // Aliases for quoted and unquoted variants
@@ -9,6 +24,14 @@ When('I click the icon for {string}', async function (iconTestId) {
 });
 When('I click the icon for "{string}"', async function (iconTestId) {
   await this.navigation.clickIcon(iconTestId);
+});
+
+When('the user switches to another tab', async function () {
+  await this.tabBar.clickTab('Welcome');
+});
+
+When('the user switches back to the {string} tab', async function (tabTitle) {
+  await this.tabBar.clickTab(tabTitle);
 });
 
 When('I click the icon for {string} on the {string} side', async function (iconTestId, side) {

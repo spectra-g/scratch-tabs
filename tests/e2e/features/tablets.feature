@@ -132,3 +132,24 @@ Feature: Tablets Smoke Tests
     Then the "Emoji as Data" tab should exist on the page
     And I should see the emoji picker interface
     And I should see emoji grid
+
+  Scenario: Opening Personal Kanban from tool selector
+    Given the user has opened the tool selector modal
+    When I select "Personal Kanban" from the tablet selector
+    Then the "Personal Kanban" tab should exist on the page
+    And the Personal Kanban board shell should be visible
+
+  Scenario: Personal Kanban displays three standard columns
+    Given the user has a "Personal Kanban" tablet tab open
+    When the user views the tablet content
+    Then the user should see a column labeled "To Do"
+    And the user should see a column labeled "In Progress"
+    And the user should see a column labeled "Done"
+    And each Personal Kanban column should show empty-state guidance
+
+  Scenario: Personal Kanban state persists across re-render
+    Given the user has a "Personal Kanban" tablet tab open
+    When the user switches to another tab
+    And the user switches back to the "Personal Kanban" tab
+    Then the user should still see all three columns
+    And the Personal Kanban shell subtitle should remain visible
