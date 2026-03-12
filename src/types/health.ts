@@ -1,6 +1,6 @@
 import type { DatabaseHealthResult } from "../services/health/DatabaseHealthProbe";
 
-export type HealthStatus = "healthy";
+export type HealthStatus = "healthy" | "unhealthy";
 
 export interface HealthCheckResult {
   status: HealthStatus;
