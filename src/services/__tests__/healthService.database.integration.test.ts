@@ -7,7 +7,16 @@ describe("healthService database integration", () => {
       check: jest.fn().mockResolvedValue({ healthy: true }),
     };
 
-    const service = createHealthService({ databaseProbe, random: () => 0 });
+    const service = createHealthService({
+      databaseProbe,
+      configLoader: {
+        load: jest.fn().mockResolvedValue({
+          good: ["Healthy integration message"],
+          notGood: ["Unhealthy integration message"],
+        }),
+      },
+      random: () => 0,
+    });
     const response = await service.getStatus();
 
     expect(databaseProbe.check).toHaveBeenCalledTimes(1);

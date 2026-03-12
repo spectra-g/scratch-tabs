@@ -19,5 +19,6 @@ export interface HealthRepository {
 }
 
 export interface HealthService {
+  initialize(): Promise<void>;
   getStatus(): Promise<HealthResult>;
 }

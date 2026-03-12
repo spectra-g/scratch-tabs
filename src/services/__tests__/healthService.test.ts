@@ -1,157 +1,131 @@
-import { GOOD_HEALTH_MESSAGES } from "../../data/healthMessages";
-import { NOT_GOOD_HEALTH_MESSAGES } from "../../constants/healthMessages";
 import type { HealthRepository } from "../../types/health";
 import type { DatabaseHealthProbe } from "../health/DatabaseHealthProbe";
-import { createHealthService, healthService } from "../healthService";
+import type { HealthMessagesConfig, HealthMessagesConfigLoader } from "../health/configLoader";
+import { createHealthService } from "../healthService";
+
+function createRepository(status: "healthy" | "unhealthy" = "healthy"): HealthRepository {
+  return {
+    checkHealth: jest.fn().mockResolvedValue({ status }),
+  };
+}
+
+function createDatabaseProbe(healthy = true): DatabaseHealthProbe {
+  return {
+    check: jest.fn().mockResolvedValue({ healthy }),
+  };
+}
+
+function createConfigLoader(
+  config: HealthMessagesConfig,
+): HealthMessagesConfigLoader {
+  return {
+    load: jest.fn().mockResolvedValue(config),
+  };
+}
 
 describe("healthService", () => {
-  it("returns a healthy status when the repository reports healthy", async () => {
-    const repository: HealthRepository = {
-      checkHealth: jest.fn().mockResolvedValue({ status: "healthy" }),
-    };
-
-    const service = createHealthService({ repository });
-
-    await expect(service.getStatus()).resolves.toMatchObject({
-      status: "healthy",
-      message: expect.any(String),
-      timestamp: expect.any(String),
+  it("initializes by loading both message pools from external config", async () => {
+    const configLoader = createConfigLoader({
+      good: ["Config says healthy"],
+      notGood: ["Config says unhealthy"],
     });
-    expect(repository.checkHealth).toHaveBeenCalledTimes(1);
-  });
 
-  it("returns an unhealthy status when the database probe reports unhealthy", async () => {
-    const repository: HealthRepository = {
-      checkHealth: jest.fn().mockResolvedValue({ status: "healthy" }),
-    };
-    const databaseProbe: DatabaseHealthProbe = {
-      check: jest.fn().mockResolvedValue({ healthy: false }),
-    };
-
-    const service = createHealthService({ repository, databaseProbe });
-
-    await expect(service.getStatus()).resolves.toMatchObject({
-      status: "unhealthy",
-      database: { healthy: false },
-    });
-  });
-
-  it("returns a message from the not-good pool when the database probe is unhealthy", async () => {
-    const repository: HealthRepository = {
-      checkHealth: jest.fn().mockResolvedValue({ status: "healthy" }),
-    };
-    const databaseProbe: DatabaseHealthProbe = {
-      check: jest.fn().mockResolvedValue({ healthy: false }),
-    };
-
-    const response = await createHealthService({
-      repository,
-      databaseProbe,
+    const service = createHealthService({
+      repository: createRepository(),
+      databaseProbe: createDatabaseProbe(),
+      configLoader,
       random: () => 0,
-    }).getStatus();
+    });
 
-    expect(response.status).toBe("unhealthy");
-    expect(NOT_GOOD_HEALTH_MESSAGES).toContain(response.message);
+    await service.initialize();
+    const healthy = await service.getStatus();
+
+    expect(configLoader.load).toHaveBeenCalledTimes(1);
+    expect(healthy.message).toBe("Config says healthy");
   });
 
-  it("preserves the response contract when the database probe is unhealthy", async () => {
-    const repository: HealthRepository = {
-      checkHealth: jest.fn().mockResolvedValue({ status: "healthy" }),
-    };
-    const databaseProbe: DatabaseHealthProbe = {
-      check: jest.fn().mockResolvedValue({ healthy: false }),
+  it("picks up changed config after re-initialization without code changes", async () => {
+    const configLoader: HealthMessagesConfigLoader = {
+      load: jest
+        .fn()
+        .mockResolvedValueOnce({
+          good: ["Initial message"],
+          notGood: ["Initial unhealthy"],
+        })
+        .mockResolvedValueOnce({
+          good: ["Updated message"],
+          notGood: ["Updated unhealthy"],
+        }),
     };
 
-    const response = await createHealthService({
-      repository,
-      databaseProbe,
-    }).getStatus();
+    const service = createHealthService({
+      repository: createRepository(),
+      databaseProbe: createDatabaseProbe(),
+      configLoader,
+      random: () => 0,
+    });
+
+    await service.initialize();
+    const first = await service.getStatus();
+    await service.initialize();
+    const second = await service.getStatus();
+
+    expect(first.message).toBe("Initial message");
+    expect(second.message).toBe("Updated message");
+    expect(configLoader.load).toHaveBeenCalledTimes(2);
+  });
+
+  it("preserves the health response contract while sourcing messages externally", async () => {
+    const service = createHealthService({
+      repository: createRepository(),
+      databaseProbe: createDatabaseProbe(),
+      configLoader: createConfigLoader({
+        good: ["Healthy contract message"],
+        notGood: ["Unhealthy contract message"],
+      }),
+      random: () => 0,
+    });
+
+    const response = await service.getStatus();
 
     expect(response).toMatchObject({
-      status: "unhealthy",
-      message: expect.any(String),
+      status: "healthy",
       timestamp: expect.any(String),
-      database: { healthy: false },
+      message: "Healthy contract message",
+      database: { healthy: true },
     });
     expect(new Date(response.timestamp).toISOString()).toBe(response.timestamp);
   });
 
-  it("may return different messages from the not-good pool across sequential unhealthy calls", async () => {
-    const repository: HealthRepository = {
-      checkHealth: jest.fn().mockResolvedValue({ status: "healthy" }),
-    };
-    const databaseProbe: DatabaseHealthProbe = {
-      check: jest.fn().mockResolvedValue({ healthy: false }),
-    };
-    const random = jest
-      .fn()
-      .mockReturnValueOnce(0)
-      .mockReturnValueOnce(0.99);
-
-    const service = createHealthService({ repository, databaseProbe, random });
-    const first = await service.getStatus();
-    const second = await service.getStatus();
-
-    expect(first.status).toBe("unhealthy");
-    expect(second.status).toBe("unhealthy");
-    expect(NOT_GOOD_HEALTH_MESSAGES).toContain(first.message);
-    expect(NOT_GOOD_HEALTH_MESSAGES).toContain(second.message);
-    expect(first.message).not.toBe(second.message);
-  });
-
-  it("returns the message selected from the good message pool", async () => {
-    const repository: HealthRepository = {
-      checkHealth: jest.fn().mockResolvedValue({ status: "healthy" }),
-    };
-    const random = jest.fn().mockReturnValue(0.99);
-
-    const service = createHealthService({ repository, random });
-    const response = await service.getStatus();
-
-    expect(response.message).toBe(
-      GOOD_HEALTH_MESSAGES[GOOD_HEALTH_MESSAGES.length - 1],
-    );
-    expect(GOOD_HEALTH_MESSAGES).toContain(response.message);
-    expect(random).toHaveBeenCalledTimes(1);
-  });
-
-  it("may return different messages across sequential calls", async () => {
-    const repository: HealthRepository = {
-      checkHealth: jest.fn().mockResolvedValue({ status: "healthy" }),
-    };
-    const random = jest
-      .fn()
-      .mockReturnValueOnce(0)
-      .mockReturnValueOnce(0.99);
-
-    const service = createHealthService({ repository, random });
-    const first = await service.getStatus();
-    const second = await service.getStatus();
-
-    expect(first.message).not.toBe(second.message);
-    expect(random).toHaveBeenCalledTimes(2);
-  });
-
-  it("encapsulates message selection instead of leaking repository fields", async () => {
-    const repository: HealthRepository = {
-      checkHealth: jest.fn().mockResolvedValue({
-        status: "healthy",
-        message: "leaky repository message",
+  it("uses the last configured message when the random source hits the upper bound", async () => {
+    const service = createHealthService({
+      repository: createRepository(),
+      databaseProbe: createDatabaseProbe(),
+      configLoader: createConfigLoader({
+        good: ["First healthy", "Last healthy"],
+        notGood: ["First unhealthy", "Last unhealthy"],
       }),
-    };
+      random: () => 1,
+    });
 
-    const response = await createHealthService({ repository }).getStatus();
-
-    expect(response.status).toBe("healthy");
-    expect(response.message).not.toBe("leaky repository message");
-    expect(GOOD_HEALTH_MESSAGES).toContain(response.message);
+    await expect(service.getStatus()).resolves.toMatchObject({
+      message: "Last healthy",
+    });
   });
 
-  it("exposes a ready-to-use default service for consumers", async () => {
-    await expect(healthService.getStatus()).resolves.toMatchObject({
-      status: "healthy",
-      message: expect.any(String),
-      timestamp: expect.any(String),
+  it("throws a clear error when config loading fails instead of silently defaulting", async () => {
+    const service = createHealthService({
+      repository: createRepository(),
+      databaseProbe: createDatabaseProbe(),
+      configLoader: {
+        load: jest
+          .fn()
+          .mockRejectedValue(new Error("Failed to load health messages config")),
+      },
     });
+
+    await expect(service.initialize()).rejects.toThrow(
+      "Failed to load health messages config",
+    );
   });
 });

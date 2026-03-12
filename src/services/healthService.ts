@@ -1,14 +1,20 @@
-import { GOOD_HEALTH_MESSAGES } from "../data/healthMessages";
-import { NOT_GOOD_HEALTH_MESSAGES } from "../constants/healthMessages";
 import { healthRepository as defaultRepository } from "../repositories/healthRepository";
+import type { HealthRepository, HealthService } from "../types/health";
+import { createHealthMessagesConfigLoader, type HealthMessagesConfig, type HealthMessagesConfigLoader } from "./health/configLoader";
 import { StubbedDatabaseHealthProbe } from "./health/StubbedDatabaseHealthProbe";
 import type { DatabaseHealthProbe } from "./health/DatabaseHealthProbe";
-import type { HealthRepository, HealthService } from "../types/health";
 
 export interface CreateHealthServiceOptions {
   repository?: HealthRepository;
   databaseProbe?: DatabaseHealthProbe;
+  configLoader?: HealthMessagesConfigLoader;
   random?: () => number;
+}
+
+function selectMessage(messages: string[], random: () => number): string {
+  const boundedRandom = Math.min(Math.max(random(), 0), 0.9999999999999999);
+  const messageIndex = Math.floor(boundedRandom * messages.length);
+  return messages[messageIndex];
 }
 
 export function createHealthService(
@@ -19,24 +25,38 @@ export function createHealthService(
     options.databaseProbe ?? new StubbedDatabaseHealthProbe();
   const random = options.random ?? Math.random;
 
+  let messagePools: HealthMessagesConfig | null = null;
+  let configLoader = options.configLoader ?? null;
+
+  async function initialize() {
+    configLoader ??= createHealthMessagesConfigLoader();
+    messagePools = await configLoader.load();
+  }
+
+  async function ensureInitialized() {
+    if (!messagePools) {
+      await initialize();
+    }
+
+    return messagePools as HealthMessagesConfig;
+  }
+
   return {
+    initialize,
     async getStatus() {
+      const pools = await ensureInitialized();
       const [{ status }, database] = await Promise.all([
         repository.checkHealth(),
         databaseProbe.check(),
       ]);
       const resolvedStatus = database.healthy ? status : "unhealthy";
-      const messages =
-        resolvedStatus === "healthy"
-          ? GOOD_HEALTH_MESSAGES
-          : NOT_GOOD_HEALTH_MESSAGES;
-      const messageIndex = Math.floor(random() * messages.length);
+      const messages = resolvedStatus === "healthy" ? pools.good : pools.notGood;
 
       return {
         status: resolvedStatus,
         database,
         timestamp: new Date().toISOString(),
-        message: messages[messageIndex],
+        message: selectMessage(messages, random),
       };
     },
   };
