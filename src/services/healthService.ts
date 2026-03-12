@@ -1,4 +1,5 @@
 import { GOOD_HEALTH_MESSAGES } from "../data/healthMessages";
+import { NOT_GOOD_HEALTH_MESSAGES } from "../constants/healthMessages";
 import { healthRepository as defaultRepository } from "../repositories/healthRepository";
 import { StubbedDatabaseHealthProbe } from "./health/StubbedDatabaseHealthProbe";
 import type { DatabaseHealthProbe } from "./health/DatabaseHealthProbe";
@@ -24,13 +25,18 @@ export function createHealthService(
         repository.checkHealth(),
         databaseProbe.check(),
       ]);
-      const messageIndex = Math.floor(random() * GOOD_HEALTH_MESSAGES.length);
+      const resolvedStatus = database.healthy ? status : "unhealthy";
+      const messages =
+        resolvedStatus === "healthy"
+          ? GOOD_HEALTH_MESSAGES
+          : NOT_GOOD_HEALTH_MESSAGES;
+      const messageIndex = Math.floor(random() * messages.length);
 
       return {
-        status,
+        status: resolvedStatus,
         database,
         timestamp: new Date().toISOString(),
-        message: GOOD_HEALTH_MESSAGES[messageIndex],
+        message: messages[messageIndex],
       };
     },
   };
