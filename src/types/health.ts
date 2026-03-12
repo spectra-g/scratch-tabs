@@ -1,3 +1,5 @@
+import type { DatabaseHealthResult } from "../services/health/DatabaseHealthProbe";
+
 export type HealthStatus = "healthy";
 
 export interface HealthCheckResult {
@@ -9,6 +11,7 @@ export interface HealthResult {
   status: HealthStatus;
   timestamp: string;
   message: string;
+  database: DatabaseHealthResult;
 }
 
 export interface HealthRepository {
