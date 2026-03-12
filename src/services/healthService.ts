@@ -1,30 +1,30 @@
-import { HEALTH_MESSAGES } from "../constants/healthMessages";
+import { GOOD_HEALTH_MESSAGES } from "../data/healthMessages";
+import { healthRepository as defaultRepository } from "../repositories/healthRepository";
+import type { HealthRepository, HealthService } from "../types/health";
 
-export interface HealthProbe {
-  check: () => Promise<boolean>;
+export interface CreateHealthServiceOptions {
+  repository?: HealthRepository;
+  random?: () => number;
 }
 
-export interface GetHealthStatusOptions {
-  probe?: HealthProbe;
-}
-
-export interface HealthResponse {
-  status: "healthy";
-  timestamp: string;
-  message: (typeof HEALTH_MESSAGES)[number];
-}
-
-export async function getHealthStatus(
-  options: GetHealthStatusOptions = {},
-): Promise<HealthResponse> {
-  await options.probe?.check();
-
-  const message =
-    HEALTH_MESSAGES[Math.floor(Math.random() * HEALTH_MESSAGES.length)];
+export function createHealthService(
+  options: CreateHealthServiceOptions = {},
+): HealthService {
+  const repository = options.repository ?? defaultRepository;
+  const random = options.random ?? Math.random;
 
   return {
-    status: "healthy",
-    timestamp: new Date().toISOString(),
-    message,
+    async getStatus() {
+      const { status } = await repository.checkHealth();
+      const messageIndex = Math.floor(random() * GOOD_HEALTH_MESSAGES.length);
+
+      return {
+        status,
+        timestamp: new Date().toISOString(),
+        message: GOOD_HEALTH_MESSAGES[messageIndex],
+      };
+    },
   };
 }
+
+export const healthService = createHealthService();
