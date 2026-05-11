@@ -9,6 +9,9 @@ import { CurlOptionsPalette } from './CurlOptionsPalette';
 import { tabletActionService } from '../../../../services/tabletActionService';
 import { Plus, FileText, Terminal } from '../../../../components/Icons';
 
+// Persists the selected card ID per tab across component remounts (e.g. tab switching)
+const activeCardByTab = new Map<string, string>();
+
 export const CurlSmartView: React.FC<SmartViewProps> = ({
   content,
   onContentChange,
@@ -16,7 +19,15 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
   side,
 }) => {
   const [parsedDoc, setParsedDoc] = useState<ParsedDocument>([]);
-  const [activeCardId, setActiveCardId] = useState<string | null>(null);
+  const [activeCardId, setActiveCardIdState] = useState<string | null>(
+    () => activeCardByTab.get(tabId) ?? null
+  );
+
+  const setActiveCardId = useCallback((id: string | null) => {
+    setActiveCardIdState(id);
+    if (id) activeCardByTab.set(tabId, id);
+    else activeCardByTab.delete(tabId);
+  }, [tabId]);
 
   const [showOptionsPalette, setShowOptionsPalette] = useState(false);
   const isInternalUpdateRef = useRef(false);
@@ -33,12 +44,11 @@ export const CurlSmartView: React.FC<SmartViewProps> = ({
       const parsed = parseCurlDocument(content);
       setParsedDoc(parsed);
 
-      // Auto-select first curl command if none selected
-      if (!activeCardId) {
+      // Validate cached selection still exists; otherwise auto-select first
+      const isCurrentSelectionValid = activeCardId && parsed.some(block => block.id === activeCardId);
+      if (!isCurrentSelectionValid) {
         const firstCurlBlock = parsed.find(block => block.type === 'curl');
-        if (firstCurlBlock) {
-          setActiveCardId(firstCurlBlock.id);
-        }
+        setActiveCardId(firstCurlBlock ? firstCurlBlock.id : null);
       }
     } catch (error) {
       console.error('Failed to parse curl document:', error);
