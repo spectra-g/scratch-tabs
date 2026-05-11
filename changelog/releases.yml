@@ -15,6 +15,7 @@ releases:
         changes:
           - "**Right-click Copy:** Fixed Copy in the editor context menu not putting selected text on the clipboard (Monaco 0.54 EditContext API regression)"
           - "**Right-click Paste:** Fixed Paste in the editor context menu doing nothing when clicked (Monaco 0.54 shadow DOM focus regression)"
+          - "**Sidebar height on large screens:** Fixed the sidebar workspace list cutting off before the bottom of the screen on tall displays — list now expands to fill the full available height"
 
   - version: "1.24.0"
     type: "release"
