@@ -82,7 +82,7 @@ class TabletBridgeImpl implements TabletBridge {
       throw new Error('Bridge not initialized. Call initialize() first.');
     }
 
-    const workspaceId = options.workspaceId || this.workspaceStore.activeWorkspaceId;
+    const workspaceId = options.workspaceId || useWorkspaceStore.getState().activeWorkspaceId;
     if (!workspaceId) {
       throw new Error('No active workspace found');
     }
@@ -198,10 +198,7 @@ class TabletBridgeImpl implements TabletBridge {
    * Get current workspace ID
    */
   getCurrentWorkspaceId(): string | null {
-    if (!this.workspaceStore) {
-      throw new Error('Bridge not initialized. Call initialize() first.');
-    }
-    return this.workspaceStore.activeWorkspaceId;
+    return useWorkspaceStore.getState().activeWorkspaceId;
   }
 }
 
