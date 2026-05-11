@@ -683,7 +683,7 @@ export const Sidebar: React.FC = () => {
 
         observer.observe(listContainerRef.current);
         return () => observer.disconnect();
-    }, []);
+    }, [isHydrated]); // re-run after hydration so the ref is attached when the observer is created
 
     // Reveal in Sidebar: Auto-scroll to active tab
     // Only triggers when activeTabId changes (not when workspaces expand/collapse)
@@ -845,7 +845,7 @@ export const Sidebar: React.FC = () => {
                         </div>
                     </div>
 
-                    <div ref={listContainerRef} className="flex-1 overflow-hidden font-[system-ui]">
+                    <div ref={listContainerRef} className="flex-1 min-h-0 overflow-hidden font-[system-ui]">
                         {treeItems.length > 0 ? (
                             <List
                                 ref={listRef}
