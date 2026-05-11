@@ -3,8 +3,21 @@ config:
   max_versions: 100  # Maximum number of versions to display
 
 releases:
-  - version: "1.24.0"
+  - version: "1.24.1"
     type: "latest"
+    draft: false
+    date: "2026-05-11"
+    headline: "Editor Copy/Paste Fix"
+    summary: "Restored right-click Copy and Paste in the Monaco editor context menu, broken by a Monaco 0.54 upgrade"
+    description: "Monaco 0.54 introduced the EditContext API and moved context menus into a shadow DOM, which broke both Copy (clipboard never received selected text) and Paste (hasTextFocus() returned false, silently doing nothing). This patch disables the EditContext API to restore Copy, and intercepts Paste clicks via composedPath() on the shadow DOM to bypass the focus guard."
+    categories:
+      - name: "🐛 Bug Fixes"
+        changes:
+          - "**Right-click Copy:** Fixed Copy in the editor context menu not putting selected text on the clipboard (Monaco 0.54 EditContext API regression)"
+          - "**Right-click Paste:** Fixed Paste in the editor context menu doing nothing when clicked (Monaco 0.54 shadow DOM focus regression)"
+
+  - version: "1.24.0"
+    type: "release"
     draft: false
     date: "2026-02-26"
     headline: "Open-Source Readiness"

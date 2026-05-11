@@ -415,6 +415,45 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
       onEditorReady?.(editor);
       setActiveEditor(side, editor);
 
+      // Disable EditContext API (Monaco 0.54+) - it breaks context menu copy/paste because the
+      // copy event fires on the focused context menu element instead of the EditContext DOM node,
+      // so Monaco's _ensureClipboardGetsEditorSelection handler never runs. The traditional
+      // textarea-based approach focuses/selects text before execCommand('copy') and works correctly.
+      editor.updateOptions({ editContext: false });
+
+      // Workaround for Monaco 0.54 regression: context menus render inside a shadow DOM.
+      // Clicking "Paste" shifts focus to the shadow DOM element so hasTextFocus() returns
+      // false and the built-in paste handler silently does nothing. Standard override paths
+      // (CommandsRegistry, PasteAction.addImplementation) don't work because Vite's module
+      // pre-bundling creates a separate module instance from Monaco's internal bundle.
+      // Instead: add a capture-phase document click listener each time the context menu opens.
+      // composedPath() sees inside the open shadow root to identify the Paste click, and
+      // stopImmediatePropagation() prevents the built-in handler from running before ours.
+      editor.onContextMenu(() => {
+        let cleanupTimer: ReturnType<typeof setTimeout>;
+        const onPasteClick = async (e: MouseEvent) => {
+          document.removeEventListener('click', onPasteClick, true);
+          clearTimeout(cleanupTimer);
+          const isPaste = e.composedPath().some(
+            (el): el is HTMLElement =>
+              el instanceof HTMLElement &&
+              typeof el.className === 'string' &&
+              el.className.includes('action-label') &&
+              el.textContent?.trim() === 'Paste'
+          );
+          if (!isPaste) return;
+          e.stopImmediatePropagation();
+          e.preventDefault();
+          const text = await navigator.clipboard.readText();
+          if (text) editor.trigger('keyboard', 'paste', { text });
+        };
+        document.addEventListener('click', onPasteClick, true);
+        cleanupTimer = setTimeout(
+          () => document.removeEventListener('click', onPasteClick, true),
+          5000
+        );
+      });
+
       // Add focus listener to update active editor
       editor.onDidFocusEditorWidget(() => {
         setActiveEditor(side, editor);
@@ -600,6 +639,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
               scrollBeyondLastLine: true,
               formatOnPaste: true,
               formatOnType: true,
+              editContext: false,
               find: {
                 addExtraSpaceOnTop: false,
               },
