@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Edit3, Copy } from "../../../../components/Icons";
+import { Edit3, Copy, Check } from "../../../../components/Icons";
 import { highlightSearchTerm } from "../utils/searchHighlight";
 import { getCellClasses } from "../constants/cellStyles";
 import { FullValuePopup } from "./FullValuePopup";
@@ -49,6 +49,7 @@ export const MaskedCell: React.FC<MaskedCellProps> = React.memo(({
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState(value);
     const [isHovered, setIsHovered] = useState(false);
+    const [copySuccess, setCopySuccess] = useState(false);
     const [isTemporarilyUnmasked, setIsTemporarilyUnmasked] = useState(false);
     const [showPopup, setShowPopup] = useState(false);
     const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
@@ -161,10 +162,16 @@ export const MaskedCell: React.FC<MaskedCellProps> = React.memo(({
     );
 
     const handleCopyClick = useCallback(
-      (e: React.MouseEvent) => {
+      async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        navigator.clipboard.writeText(value);
+        try {
+          await navigator.clipboard.writeText(value);
+          setCopySuccess(true);
+          setTimeout(() => setCopySuccess(false), 2000);
+        } catch (err) {
+          console.error('Failed to copy text:', err);
+        }
       },
       [value],
     );
@@ -241,11 +248,11 @@ export const MaskedCell: React.FC<MaskedCellProps> = React.memo(({
                 isHovered || isSelected
                   ? "opacity-70 hover:opacity-100"
                   : "opacity-0"
-              }`}
+              } ${copySuccess ? 'text-success' : ''}`}
               onClick={handleCopyClick}
               title="Copy cell value"
             >
-              <Copy size={12} />
+              {copySuccess ? <Check size={12} /> : <Copy size={12} />}
             </button>
             <button
               className={`p-1 rounded hover:bg-element-hover transition-all ${

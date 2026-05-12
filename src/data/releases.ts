@@ -15,12 +15,30 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.24.0';
+export const APP_VERSION = '1.24.1';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.24.0",
+    "version": "1.24.1",
     "type": "latest",
+    "date": "2026-05-11",
+    "headline": "Editor Copy/Paste Fix",
+    "summary": "Restored right-click Copy and Paste in the Monaco editor context menu, broken by a Monaco 0.54 upgrade",
+    "categories": [
+      {
+        "name": "Bug Fixes",
+        "changes": [
+          "**Right-click Copy:** Fixed Copy in the editor context menu not putting selected text on the clipboard (Monaco 0.54 EditContext API regression)",
+          "**Right-click Paste:** Fixed Paste in the editor context menu doing nothing when clicked (Monaco 0.54 shadow DOM focus regression)",
+          "**Sidebar height on large screens:** Fixed the sidebar workspace list cutting off before the bottom of the screen on tall displays — list now expands to fill the full available height",
+          "**CSV masked column copy feedback:** Fixed copy icon in password/sensitive columns not switching to a green tick after copying — now shows the same 2-second success indicator as regular columns"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.24.0",
+    "type": "release",
     "date": "2026-02-26",
     "headline": "Open-Source Readiness",
     "summary": "Prepared the project for open-source release with repository hygiene, public docs, and contributor-facing updates",

@@ -18,6 +18,19 @@ export type ParsedBlock =
 export type ParsedDocument = ParsedBlock[];
 
 /**
+ * Simple stable hash for generating deterministic block IDs from content.
+ * Same input always produces the same output.
+ */
+function stableHash(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash = hash & hash; // 32-bit int
+  }
+  return Math.abs(hash).toString(36);
+}
+
+/**
  * Parse a document containing curl commands and text
  */
 export function parseCurlDocument(text: string): ParsedDocument {
@@ -44,14 +57,14 @@ export function parseCurlDocument(text: string): ParsedDocument {
           type: 'curl',
           request,
           raw: rawCurl,
-          id: `curl-${blocks.length}-${Date.now()}`,
+          id: `curl-${blocks.length}-${stableHash(rawCurl)}`,
         });
       } catch (error) {
         // If parsing fails, treat as text block
         blocks.push({
           type: 'text',
           content: rawCurl,
-          id: `text-${blocks.length}-${Date.now()}`,
+          id: `text-${blocks.length}-${stableHash(rawCurl)}`,
         });
       }
       
@@ -66,10 +79,11 @@ export function parseCurlDocument(text: string): ParsedDocument {
       }
       
       if (textLines.length > 0) {
+        const textContent = textLines.join('\n');
         blocks.push({
           type: 'text',
-          content: textLines.join('\n'),
-          id: `text-${blocks.length}-${Date.now()}`,
+          content: textContent,
+          id: `text-${blocks.length}-${stableHash(textContent)}`,
         });
       }
     }

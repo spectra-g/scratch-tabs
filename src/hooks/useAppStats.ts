@@ -41,7 +41,7 @@ export function formatRelativeTime(date: Date): string {
     return weeks === 1 ? "1 week" : `${weeks} weeks`;
   }
   if (diffDays < 365) {
-    const months = Math.floor(diffDays / 30);
+    const months = Math.round(diffDays / 30);
     return months === 1 ? "1 month" : `${months} months`;
   }
   const years = Math.floor(diffDays / 365);

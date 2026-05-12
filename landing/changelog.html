@@ -129,27 +129,40 @@
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
 
-        <!-- Version 1.24.0 -->
+        <!-- Version 1.24.1 -->
         <div class="changelog-entry latest">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-white">V1.24.0</h2>
+              <h2 class="text-2xl font-bold text-white">V1.24.1</h2>
               <span class="badge latest">LATEST</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">05/11/2026</span>
+          </div>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">EDITOR COPY/PASTE FIX</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p class="mb-4">Monaco 0.54 introduced the EditContext API and moved context menus into a shadow DOM, which broke both Copy (clipboard never received selected text) and Paste (hasTextFocus() returned false, silently doing nothing). This patch disables the EditContext API to restore Copy, and intercepts Paste clicks via composedPath() on the shadow DOM to bypass the focus guard.</p>
+
+            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># bug_fixes</h4>
+            <ul class="space-y-2 mb-6">
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Right-click Copy:</strong> Fixed Copy in the editor context menu not putting selected text on the clipboard (Monaco 0.54 EditContext API regression)</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Right-click Paste:</strong> Fixed Paste in the editor context menu doing nothing when clicked (Monaco 0.54 shadow DOM focus regression)</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Sidebar height on large screens:</strong> Fixed the sidebar workspace list cutting off before the bottom of the screen on tall displays — list now expands to fill the full available height</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>CSV masked column copy feedback:</strong> Fixed copy icon in password/sensitive columns not switching to a green tick after copying — now shows the same 2-second success indicator as regular columns</span></li>
+            </ul>
+          </div>
+        </div>
+        <!-- Version 1.24.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.24.0</h2>
+              <span class="badge release">RELEASE</span>
             </div>
             <span class="text-gray-500 text-xs font-mono">02/26/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">OPEN-SOURCE READINESS</h3>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">OPEN-SOURCE READINESS</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">This release focuses on making Scratch Tabs open-source ready: cleaned repository artifacts, added standard open-source documentation, generalized internal examples, and updated public-facing pages and changelog workflows.</p>
-
-            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># open_source</h4>
-            <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Repository hygiene:</strong> Removed internal-only notes/scripts and cleaned ignored local artifacts</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Public docs added:</strong> Added README, LICENSE, CONTRIBUTING, CODE_OF_CONDUCT, and SECURITY policies</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Content sanitization:</strong> Replaced organization-specific test fixtures and headers with neutral generic examples</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Landing updates:</strong> Added concise open-source mentions in key landing pages and FAQ</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Changelog refresh:</strong> Added this release and regenerated changelog outputs</span></li>
-            </ul>
+            <p>Prepared the project for open-source release with repository hygiene, public docs, and contributor-facing updates</p>
           </div>
         </div>
         <!-- Version 1.23.1 -->
@@ -627,7 +640,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.24.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.24.1</span>
         </div>
 
         <div class="flex space-x-8">
