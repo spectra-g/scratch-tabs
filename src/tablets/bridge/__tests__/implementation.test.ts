@@ -6,6 +6,14 @@ jest.mock("../../../formats", () => ({
   detectFormat: jest.fn(),
 }));
 
+// Mock useWorkspaceStore — implementation now calls getState() directly
+const mockWorkspaceStoreState = { activeWorkspaceId: "workspace-123" };
+jest.mock("../../../stores/workspaceStore", () => ({
+  useWorkspaceStore: {
+    getState: () => mockWorkspaceStoreState,
+  },
+}));
+
 // Mock crypto.randomUUID
 Object.defineProperty(globalThis, "crypto", {
   value: {
@@ -23,6 +31,9 @@ describe("TabletBridge Implementation", () => {
   beforeEach(() => {
     // Reset mocks
     jest.clearAllMocks();
+
+    // Reset the module-level workspace store state used by getState()
+    mockWorkspaceStoreState.activeWorkspaceId = "workspace-123";
 
     // Create mock stores
     mockRootStore = {
@@ -175,7 +186,7 @@ describe("TabletBridge Implementation", () => {
     });
 
     it("should throw error when no active workspace", async () => {
-      mockWorkspaceStore.activeWorkspaceId = null;
+      mockWorkspaceStoreState.activeWorkspaceId = null;
 
       await expect(
         tabletBridge.createBackgroundTab({
@@ -490,7 +501,7 @@ describe("TabletBridge Implementation", () => {
     });
 
     it("should return null when no active workspace", () => {
-      mockWorkspaceStore.activeWorkspaceId = null;
+      mockWorkspaceStoreState.activeWorkspaceId = null;
 
       const workspaceId = tabletBridge.getCurrentWorkspaceId();
 

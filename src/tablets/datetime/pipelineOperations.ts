@@ -1,16 +1,14 @@
-/**
- * DateTime Pipeline Operations
- *
- * Registers DateTime-related operations to the pipeline registry.
- * This file self-registers operations when imported.
- */
+import {
+    format,
+    formatDistanceToNow,
+    formatRFC3339,
+    formatRFC7231,
+} from "date-fns";
 
 import { operationRegistry } from "../../services/pipeline/OperationRegistry";
 import { OperationDefinition } from "../../services/pipeline/types";
+import { intelligentParse } from "./utils/dateUtils";
 
-/**
- * DateTime operations for the pipeline
- */
 const dateTimeOperations: OperationDefinition[] = [
     {
         id: "datetime.to-unix",
@@ -140,7 +138,73 @@ const dateTimeOperations: OperationDefinition[] = [
         keywords: ["date", "time", "timestamp", "epoch", "convert"],
         icon: "Clock",
         source: "tablet",
-    }
+    },
+    {
+        id: "datetime.format",
+        name: "Format Date",
+        description: "Parse a date string and reformat it into a different representation",
+        categories: ["datetime"],
+        processingMode: "configurable",
+        parameters: [
+            {
+                name: "outputFormat",
+                label: "Output Format",
+                type: "select",
+                default: "iso",
+                options: [
+                    { value: "iso", label: "ISO 8601 (2026-01-23T14:00:00.000Z)" },
+                    { value: "iso-date", label: "Date only (2026-01-23)" },
+                    { value: "sql", label: "SQL (2026-01-23 14:00:00)" },
+                    { value: "rfc3339", label: "RFC 3339 (2026-01-23T14:00:00+00:00)" },
+                    { value: "http", label: "HTTP / RFC 7231 (Thu, 23 Jan 2026 14:00:00 GMT)" },
+                    { value: "human", label: "Human (January 23, 2026)" },
+                    { value: "human-full", label: "Full human (Thursday, January 23, 2026, 2:00:00 PM)" },
+                    { value: "relative", label: "Relative (2 hours ago)" },
+                    { value: "unix-s", label: "Unix seconds" },
+                    { value: "unix-ms", label: "Unix milliseconds" },
+                    { value: "custom", label: "Custom (date-fns format string)" },
+                ],
+            },
+            {
+                name: "customFormat",
+                label: "Custom Format",
+                type: "string",
+                default: "yyyy-MM-dd HH:mm:ss",
+                placeholder: "yyyy-MM-dd HH:mm:ss",
+                description: "date-fns format string. Used when Output Format is set to Custom.",
+            },
+        ],
+        execute: (input, params) => {
+            const outputFormat = (params.outputFormat as string) || "iso";
+            const customFormat = (params.customFormat as string) || "yyyy-MM-dd HH:mm:ss";
+
+            const trimmed = input.trim();
+            if (!trimmed) return "";
+
+            const { date } = intelligentParse(trimmed);
+            if (!date) {
+                throw new Error(`Could not parse date: "${trimmed}"`);
+            }
+
+            switch (outputFormat) {
+                case "iso": return date.toISOString();
+                case "iso-date": return format(date, "yyyy-MM-dd");
+                case "sql": return format(date, "yyyy-MM-dd HH:mm:ss");
+                case "rfc3339": return formatRFC3339(date);
+                case "http": return formatRFC7231(date);
+                case "human": return format(date, "MMMM d, yyyy");
+                case "human-full": return format(date, "EEEE, MMMM d, yyyy, h:mm:ss a");
+                case "relative": return formatDistanceToNow(date, { addSuffix: true });
+                case "unix-s": return Math.floor(date.getTime() / 1000).toString();
+                case "unix-ms": return date.getTime().toString();
+                case "custom": return format(date, customFormat);
+                default: return date.toISOString();
+            }
+        },
+        keywords: ["date", "time", "format", "convert", "reformat", "transform", "datetime", "parse"],
+        icon: "Calendar",
+        source: "tablet",
+    },
 ];
 
 // Self-register all operations

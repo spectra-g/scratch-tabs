@@ -20,6 +20,7 @@ import {
   stringifyJson,
   unstringifyJsonContent,
 } from "./actions/jsonOperations";
+import { JSONPath } from "jsonpath-plus";
 
 /**
  * JSON operations for the pipeline
@@ -145,6 +146,76 @@ const jsonOperations: OperationDefinition[] = [
     execute: (input) => unstringifyJsonContent(input),
     keywords: ["unescape", "unquote", "parse"],
     icon: "Ungroup",
+    source: "format",
+  },
+  {
+    id: "json.jsonpath",
+    name: "JSONPath Query",
+    description: "Extract values from JSON using a JSONPath expression (e.g. $.users[*].name)",
+    categories: ["json", "filtering"],
+    parameters: [
+      {
+        name: "path",
+        label: "JSONPath Expression",
+        type: "string",
+        default: "$",
+        required: true,
+        description: "JSONPath expression to evaluate",
+        placeholder: "e.g. $.store.book[*].author",
+      },
+      {
+        name: "outputFormat",
+        label: "Output Format",
+        type: "select",
+        default: "pretty",
+        options: [
+          { value: "pretty", label: "Pretty JSON" },
+          { value: "compact", label: "Compact JSON" },
+          { value: "lines", label: "One Value Per Line" },
+        ],
+      },
+      {
+        name: "indent",
+        label: "Indent Size",
+        type: "number",
+        default: 2,
+        min: 1,
+        max: 8,
+        description: "Spaces for Pretty JSON output",
+      },
+    ],
+    processingMode: "entire",
+    execute: (input, params) => {
+      const path = (params.path as string) || "$";
+      const outputFormat = (params.outputFormat as string) || "pretty";
+      const indent = (params.indent as number) ?? 2;
+
+      let json: unknown;
+      try {
+        json = JSON.parse(input);
+      } catch {
+        throw new Error("Invalid JSON input");
+      }
+
+      const raw = JSONPath({ path, json });
+      // Normalize: real library wraps in array, mock may return raw value
+      const results: unknown[] = Array.isArray(raw)
+        ? raw
+        : raw !== undefined && raw !== null
+          ? [raw]
+          : [];
+
+      if (outputFormat === "lines") {
+        return results
+          .map((v) => (typeof v === "object" ? JSON.stringify(v) : String(v)))
+          .join("\n");
+      }
+
+      const indentSize = outputFormat === "pretty" ? indent : undefined;
+      return JSON.stringify(results, null, indentSize);
+    },
+    keywords: ["jsonpath", "query", "filter", "extract", "jq", "select", "search"],
+    icon: "Filter",
     source: "format",
   },
 ];
