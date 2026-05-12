@@ -316,7 +316,110 @@ export const extractionOperations: OperationDefinition[] = [
         },
         keywords: ["date", "time", "extract", "datetime", "calendar"],
         source: "core",
-    }
+    },
+    {
+        id: "ip.change-format",
+        name: "Change IP Format",
+        description: "Convert IPv4 addresses between dotted decimal, integer, hex, and octal",
+        categories: ["networking"],
+        parameters: [
+            {
+                name: "inputFormat",
+                label: "Input Format",
+                type: "select",
+                default: "dotted",
+                options: [
+                    { value: "dotted", label: "Dotted Decimal (192.168.1.1)" },
+                    { value: "decimal", label: "Decimal Integer (3232235777)" },
+                    { value: "hex", label: "Hex (0xC0A80101)" },
+                    { value: "octal", label: "Dotted Octal (0300.0250.0001.0001)" },
+                ]
+            },
+            {
+                name: "outputFormat",
+                label: "Output Format",
+                type: "select",
+                default: "decimal",
+                options: [
+                    { value: "dotted", label: "Dotted Decimal (192.168.1.1)" },
+                    { value: "decimal", label: "Decimal Integer (3232235777)" },
+                    { value: "hex", label: "Hex (0xC0A80101)" },
+                    { value: "octal", label: "Dotted Octal (0300.0250.0001.0001)" },
+                ]
+            }
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const inputFormat = (params.inputFormat as string) || "dotted";
+            const outputFormat = (params.outputFormat as string) || "decimal";
+
+            function parseIp(ip: string): number {
+                switch (inputFormat) {
+                    case "dotted": {
+                        const parts = ip.split('.').map(Number);
+                        if (parts.length !== 4 || parts.some(p => isNaN(p) || p < 0 || p > 255)) {
+                            throw new Error(`Invalid dotted IP: ${ip}`);
+                        }
+                        return ((parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3]) >>> 0;
+                    }
+                    case "decimal": {
+                        const n = parseInt(ip, 10);
+                        if (isNaN(n) || n < 0 || n > 4294967295) throw new Error(`Invalid decimal IP: ${ip}`);
+                        return n >>> 0;
+                    }
+                    case "hex": {
+                        const n = parseInt(ip.replace(/^0x/i, ''), 16);
+                        if (isNaN(n)) throw new Error(`Invalid hex IP: ${ip}`);
+                        return n >>> 0;
+                    }
+                    case "octal": {
+                        const parts = ip.split('.').map(p => parseInt(p, 8));
+                        if (parts.length !== 4 || parts.some(p => isNaN(p) || p < 0 || p > 255)) {
+                            throw new Error(`Invalid octal IP: ${ip}`);
+                        }
+                        return ((parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3]) >>> 0;
+                    }
+                    default:
+                        throw new Error(`Unknown input format: ${inputFormat}`);
+                }
+            }
+
+            function formatIp(value: number): string {
+                const a = (value >>> 24) & 0xff;
+                const b = (value >>> 16) & 0xff;
+                const c = (value >>> 8) & 0xff;
+                const d = value & 0xff;
+                switch (outputFormat) {
+                    case "dotted":  return `${a}.${b}.${c}.${d}`;
+                    case "decimal": return String(value >>> 0);
+                    case "hex":     return `0x${value.toString(16).toUpperCase().padStart(8, '0')}`;
+                    case "octal":   return [a, b, c, d].map(n => '0' + n.toString(8).padStart(3, '0')).join('.');
+                    default: throw new Error(`Unknown output format: ${outputFormat}`);
+                }
+            }
+
+            // Build regex for the selected input format
+            const patterns: Record<string, RegExp> = {
+                dotted:  /\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b/g,
+                decimal: /\b(?:429496729[0-5]|42949672[0-8]\d|4294967[01]\d{2}|429496[0-6]\d{3}|42949[0-5]\d{4}|4294[0-8]\d{5}|429[0-3]\d{6}|42[0-8]\d{7}|4[01]\d{8}|[1-3]\d{9}|\d{1,9})\b/g,
+                hex:     /\b0x[0-9a-fA-F]{1,8}\b/g,
+                octal:   /\b0\d{1,3}\.0\d{1,3}\.0\d{1,3}\.0\d{1,3}\b/g,
+            };
+
+            const regex = patterns[inputFormat];
+            if (!regex) throw new Error(`Unknown input format: ${inputFormat}`);
+
+            return input.replace(regex, (match) => {
+                try {
+                    return formatIp(parseIp(match));
+                } catch {
+                    return match;
+                }
+            });
+        },
+        keywords: ["ip", "ipv4", "address", "format", "convert", "decimal", "hex", "octal", "networking"],
+        source: "core",
+    },
 ];
 
 // Self-register all operations

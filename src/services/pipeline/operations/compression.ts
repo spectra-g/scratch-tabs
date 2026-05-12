@@ -127,7 +127,203 @@ export const compressionOperations: OperationDefinition[] = [
                 throw new Error("Decompression failed: " + (e as Error).message);
             }
         }
-    }
+    },
+    {
+        id: "compression.deflate",
+        name: "Raw Deflate",
+        description: "Compress data using Raw Deflate (no header/checksum)",
+        categories: ["compression"],
+        parameters: [
+            {
+                name: "outputEncoding",
+                label: "Output Encoding",
+                type: "select",
+                default: "base64",
+                options: [
+                    { value: "base64", label: "Base64" },
+                    { value: "latin1", label: "Raw String (Latin-1)" }
+                ]
+            }
+        ],
+        execute: async (input) => {
+            if (!input) return "";
+            if (typeof CompressionStream === 'undefined') {
+                throw new Error("CompressionStream API not supported in this environment");
+            }
+            try {
+                let Encoder;
+                if (typeof TextEncoder === 'undefined') {
+                    Encoder = require('util').TextEncoder;
+                } else {
+                    Encoder = TextEncoder;
+                }
+                const inputBytes = new Encoder().encode(input);
+                const cs = new CompressionStream('deflate-raw');
+                const writer = cs.writable.getWriter();
+                writer.write(inputBytes);
+                writer.close();
+                const buf = await new Response(cs.readable).arrayBuffer();
+                const bytes = new Uint8Array(buf);
+                let binary = '';
+                bytes.forEach(b => { binary += String.fromCharCode(b); });
+                return btoa(binary);
+            } catch (e) {
+                throw new Error("Compression failed: " + (e as Error).message);
+            }
+        },
+        keywords: ["deflate", "compress", "raw", "inflate"],
+        source: "core",
+    },
+    {
+        id: "compression.inflate",
+        name: "Raw Inflate",
+        description: "Decompress Raw Deflate data (Base64 input)",
+        categories: ["compression"],
+        parameters: [
+            {
+                name: "inputEncoding",
+                label: "Input Encoding",
+                type: "select",
+                default: "base64",
+                options: [
+                    { value: "base64", label: "Base64" },
+                    { value: "latin1", label: "Raw String" }
+                ]
+            }
+        ],
+        execute: async (input, params) => {
+            if (!input) return "";
+            if (typeof DecompressionStream === 'undefined') {
+                throw new Error("DecompressionStream API not supported in this environment");
+            }
+            let binaryString = input;
+            if (params.inputEncoding !== 'latin1') {
+                try {
+                    binaryString = atob(input.replace(/\s/g, ''));
+                } catch {
+                    throw new Error("Invalid Base64 input");
+                }
+            }
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+            try {
+                const ds = new DecompressionStream('deflate-raw');
+                const writer = ds.writable.getWriter();
+                writer.write(bytes);
+                writer.close();
+                let Decoder;
+                if (typeof TextDecoder === 'undefined') {
+                    Decoder = require('util').TextDecoder;
+                } else {
+                    Decoder = TextDecoder;
+                }
+                const buf = await new Response(ds.readable).arrayBuffer();
+                return new Decoder('utf-8').decode(buf as ArrayBuffer);
+            } catch (e) {
+                throw new Error("Decompression failed: " + (e as Error).message);
+            }
+        },
+        keywords: ["deflate", "inflate", "decompress", "raw"],
+        source: "core",
+    },
+    {
+        id: "compression.zlib",
+        name: "Zlib Deflate",
+        description: "Compress data using Zlib (Deflate with zlib header)",
+        categories: ["compression"],
+        parameters: [
+            {
+                name: "outputEncoding",
+                label: "Output Encoding",
+                type: "select",
+                default: "base64",
+                options: [
+                    { value: "base64", label: "Base64" },
+                    { value: "latin1", label: "Raw String (Latin-1)" }
+                ]
+            }
+        ],
+        execute: async (input) => {
+            if (!input) return "";
+            if (typeof CompressionStream === 'undefined') {
+                throw new Error("CompressionStream API not supported in this environment");
+            }
+            try {
+                let Encoder;
+                if (typeof TextEncoder === 'undefined') {
+                    Encoder = require('util').TextEncoder;
+                } else {
+                    Encoder = TextEncoder;
+                }
+                const inputBytes = new Encoder().encode(input);
+                const cs = new CompressionStream('deflate');
+                const writer = cs.writable.getWriter();
+                writer.write(inputBytes);
+                writer.close();
+                const buf = await new Response(cs.readable).arrayBuffer();
+                const bytes = new Uint8Array(buf);
+                let binary = '';
+                bytes.forEach(b => { binary += String.fromCharCode(b); });
+                return btoa(binary);
+            } catch (e) {
+                throw new Error("Compression failed: " + (e as Error).message);
+            }
+        },
+        keywords: ["zlib", "compress", "deflate"],
+        source: "core",
+    },
+    {
+        id: "compression.unzlib",
+        name: "Zlib Inflate",
+        description: "Decompress Zlib-compressed data (Base64 input)",
+        categories: ["compression"],
+        parameters: [
+            {
+                name: "inputEncoding",
+                label: "Input Encoding",
+                type: "select",
+                default: "base64",
+                options: [
+                    { value: "base64", label: "Base64" },
+                    { value: "latin1", label: "Raw String" }
+                ]
+            }
+        ],
+        execute: async (input, params) => {
+            if (!input) return "";
+            if (typeof DecompressionStream === 'undefined') {
+                throw new Error("DecompressionStream API not supported in this environment");
+            }
+            let binaryString = input;
+            if (params.inputEncoding !== 'latin1') {
+                try {
+                    binaryString = atob(input.replace(/\s/g, ''));
+                } catch {
+                    throw new Error("Invalid Base64 input");
+                }
+            }
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+            try {
+                const ds = new DecompressionStream('deflate');
+                const writer = ds.writable.getWriter();
+                writer.write(bytes);
+                writer.close();
+                let Decoder;
+                if (typeof TextDecoder === 'undefined') {
+                    Decoder = require('util').TextDecoder;
+                } else {
+                    Decoder = TextDecoder;
+                }
+                const buf = await new Response(ds.readable).arrayBuffer();
+                return new Decoder('utf-8').decode(buf as ArrayBuffer);
+            } catch (e) {
+                throw new Error("Decompression failed: " + (e as Error).message);
+            }
+        },
+        keywords: ["zlib", "inflate", "decompress", "deflate"],
+        source: "core",
+    },
 ];
 
 // Self-register all operations

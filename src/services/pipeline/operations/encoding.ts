@@ -1,5 +1,110 @@
 import { OperationDefinition } from "../types";
 
+// === Base32 helpers (RFC 4648) ===
+const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+
+function encodeBase32(input: string, padding: boolean): string {
+    const bytes = typeof TextEncoder !== 'undefined'
+        ? Array.from(new TextEncoder().encode(input))
+        : Array.from(input).map(c => c.charCodeAt(0) & 0xff);
+
+    let bits = 0;
+    let value = 0;
+    let output = '';
+
+    for (const byte of bytes) {
+        value = (value << 8) | byte;
+        bits += 8;
+        while (bits >= 5) {
+            output += BASE32_ALPHABET[(value >>> (bits - 5)) & 31];
+            bits -= 5;
+        }
+    }
+
+    if (bits > 0) {
+        output += BASE32_ALPHABET[(value << (5 - bits)) & 31];
+    }
+
+    if (padding) {
+        while (output.length % 8 !== 0) output += '=';
+    }
+
+    return output;
+}
+
+function decodeBase32(input: string): string {
+    const clean = input.toUpperCase().replace(/=+$/, '').replace(/\s/g, '');
+    const bytes: number[] = [];
+    let bits = 0;
+    let value = 0;
+
+    for (const char of clean) {
+        const idx = BASE32_ALPHABET.indexOf(char);
+        if (idx === -1) throw new Error(`Invalid Base32 character: ${char}`);
+        value = (value << 5) | idx;
+        bits += 5;
+        if (bits >= 8) {
+            bytes.push((value >>> (bits - 8)) & 255);
+            bits -= 8;
+        }
+    }
+
+    if (typeof TextDecoder !== 'undefined') {
+        return new TextDecoder().decode(new Uint8Array(bytes));
+    }
+    return bytes.map(b => String.fromCharCode(b)).join('');
+}
+
+// === Base58 helpers (Bitcoin alphabet) ===
+const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+
+function encodeBase58(input: string): string {
+    const bytes = typeof TextEncoder !== 'undefined'
+        ? Array.from(new TextEncoder().encode(input))
+        : Array.from(input).map(c => c.charCodeAt(0) & 0xff);
+
+    let leadingZeros = 0;
+    while (leadingZeros < bytes.length && bytes[leadingZeros] === 0) leadingZeros++;
+
+    let num = BigInt(0);
+    for (const byte of bytes) num = (num << BigInt(8)) + BigInt(byte);
+
+    const result: string[] = [];
+    while (num > BigInt(0)) {
+        result.unshift(BASE58_ALPHABET[Number(num % BigInt(58))]);
+        num = num / BigInt(58);
+    }
+
+    return '1'.repeat(leadingZeros) + result.join('');
+}
+
+function decodeBase58(input: string): string {
+    const clean = input.replace(/\s/g, '');
+
+    let leadingZeros = 0;
+    while (leadingZeros < clean.length && clean[leadingZeros] === '1') leadingZeros++;
+
+    let num = BigInt(0);
+    for (const char of clean) {
+        const idx = BASE58_ALPHABET.indexOf(char);
+        if (idx === -1) throw new Error(`Invalid Base58 character: ${char}`);
+        num = num * BigInt(58) + BigInt(idx);
+    }
+
+    const bytes: number[] = [];
+    while (num > BigInt(0)) {
+        bytes.unshift(Number(num & BigInt(0xff)));
+        num >>= BigInt(8);
+    }
+
+    const allBytes = new Uint8Array([...new Array(leadingZeros).fill(0), ...bytes]);
+
+    if (typeof TextDecoder !== 'undefined') {
+        return new TextDecoder().decode(allBytes);
+    }
+    return Array.from(allBytes).map(b => String.fromCharCode(b)).join('');
+}
+
 /**
  * Encoding Pipeline Operations
  *
@@ -423,6 +528,255 @@ export const encodingOperations: OperationDefinition[] = [
                 .replace(/&#([0-9]+);/g, (_, dec) => String.fromCharCode(parseInt(dec, 10)));
         },
         keywords: ["html", "entity", "decode", "web"],
+        source: "core",
+    },
+
+    // === BINARY STRING ===
+    {
+        id: "encoding.to-binary",
+        name: "To Binary",
+        description: "Convert text to binary bit string (e.g. A → 01000001)",
+        categories: ["encoding", "binary"],
+        parameters: [
+            {
+                name: "delimiter",
+                label: "Delimiter",
+                type: "select",
+                default: "space",
+                options: [
+                    { value: "space", label: "Space (01000001 01000010)" },
+                    { value: "none", label: "None (0100000101000010)" },
+                    { value: "newline", label: "Newline" },
+                    { value: "comma", label: "Comma" },
+                ]
+            }
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const delimiter = (params.delimiter as string) || "space";
+            const sep = delimiter === "newline" ? "\n" : delimiter === "comma" ? "," : delimiter === "none" ? "" : " ";
+            return Array.from(input)
+                .map(char => char.charCodeAt(0).toString(2).padStart(8, '0'))
+                .join(sep);
+        },
+        keywords: ["binary", "encode", "bits", "convert", "bitstring"],
+        source: "core",
+    },
+    {
+        id: "encoding.from-binary",
+        name: "From Binary",
+        description: "Convert binary bit string back to text",
+        categories: ["encoding", "binary"],
+        parameters: [
+            {
+                name: "delimiter",
+                label: "Delimiter",
+                type: "select",
+                default: "auto",
+                options: [
+                    { value: "auto", label: "Auto" },
+                    { value: "space", label: "Space" },
+                    { value: "none", label: "None (8-bit groups)" },
+                    { value: "newline", label: "Newline" },
+                    { value: "comma", label: "Comma" },
+                ]
+            }
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const delimiter = (params.delimiter as string) || "auto";
+            let groups: string[];
+
+            const splitIntoBytes = (s: string) => {
+                const clean = s.replace(/\s/g, '');
+                const out: string[] = [];
+                for (let i = 0; i < clean.length; i += 8) out.push(clean.slice(i, i + 8));
+                return out;
+            };
+
+            if (delimiter === "none") {
+                groups = splitIntoBytes(input);
+            } else if (delimiter === "space") {
+                groups = input.trim().split(/\s+/);
+            } else if (delimiter === "newline") {
+                groups = input.trim().split('\n');
+            } else if (delimiter === "comma") {
+                groups = input.split(',');
+            } else {
+                // auto: detect by presence of delimiter chars
+                const t = input.trim();
+                if (t.includes(' ')) groups = t.split(/\s+/);
+                else if (t.includes(',')) groups = t.split(',');
+                else if (t.includes('\n')) groups = t.split('\n');
+                else groups = splitIntoBytes(t);
+            }
+
+            return groups
+                .map(g => g.trim())
+                .filter(g => g.length > 0)
+                .map(g => {
+                    const code = parseInt(g, 2);
+                    return isNaN(code) ? '' : String.fromCharCode(code);
+                })
+                .join('');
+        },
+        keywords: ["binary", "decode", "bits", "convert"],
+        source: "core",
+    },
+
+    // === OCTAL ===
+    {
+        id: "encoding.to-octal",
+        name: "To Octal",
+        description: "Convert text to octal byte values (e.g. A → 101)",
+        categories: ["encoding"],
+        parameters: [
+            {
+                name: "delimiter",
+                label: "Delimiter",
+                type: "select",
+                default: "space",
+                options: [
+                    { value: "space", label: "Space" },
+                    { value: "none", label: "None" },
+                    { value: "backslash", label: "Backslash (\\101)" },
+                    { value: "comma", label: "Comma" },
+                ]
+            }
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const delimiter = (params.delimiter as string) || "space";
+            const octChars = Array.from(input).map(char => char.charCodeAt(0).toString(8));
+            switch (delimiter) {
+                case "none": return octChars.join('');
+                case "backslash": return octChars.map(o => '\\' + o).join('');
+                case "comma": return octChars.join(',');
+                default: return octChars.join(' ');
+            }
+        },
+        keywords: ["octal", "encode", "convert", "base8"],
+        source: "core",
+    },
+    {
+        id: "encoding.from-octal",
+        name: "From Octal",
+        description: "Convert octal values back to text",
+        categories: ["encoding"],
+        parameters: [
+            {
+                name: "delimiter",
+                label: "Delimiter",
+                type: "select",
+                default: "auto",
+                options: [
+                    { value: "auto", label: "Auto" },
+                    { value: "space", label: "Space" },
+                    { value: "backslash", label: "Backslash" },
+                    { value: "comma", label: "Comma" },
+                ]
+            }
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const delimiter = (params.delimiter as string) || "auto";
+            let groups: string[];
+
+            if (delimiter === "backslash") {
+                groups = input.split('\\').filter(g => g.length > 0);
+            } else if (delimiter === "comma") {
+                groups = input.split(',');
+            } else if (delimiter === "space") {
+                groups = input.trim().split(/\s+/);
+            } else {
+                const t = input.trim();
+                if (t.startsWith('\\')) groups = t.split('\\').filter(g => g.length > 0);
+                else if (t.includes(',')) groups = t.split(',');
+                else groups = t.split(/\s+/);
+            }
+
+            return groups
+                .map(g => g.trim())
+                .filter(g => g.length > 0)
+                .map(g => {
+                    const code = parseInt(g, 8);
+                    return isNaN(code) ? '' : String.fromCharCode(code);
+                })
+                .join('');
+        },
+        keywords: ["octal", "decode", "convert", "base8"],
+        source: "core",
+    },
+
+    // === BASE32 ===
+    {
+        id: "encoding.base32-encode",
+        name: "Base32 Encode",
+        description: "Encode text to Base32 (RFC 4648)",
+        categories: ["encoding"],
+        parameters: [
+            {
+                name: "padding",
+                label: "Padding",
+                type: "boolean",
+                default: true,
+                description: "Append = padding to make output length a multiple of 8"
+            }
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            return encodeBase32(input, (params.padding ?? true) as boolean);
+        },
+        keywords: ["base32", "encode", "rfc4648", "totp"],
+        source: "core",
+    },
+    {
+        id: "encoding.base32-decode",
+        name: "Base32 Decode",
+        description: "Decode Base32 back to text",
+        categories: ["encoding"],
+        parameters: [
+            {
+                name: "padding",
+                label: "Padding",
+                type: "boolean",
+                default: true,
+                description: "Input uses = padding (stripped automatically)"
+            }
+        ],
+        processingMode: "entire",
+        execute: (input) => {
+            return decodeBase32(input);
+        },
+        keywords: ["base32", "decode", "rfc4648", "totp"],
+        source: "core",
+    },
+
+    // === BASE58 ===
+    {
+        id: "encoding.base58-encode",
+        name: "Base58 Encode",
+        description: "Encode text to Base58 (Bitcoin/IPFS alphabet)",
+        categories: ["encoding"],
+        parameters: [],
+        processingMode: "entire",
+        execute: (input) => {
+            return encodeBase58(input);
+        },
+        keywords: ["base58", "encode", "bitcoin", "ipfs", "wallet"],
+        source: "core",
+    },
+    {
+        id: "encoding.base58-decode",
+        name: "Base58 Decode",
+        description: "Decode Base58 back to text",
+        categories: ["encoding"],
+        parameters: [],
+        processingMode: "entire",
+        execute: (input) => {
+            return decodeBase58(input);
+        },
+        keywords: ["base58", "decode", "bitcoin", "ipfs", "wallet"],
         source: "core",
     },
 

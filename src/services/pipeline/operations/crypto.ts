@@ -85,6 +85,71 @@ export const cryptoOperations: OperationDefinition[] = [
         source: "core",
     },
 
+    // === HASH DIGEST ===
+    {
+        id: "hash.digest",
+        name: "Hash / Digest",
+        description: "Generate a cryptographic hash of the input (SHA-1, SHA-256, SHA-384, SHA-512)",
+        categories: ["hashing"],
+        parameters: [
+            {
+                name: "algorithm",
+                label: "Algorithm",
+                type: "select",
+                default: "SHA-256",
+                options: [
+                    { value: "SHA-1", label: "SHA-1 (160-bit)" },
+                    { value: "SHA-256", label: "SHA-256 (256-bit)" },
+                    { value: "SHA-384", label: "SHA-384 (384-bit)" },
+                    { value: "SHA-512", label: "SHA-512 (512-bit)" },
+                ]
+            },
+            {
+                name: "outputFormat",
+                label: "Output Format",
+                type: "select",
+                default: "hex",
+                options: [
+                    { value: "hex", label: "Hexadecimal" },
+                    { value: "base64", label: "Base64" },
+                ]
+            }
+        ],
+        processingMode: "configurable",
+        execute: async (input, params) => {
+            const algorithm = (params.algorithm as string) || "SHA-256";
+            const outputFormat = (params.outputFormat as string) || "hex";
+
+            const hasWebCrypto = typeof crypto !== 'undefined' && crypto.subtle && typeof TextEncoder !== 'undefined';
+
+            if (hasWebCrypto) {
+                const data = new TextEncoder().encode(input);
+                const hashBuffer = await crypto.subtle.digest(algorithm, data);
+                const hashArray = new Uint8Array(hashBuffer);
+
+                if (outputFormat === 'base64') {
+                    let binary = '';
+                    hashArray.forEach(byte => { binary += String.fromCharCode(byte); });
+                    return btoa(binary);
+                }
+                return Array.from(hashArray).map(b => b.toString(16).padStart(2, '0')).join('');
+            } else {
+                const nodeCrypto = await import('crypto');
+                const algoMap: Record<string, string> = {
+                    'SHA-1': 'sha1',
+                    'SHA-256': 'sha256',
+                    'SHA-384': 'sha384',
+                    'SHA-512': 'sha512',
+                };
+                const hash = nodeCrypto.createHash(algoMap[algorithm] || 'sha256');
+                hash.update(input);
+                return hash.digest(outputFormat === 'base64' ? 'base64' : 'hex');
+            }
+        },
+        keywords: ["hash", "digest", "sha", "sha256", "sha512", "checksum", "fingerprint", "crypto"],
+        source: "core",
+    },
+
     // === HMAC ===
     {
         id: "crypto.hmac",

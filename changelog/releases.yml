@@ -3,8 +3,31 @@ config:
   max_versions: 100  # Maximum number of versions to display
 
 releases:
-  - version: "1.24.1"
+  - version: "1.25.0"
     type: "latest"
+    draft: false
+    date: "2026-05-12"
+    headline: "17 New Pipeline Operations — Encoding, Compression, Hashing, Networking & Datetime"
+    summary: "Format Date, binary/octal/Base32/Base58 encoding, Raw Deflate and Zlib compression, SHA hash digest, IPv4 format conversion, and JSONPath queries"
+    description: "Major pipeline expansion with 17 new operations across five categories. Format Date parses date strings from any common format and reformats them into any of 11 output presets or a custom date-fns format string. The encoding matrix is now complete with binary, octal, Base32 (RFC 4648), and Base58 (Bitcoin/IPFS alphabet) alongside the existing hex and Base64 ops. Compression gains Raw Deflate and Zlib inflate/deflate pairs via the browser's native CompressionStream API. A composable Hash/Digest operation exposes SHA-1, SHA-256, SHA-384, and SHA-512 with hex or Base64 output. IPv4 addresses can be converted between dotted decimal, decimal integer, hex, and octal representations in-place within any text. JSON pipelines gain a JSONPath Query step that evaluates any expression and outputs results as pretty JSON, compact JSON, or one value per line."
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**Format Date:** Parse any date string and reformat it — accepts ISO 8601, SQL datetime, Unix timestamps (seconds or milliseconds), natural language (yesterday, 2 hours ago), and more as input"
+          - "**11 date output presets:** ISO 8601, date-only, SQL, RFC 3339, HTTP/RFC 7231, human, full human (with weekday), relative time, Unix seconds, Unix milliseconds, and custom date-fns format string"
+          - "**Per-line date processing:** Configurable mode converts a list of dates line-by-line in a single pipeline step"
+          - "**To/From Binary:** Convert text to space-separated binary bit strings (e.g. `A` → `01000001`) and back — delimiter options: space, none, comma, newline"
+          - "**To/From Octal:** Convert text to octal byte values (e.g. `A` → `101`) and back — delimiter options: space, backslash, none, comma"
+          - "**Base32 Encode/Decode:** RFC 4648 standard Base32 with optional padding control — useful for TOTP/2FA secrets and DNS encodings"
+          - "**Base58 Encode/Decode:** Bitcoin/IPFS alphabet Base58 — useful for wallet addresses, CIDs, and SSH key fingerprints"
+          - "**Raw Deflate / Raw Inflate:** Compress and decompress using Raw Deflate (no header), output as Base64"
+          - "**Zlib Deflate / Zlib Inflate:** Compress and decompress using Zlib-wrapped Deflate, output as Base64"
+          - "**Hash / Digest:** Generate SHA-1, SHA-256, SHA-384, or SHA-512 hashes with hex or Base64 output — composable per-line or full-text"
+          - "**Change IP Format:** Convert IPv4 addresses in-place between dotted decimal, decimal integer (e.g. `3232235777`), hex (`0xC0A80101`), and dotted octal — works on embedded IPs in log lines"
+          - "**JSONPath Query:** Apply a JSONPath expression to JSON input and output results as pretty JSON, compact JSON, or one value per line (e.g. `$.users[*].name`)"
+
+  - version: "1.24.1"
+    type: "release"
     draft: false
     date: "2026-05-11"
     headline: "Editor Copy/Paste Fix"
