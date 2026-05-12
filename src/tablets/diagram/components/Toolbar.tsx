@@ -8,7 +8,9 @@ import {
   FileDown,
   Code,
   Palette,
-  BookOpen
+  BookOpen,
+  Split,
+  Maximize
 } from '../../../components/Icons';
 import { MermaidTheme, ExportSettings } from '../types';
 
@@ -33,6 +35,8 @@ interface ToolbarProps {
     codeLines: number;
     codeSize: number;
   } | null;
+  viewMode: 'split' | 'preview';
+  onViewModeChange: (mode: 'split' | 'preview') => void;
 }
 
 const THEMES: { value: MermaidTheme; label: string }[] = [
@@ -57,7 +61,9 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({
   isOptimizing,
   copyCodeSuccess = false,
   optimizeSuccess = false,
-  statistics
+  statistics,
+  viewMode,
+  onViewModeChange
 }) => {
   const [showExportMenu, setShowExportMenu] = React.useState(false);
   const [showThemeMenu, setShowThemeMenu] = React.useState(false);
@@ -166,6 +172,14 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({
             </div>
           )}
         </div>
+
+        {/* View mode toggle */}
+        <ToolbarButton
+          onClick={() => onViewModeChange(viewMode === 'split' ? 'preview' : 'split')}
+          title={viewMode === 'split' ? 'Maximize diagram view' : 'Show editor and diagram'}
+        >
+          {viewMode === 'split' ? <Maximize size={16} /> : <Split size={16} />}
+        </ToolbarButton>
 
         {/* Copy actions */}
         <ToolbarButton

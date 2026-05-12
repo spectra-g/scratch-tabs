@@ -7,6 +7,8 @@ import { TemplateLibrary } from './components/TemplateLibrary';
 import { ErrorPanel } from './components/ErrorPanel';
 import { MermaidEditor } from './components/MermaidEditor';
 import { useMermaidRenderer } from './hooks/useMermaidRenderer';
+import { useMarkdownPreviewResizer } from '../../hooks/useMarkdownPreviewResizer';
+import { PreviewDivider } from '../../components/Preview/PreviewDivider';
 
 interface DiagramTabletProps {
   state: DiagramTabletState;
@@ -30,6 +32,17 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
   const [copyCodeSuccess, setCopyCodeSuccess] = useState(false);
   const [optimizeSuccess, setOptimizeSuccess] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'split' | 'preview'>('split');
+
+  const { containerRef, editorStyle, previewStyle, dividerProps, isDragging } =
+    useMarkdownPreviewResizer(true);
+
+  const effectiveEditorStyle = viewMode === 'preview'
+    ? { display: 'none' as const }
+    : editorStyle;
+  const effectivePreviewStyle = viewMode === 'preview'
+    ? { flex: '1 1 auto', minWidth: 0 }
+    : previewStyle;
 
   // Ref to access current state without causing re-renders
   const stateRef = useRef(state);
@@ -338,6 +351,8 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
         exportSettings={state.exportSettings}
         onExportSettingsChange={handleExportSettingsChange}
         statistics={statistics}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
 
       {/* Error Panel */}
@@ -353,9 +368,9 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
       )}
 
       {/* Main content area */}
-      <div className="flex-1 flex min-h-0">
+      <div ref={containerRef} className="flex-1 flex min-h-0">
         {/* Code Editor Panel */}
-        <div className="w-1/2 h-full border-r border-base min-h-0">
+        <div style={effectiveEditorStyle} className="h-full border-r border-base min-h-0">
           <div className="h-full bg-surface-secondary p-4">
             <div className="mb-3">
               <label className="block text-sm font-medium text-secondary mb-2">
@@ -377,16 +392,22 @@ export const DiagramTablet: React.FC<DiagramTabletProps> = ({
           </div>
         </div>
 
+        {/* Drag divider */}
+        {viewMode === 'split' && (
+          <PreviewDivider
+            dividerProps={dividerProps}
+            isDragging={isDragging}
+            isPreviewEnabled={true}
+          />
+        )}
+
         {/* Preview Panel */}
-        <div className="w-1/2 h-full min-h-0">
+        <div style={effectivePreviewStyle} className="h-full min-h-0">
           <PreviewPanel
             svgContent={renderedSvg}
             isRendering={isRendering}
             onElementClick={handlePreviewElementClick}
-            onHighlightLine={() => {
-              // Line highlighting in Monaco editor
-              // TODO: Implement Monaco editor line highlighting
-            }}
+            onHighlightLine={() => {}}
           />
         </div>
       </div>

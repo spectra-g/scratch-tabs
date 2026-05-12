@@ -15,12 +15,46 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.24.1';
+export const APP_VERSION = '1.25.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.24.1",
+    "version": "1.25.0",
     "type": "latest",
+    "date": "2026-05-12",
+    "headline": "17 New Pipeline Operations - Encoding, Compression, Hashing, Networking & Datetime",
+    "summary": "Format Date, binary/octal/Base32/Base58 encoding, Raw Deflate and Zlib compression, SHA hash digest, IPv4 format conversion, and JSONPath queries",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Format Date:** Parse any date string and reformat it - accepts ISO 8601, SQL datetime, Unix timestamps (seconds or milliseconds), natural language (yesterday, 2 hours ago), and more as input",
+          "**11 date output presets:** ISO 8601, date-only, SQL, RFC 3339, HTTP/RFC 7231, human, full human (with weekday), relative time, Unix seconds, Unix milliseconds, and custom date-fns format string",
+          "**Per-line date processing:** Configurable mode converts a list of dates line-by-line in a single pipeline step",
+          "**To/From Binary:** Convert text to space-separated binary bit strings (e.g. `A` → `01000001`) and back - delimiter options: space, none, comma, newline",
+          "**To/From Octal:** Convert text to octal byte values (e.g. `A` → `101`) and back - delimiter options: space, backslash, none, comma",
+          "**Base32 Encode/Decode:** RFC 4648 standard Base32 with optional padding control - useful for TOTP/2FA secrets and DNS encodings",
+          "**Base58 Encode/Decode:** Bitcoin/IPFS alphabet Base58 - useful for wallet addresses, CIDs, and SSH key fingerprints",
+          "**Raw Deflate / Raw Inflate:** Compress and decompress using Raw Deflate (no header), output as Base64",
+          "**Zlib Deflate / Zlib Inflate:** Compress and decompress using Zlib-wrapped Deflate, output as Base64",
+          "**Hash / Digest:** Generate SHA-1, SHA-256, SHA-384, or SHA-512 hashes with hex or Base64 output - composable per-line or full-text",
+          "**Change IP Format:** Convert IPv4 addresses in-place between dotted decimal, decimal integer (e.g. `3232235777`), hex (`0xC0A80101`), and dotted octal - works on embedded IPs in log lines",
+          "**JSONPath Query:** Apply a JSONPath expression to JSON input and output results as pretty JSON, compact JSON, or one value per line (e.g. `$.users[*].name`)",
+          "**Diagram Tablet - Resizable split:** Drag the vertical divider between the Mermaid code editor and diagram preview to adjust the split ratio - uses the same drag handle as the Markdown preview",
+          "**Diagram Tablet - Maximize view:** New toolbar toggle (split  maximize icons) collapses the editor to show the diagram full-width, then restores the split with one click"
+        ]
+      },
+      {
+        "name": "Bug Fixes",
+        "changes": [
+          "**Diagram Tablet - Label clipping:** Fixed right-side clipping of node label text (e.g. `Decision?`, `Action 1`) caused by Mermaid slightly under-calculating the SVG viewBox width - an 8px padding is now added to every side of the viewBox before display"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.24.1",
+    "type": "release",
     "date": "2026-05-11",
     "headline": "Editor Copy/Paste Fix",
     "summary": "Restored right-click Copy and Paste in the Monaco editor context menu, broken by a Monaco 0.54 upgrade",
@@ -30,8 +64,8 @@ export const RELEASES: Release[] = [
         "changes": [
           "**Right-click Copy:** Fixed Copy in the editor context menu not putting selected text on the clipboard (Monaco 0.54 EditContext API regression)",
           "**Right-click Paste:** Fixed Paste in the editor context menu doing nothing when clicked (Monaco 0.54 shadow DOM focus regression)",
-          "**Sidebar height on large screens:** Fixed the sidebar workspace list cutting off before the bottom of the screen on tall displays — list now expands to fill the full available height",
-          "**CSV masked column copy feedback:** Fixed copy icon in password/sensitive columns not switching to a green tick after copying — now shows the same 2-second success indicator as regular columns"
+          "**Sidebar height on large screens:** Fixed the sidebar workspace list cutting off before the bottom of the screen on tall displays - list now expands to fill the full available height",
+          "**CSV masked column copy feedback:** Fixed copy icon in password/sensitive columns not switching to a green tick after copying - now shows the same 2-second success indicator as regular columns"
         ]
       }
     ]

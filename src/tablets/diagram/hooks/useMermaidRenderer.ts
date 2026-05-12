@@ -184,6 +184,10 @@ const cleanupUnwantedMermaidDiv = (diagramId: string): void => {
   setTimeout(attemptCleanup, CLEANUP_DELAY);
 };
 
+// Extra padding added to every side of the viewBox so Mermaid's slightly
+// under-calculated label bounds don't get clipped by the SVG overflow boundary.
+const VIEWBOX_PADDING = 8;
+
 /**
  * Processes SVG to improve sizing - ensures small diagrams are visible while large ones fit container
  */
@@ -192,34 +196,42 @@ const processSvgForBetterSizing = (svg: string): string => {
     const parser = new DOMParser();
     const svgDoc = parser.parseFromString(svg, 'image/svg+xml');
     const svgElement = svgDoc.querySelector('svg');
-    
+
     if (!svgElement) return svg;
-    
+
     // Get the viewBox to understand content dimensions
     const viewBox = svgElement.getAttribute('viewBox');
     if (viewBox) {
       const [x, y, width, height] = viewBox.split(' ').map(Number);
-      
+
+      // Expand the viewBox by VIEWBOX_PADDING on every side so label text that
+      // Mermaid slightly under-estimates is not clipped by the SVG element itself.
+      const paddedX = x - VIEWBOX_PADDING;
+      const paddedY = y - VIEWBOX_PADDING;
+      const paddedWidth = width + VIEWBOX_PADDING * 2;
+      const paddedHeight = height + VIEWBOX_PADDING * 2;
+
       // Determine if this is a small diagram that needs minimum sizing
-      const isSmallDiagram = width < SMALL_DIAGRAM_THRESHOLD.width || height < SMALL_DIAGRAM_THRESHOLD.height;
-      
+      const isSmallDiagram = paddedWidth < SMALL_DIAGRAM_THRESHOLD.width || paddedHeight < SMALL_DIAGRAM_THRESHOLD.height;
+
       if (isSmallDiagram) {
         // For small diagrams, enforce minimum dimensions to ensure visibility
-        const finalWidth = Math.max(width, MIN_DIAGRAM_WIDTH);
-        const finalHeight = Math.max(height, MIN_DIAGRAM_HEIGHT);
-        
+        const finalWidth = Math.max(paddedWidth, MIN_DIAGRAM_WIDTH);
+        const finalHeight = Math.max(paddedHeight, MIN_DIAGRAM_HEIGHT);
+
         // Center the content in the expanded viewBox
-        const newX = x - (finalWidth - width) / 2;
-        const newY = y - (finalHeight - height) / 2;
-        
+        const newX = paddedX - (finalWidth - paddedWidth) / 2;
+        const newY = paddedY - (finalHeight - paddedHeight) / 2;
+
         svgElement.setAttribute('viewBox', `${newX} ${newY} ${finalWidth} ${finalHeight}`);
         svgElement.setAttribute('width', `${finalWidth}px`);
         svgElement.setAttribute('height', `${finalHeight}px`);
       } else {
         // For larger diagrams, remove fixed dimensions and set up responsive scaling
+        svgElement.setAttribute('viewBox', `${paddedX} ${paddedY} ${paddedWidth} ${paddedHeight}`);
         svgElement.removeAttribute('width');
         svgElement.removeAttribute('height');
-        
+
         // Set preserveAspectRatio to ensure proper scaling
         svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
       }
