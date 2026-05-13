@@ -389,6 +389,17 @@ export const tabletMetadata: TabletMetadata[] = [
     },
   },
   {
+    id: 'totp',
+    label: 'TOTP 2FA Generator',
+    description:
+      'Generate and verify time-based one-time passwords for two-factor authentication. ' +
+      'Supports multiple accounts, SHA1/256/512, and otpauth:// URI import — entirely offline.',
+    keywords: [
+      'totp', '2fa', 'otp', 'authenticator', 'two-factor', 'mfa',
+      'one-time', 'password', 'rfc6238', 'google authenticator',
+    ],
+  },
+  {
     id: 'colourpalette',
     label: 'Colour Palette',
     description: 'Extract, create, and test colour palettes with accessibility insights',

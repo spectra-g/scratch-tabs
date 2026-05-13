@@ -1,3 +1,4 @@
+@tablets
 Feature: Tablets Smoke Tests
   As a user
   I want to verify that all tablets load and work correctly
@@ -134,6 +135,20 @@ Feature: Tablets Smoke Tests
     When I type "https://example.com" into the QR URL input
     Then I should see a QR code preview
     And I should see QR code action buttons
+
+  Scenario: TOTP 2FA Generator tablet loads and shows codes
+    When I click the icon for "New tab"
+    And I click the icon for "New tablet"
+    And I select "TOTP 2FA Generator" from the tablet selector
+    And I wait for the tablet to be ready
+    Then the "TOTP 2FA Generator" tab should exist on the page
+    And I should see the TOTP generator interface
+    When I click the add account button
+    And I switch to the manual entry tab
+    And I fill in the TOTP account with label "GitHub" and secret "JBSWY3DPEHPK3PXP"
+    And I save the TOTP account
+    Then I should see a 6-digit TOTP code
+    And I should see a countdown timer
 
   Scenario: Emoji as Data tablet loads and displays emojis
     When I click the icon for "New tab"

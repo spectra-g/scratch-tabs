@@ -233,6 +233,38 @@ Then('I should see QR code action buttons', async function () {
 });
 
 // ============================================================================
+// TOTP 2FA Generator Tablet Steps
+// ============================================================================
+
+Then('I should see the TOTP generator interface', async function () {
+  await this.tablets.expectTotpInterfaceVisible();
+});
+
+When('I click the add account button', async function () {
+  await this.tablets.clickTotpAddAccountButton();
+});
+
+When('I switch to the manual entry tab', async function () {
+  await this.tablets.clickTotpManualEntryTab();
+});
+
+When('I fill in the TOTP account with label {string} and secret {string}', async function (label: string, secret: string) {
+  await this.tablets.fillTotpAccountForm(label, secret);
+});
+
+When('I save the TOTP account', async function () {
+  await this.tablets.saveTotpAccount();
+});
+
+Then('I should see a {int}-digit TOTP code', async function (digits: number) {
+  await this.tablets.expectTotpCodeVisible(digits);
+});
+
+Then('I should see a countdown timer', async function () {
+  await this.tablets.expectTotpCountdownVisible();
+});
+
+// ============================================================================
 // Emoji as Data Tablet Steps
 // ============================================================================
 
