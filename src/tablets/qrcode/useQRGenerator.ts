@@ -33,15 +33,17 @@ function buildOptions(data: string, style: QRStyleConfig, logoDataUrl: string | 
 export function useQRGenerator() {
   const qrRef = useRef<QRCodeStyling | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const latestOptsRef = useRef<Options | null>(null);
+  // Holds the most-recent options so the mount effect can initialise with real
+  // content instead of a blank placeholder (avoids a visible flash on load).
+  const latestOptsRef = useRef<Options>({ width: 512, height: 512, type: 'svg', data: ' ' });
 
-  // Mount: create the QR instance once using the latest known options
+  // Mount: create the QR instance once; use latestOptsRef so the very first
+  // render has real data if update() was called before the effect ran.
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const opts = latestOptsRef.current ?? { width: 512, height: 512, type: 'svg', data: ' ' };
-    const qr = new QRCodeStyling(opts);
+    const qr = new QRCodeStyling(latestOptsRef.current);
     qrRef.current = qr;
     container.innerHTML = '';
     qr.append(container);
@@ -56,9 +58,7 @@ export function useQRGenerator() {
     (data: string, style: QRStyleConfig, logoDataUrl: string | null, logoSize: number) => {
       const opts = buildOptions(data, style, logoDataUrl, logoSize);
       latestOptsRef.current = opts;
-      if (qrRef.current) {
-        qrRef.current.update(opts);
-      }
+      qrRef.current?.update(opts);
     },
     [],
   );
@@ -72,10 +72,12 @@ export function useQRGenerator() {
   }, []);
 
   const copyPng = useCallback(async (): Promise<boolean> => {
-    const blob = await qrRef.current?.getRawData('png');
-    if (!blob) return false;
+    if (!qrRef.current) return false;
     try {
-      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob as Blob })]);
+      // Pass the Promise directly so ClipboardItem is constructed synchronously
+      // within the user-gesture call stack — required by Safari.
+      const blobPromise = qrRef.current.getRawData('png').then((b) => b as Blob);
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blobPromise })]);
       return true;
     } catch {
       return false;

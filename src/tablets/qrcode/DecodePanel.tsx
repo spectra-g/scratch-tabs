@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Upload, Copy, ExternalLink, Check, Loader2, ScanQrCode, ArrowRight } from 'lucide-react';
 import { useQRDecoder } from './useQRDecoder';
 import type { ContentTypeId } from './contentTypes';
@@ -24,16 +24,26 @@ export const DecodePanel: React.FC<Props> = ({ onSendToGenerate }) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Track the current object URL in a ref so the unmount cleanup can revoke it
+  // even if state has already been torn down.
+  const previewUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    };
+  }, []);
 
   const handleFile = useCallback(
     async (file: File) => {
       if (!file.type.startsWith('image/')) return;
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
       const url = URL.createObjectURL(file);
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      previewUrlRef.current = url;
       setPreviewUrl(url);
       await decode(file);
     },
-    [decode, previewUrl],
+    [decode],
   );
 
   const handleDrop = useCallback(
@@ -65,10 +75,11 @@ export const DecodePanel: React.FC<Props> = ({ onSendToGenerate }) => {
   }, [result]);
 
   const handleClear = useCallback(() => {
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    previewUrlRef.current = null;
     setPreviewUrl(null);
     reset();
-  }, [previewUrl, reset]);
+  }, [reset]);
 
   return (
     <div className="flex flex-col h-full">

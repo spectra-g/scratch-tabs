@@ -403,8 +403,21 @@ const QRCodeUI: React.FC<{
 
       {/* Right: preview */}
       <div className="flex-1 min-w-0 flex flex-col">
-        {/* QR preview */}
-        <div className="flex-1 flex items-center justify-center p-6 bg-surface-raised/10 min-h-0">
+        {/* QR preview — show checkerboard when transparent so black dots are visible on dark theme */}
+        <div
+          className="flex-1 flex items-center justify-center p-6 min-h-0"
+          style={
+            data.style.transparent
+              ? {
+                  backgroundImage:
+                    'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)',
+                  backgroundSize: '16px 16px',
+                  backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px',
+                  backgroundColor: '#fff',
+                }
+              : {}
+          }
+        >
           <div
             ref={containerRef}
             className="rounded-lg overflow-hidden shadow-sm"

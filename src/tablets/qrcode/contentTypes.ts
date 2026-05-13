@@ -102,17 +102,24 @@ export const contentTypeConfigs: Record<ContentTypeId, ContentTypeConfig> = {
       { key: 'url', label: 'Website', placeholder: 'https://example.com', inputType: 'url' },
     ],
     format: (f) => {
+      const fullName = f.name || '';
+      // Split "First … Last" → N field: "Last;First;;;" as v3.0 expects
+      const parts = fullName.trim().split(/\s+/);
+      const lastName = parts.length > 1 ? parts.pop()! : '';
+      const firstName = parts.join(' ');
       const lines = [
         'BEGIN:VCARD',
         'VERSION:3.0',
-        f.name ? `FN:${f.name}` : '',
-        f.phone ? `TEL:${f.phone}` : '',
-        f.email ? `EMAIL:${f.email}` : '',
+        fullName ? `FN:${fullName}` : '',
+        fullName ? `N:${lastName};${firstName};;;` : 'N:;;;',
+        f.phone ? `TEL;TYPE=cell:${f.phone}` : '',
+        f.email ? `EMAIL;TYPE=work:${f.email}` : '',
         f.org ? `ORG:${f.org}` : '',
         f.url ? `URL:${f.url}` : '',
         'END:VCARD',
       ];
-      return lines.filter(Boolean).join('\n');
+      // RFC 2426 mandates CRLF line endings
+      return lines.filter(Boolean).join('\r\n');
     },
   },
   geo: {
