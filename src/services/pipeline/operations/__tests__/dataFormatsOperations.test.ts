@@ -403,4 +403,116 @@ fruits:
             expect(result).toBe("Contains\ttabs\nNormal");
         });
     });
+
+    describe("toml.to-json", () => {
+        it("should convert basic TOML to JSON", async () => {
+            const input = `[server]\nhost = "localhost"\nport = 8080`;
+            const result = await execute("toml.to-json", input);
+            const parsed = JSON.parse(result);
+
+            expect(parsed.server.host).toBe("localhost");
+            expect(parsed.server.port).toBe(8080);
+        });
+
+        it("should convert nested TOML tables to JSON", async () => {
+            const input = `[database]\nhost = "db.local"\nport = 5432\n\n[database.credentials]\nuser = "admin"`;
+            const result = await execute("toml.to-json", input);
+            const parsed = JSON.parse(result);
+
+            expect(parsed.database.host).toBe("db.local");
+            expect(parsed.database.credentials.user).toBe("admin");
+        });
+
+        it("should convert array-of-tables to JSON array", async () => {
+            const input = `[[products]]\nname = "Widget"\nprice = 9.99\n\n[[products]]\nname = "Gadget"\nprice = 24.99`;
+            const result = await execute("toml.to-json", input);
+            const parsed = JSON.parse(result);
+
+            expect(Array.isArray(parsed.products)).toBe(true);
+            expect(parsed.products[0].name).toBe("Widget");
+            expect(parsed.products[1].name).toBe("Gadget");
+        });
+
+        it("should support indent parameter", async () => {
+            const input = `[app]\nname = "test"`;
+            const result = await execute("toml.to-json", input, { indent: 4 });
+
+            expect(result).toContain("    ");
+        });
+
+        it("should minify when indent is 0", async () => {
+            const input = `[app]\nname = "test"`;
+            const result = await execute("toml.to-json", input, { indent: 0 });
+
+            expect(result).not.toContain("\n");
+        });
+
+        it("should throw for invalid TOML", async () => {
+            await expect(execute("toml.to-json", "invalid = [unclosed")).rejects.toThrow(/TOML/);
+        });
+    });
+
+    describe("json.to-toml", () => {
+        it("should convert simple JSON object to TOML", async () => {
+            const input = '{"name":"MyApp","version":"1.0.0"}';
+            const result = await execute("json.to-toml", input);
+
+            expect(result).toContain("name");
+            expect(result).toContain("MyApp");
+        });
+
+        it("should convert nested JSON object to TOML", async () => {
+            const input = '{"server":{"host":"localhost","port":8080}}';
+            const result = await execute("json.to-toml", input);
+
+            expect(result).toContain("[server]");
+            expect(result).toContain("host");
+        });
+
+        it("should throw for invalid JSON", async () => {
+            await expect(execute("json.to-toml", "{invalid}")).rejects.toThrow(/TOML/);
+        });
+    });
+
+    describe("toml.to-yaml", () => {
+        it("should convert basic TOML to YAML", async () => {
+            const input = `[server]\nhost = "localhost"\nport = 8080`;
+            const result = await execute("toml.to-yaml", input);
+
+            expect(result).toContain("server:");
+            expect(result).toContain("host: localhost");
+            expect(result).toContain("port: 8080");
+        });
+
+        it("should support indent parameter", async () => {
+            const input = `[server]\nhost = "localhost"`;
+            const result = await execute("toml.to-yaml", input, { indent: 4 });
+
+            expect(result).toContain("    host:");
+        });
+
+        it("should throw for invalid TOML", async () => {
+            await expect(execute("toml.to-yaml", "key = [unclosed")).rejects.toThrow(/TOML/);
+        });
+    });
+
+    describe("yaml.to-toml", () => {
+        it("should convert basic YAML to TOML", async () => {
+            const input = `server:\n  host: localhost\n  port: 8080`;
+            const result = await execute("yaml.to-toml", input);
+
+            expect(result).toContain("[server]");
+            expect(result).toContain("host");
+            expect(result).toContain("port");
+        });
+
+        it("should throw error when YAML root is an array", async () => {
+            const input = `- item1\n- item2\n- item3`;
+            await expect(execute("yaml.to-toml", input)).rejects.toThrow(/root must be a table/);
+        });
+
+        it("should throw for invalid YAML", async () => {
+            await expect(execute("yaml.to-toml", "key: [unclosed")).rejects.toThrow();
+        });
+    });
 });
