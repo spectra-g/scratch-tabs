@@ -1,6 +1,7 @@
 import { OperationDefinition } from "../types";
 import { operationRegistry } from "../OperationRegistry";
 import * as jsYaml from "js-yaml";
+import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
 
 /**
  * Data Format Pipeline Operations
@@ -78,6 +79,107 @@ export const dataFormatOperations: OperationDefinition[] = [
             }
         },
         keywords: ["json", "yaml", "convert", "yml"],
+        source: "core",
+    },
+
+    // === TOML ===
+    {
+        id: "toml.to-json",
+        name: "TOML to JSON",
+        description: "Convert TOML content to JSON format",
+        categories: ["formatting", "utilities"],
+        parameters: [
+            {
+                name: "indent",
+                label: "Indent Size",
+                type: "number",
+                default: 2,
+                min: 0,
+                max: 8,
+                description: "Number of spaces for JSON indentation (0 = minified)",
+            },
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const indent = (params.indent as number) ?? 2;
+            try {
+                const parsed = parseToml(input);
+                return indent === 0
+                    ? JSON.stringify(parsed)
+                    : JSON.stringify(parsed, null, indent);
+            } catch (e: any) {
+                throw new Error(`Failed to parse TOML: ${e.message}`);
+            }
+        },
+        keywords: ["toml", "json", "convert"],
+        source: "core",
+    },
+    {
+        id: "json.to-toml",
+        name: "JSON to TOML",
+        description: "Convert JSON content to TOML format",
+        categories: ["formatting", "utilities"],
+        parameters: [],
+        processingMode: "entire",
+        execute: (input) => {
+            try {
+                const parsed = JSON.parse(input);
+                return stringifyToml(parsed);
+            } catch (e: any) {
+                throw new Error(`Failed to convert to TOML: ${e.message}`);
+            }
+        },
+        keywords: ["json", "toml", "convert"],
+        source: "core",
+    },
+    {
+        id: "toml.to-yaml",
+        name: "TOML to YAML",
+        description: "Convert TOML content to YAML format",
+        categories: ["formatting", "utilities"],
+        parameters: [
+            {
+                name: "indent",
+                label: "Indent Size",
+                type: "number",
+                default: 2,
+                min: 1,
+                max: 8,
+                description: "Number of spaces for YAML indentation",
+            },
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const indent = (params.indent as number) ?? 2;
+            try {
+                const parsed = parseToml(input);
+                return jsYaml.dump(parsed, { indent, quotingType: '"', forceQuotes: false });
+            } catch (e: any) {
+                throw new Error(`Failed to convert TOML to YAML: ${e.message}`);
+            }
+        },
+        keywords: ["toml", "yaml", "convert"],
+        source: "core",
+    },
+    {
+        id: "yaml.to-toml",
+        name: "YAML to TOML",
+        description: "Convert YAML content to TOML format",
+        categories: ["formatting", "utilities"],
+        parameters: [],
+        processingMode: "entire",
+        execute: (input) => {
+            try {
+                const parsed = jsYaml.load(input);
+                if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+                    throw new Error("TOML root must be a table (object). Arrays at root level are not supported.");
+                }
+                return stringifyToml(parsed as Record<string, unknown>);
+            } catch (e: any) {
+                throw new Error(`Failed to convert YAML to TOML: ${e.message}`);
+            }
+        },
+        keywords: ["yaml", "toml", "convert"],
         source: "core",
     },
 

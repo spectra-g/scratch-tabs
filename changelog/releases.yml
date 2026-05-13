@@ -3,8 +3,25 @@ config:
   max_versions: 100  # Maximum number of versions to display
 
 releases:
-  - version: "1.25.0"
+  - version: "1.26.0"
     type: "latest"
+    draft: false
+    date: "2026-05-13"
+    headline: "TOML Smart View & 4 New Pipeline Operations"
+    summary: "Full TOML format support with Structure Explorer smart view, custom syntax highlighting, and TOML↔JSON/YAML pipeline conversions"
+    description: "Adds first-class TOML support powered by smol-toml. Auto-detection handles TOML vs INI disambiguation using TOML-specific signals (array-of-tables, RFC 3339 datetimes, dotted keys, inline tables, multi-line strings). The Structure Explorer smart view pairs a virtualized tree with a Monaco editor using a custom Monarch tokenizer that highlights table headers, keys, all TOML types, and datetimes. Clicking a tree node shows path, type, and value in the details panel. Four new pipeline operations round out the integration: TOML↔JSON and TOML↔YAML conversions with configurable indentation."
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**TOML Smart View:** Structure Explorer with resizable tree/editor split — browse tables, arrays-of-tables, and all scalar types in a virtualised tree alongside the Monaco editor"
+          - "**TOML Syntax Highlighting:** Custom Monarch tokenizer with colour-coded table headers, keys, strings, numbers, booleans, datetimes, inline tables, and array delimiters"
+          - "**TOML Auto-Detection:** Confidently distinguishes TOML from INI using array-of-tables `[[t]]`, RFC 3339 datetimes, dotted keys, inline tables, and multi-line strings as strong signals; penalises `;` comments and colon-delimited values that indicate INI"
+          - "**TOML↔JSON Pipeline Operations:** `toml.to-json` and `json.to-toml` with configurable indent size"
+          - "**TOML↔YAML Pipeline Operations:** `toml.to-yaml` and `yaml.to-toml` with configurable indent size; `yaml.to-toml` raises a clear error when the YAML root is an array (not valid at TOML root)"
+          - "**Convert to JSON / YAML:** Toolbar convert dropdown in the TOML smart view opens the converted output in a new background tab"
+
+  - version: "1.25.0"
+    type: "release"
     draft: false
     date: "2026-05-12"
     headline: "17 New Pipeline Operations - Encoding, Compression, Hashing, Networking & Datetime"
