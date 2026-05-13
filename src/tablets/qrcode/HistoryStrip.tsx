@@ -23,7 +23,7 @@ export const HistoryStrip: React.FC<Props> = ({ history, onRestore }) => {
   return (
     <div className="border-t border-base/30 px-3 py-2">
       <div className="text-xs text-muted mb-1.5">Recent</div>
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-base/30">
+      <div className="flex gap-2 overflow-x-auto pb-1 custom-scrollbar">
         {history.map((item) => (
           <button
             key={item.id}

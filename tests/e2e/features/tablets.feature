@@ -124,6 +124,17 @@ Feature: Tablets Smoke Tests
     And I should see the date time interface
     And I should see current time display
 
+  Scenario: QR Code Generator tablet loads and generates a QR code
+    When I click the icon for "New tab"
+    And I click the icon for "New tablet"
+    And I select "QR Code Generator" from the tablet selector
+    And I wait for the tablet to be ready
+    Then the "QR Code Generator" tab should exist on the page
+    And I should see the QR code generator interface
+    When I type "https://example.com" into the QR URL input
+    Then I should see a QR code preview
+    And I should see QR code action buttons
+
   Scenario: Emoji as Data tablet loads and displays emojis
     When I click the icon for "New tab"
     And I click the icon for "New tablet"

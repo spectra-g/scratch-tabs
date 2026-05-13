@@ -170,6 +170,21 @@ export interface HistoryItem {
   timestamp: number;
 }
 
+export function hasUserContent(contentType: ContentTypeId, fields: Record<string, string>): boolean {
+  switch (contentType) {
+    case 'url':   return !!fields.url?.trim();
+    case 'text':  return !!fields.text?.trim();
+    case 'wifi':  return !!fields.ssid?.trim();
+    case 'email': return !!fields.address?.trim();
+    case 'phone': return !!fields.phone?.trim();
+    case 'sms':   return !!fields.phone?.trim() || !!fields.message?.trim();
+    case 'vcard': return !!(fields.name || fields.phone || fields.email || fields.org || fields.url);
+    case 'geo':   return !!(fields.lat?.trim() && fields.lng?.trim()
+                    && (fields.lat !== '0' || fields.lng !== '0'));
+    default:      return false;
+  }
+}
+
 export function autoDetectContentType(text: string): ContentTypeId | null {
   const t = text.trim();
   if (/^https?:\/\//i.test(t)) return 'url';

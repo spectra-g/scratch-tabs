@@ -517,6 +517,42 @@ export class TabletsActions {
   }
 
   // ============================================================================
+  // QR Code Generator Tablet
+  // ============================================================================
+
+  async expectQRCodeInterfaceVisible() {
+    // The Generate/Decode mode tabs are always rendered and unique to this tablet
+    const generateTab = this.page.getByRole('button', { name: /Generate/i });
+    await expect(generateTab).toBeVisible();
+    const decodeTab = this.page.getByRole('button', { name: /Decode/i });
+    await expect(decodeTab).toBeVisible();
+    // Content-type selector row (URL is always the default)
+    const urlTypeBtn = this.page.getByRole('button', { name: /^URL$/i });
+    await expect(urlTypeBtn).toBeVisible();
+  }
+
+  async typeIntoQRUrlInput(url: string) {
+    const input = this.page.getByPlaceholder('https://example.com');
+    await expect(input).toBeVisible();
+    await input.fill(url);
+  }
+
+  async expectQRCodePreviewVisible() {
+    // qr-code-styling injects an SVG into the preview container
+    const svg = this.page.locator('svg').filter({ has: this.page.locator('rect, path') }).first();
+    await expect(svg).toBeVisible({ timeout: 5000 });
+  }
+
+  async expectQRCodeActionButtonsVisible() {
+    const copyBtn = this.page.getByRole('button', { name: /Copy PNG/i });
+    await expect(copyBtn).toBeVisible();
+    const pngBtn = this.page.getByRole('button', { name: /^PNG$/i });
+    await expect(pngBtn).toBeVisible();
+    const svgBtn = this.page.getByRole('button', { name: /^SVG$/i });
+    await expect(svgBtn).toBeVisible();
+  }
+
+  // ============================================================================
   // Emoji as Data Tablet
   // ============================================================================
 

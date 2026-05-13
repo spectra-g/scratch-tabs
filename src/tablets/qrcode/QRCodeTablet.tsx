@@ -15,6 +15,7 @@ import {
   contentTypeConfigs,
   CONTENT_TYPE_ORDER,
   autoDetectContentType,
+  hasUserContent,
   DEFAULT_STYLE,
   type ContentTypeId,
   type QRStyleConfig,
@@ -43,6 +44,7 @@ interface QRCodeTabletState extends TabletState {
 function buildQRContent(contentType: ContentTypeId, fields: Record<string, string>): string {
   return contentTypeConfigs[contentType].format(fields);
 }
+
 
 function createInitialData(): QRCodeData {
   return {
@@ -116,6 +118,8 @@ const QRCodeUI: React.FC<{
   // listed as a dependency (avoids resetting the debounce on every keypress).
   const saveHistoryCallbackRef = useRef<() => void>(() => {});
   saveHistoryCallbackRef.current = async () => {
+    // Guard runs at fire-time so a field cleared within the 1.5s window is caught.
+    if (!hasUserContent(data.contentType, data.fields)) return;
     const thumbDataUrl = await getThumbnailDataUrl();
     if (!thumbDataUrl) return;
     const item: HistoryItem = {
@@ -128,8 +132,11 @@ const QRCodeUI: React.FC<{
       logoSize: data.logoSize,
       timestamp: Date.now(),
     };
-    const next = [item, ...data.history.filter((h) => h.id !== item.id)].slice(0, 8);
-    updateData({ history: next });
+    // Deduplicate: replace any existing entry that produces the same QR payload.
+    const deduped = data.history.filter(
+      (h) => buildQRContent(h.contentType, h.fields) !== qrContent,
+    );
+    updateData({ history: [item, ...deduped].slice(0, 8) });
   };
 
   // Debounce: save to history 1.5s after content/style/logo changes.
@@ -216,7 +223,7 @@ const QRCodeUI: React.FC<{
   const generateView = (
     <div className="flex-1 flex overflow-hidden min-h-0">
       {/* Left: form */}
-      <div className="w-[46%] min-w-0 flex flex-col border-r border-base/30 overflow-y-auto">
+      <div className="w-[46%] min-w-0 flex flex-col border-r border-base/30 overflow-y-auto custom-scrollbar">
         {/* Content type tabs */}
         <div className="flex-shrink-0 flex flex-wrap gap-1 p-3 border-b border-base/30">
           {CONTENT_TYPE_ORDER.map((ct) => (
@@ -405,7 +412,7 @@ const QRCodeUI: React.FC<{
       <div className="flex-1 min-w-0 flex flex-col">
         {/* QR preview — show checkerboard when transparent so black dots are visible on dark theme */}
         <div
-          className="flex-1 flex items-center justify-center p-6 min-h-0"
+          className="flex-1 flex items-center justify-center p-6 min-h-0 overflow-hidden"
           style={
             data.style.transparent
               ? {
@@ -418,10 +425,15 @@ const QRCodeUI: React.FC<{
               : {}
           }
         >
+          {/*
+            aspect-square + w-full + max-h-full: the wrapper becomes a square whose
+            side is min(container_width, container_height). The SVG is then told to
+            fill that square — so it scales correctly on both axes as the viewport
+            shrinks in either direction.
+          */}
           <div
             ref={containerRef}
-            className="rounded-lg overflow-hidden shadow-sm"
-            style={{ maxWidth: '100%', maxHeight: '100%' }}
+            className="aspect-square w-full max-h-full [&>svg]:block [&>svg]:w-full [&>svg]:h-full rounded-lg overflow-hidden shadow-sm"
           />
         </div>
 
