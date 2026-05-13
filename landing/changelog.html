@@ -129,41 +129,42 @@
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
 
-        <!-- Version 1.25.0 -->
+        <!-- Version 1.26.0 -->
         <div class="changelog-entry latest">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-white">V1.25.0</h2>
+              <h2 class="text-2xl font-bold text-white">V1.26.0</h2>
               <span class="badge latest">LATEST</span>
             </div>
-            <span class="text-gray-500 text-xs font-mono">05/12/2026</span>
+            <span class="text-gray-500 text-xs font-mono">05/13/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">17 NEW PIPELINE OPERATIONS - ENCODING, COMPRESSION, HASHING, NETWORKING & DATETIME</h3>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">TOML SMART VIEW & 4 NEW PIPELINE OPERATIONS</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">Major pipeline expansion with 17 new operations across five categories. Format Date parses date strings from any common format and reformats them into any of 11 output presets or a custom date-fns format string. The encoding matrix is now complete with binary, octal, Base32 (RFC 4648), and Base58 (Bitcoin/IPFS alphabet) alongside the existing hex and Base64 ops. Compression gains Raw Deflate and Zlib inflate/deflate pairs via the browser's native CompressionStream API. A composable Hash/Digest operation exposes SHA-1, SHA-256, SHA-384, and SHA-512 with hex or Base64 output. IPv4 addresses can be converted between dotted decimal, decimal integer, hex, and octal representations in-place within any text. JSON pipelines gain a JSONPath Query step that evaluates any expression and outputs results as pretty JSON, compact JSON, or one value per line.</p>
+            <p class="mb-4">Adds first-class TOML support powered by smol-toml. Auto-detection handles TOML vs INI disambiguation using TOML-specific signals (array-of-tables, RFC 3339 datetimes, dotted keys, inline tables, multi-line strings). The Structure Explorer smart view pairs a virtualized tree with a Monaco editor using a custom Monarch tokenizer that highlights table headers, keys, all TOML types, and datetimes. Clicking a tree node shows path, type, and value in the details panel. Four new pipeline operations round out the integration: TOML↔JSON and TOML↔YAML conversions with configurable indentation.</p>
 
             <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
             <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Format Date:</strong> Parse any date string and reformat it - accepts ISO 8601, SQL datetime, Unix timestamps (seconds or milliseconds), natural language (yesterday, 2 hours ago), and more as input</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>11 date output presets:</strong> ISO 8601, date-only, SQL, RFC 3339, HTTP/RFC 7231, human, full human (with weekday), relative time, Unix seconds, Unix milliseconds, and custom date-fns format string</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Per-line date processing:</strong> Configurable mode converts a list of dates line-by-line in a single pipeline step</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>To/From Binary:</strong> Convert text to space-separated binary bit strings (e.g. `A` → `01000001`) and back - delimiter options: space, none, comma, newline</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>To/From Octal:</strong> Convert text to octal byte values (e.g. `A` → `101`) and back - delimiter options: space, backslash, none, comma</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Base32 Encode/Decode:</strong> RFC 4648 standard Base32 with optional padding control - useful for TOTP/2FA secrets and DNS encodings</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Base58 Encode/Decode:</strong> Bitcoin/IPFS alphabet Base58 - useful for wallet addresses, CIDs, and SSH key fingerprints</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Raw Deflate / Raw Inflate:</strong> Compress and decompress using Raw Deflate (no header), output as Base64</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Zlib Deflate / Zlib Inflate:</strong> Compress and decompress using Zlib-wrapped Deflate, output as Base64</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Hash / Digest:</strong> Generate SHA-1, SHA-256, SHA-384, or SHA-512 hashes with hex or Base64 output - composable per-line or full-text</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Change IP Format:</strong> Convert IPv4 addresses in-place between dotted decimal, decimal integer (e.g. `3232235777`), hex (`0xC0A80101`), and dotted octal - works on embedded IPs in log lines</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>JSONPath Query:</strong> Apply a JSONPath expression to JSON input and output results as pretty JSON, compact JSON, or one value per line (e.g. `$.users[*].name`)</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Diagram Tablet - Resizable split:</strong> Drag the vertical divider between the Mermaid code editor and diagram preview to adjust the split ratio - uses the same drag handle as the Markdown preview</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Diagram Tablet - Maximize view:</strong> New toolbar toggle (split  maximize icons) collapses the editor to show the diagram full-width, then restores the split with one click</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>TOML Smart View:</strong> Structure Explorer with resizable tree/editor split — browse tables, arrays-of-tables, and all scalar types in a virtualised tree alongside the Monaco editor</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>TOML Syntax Highlighting:</strong> Custom Monarch tokenizer with colour-coded table headers, keys, strings, numbers, booleans, datetimes, inline tables, and array delimiters</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>TOML Auto-Detection:</strong> Confidently distinguishes TOML from INI using array-of-tables `[[t]]`, RFC 3339 datetimes, dotted keys, inline tables, and multi-line strings as strong signals; penalises `;` comments and colon-delimited values that indicate INI</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>TOMLJSON Pipeline Operations:</strong> `toml.to-json` and `json.to-toml` with configurable indent size</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>TOMLYAML Pipeline Operations:</strong> `toml.to-yaml` and `yaml.to-toml` with configurable indent size; `yaml.to-toml` raises a clear error when the YAML root is an array (not valid at TOML root)</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Convert to JSON / YAML:</strong> Toolbar convert dropdown in the TOML smart view opens the converted output in a new background tab</span></li>
             </ul>
-
-            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># bug_fixes</h4>
-            <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Diagram Tablet - Label clipping:</strong> Fixed right-side clipping of node label text (e.g. `Decision?`, `Action 1`) caused by Mermaid slightly under-calculating the SVG viewBox width - an 8px padding is now added to every side of the viewBox before display</span></li>
-            </ul>
+          </div>
+        </div>
+        <!-- Version 1.25.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.25.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">05/12/2026</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">17 NEW PIPELINE OPERATIONS - ENCODING, COMPRESSION, HASHING, NETWORKING & DATETIME</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p>Format Date, binary/octal/Base32/Base58 encoding, Raw Deflate and Zlib compression, SHA hash digest, IPv4 format conversion, and JSONPath queries</p>
           </div>
         </div>
         <!-- Version 1.24.1 -->
@@ -669,7 +670,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.25.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.26.0</span>
         </div>
 
         <div class="flex space-x-8">

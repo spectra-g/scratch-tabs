@@ -15,12 +15,32 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.25.0';
+export const APP_VERSION = '1.26.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.25.0",
+    "version": "1.26.0",
     "type": "latest",
+    "date": "2026-05-13",
+    "headline": "TOML Smart View & 4 New Pipeline Operations",
+    "summary": "Full TOML format support with Structure Explorer smart view, custom syntax highlighting, and TOMLJSON/YAML pipeline conversions",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**TOML Smart View:** Structure Explorer with resizable tree/editor split — browse tables, arrays-of-tables, and all scalar types in a virtualised tree alongside the Monaco editor",
+          "**TOML Syntax Highlighting:** Custom Monarch tokenizer with colour-coded table headers, keys, strings, numbers, booleans, datetimes, inline tables, and array delimiters",
+          "**TOML Auto-Detection:** Confidently distinguishes TOML from INI using array-of-tables `[[t]]`, RFC 3339 datetimes, dotted keys, inline tables, and multi-line strings as strong signals; penalises `;` comments and colon-delimited values that indicate INI",
+          "**TOMLJSON Pipeline Operations:** `toml.to-json` and `json.to-toml` with configurable indent size",
+          "**TOMLYAML Pipeline Operations:** `toml.to-yaml` and `yaml.to-toml` with configurable indent size; `yaml.to-toml` raises a clear error when the YAML root is an array (not valid at TOML root)",
+          "**Convert to JSON / YAML:** Toolbar convert dropdown in the TOML smart view opens the converted output in a new background tab"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.25.0",
+    "type": "release",
     "date": "2026-05-12",
     "headline": "17 New Pipeline Operations - Encoding, Compression, Hashing, Networking & Datetime",
     "summary": "Format Date, binary/octal/Base32/Base58 encoding, Raw Deflate and Zlib compression, SHA hash digest, IPv4 format conversion, and JSONPath queries",
