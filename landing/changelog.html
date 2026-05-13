@@ -129,28 +129,51 @@
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
 
-        <!-- Version 1.26.0 -->
+        <!-- Version 1.27.0 -->
         <div class="changelog-entry latest">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-white">V1.26.0</h2>
+              <h2 class="text-2xl font-bold text-white">V1.27.0</h2>
               <span class="badge latest">LATEST</span>
             </div>
             <span class="text-gray-500 text-xs font-mono">05/13/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">TOML SMART VIEW & 4 NEW PIPELINE OPERATIONS</h3>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">QR CODE GENERATOR</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">Adds first-class TOML support powered by smol-toml. Auto-detection handles TOML vs INI disambiguation using TOML-specific signals (array-of-tables, RFC 3339 datetimes, dotted keys, inline tables, multi-line strings). The Structure Explorer smart view pairs a virtualized tree with a Monaco editor using a custom Monarch tokenizer that highlights table headers, keys, all TOML types, and datetimes. Clicking a tree node shows path, type, and value in the details panel. Four new pipeline operations round out the integration: TOML↔JSON and TOML↔YAML conversions with configurable indentation.</p>
+            <p class="mb-4">Adds a fully offline QR Code Generator tablet powered by qr-code-styling and jsQR. Supports eight smart content types — URL, Plain Text, WiFi credentials, Email, Phone, SMS, vCard contact, and Geographic coordinates — each with a dedicated form that formats the correct URI scheme automatically. Visual customisation covers dot style (square, dots, rounded, classy, classy-rounded, extra-rounded), corner frame style, dot and background colours with a transparent toggle, error correction level (L/M/Q/H), output size (256–2048 px), and margin. Logo embedding resizes the uploaded image client-side (≤200 px), composites it onto the QR, and auto-bumps error correction to H for reliable scanning. A Decode tab accepts drag-and-drop, paste (Ctrl+V), or file-pick images and decodes them entirely in-browser via jsQR with smart content-type detection and a 'Send to Generate' shortcut. The last eight generated codes are saved as thumbnails in a history strip for one-click restore. A permanently visible privacy footer makes the offline guarantee tangible.</p>
 
             <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
             <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>TOML Smart View:</strong> Structure Explorer with resizable tree/editor split — browse tables, arrays-of-tables, and all scalar types in a virtualised tree alongside the Monaco editor</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>TOML Syntax Highlighting:</strong> Custom Monarch tokenizer with colour-coded table headers, keys, strings, numbers, booleans, datetimes, inline tables, and array delimiters</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>TOML Auto-Detection:</strong> Confidently distinguishes TOML from INI using array-of-tables `[[t]]`, RFC 3339 datetimes, dotted keys, inline tables, and multi-line strings as strong signals; penalises `;` comments and colon-delimited values that indicate INI</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>TOMLJSON Pipeline Operations:</strong> `toml.to-json` and `json.to-toml` with configurable indent size</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>TOMLYAML Pipeline Operations:</strong> `toml.to-yaml` and `yaml.to-toml` with configurable indent size; `yaml.to-toml` raises a clear error when the YAML root is an array (not valid at TOML root)</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Convert to JSON / YAML:</strong> Toolbar convert dropdown in the TOML smart view opens the converted output in a new background tab</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>QR Code Generator:</strong> Eight smart content types — URL, Text, WiFi, Email, Phone, SMS, vCard, and Location — each with a dedicated form that formats the correct URI scheme (WIFI:T:..., mailto:, tel:, smsto:, BEGIN:VCARD, geo:) automatically</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Visual Customisation:</strong> Dot style (6 variants), corner frame style (3 variants), dot and background colour pickers, transparent background toggle (SVG), error correction level (L 7% / M 15% / Q 25% / H 30%), output size (256–2048 px), and margin slider</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Logo Embedding:</strong> Drag-and-drop or file-pick PNG/SVG/JPEG logos (max 2 MB), resized client-side to ≤200 px; auto-bumps error correction to H with a scanability indicator when logo coverage exceeds 30%</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Decode Tab:</strong> Drop a QR image, paste from clipboard (Ctrl+V), or pick a file — jsQR decodes it entirely in-browser with smart content-type detection and a 'Send to Generate' action to load the result back into the generator</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>History Strip:</strong> Last 8 generated QR codes stored as thumbnails; click any to restore its content, style, and logo</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Auto-Detection:</strong> Pasting a URL, WIFI:T:..., mailto:, or vCard string into the URL field shows a 'Detected: X — Switch' pill for one-click content-type switching</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Geo Location:</strong> 'Use my location' button on the Location type populates coordinates via the browser Geolocation API</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Context Action:</strong> Any editor tab containing a URL gains a 'Generate QR Code' option in the right-click actions menu</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Privacy Footer:</strong> Permanently visible 'Generated in your browser — no data leaves your device' footer</span></li>
             </ul>
+
+            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># bug_fixes</h4>
+            <ul class="space-y-2 mb-6">
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Safari clipboard:</strong> Copy PNG now passes the blob Promise directly into ClipboardItem so it is constructed synchronously within the user-gesture frame, satisfying Safari's strict clipboard API requirement</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>vCard line endings:</strong> vCard 3.0 output now uses CRLF (\r\n) as required by RFC 2426; added the mandatory N: field (Last;First;;;) and TYPE annotations on TEL and EMAIL properties for correct iOS Contacts parsing</span></li>
+            </ul>
+          </div>
+        </div>
+        <!-- Version 1.26.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.26.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">05/13/2026</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">TOML SMART VIEW & 4 NEW PIPELINE OPERATIONS</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p>Full TOML format support with Structure Explorer smart view, custom syntax highlighting, and TOMLJSON/YAML pipeline conversions</p>
           </div>
         </div>
         <!-- Version 1.25.0 -->
@@ -670,7 +693,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.26.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.27.0</span>
         </div>
 
         <div class="flex space-x-8">

@@ -3,8 +3,32 @@ config:
   max_versions: 100  # Maximum number of versions to display
 
 releases:
-  - version: "1.26.0"
+  - version: "1.27.0"
     type: "latest"
+    draft: false
+    date: "2026-05-13"
+    headline: "QR Code Generator"
+    summary: "Full offline QR code generation and decoding — 8 content types, visual customisation, logo embedding, and a history strip, with no data leaving the browser"
+    description: "Adds a fully offline QR Code Generator tablet powered by qr-code-styling and jsQR. Supports eight smart content types — URL, Plain Text, WiFi credentials, Email, Phone, SMS, vCard contact, and Geographic coordinates — each with a dedicated form that formats the correct URI scheme automatically. Visual customisation covers dot style (square, dots, rounded, classy, classy-rounded, extra-rounded), corner frame style, dot and background colours with a transparent toggle, error correction level (L/M/Q/H), output size (256–2048 px), and margin. Logo embedding resizes the uploaded image client-side (≤200 px), composites it onto the QR, and auto-bumps error correction to H for reliable scanning. A Decode tab accepts drag-and-drop, paste (Ctrl+V), or file-pick images and decodes them entirely in-browser via jsQR with smart content-type detection and a 'Send to Generate' shortcut. The last eight generated codes are saved as thumbnails in a history strip for one-click restore. A permanently visible privacy footer makes the offline guarantee tangible."
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**QR Code Generator:** Eight smart content types — URL, Text, WiFi, Email, Phone, SMS, vCard, and Location — each with a dedicated form that formats the correct URI scheme (WIFI:T:..., mailto:, tel:, smsto:, BEGIN:VCARD, geo:) automatically"
+          - "**Visual Customisation:** Dot style (6 variants), corner frame style (3 variants), dot and background colour pickers, transparent background toggle (SVG), error correction level (L 7% / M 15% / Q 25% / H 30%), output size (256–2048 px), and margin slider"
+          - "**Logo Embedding:** Drag-and-drop or file-pick PNG/SVG/JPEG logos (max 2 MB), resized client-side to ≤200 px; auto-bumps error correction to H with a scanability indicator when logo coverage exceeds 30%"
+          - "**Decode Tab:** Drop a QR image, paste from clipboard (Ctrl+V), or pick a file — jsQR decodes it entirely in-browser with smart content-type detection and a 'Send to Generate' action to load the result back into the generator"
+          - "**History Strip:** Last 8 generated QR codes stored as thumbnails; click any to restore its content, style, and logo"
+          - "**Auto-Detection:** Pasting a URL, WIFI:T:..., mailto:, or vCard string into the URL field shows a 'Detected: X — Switch' pill for one-click content-type switching"
+          - "**Geo Location:** 'Use my location' button on the Location type populates coordinates via the browser Geolocation API"
+          - "**Context Action:** Any editor tab containing a URL gains a 'Generate QR Code' option in the right-click actions menu"
+          - "**Privacy Footer:** Permanently visible 'Generated in your browser — no data leaves your device' footer"
+      - name: "🐛 Bug Fixes"
+        changes:
+          - "**Safari clipboard:** Copy PNG now passes the blob Promise directly into ClipboardItem so it is constructed synchronously within the user-gesture frame, satisfying Safari's strict clipboard API requirement"
+          - "**vCard line endings:** vCard 3.0 output now uses CRLF (\\r\\n) as required by RFC 2426; added the mandatory N: field (Last;First;;;) and TYPE annotations on TEL and EMAIL properties for correct iOS Contacts parsing"
+
+  - version: "1.26.0"
+    type: "release"
     draft: false
     date: "2026-05-13"
     headline: "TOML Smart View & 4 New Pipeline Operations"
