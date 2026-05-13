@@ -213,6 +213,26 @@ Then('I should see current time display', async function () {
 });
 
 // ============================================================================
+// QR Code Generator Tablet Steps
+// ============================================================================
+
+Then('I should see the QR code generator interface', async function () {
+  await this.tablets.expectQRCodeInterfaceVisible();
+});
+
+When('I type {string} into the QR URL input', async function (url: string) {
+  await this.tablets.typeIntoQRUrlInput(url);
+});
+
+Then('I should see a QR code preview', async function () {
+  await this.tablets.expectQRCodePreviewVisible();
+});
+
+Then('I should see QR code action buttons', async function () {
+  await this.tablets.expectQRCodeActionButtonsVisible();
+});
+
+// ============================================================================
 // Emoji as Data Tablet Steps
 // ============================================================================
 

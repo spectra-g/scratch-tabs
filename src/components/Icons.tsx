@@ -190,6 +190,8 @@ export {
   Share2,
   PanelLeftClose,
   PanelRightClose,
+  QrCode,
+  ScanQrCode,
 } from 'lucide-react';
 
 // Export types separately

@@ -1,5 +1,5 @@
 import { TabletActionContext, TabletAction } from "./types";
-import { FileText, Type, Shield, Network, Palette } from "../components/Icons";
+import { FileText, Type, Shield, Network, Palette, QrCode } from "../components/Icons";
 import { tabletActionService } from "../services/tabletActionService";
 
 export interface TabletMetadata {
@@ -357,6 +357,36 @@ export const tabletMetadata: TabletMetadata[] = [
       }
       return [];
     }
+  },
+  {
+    id: 'qrcode',
+    label: 'QR Code Generator',
+    description:
+      'Generate and decode QR codes entirely in your browser. Supports URLs, WiFi credentials, contacts, and more — no data leaves your device.',
+    keywords: ['qr', 'qrcode', 'generator', 'barcode', 'wifi', 'url', 'vcard', 'offline', 'decode', 'scan'],
+    getActionsForContext: (context) => {
+      if (context.source === 'editor-tab' && context.content) {
+        const isUrl = /^https?:\/\//i.test(context.content.trim());
+        if (isUrl) {
+          return [
+            {
+              id: 'qrcode.generate-from-url',
+              label: 'Generate QR Code',
+              icon: QrCode,
+              action: () => {
+                tabletActionService.handleAction({
+                  targetTablet: 'qrcode',
+                  action: 'new-tab',
+                  payload: { url: context.content?.trim() },
+                  source: { tabId: context.tab?.id, titleHint: 'QR Code', side: context.side },
+                });
+              },
+            },
+          ];
+        }
+      }
+      return [];
+    },
   },
   {
     id: 'colourpalette',
