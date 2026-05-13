@@ -1,19 +1,39 @@
-export const WELCOME_TAB_CONTENT = `# ⚡ Ready to Scratch
+export const WELCOME_TAB_CONTENT = `# Ready to Scratch
 
-Your workspace is live. Data stays in your browser.
+Your workspace is live. Data stays in your browser. *Nothing is posted to any server.*
 
-### 🚀 Quick Start
-- **Paste Data:** JSON, XML, or JWT strings will trigger the **Smart View** button (top right)
-- **Open Tools:** Click the extension icon to access dev tools or what we call "Tablets"
-- **Transform:** Select text, **Right-Click**, and choose "Transformation Pipeline" to chain operations (e.g., Trim → Base64)
-- **Split View:** Move tabs between left and right panes for side-by-side comparison
+You can open unlimited tabs. Just double click in the empty space in the tab bar or click the plus icon top right — or the clipboard-plus icon, which opens a new tab pre-loaded with the contents of your clipboard.
 
-### 🔒 Privacy & Storage
-- **Offline & Private:** We use IndexedDB. No data is sent to any server
-- **Auto-Save:** Tabs persist across reloads automatically
-- **Warning:** Explicitly closing a tab (clicking 'x') deletes it permanently
+Anything you paste will be content auto-detected and formatted where possible. Scratch tabs likes to be helpful, but in case it guesses the wrong format simply switch it using the format label at the bottom of the page.
 
-### ⌨️ Power User Shortcuts
+## Smart Views
+
+Some formats support smart views. JSON provides the richest smart view capabilities. Toggle the view on or off using the icon next to the format label at the bottom of the screen.
+
+## Tools
+
+Tabs can be more than just text editing. **Tablets** are isolated tools — think of these as IDE plugins. Click the four-squares icon at the top right of the page. Like the rest of the application, these run entirely offline in your browser.
+
+## Editing Features
+
+- Split view — view content side by side
+- Macro recording and playback
+- Transformation pipeline (CyberChef-style operations in a pipeline)
+- Text compare any two tabs
+- Share — offline sharing
+- Right-click on a tab to find these and more
+- Manage your tabs using the workspaces in the left hand sidebar
+
+## Privacy & Storage
+
+- All features work offline
+- Data is stored in your browser's database (IndexedDB)
+- Tabs are auto-saved
+- No data is posted to any server
+- No cookies, no tracking, no signups, no ads
+
+## Shortcuts
+
 | Action | Windows/Linux | Mac |
 |--------|---------------|-----|
 | New Tab | Double-click bar | Double-click bar |
@@ -23,11 +43,6 @@ Your workspace is live. Data stays in your browser.
 | Command Palette | \`F1\` | \`F1\` |
 | Toggle Sidebar | \`Ctrl+B\` | \`Cmd+B\` |
 
-### 💡 Pro Tips
-- **Workspaces:** Group related tabs into projects using the sidebar (\`Ctrl+B\`)
-- **Tab Options:** Right-click any tab for rename, duplicate, export, and more
-- **Format Lock:** Click the language badge to prevent auto-detection changes
-
 ---
-*Tip: Right-click this tab and choose Split Right to enable Split View.*
+Report issues: https://github.com/spectra-g/scratch-tabs-feedback/issues/new
 `;
