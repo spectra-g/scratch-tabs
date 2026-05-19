@@ -389,6 +389,19 @@ export const tabletMetadata: TabletMetadata[] = [
     },
   },
   {
+    id: 'sshkeygen',
+    label: 'SSH Key Generator',
+    description:
+      'Generate Ed25519, RSA, and ECDSA SSH key pairs with optional passphrase encryption. ' +
+      'Inspect any public or private key to view fingerprints, derive a public key from a private key, ' +
+      'or validate that a key pair matches — entirely offline.',
+    keywords: [
+      'ssh', 'keygen', 'key', 'rsa', 'ed25519', 'ecdsa',
+      'fingerprint', 'public key', 'private key', 'authorized_keys',
+      'passphrase', 'generate', 'security', 'cryptography', 'openssh',
+    ],
+  },
+  {
     id: 'totp',
     label: 'TOTP 2FA Generator',
     description:

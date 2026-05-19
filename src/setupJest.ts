@@ -1,3 +1,12 @@
+// Polyfill TextEncoder / TextDecoder — not exposed globally by all jsdom versions
+import { TextEncoder, TextDecoder } from 'util';
+if (typeof global.TextEncoder === 'undefined') {
+  global.TextEncoder = TextEncoder as typeof global.TextEncoder;
+}
+if (typeof global.TextDecoder === 'undefined') {
+  global.TextDecoder = TextDecoder as typeof global.TextDecoder;
+}
+
 // Mock BroadcastChannel for Jest environment
 class MockBroadcastChannel {
   name: string;
@@ -54,6 +63,20 @@ if (typeof global.crypto === "undefined") {
       );
     },
   } as any;
+}
+
+// Polyfill crypto.subtle from Node.js webcrypto — jsdom does not provide it.
+if (typeof global.crypto !== "undefined" && !global.crypto.subtle) {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { webcrypto } = require("crypto");
+  Object.defineProperty(global.crypto, "subtle", {
+    value: webcrypto.subtle,
+    configurable: true,
+    writable: true,
+  });
+  if (!global.crypto.getRandomValues) {
+    global.crypto.getRandomValues = webcrypto.getRandomValues.bind(webcrypto);
+  }
 }
 
 // Mock MessageEvent if not available

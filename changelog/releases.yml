@@ -7,12 +7,19 @@ releases:
     type: "latest"
     draft: false
     date: "2026-05-19"
-    headline: "TOTP 2FA Generator"
-    summary: "Fully offline multi-account TOTP authenticator with animated countdown rings, otpauth:// URI import, and a standalone code-verify panel — secrets never leave the browser"
-    description: "Adds a TOTP 2FA Generator tablet powered by otpauth (RFC 6238). Each account card displays the live one-time code, a per-account SVG countdown ring that depletes smoothly and turns amber in the final 5 seconds, and a one-click copy button. Accounts support SHA-1, SHA-256, and SHA-512 algorithms, 6–8 digit codes, and custom periods. New accounts can be added by pasting an otpauth:// URI (auto-parsed) or via manual entry with a Base32 secret field that validates inline and previews the live code before saving. A dedicated Verify panel lets you check any code against a secret without adding an account, and reports clock skew when a code is valid but outside the current window. All secrets are persisted locally in the tablet state and never transmitted anywhere."
+    headline: "SSH Key Generator & TOTP 2FA Generator"
+    summary: "Two new offline security tablets: generate Ed25519, RSA, and ECDSA SSH key pairs with passphrase encryption, inspect and validate any key — plus a multi-account TOTP authenticator with animated countdown rings"
+    description: "Adds two fully offline security tablets. The SSH Key Generator produces Ed25519, RSA-3072, RSA-4096, and ECDSA P-256/P-384/P-521 key pairs entirely in the browser via the Web Crypto API, writing passphrase-encrypted private keys in standard OpenSSH format (AES-256-CBC + bcrypt_pbkdf KDF) that work directly with ssh-add and ssh-keygen. An Inspector tab parses any pasted public or private key to show algorithm, bit length, SHA-256 and MD5 fingerprints, and derives the authorized_keys line from an unencrypted private key without decrypting it. A Validate Pair mode confirms whether a public and private key belong to the same pair. No key material or passphrases are ever persisted. The TOTP 2FA Generator tablet is powered by otpauth (RFC 6238). Each account card displays the live one-time code, a per-account SVG countdown ring that depletes smoothly and turns amber in the final 5 seconds, and a one-click copy button. Accounts support SHA-1, SHA-256, and SHA-512 algorithms, 6–8 digit codes, and custom periods. New accounts can be added by pasting an otpauth:// URI or via manual entry with inline Base32 validation. A dedicated Verify panel reports clock skew when a code is valid but outside the current window."
     categories:
       - name: "✨ New Features"
         changes:
+          - "**SSH Key Generator:** Generate Ed25519, RSA-3072, RSA-4096, and ECDSA P-256/P-384/P-521 key pairs entirely in the browser — no server calls, no data leaves the device"
+          - "**OpenSSH-Compatible Output:** Private keys are written in the standard OpenSSH v1 format (AES-256-CBC + bcrypt_pbkdf KDF, 16 rounds) — immediately usable with `ssh-add`, `ssh-keygen`, and any compliant SSH client"
+          - "**Passphrase Encryption:** Optionally protect the private key with a passphrase; the field persists between generations so you can generate multiple keys without re-entering it"
+          - "**Key Inspector:** Paste any SSH public or private key to see algorithm, bit length, SHA-256 fingerprint (matching `ssh-keygen -l`), MD5 fingerprint, and encryption status — derives the `authorized_keys` line from an unencrypted private key without decryption"
+          - "**Pair Validator:** Confirm that a public key and private key belong to the same pair by comparing their embedded wire-format public key bytes"
+          - "**Copy & Download:** One-click copy and download buttons for both keys; private key downloads as `id_ed25519` / `id_rsa` / `id_ecdsa` and public key as the `.pub` counterpart"
+          - "**Zero Persistence:** No key material, passphrases, or generated results are ever written to IndexedDB — only the selected algorithm, comment, and tab preference are saved"
           - "**TOTP 2FA Generator:** Multi-account authenticator tablet — add as many TOTP accounts as needed, each stored locally and generating a fresh code every period"
           - "**Animated Countdown Ring:** Per-account SVG ring depletes smoothly as the OTP window expires; turns amber with a numeric countdown in the final 5 seconds to signal an imminent rotation"
           - "**otpauth:// URI Import:** Paste any `otpauth://totp/...` URI to auto-populate label, issuer, secret, algorithm, digits, and period in one click — compatible with Google Authenticator, Aegis, and standard 2FA QR codes"
@@ -21,7 +28,6 @@ releases:
           - "**One-Click Copy:** Copy the current OTP to the clipboard directly from the account card with a 1.5-second green tick confirmation"
           - "**Verify Panel:** Standalone tab to check a code against a raw Base32 secret without adding an account — returns Valid, Invalid, or Clock Skew with the exact drift in seconds"
           - "**Color-Coded Accounts:** Each account receives a deterministic HSL color derived from its label, shown as a dot on the card and as the ring stroke color"
-          - "**Fully Offline & Private:** All secrets are stored in local tablet state only — no network calls, no external services, no data leaves the device"
 
   - version: "1.27.0"
     type: "release"
