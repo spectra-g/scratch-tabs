@@ -7,7 +7,7 @@ export function useCountdown(): { tick: number } {
     const id = setInterval(() => {
       const next = Math.floor(Date.now() / 1000);
       setTick((prev) => (prev !== next ? next : prev));
-    }, 1000);
+    }, 250);
     return () => clearInterval(id);
   }, []);
 

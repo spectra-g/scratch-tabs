@@ -2,13 +2,17 @@ import * as OTPAuth from 'otpauth';
 import type { TotpAccount } from './totpTypes';
 
 export function generateCode(account: TotpAccount): string {
-  const totp = new OTPAuth.TOTP({
-    secret: OTPAuth.Secret.fromBase32(account.secret),
-    algorithm: account.algorithm,
-    digits: account.digits,
-    period: account.period,
-  });
-  return totp.generate();
+  try {
+    const totp = new OTPAuth.TOTP({
+      secret: OTPAuth.Secret.fromBase32(account.secret),
+      algorithm: account.algorithm,
+      digits: account.digits,
+      period: account.period,
+    });
+    return totp.generate();
+  } catch {
+    return '------';
+  }
 }
 
 export function getTimeRemaining(period: number): number {
@@ -54,18 +58,22 @@ export function verifyCode(
   account: Pick<TotpAccount, 'secret' | 'algorithm' | 'digits' | 'period'>,
   code: string,
 ): { valid: boolean; drift: number | null } {
-  const totp = new OTPAuth.TOTP({
-    secret: OTPAuth.Secret.fromBase32(account.secret),
-    algorithm: account.algorithm,
-    digits: account.digits,
-    period: account.period,
-  });
+  try {
+    const totp = new OTPAuth.TOTP({
+      secret: OTPAuth.Secret.fromBase32(account.secret),
+      algorithm: account.algorithm,
+      digits: account.digits,
+      period: account.period,
+    });
 
-  const delta = totp.validate({ token: code, window: 1 });
-  if (delta === null) return { valid: false, drift: null };
+    const delta = totp.validate({ token: code, window: 1 });
+    if (delta === null) return { valid: false, drift: null };
 
-  const drift = delta === 0 ? null : delta * account.period;
-  return { valid: true, drift };
+    const drift = delta === 0 ? null : delta * account.period;
+    return { valid: true, drift };
+  } catch {
+    return { valid: false, drift: null };
+  }
 }
 
 /** Deterministic HSL color derived from a label string. */
