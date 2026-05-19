@@ -553,6 +553,70 @@ export class TabletsActions {
   }
 
   // ============================================================================
+  // TOTP 2FA Generator Tablet
+  // ============================================================================
+
+  async expectTotpInterfaceVisible() {
+    const codesTab = this.page.getByRole('button', { name: /^Codes$/i });
+    await expect(codesTab).toBeVisible();
+    const verifyTab = this.page.getByRole('button', { name: /^Verify$/i });
+    await expect(verifyTab).toBeVisible();
+  }
+
+  async clickTotpAddAccountButton() {
+    // Try the header "Add" button first; fall back to the empty-state button
+    const headerBtn = this.page.locator('[data-testid="add-account-button"]');
+    const emptyBtn = this.page.locator('[data-testid="add-first-account-button"]');
+
+    if (await headerBtn.isVisible().catch(() => false)) {
+      await headerBtn.click();
+    } else {
+      await expect(emptyBtn).toBeVisible();
+      await emptyBtn.click();
+    }
+
+    // Modal should now be open
+    await expect(this.page.getByRole('heading', { name: /Add Account/i })).toBeVisible();
+  }
+
+  async clickTotpManualEntryTab() {
+    const manualTab = this.page.getByRole('button', { name: /Manual Entry/i });
+    await expect(manualTab).toBeVisible();
+    await manualTab.click();
+  }
+
+  async fillTotpAccountForm(label: string, secret: string) {
+    const labelInput = this.page.getByPlaceholder(/GitHub, AWS Console/i);
+    await expect(labelInput).toBeVisible();
+    await labelInput.fill(label);
+
+    const secretInput = this.page.getByPlaceholder(/Base32 secret/i);
+    await expect(secretInput).toBeVisible();
+    await secretInput.fill(secret);
+  }
+
+  async saveTotpAccount() {
+    const saveBtn = this.page.getByRole('button', { name: /Add Account/i }).last();
+    await expect(saveBtn).toBeVisible();
+    await saveBtn.click();
+    // Modal should close
+    await expect(this.page.getByRole('heading', { name: /Add Account/i })).not.toBeVisible();
+  }
+
+  async expectTotpCodeVisible(digits: number) {
+    const codeEl = this.page.locator('[data-testid="totp-code"]').first();
+    await expect(codeEl).toBeVisible();
+    const text = (await codeEl.textContent() ?? '').replace(/\s/g, '');
+    expect(text).toMatch(new RegExp(`^\\d{${digits}}$`));
+  }
+
+  async expectTotpCountdownVisible() {
+    // The countdown timer renders an SVG ring plus a text label ending in "s"
+    const countdownText = this.page.locator('text=/\\d+s/').first();
+    await expect(countdownText).toBeVisible();
+  }
+
+  // ============================================================================
   // Emoji as Data Tablet
   // ============================================================================
 

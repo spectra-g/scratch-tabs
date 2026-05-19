@@ -129,37 +129,51 @@
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
 
-        <!-- Version 1.27.0 -->
+        <!-- Version 1.28.0 -->
         <div class="changelog-entry latest">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-white">V1.27.0</h2>
+              <h2 class="text-2xl font-bold text-white">V1.28.0</h2>
               <span class="badge latest">LATEST</span>
             </div>
-            <span class="text-gray-500 text-xs font-mono">05/13/2026</span>
+            <span class="text-gray-500 text-xs font-mono">05/19/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">QR CODE GENERATOR</h3>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">SSH KEY GENERATOR & TOTP 2FA GENERATOR</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">Adds a fully offline QR Code Generator tablet powered by qr-code-styling and jsQR. Supports eight smart content types — URL, Plain Text, WiFi credentials, Email, Phone, SMS, vCard contact, and Geographic coordinates — each with a dedicated form that formats the correct URI scheme automatically. Visual customisation covers dot style (square, dots, rounded, classy, classy-rounded, extra-rounded), corner frame style, dot and background colours with a transparent toggle, error correction level (L/M/Q/H), output size (256–2048 px), and margin. Logo embedding resizes the uploaded image client-side (≤200 px), composites it onto the QR, and auto-bumps error correction to H for reliable scanning. A Decode tab accepts drag-and-drop, paste (Ctrl+V), or file-pick images and decodes them entirely in-browser via jsQR with smart content-type detection and a 'Send to Generate' shortcut. The last eight generated codes are saved as thumbnails in a history strip for one-click restore. A permanently visible privacy footer makes the offline guarantee tangible.</p>
+            <p class="mb-4">Adds two fully offline security tablets. The SSH Key Generator produces Ed25519, RSA-3072, RSA-4096, and ECDSA P-256/P-384/P-521 key pairs entirely in the browser via the Web Crypto API, writing passphrase-encrypted private keys in standard OpenSSH format (AES-256-CBC + bcrypt_pbkdf KDF) that work directly with ssh-add and ssh-keygen. An Inspector tab parses any pasted public or private key to show algorithm, bit length, SHA-256 and MD5 fingerprints, and derives the authorized_keys line from an unencrypted private key without decrypting it. A Validate Pair mode confirms whether a public and private key belong to the same pair. No key material or passphrases are ever persisted. The TOTP 2FA Generator tablet is powered by otpauth (RFC 6238). Each account card displays the live one-time code, a per-account SVG countdown ring that depletes smoothly and turns amber in the final 5 seconds, and a one-click copy button. Accounts support SHA-1, SHA-256, and SHA-512 algorithms, 6–8 digit codes, and custom periods. New accounts can be added by pasting an otpauth:// URI or via manual entry with inline Base32 validation. A dedicated Verify panel reports clock skew when a code is valid but outside the current window.</p>
 
             <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
             <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>QR Code Generator:</strong> Eight smart content types — URL, Text, WiFi, Email, Phone, SMS, vCard, and Location — each with a dedicated form that formats the correct URI scheme (WIFI:T:..., mailto:, tel:, smsto:, BEGIN:VCARD, geo:) automatically</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Visual Customisation:</strong> Dot style (6 variants), corner frame style (3 variants), dot and background colour pickers, transparent background toggle (SVG), error correction level (L 7% / M 15% / Q 25% / H 30%), output size (256–2048 px), and margin slider</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Logo Embedding:</strong> Drag-and-drop or file-pick PNG/SVG/JPEG logos (max 2 MB), resized client-side to ≤200 px; auto-bumps error correction to H with a scanability indicator when logo coverage exceeds 30%</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Decode Tab:</strong> Drop a QR image, paste from clipboard (Ctrl+V), or pick a file — jsQR decodes it entirely in-browser with smart content-type detection and a 'Send to Generate' action to load the result back into the generator</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>History Strip:</strong> Last 8 generated QR codes stored as thumbnails; click any to restore its content, style, and logo</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Auto-Detection:</strong> Pasting a URL, WIFI:T:..., mailto:, or vCard string into the URL field shows a 'Detected: X — Switch' pill for one-click content-type switching</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Geo Location:</strong> 'Use my location' button on the Location type populates coordinates via the browser Geolocation API</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Context Action:</strong> Any editor tab containing a URL gains a 'Generate QR Code' option in the right-click actions menu</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Privacy Footer:</strong> Permanently visible 'Generated in your browser — no data leaves your device' footer</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>SSH Key Generator:</strong> Generate Ed25519, RSA-3072, RSA-4096, and ECDSA P-256/P-384/P-521 key pairs entirely in the browser — no server calls, no data leaves the device</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>OpenSSH-Compatible Output:</strong> Private keys are written in the standard OpenSSH v1 format (AES-256-CBC + bcrypt_pbkdf KDF, 16 rounds) — immediately usable with `ssh-add`, `ssh-keygen`, and any compliant SSH client</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Passphrase Encryption:</strong> Optionally protect the private key with a passphrase; the field persists between generations so you can generate multiple keys without re-entering it</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Key Inspector:</strong> Paste any SSH public or private key to see algorithm, bit length, SHA-256 fingerprint (matching `ssh-keygen -l`), MD5 fingerprint, and encryption status — derives the `authorized_keys` line from an unencrypted private key without decryption</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Pair Validator:</strong> Confirm that a public key and private key belong to the same pair by comparing their embedded wire-format public key bytes</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Copy & Download:</strong> One-click copy and download buttons for both keys; private key downloads as `id_ed25519` / `id_rsa` / `id_ecdsa` and public key as the `.pub` counterpart</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Zero Persistence:</strong> No key material, passphrases, or generated results are ever written to IndexedDB — only the selected algorithm, comment, and tab preference are saved</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>TOTP 2FA Generator:</strong> Multi-account authenticator tablet — add as many TOTP accounts as needed, each stored locally and generating a fresh code every period</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Animated Countdown Ring:</strong> Per-account SVG ring depletes smoothly as the OTP window expires; turns amber with a numeric countdown in the final 5 seconds to signal an imminent rotation</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>otpauth:// URI Import:</strong> Paste any `otpauth://totp/...` URI to auto-populate label, issuer, secret, algorithm, digits, and period in one click — compatible with Google Authenticator, Aegis, and standard 2FA QR codes</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Manual Entry:</strong> Add accounts manually with label, issuer, Base32 secret (show/hide toggle), algorithm (SHA1/SHA256/SHA512), digit count (6/7/8), and custom period — inline Base32 validation and a live code preview appear as you type</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Edit & Delete:</strong> Modify any account's details or remove it via the per-card overflow menu</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>One-Click Copy:</strong> Copy the current OTP to the clipboard directly from the account card with a 1.5-second green tick confirmation</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Verify Panel:</strong> Standalone tab to check a code against a raw Base32 secret without adding an account — returns Valid, Invalid, or Clock Skew with the exact drift in seconds</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Color-Coded Accounts:</strong> Each account receives a deterministic HSL color derived from its label, shown as a dot on the card and as the ring stroke color</span></li>
             </ul>
-
-            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># bug_fixes</h4>
-            <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Safari clipboard:</strong> Copy PNG now passes the blob Promise directly into ClipboardItem so it is constructed synchronously within the user-gesture frame, satisfying Safari's strict clipboard API requirement</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>vCard line endings:</strong> vCard 3.0 output now uses CRLF (\r\n) as required by RFC 2426; added the mandatory N: field (Last;First;;;) and TYPE annotations on TEL and EMAIL properties for correct iOS Contacts parsing</span></li>
-            </ul>
+          </div>
+        </div>
+        <!-- Version 1.27.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.27.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">05/13/2026</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">QR CODE GENERATOR</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p>Full offline QR code generation and decoding — 8 content types, visual customisation, logo embedding, and a history strip, with no data leaving the browser</p>
           </div>
         </div>
         <!-- Version 1.26.0 -->
@@ -693,7 +707,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.27.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.28.0</span>
         </div>
 
         <div class="flex space-x-8">

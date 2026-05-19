@@ -16,7 +16,8 @@ export default {
     "^react-resizable-panels$": "<rootDir>/src/__mocks__/react-resizable-panels.tsx",
     "^.*tablets/dynamicRegistry$": "<rootDir>/src/tablets/__mocks__/dynamicRegistry.ts",
     "^.*stores/aiStore$": "<rootDir>/src/__mocks__/aiStore.ts",
-    "\\.(css|less|scss|sass)$": "<rootDir>/src/__mocks__/styleMock.js"
+    "\\.(css|less|scss|sass)$": "<rootDir>/src/__mocks__/styleMock.js",
+    "^otpauth$": "<rootDir>/node_modules/otpauth/dist/otpauth.node.cjs"
   },
   transform: {
     "^.+\\.(ts|tsx)$": [
@@ -41,5 +42,5 @@ export default {
   ],
   coverageDirectory: "coverage",
   coverageReporters: ["text", "lcov", "html"],
-  transformIgnorePatterns: ["node_modules/(?!(dexie|monaco-editor|jose|react-markdown|remark-gfm|yaml|tiptap-extension-resizable-image)/)"],
+  transformIgnorePatterns: ["node_modules/(?!(dexie|monaco-editor|jose|react-markdown|remark-gfm|yaml|tiptap-extension-resizable-image|otpauth)/)"],
 };
