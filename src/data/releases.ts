@@ -15,12 +15,35 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.27.0';
+export const APP_VERSION = '1.28.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.27.0",
+    "version": "1.28.0",
     "type": "latest",
+    "date": "2026-05-19",
+    "headline": "TOTP 2FA Generator",
+    "summary": "Fully offline multi-account TOTP authenticator with animated countdown rings, otpauth:// URI import, and a standalone code-verify panel — secrets never leave the browser",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**TOTP 2FA Generator:** Multi-account authenticator tablet — add as many TOTP accounts as needed, each stored locally and generating a fresh code every period",
+          "**Animated Countdown Ring:** Per-account SVG ring depletes smoothly as the OTP window expires; turns amber with a numeric countdown in the final 5 seconds to signal an imminent rotation",
+          "**otpauth:// URI Import:** Paste any `otpauth://totp/...` URI to auto-populate label, issuer, secret, algorithm, digits, and period in one click — compatible with Google Authenticator, Aegis, and standard 2FA QR codes",
+          "**Manual Entry:** Add accounts manually with label, issuer, Base32 secret (show/hide toggle), algorithm (SHA1/SHA256/SHA512), digit count (6/7/8), and custom period — inline Base32 validation and a live code preview appear as you type",
+          "**Edit & Delete:** Modify any account's details or remove it via the per-card overflow menu",
+          "**One-Click Copy:** Copy the current OTP to the clipboard directly from the account card with a 1.5-second green tick confirmation",
+          "**Verify Panel:** Standalone tab to check a code against a raw Base32 secret without adding an account — returns Valid, Invalid, or Clock Skew with the exact drift in seconds",
+          "**Color-Coded Accounts:** Each account receives a deterministic HSL color derived from its label, shown as a dot on the card and as the ring stroke color",
+          "**Fully Offline & Private:** All secrets are stored in local tablet state only — no network calls, no external services, no data leaves the device"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.27.0",
+    "type": "release",
     "date": "2026-05-13",
     "headline": "QR Code Generator",
     "summary": "Full offline QR code generation and decoding — 8 content types, visual customisation, logo embedding, and a history strip, with no data leaving the browser",

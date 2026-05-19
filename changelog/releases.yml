@@ -3,8 +3,28 @@ config:
   max_versions: 100  # Maximum number of versions to display
 
 releases:
-  - version: "1.27.0"
+  - version: "1.28.0"
     type: "latest"
+    draft: false
+    date: "2026-05-19"
+    headline: "TOTP 2FA Generator"
+    summary: "Fully offline multi-account TOTP authenticator with animated countdown rings, otpauth:// URI import, and a standalone code-verify panel — secrets never leave the browser"
+    description: "Adds a TOTP 2FA Generator tablet powered by otpauth (RFC 6238). Each account card displays the live one-time code, a per-account SVG countdown ring that depletes smoothly and turns amber in the final 5 seconds, and a one-click copy button. Accounts support SHA-1, SHA-256, and SHA-512 algorithms, 6–8 digit codes, and custom periods. New accounts can be added by pasting an otpauth:// URI (auto-parsed) or via manual entry with a Base32 secret field that validates inline and previews the live code before saving. A dedicated Verify panel lets you check any code against a secret without adding an account, and reports clock skew when a code is valid but outside the current window. All secrets are persisted locally in the tablet state and never transmitted anywhere."
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**TOTP 2FA Generator:** Multi-account authenticator tablet — add as many TOTP accounts as needed, each stored locally and generating a fresh code every period"
+          - "**Animated Countdown Ring:** Per-account SVG ring depletes smoothly as the OTP window expires; turns amber with a numeric countdown in the final 5 seconds to signal an imminent rotation"
+          - "**otpauth:// URI Import:** Paste any `otpauth://totp/...` URI to auto-populate label, issuer, secret, algorithm, digits, and period in one click — compatible with Google Authenticator, Aegis, and standard 2FA QR codes"
+          - "**Manual Entry:** Add accounts manually with label, issuer, Base32 secret (show/hide toggle), algorithm (SHA1/SHA256/SHA512), digit count (6/7/8), and custom period — inline Base32 validation and a live code preview appear as you type"
+          - "**Edit & Delete:** Modify any account's details or remove it via the per-card overflow menu"
+          - "**One-Click Copy:** Copy the current OTP to the clipboard directly from the account card with a 1.5-second green tick confirmation"
+          - "**Verify Panel:** Standalone tab to check a code against a raw Base32 secret without adding an account — returns Valid, Invalid, or Clock Skew with the exact drift in seconds"
+          - "**Color-Coded Accounts:** Each account receives a deterministic HSL color derived from its label, shown as a dot on the card and as the ring stroke color"
+          - "**Fully Offline & Private:** All secrets are stored in local tablet state only — no network calls, no external services, no data leaves the device"
+
+  - version: "1.27.0"
+    type: "release"
     draft: false
     date: "2026-05-13"
     headline: "QR Code Generator"
