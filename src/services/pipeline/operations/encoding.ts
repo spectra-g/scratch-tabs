@@ -105,6 +105,38 @@ function decodeBase58(input: string): string {
     return Array.from(allBytes).map(b => String.fromCharCode(b)).join('');
 }
 
+// === Morse code lookup tables ===
+const MORSE_ENCODE_MAP: Record<string, string> = {
+    A: ".-", B: "-...", C: "-.-.", D: "-..", E: ".", F: "..-.", G: "--.",
+    H: "....", I: "..", J: ".---", K: "-.-", L: ".-..", M: "--", N: "-.",
+    O: "---", P: ".--.", Q: "--.-", R: ".-.", S: "...", T: "-", U: "..-",
+    V: "...-", W: ".--", X: "-..-", Y: "-.--", Z: "--..",
+    "0": "-----", "1": ".----", "2": "..---", "3": "...--", "4": "....-",
+    "5": ".....", "6": "-....", "7": "--...", "8": "---..", "9": "----.",
+    ".": ".-.-.-", ",": "--..--", "?": "..--..", "'": ".----.",
+    "!": "-.-.--", "/": "-..-.", "(": "-.--.", ")": "-.--.-",
+    "&": ".-...", ":": "---...", ";": "-.-.-.", "=": "-...-",
+    "+": ".-.-.", "-": "-....-", "_": "..--.-", '"': ".-..-.",
+    "$": "...-..-", "@": ".--.-.",
+};
+
+const MORSE_DECODE_MAP: Record<string, string> = Object.fromEntries(
+    Object.entries(MORSE_ENCODE_MAP).map(([k, v]) => [v, k]),
+);
+
+// === NATO phonetic alphabet lookup table ===
+const NATO_PHONETIC_MAP: Record<string, string> = {
+    A: "Alfa", B: "Bravo", C: "Charlie", D: "Delta", E: "Echo",
+    F: "Foxtrot", G: "Golf", H: "Hotel", I: "India", J: "Juliet",
+    K: "Kilo", L: "Lima", M: "Mike", N: "November", O: "Oscar",
+    P: "Papa", Q: "Quebec", R: "Romeo", S: "Sierra", T: "Tango",
+    U: "Uniform", V: "Victor", W: "Whiskey", X: "X-ray", Y: "Yankee",
+    Z: "Zulu",
+    "0": "Zero", "1": "One", "2": "Two", "3": "Three", "4": "Four",
+    "5": "Five", "6": "Six", "7": "Seven", "8": "Eight", "9": "Nine",
+    " ": "(space)",
+};
+
 /**
  * Encoding Pipeline Operations
  *
@@ -777,6 +809,195 @@ export const encodingOperations: OperationDefinition[] = [
             return decodeBase58(input);
         },
         keywords: ["base58", "decode", "bitcoin", "ipfs", "wallet"],
+        source: "core",
+    },
+
+    // === MORSE CODE ===
+    {
+        id: "encoding.morse-encode",
+        name: "Text to Morse Code",
+        description: "Encode text as Morse code (dots and dashes)",
+        categories: ["encoding"],
+        parameters: [
+            {
+                name: "wordSeparator",
+                label: "Word Separator",
+                type: "select",
+                default: "/",
+                options: [
+                    { value: "/", label: "Slash ( / )" },
+                    { value: "|", label: "Pipe ( | )" },
+                    { value: "newline", label: "Newline" },
+                ],
+            },
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const wordSep = (params.wordSeparator as string) ?? "/";
+            const sep = wordSep === "newline" ? "\n" : ` ${wordSep} `;
+            const words = input.trim().toUpperCase().split(/\s+/);
+            return words
+                .map((word) =>
+                    word
+                        .split("")
+                        .map((char) => MORSE_ENCODE_MAP[char] ?? `[${char}]`)
+                        .join(" "),
+                )
+                .join(sep);
+        },
+        keywords: ["morse", "encode", "dots", "dashes", "telegraph", "ctf"],
+        source: "core",
+    },
+    {
+        id: "encoding.morse-decode",
+        name: "Morse Code to Text",
+        description: "Decode Morse code (dots and dashes) back to text",
+        categories: ["encoding"],
+        parameters: [
+            {
+                name: "wordSeparator",
+                label: "Word Separator",
+                type: "select",
+                default: "/",
+                options: [
+                    { value: "/", label: "Slash ( / )" },
+                    { value: "|", label: "Pipe ( | )" },
+                    { value: "newline", label: "Newline" },
+                ],
+            },
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const wordSep = (params.wordSeparator as string) ?? "/";
+            const wordPattern =
+                wordSep === "newline" ? /\n/ : wordSep === "|" ? /\s*\|\s*/ : /\s*\/\s*/;
+            const words = input.trim().split(wordPattern);
+            return words
+                .map((word) =>
+                    word
+                        .trim()
+                        .split(/\s+/)
+                        .map((code) => {
+                            const trimmed = code.trim();
+                            if (!trimmed) return "";
+                            return MORSE_DECODE_MAP[trimmed] ?? `[${trimmed}]`;
+                        })
+                        .join(""),
+                )
+                .join(" ");
+        },
+        keywords: ["morse", "decode", "dots", "dashes", "telegraph", "ctf"],
+        source: "core",
+    },
+
+    // === NATO PHONETIC ALPHABET ===
+    {
+        id: "encoding.nato-phonetic",
+        name: "NATO Phonetic Alphabet",
+        description: "Convert text to NATO phonetic alphabet words (A → Alfa, B → Bravo…)",
+        categories: ["encoding"],
+        parameters: [
+            {
+                name: "delimiter",
+                label: "Delimiter",
+                type: "select",
+                default: "space",
+                options: [
+                    { value: "space", label: "Space" },
+                    { value: "newline", label: "Newline" },
+                    { value: "comma", label: "Comma" },
+                    { value: "dash", label: "Dash" },
+                ],
+            },
+            {
+                name: "uppercase",
+                label: "Uppercase",
+                type: "boolean",
+                default: false,
+                description: "Output in uppercase (ALFA BRAVO…)",
+            },
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const delimiter = (params.delimiter as string) ?? "space";
+            const uppercase = params.uppercase ?? false;
+            const sep =
+                delimiter === "newline"
+                    ? "\n"
+                    : delimiter === "comma"
+                      ? ", "
+                      : delimiter === "dash"
+                        ? " - "
+                        : " ";
+            return input
+                .toUpperCase()
+                .split("")
+                .map((char) => {
+                    const word = NATO_PHONETIC_MAP[char] ?? char;
+                    return uppercase ? word.toUpperCase() : word;
+                })
+                .join(sep);
+        },
+        keywords: ["nato", "phonetic", "alphabet", "radio", "spelling", "aviation"],
+        source: "core",
+    },
+
+    // === UNICODE ESCAPE ===
+    {
+        id: "encoding.unicode-escape",
+        name: "Unicode Escape",
+        description: "Escape characters to \\uXXXX Unicode sequences",
+        categories: ["encoding"],
+        parameters: [
+            {
+                name: "mode",
+                label: "Mode",
+                type: "select",
+                default: "non-ascii",
+                options: [
+                    { value: "non-ascii", label: "Non-ASCII only" },
+                    { value: "all", label: "All characters" },
+                ],
+            },
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const mode = (params.mode as string) ?? "non-ascii";
+            return Array.from(input)
+                .map((char) => {
+                    const code = char.codePointAt(0) ?? 0;
+                    if (mode === "all" || code > 127) {
+                        if (code > 0xffff) {
+                            return `\\u{${code.toString(16).toUpperCase()}}`;
+                        }
+                        return `\\u${code.toString(16).toUpperCase().padStart(4, "0")}`;
+                    }
+                    return char;
+                })
+                .join("");
+        },
+        keywords: ["unicode", "escape", "codepoint", "uxxxx", "js", "json"],
+        source: "core",
+    },
+    {
+        id: "encoding.unicode-unescape",
+        name: "Unicode Unescape",
+        description: "Decode \\uXXXX and \\u{XXXXX} Unicode escape sequences to characters",
+        categories: ["encoding"],
+        parameters: [],
+        processingMode: "entire",
+        execute: (input) => {
+            return input
+                .replace(
+                    /\\u\{([0-9A-Fa-f]+)\}/g,
+                    (_, hex) => String.fromCodePoint(parseInt(hex, 16)),
+                )
+                .replace(
+                    /\\u([0-9A-Fa-f]{4})/g,
+                    (_, hex) => String.fromCharCode(parseInt(hex, 16)),
+                );
+        },
+        keywords: ["unicode", "unescape", "codepoint", "uxxxx", "js", "json"],
         source: "core",
     },
 

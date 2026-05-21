@@ -15,12 +15,35 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.28.0';
+export const APP_VERSION = '1.29.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.28.0",
+    "version": "1.29.0",
     "type": "latest",
+    "date": "2026-05-21",
+    "headline": "11 New Pipeline Operations — Morse, NATO, Security Defang, CSV Manipulation & Entropy",
+    "summary": "Morse code encode/decode, NATO phonetic alphabet, Unicode escape/unescape, Shannon entropy analysis, URL defang/refang for threat intel, and three CSV manipulation operations: filter rows, sort, and transpose",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Morse Code Encode/Decode:** Convert text to Morse code (dots and dashes) and back — configurable word separator (slash, pipe, or newline); round-trips correctly for all alphanumeric and punctuation characters in the standard ITU table",
+          "**NATO Phonetic Alphabet:** Convert text to NATO words (A → Alfa, B → Bravo…) with delimiter options (space, newline, comma, dash) and uppercase toggle — covers A–Z, 0–9, and space",
+          "**Unicode Escape/Unescape:** Escape characters to \\uXXXX sequences (non-ASCII only or all characters) and decode them back — handles both \\uXXXX and \\u{XXXXX} surrogate-pair form for emoji and supplementary code points",
+          "**Shannon Entropy:** Calculate information density in bits/character — full report mode shows entropy, length, unique character count, and theoretical maximum; value-only mode outputs a single number for pipeline chaining",
+          "**Defang URL:** Replace https:// → hxxps://, http:// → hxxp://, and dots → [.] for safe sharing in threat intelligence reports and IOC feeds — each substitution is independently toggleable",
+          "**Refang URL:** Reverse all common defang substitutions (hxxps://, [.], [@], [:]) back to working URLs — handles case-insensitive hxxp variants and colon-bracket notation",
+          "**Filter CSV Rows:** Keep rows where a column matches a condition — supports contains, not-contains, equals, not-equals, regex, greater-than, and less-than operators with optional case sensitivity; works by header name or column index",
+          "**Sort CSV:** Sort rows by any column ascending or descending — auto-detects numeric columns or use explicit string/number mode; preserves the header row",
+          "**Transpose CSV:** Swap rows and columns — each input row becomes a column in the output; handles unequal row lengths by padding with empty cells; preserves quoting throughout"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.28.0",
+    "type": "release",
     "date": "2026-05-19",
     "headline": "SSH Key Generator & TOTP 2FA Generator",
     "summary": "Two new offline security tablets: generate Ed25519, RSA, and ECDSA SSH key pairs with passphrase encryption, inspect and validate any key — plus a multi-account TOTP authenticator with animated countdown rings",

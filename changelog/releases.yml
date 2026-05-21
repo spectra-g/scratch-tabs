@@ -3,8 +3,28 @@ config:
   max_versions: 100  # Maximum number of versions to display
 
 releases:
-  - version: "1.28.0"
+  - version: "1.29.0"
     type: "latest"
+    draft: false
+    date: "2026-05-21"
+    headline: "11 New Pipeline Operations — Morse, NATO, Security Defang, CSV Manipulation & Entropy"
+    summary: "Morse code encode/decode, NATO phonetic alphabet, Unicode escape/unescape, Shannon entropy analysis, URL defang/refang for threat intel, and three CSV manipulation operations: filter rows, sort, and transpose"
+    description: "Expands the transformation pipeline with 11 new operations across four categories. Encoding gains Morse code (encode/decode with configurable word separator), NATO phonetic alphabet (Alfa/Bravo… with delimiter and case options), and dedicated Unicode escape/unescape operations for JS-style \\uXXXX sequences including surrogate-pair \\u{XXXXX} form. A Shannon Entropy operation computes information density in bits/character with a full report (entropy value, length, unique character count, max possible entropy) or value-only output — a standard security and crypto analysis tool. Two new Networking operations implement the threat intelligence standard for safe IOC sharing: Defang URL replaces https:// with hxxps:// and dots with [.], Refang URL reverses all substitutions including [.], [@], and [:]. Three new CSV operations complete the manipulation set: Filter CSV Rows keeps rows where any column matches a value, regex, or numeric comparison; Sort CSV orders rows by any column with auto-detected or explicit string/numeric sort; Transpose CSV swaps rows and columns with correct quoting preserved throughout."
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**Morse Code Encode/Decode:** Convert text to Morse code (dots and dashes) and back — configurable word separator (slash, pipe, or newline); round-trips correctly for all alphanumeric and punctuation characters in the standard ITU table"
+          - "**NATO Phonetic Alphabet:** Convert text to NATO words (A → Alfa, B → Bravo…) with delimiter options (space, newline, comma, dash) and uppercase toggle — covers A–Z, 0–9, and space"
+          - "**Unicode Escape/Unescape:** Escape characters to \\uXXXX sequences (non-ASCII only or all characters) and decode them back — handles both \\uXXXX and \\u{XXXXX} surrogate-pair form for emoji and supplementary code points"
+          - "**Shannon Entropy:** Calculate information density in bits/character — full report mode shows entropy, length, unique character count, and theoretical maximum; value-only mode outputs a single number for pipeline chaining"
+          - "**Defang URL:** Replace https:// → hxxps://, http:// → hxxp://, and dots → [.] for safe sharing in threat intelligence reports and IOC feeds — each substitution is independently toggleable"
+          - "**Refang URL:** Reverse all common defang substitutions (hxxps://, [.], [@], [:]) back to working URLs — handles case-insensitive hxxp variants and colon-bracket notation"
+          - "**Filter CSV Rows:** Keep rows where a column matches a condition — supports contains, not-contains, equals, not-equals, regex, greater-than, and less-than operators with optional case sensitivity; works by header name or column index"
+          - "**Sort CSV:** Sort rows by any column ascending or descending — auto-detects numeric columns or use explicit string/number mode; preserves the header row"
+          - "**Transpose CSV:** Swap rows and columns — each input row becomes a column in the output; handles unequal row lengths by padding with empty cells; preserves quoting throughout"
+
+  - version: "1.28.0"
+    type: "release"
     draft: false
     date: "2026-05-19"
     headline: "SSH Key Generator & TOTP 2FA Generator"

@@ -129,37 +129,45 @@
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
 
-        <!-- Version 1.28.0 -->
+        <!-- Version 1.29.0 -->
         <div class="changelog-entry latest">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-white">V1.28.0</h2>
+              <h2 class="text-2xl font-bold text-white">V1.29.0</h2>
               <span class="badge latest">LATEST</span>
             </div>
-            <span class="text-gray-500 text-xs font-mono">05/19/2026</span>
+            <span class="text-gray-500 text-xs font-mono">05/21/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">SSH KEY GENERATOR & TOTP 2FA GENERATOR</h3>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">11 NEW PIPELINE OPERATIONS — MORSE, NATO, SECURITY DEFANG, CSV MANIPULATION & ENTROPY</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">Adds two fully offline security tablets. The SSH Key Generator produces Ed25519, RSA-3072, RSA-4096, and ECDSA P-256/P-384/P-521 key pairs entirely in the browser via the Web Crypto API, writing passphrase-encrypted private keys in standard OpenSSH format (AES-256-CBC + bcrypt_pbkdf KDF) that work directly with ssh-add and ssh-keygen. An Inspector tab parses any pasted public or private key to show algorithm, bit length, SHA-256 and MD5 fingerprints, and derives the authorized_keys line from an unencrypted private key without decrypting it. A Validate Pair mode confirms whether a public and private key belong to the same pair. No key material or passphrases are ever persisted. The TOTP 2FA Generator tablet is powered by otpauth (RFC 6238). Each account card displays the live one-time code, a per-account SVG countdown ring that depletes smoothly and turns amber in the final 5 seconds, and a one-click copy button. Accounts support SHA-1, SHA-256, and SHA-512 algorithms, 6–8 digit codes, and custom periods. New accounts can be added by pasting an otpauth:// URI or via manual entry with inline Base32 validation. A dedicated Verify panel reports clock skew when a code is valid but outside the current window.</p>
+            <p class="mb-4">Expands the transformation pipeline with 11 new operations across four categories. Encoding gains Morse code (encode/decode with configurable word separator), NATO phonetic alphabet (Alfa/Bravo… with delimiter and case options), and dedicated Unicode escape/unescape operations for JS-style \uXXXX sequences including surrogate-pair \u{XXXXX} form. A Shannon Entropy operation computes information density in bits/character with a full report (entropy value, length, unique character count, max possible entropy) or value-only output — a standard security and crypto analysis tool. Two new Networking operations implement the threat intelligence standard for safe IOC sharing: Defang URL replaces https:// with hxxps:// and dots with [.], Refang URL reverses all substitutions including [.], [@], and [:]. Three new CSV operations complete the manipulation set: Filter CSV Rows keeps rows where any column matches a value, regex, or numeric comparison; Sort CSV orders rows by any column with auto-detected or explicit string/numeric sort; Transpose CSV swaps rows and columns with correct quoting preserved throughout.</p>
 
             <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
             <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>SSH Key Generator:</strong> Generate Ed25519, RSA-3072, RSA-4096, and ECDSA P-256/P-384/P-521 key pairs entirely in the browser — no server calls, no data leaves the device</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>OpenSSH-Compatible Output:</strong> Private keys are written in the standard OpenSSH v1 format (AES-256-CBC + bcrypt_pbkdf KDF, 16 rounds) — immediately usable with `ssh-add`, `ssh-keygen`, and any compliant SSH client</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Passphrase Encryption:</strong> Optionally protect the private key with a passphrase; the field persists between generations so you can generate multiple keys without re-entering it</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Key Inspector:</strong> Paste any SSH public or private key to see algorithm, bit length, SHA-256 fingerprint (matching `ssh-keygen -l`), MD5 fingerprint, and encryption status — derives the `authorized_keys` line from an unencrypted private key without decryption</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Pair Validator:</strong> Confirm that a public key and private key belong to the same pair by comparing their embedded wire-format public key bytes</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Copy & Download:</strong> One-click copy and download buttons for both keys; private key downloads as `id_ed25519` / `id_rsa` / `id_ecdsa` and public key as the `.pub` counterpart</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Zero Persistence:</strong> No key material, passphrases, or generated results are ever written to IndexedDB — only the selected algorithm, comment, and tab preference are saved</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>TOTP 2FA Generator:</strong> Multi-account authenticator tablet — add as many TOTP accounts as needed, each stored locally and generating a fresh code every period</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Animated Countdown Ring:</strong> Per-account SVG ring depletes smoothly as the OTP window expires; turns amber with a numeric countdown in the final 5 seconds to signal an imminent rotation</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>otpauth:// URI Import:</strong> Paste any `otpauth://totp/...` URI to auto-populate label, issuer, secret, algorithm, digits, and period in one click — compatible with Google Authenticator, Aegis, and standard 2FA QR codes</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Manual Entry:</strong> Add accounts manually with label, issuer, Base32 secret (show/hide toggle), algorithm (SHA1/SHA256/SHA512), digit count (6/7/8), and custom period — inline Base32 validation and a live code preview appear as you type</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Edit & Delete:</strong> Modify any account's details or remove it via the per-card overflow menu</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>One-Click Copy:</strong> Copy the current OTP to the clipboard directly from the account card with a 1.5-second green tick confirmation</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Verify Panel:</strong> Standalone tab to check a code against a raw Base32 secret without adding an account — returns Valid, Invalid, or Clock Skew with the exact drift in seconds</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Color-Coded Accounts:</strong> Each account receives a deterministic HSL color derived from its label, shown as a dot on the card and as the ring stroke color</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Morse Code Encode/Decode:</strong> Convert text to Morse code (dots and dashes) and back — configurable word separator (slash, pipe, or newline); round-trips correctly for all alphanumeric and punctuation characters in the standard ITU table</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>NATO Phonetic Alphabet:</strong> Convert text to NATO words (A → Alfa, B → Bravo…) with delimiter options (space, newline, comma, dash) and uppercase toggle — covers A–Z, 0–9, and space</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Unicode Escape/Unescape:</strong> Escape characters to \uXXXX sequences (non-ASCII only or all characters) and decode them back — handles both \uXXXX and \u{XXXXX} surrogate-pair form for emoji and supplementary code points</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Shannon Entropy:</strong> Calculate information density in bits/character — full report mode shows entropy, length, unique character count, and theoretical maximum; value-only mode outputs a single number for pipeline chaining</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Defang URL:</strong> Replace https:// → hxxps://, http:// → hxxp://, and dots → [.] for safe sharing in threat intelligence reports and IOC feeds — each substitution is independently toggleable</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Refang URL:</strong> Reverse all common defang substitutions (hxxps://, [.], [@], [:]) back to working URLs — handles case-insensitive hxxp variants and colon-bracket notation</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Filter CSV Rows:</strong> Keep rows where a column matches a condition — supports contains, not-contains, equals, not-equals, regex, greater-than, and less-than operators with optional case sensitivity; works by header name or column index</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Sort CSV:</strong> Sort rows by any column ascending or descending — auto-detects numeric columns or use explicit string/number mode; preserves the header row</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Transpose CSV:</strong> Swap rows and columns — each input row becomes a column in the output; handles unequal row lengths by padding with empty cells; preserves quoting throughout</span></li>
             </ul>
+          </div>
+        </div>
+        <!-- Version 1.28.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.28.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">05/19/2026</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">SSH KEY GENERATOR & TOTP 2FA GENERATOR</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p>Two new offline security tablets: generate Ed25519, RSA, and ECDSA SSH key pairs with passphrase encryption, inspect and validate any key — plus a multi-account TOTP authenticator with animated countdown rings</p>
           </div>
         </div>
         <!-- Version 1.27.0 -->
@@ -707,7 +715,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.28.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.29.0</span>
         </div>
 
         <div class="flex space-x-8">
