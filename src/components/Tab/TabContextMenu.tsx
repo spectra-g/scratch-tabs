@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useLayoutEffect } from "react";
 import { useClickOutside } from "../../hooks/useClickOutside";
 import {
   UseContextMenuConfigReturn,
@@ -37,6 +37,22 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [adjustedPosition, setAdjustedPosition] = useState<{ x: number; y: number } | null>(null);
+
+  useLayoutEffect(() => {
+    if (!menuRef.current) return;
+    const { width, height } = menuRef.current.getBoundingClientRect();
+    const margin = 8;
+    let x = position.x;
+    let y = position.y;
+    if (x + width > window.innerWidth - margin) {
+      x = Math.max(margin, position.x - width);
+    }
+    if (y + height > window.innerHeight - margin) {
+      y = Math.max(margin, window.innerHeight - height - margin);
+    }
+    setAdjustedPosition({ x, y });
+  }, [position.x, position.y]);
 
   // This is the function that will be called by useContextMenuConfig to simply close this context menu
   const closeThisContextMenu = (
@@ -96,9 +112,10 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
             ref={menuRef}
             className="absolute bg-surface border border-base rounded shadow-lg z-50 py-1"
             style={{
-              top: `${position.y}px`,
-              left: `${position.x}px`,
+              top: `${(adjustedPosition ?? position).y}px`,
+              left: `${(adjustedPosition ?? position).x}px`,
               minWidth: "200px",
+              visibility: adjustedPosition ? "visible" : "hidden",
             }}
             onContextMenu={(e) => e.preventDefault()} // Prevent native context menu over custom one
           >

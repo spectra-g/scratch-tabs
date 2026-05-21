@@ -8,11 +8,14 @@ interface ContextMenuItemProps {
 
 export const ContextMenuItem: React.FC<ContextMenuItemProps> = ({ item }) => {
   const [isSubmenuVisible, setIsSubmenuVisible] = useState(false);
-  const [submenuPosition, setSubmenuPosition] = useState({
+  const [submenuPosition, setSubmenuPosition] = useState<{
+    top: string;
+    left: string;
+    marginLeft?: string;
+  }>({
     top: "-5px",
     left: "100%",
-    bottom: "auto",
-  }); // Added bottom
+  });
   const itemRef = useRef<HTMLDivElement>(null);
   const submenuRef = useRef<HTMLDivElement>(null);
   const leaveTimeout = useRef<number | null>(null);
@@ -69,24 +72,30 @@ export const ContextMenuItem: React.FC<ContextMenuItemProps> = ({ item }) => {
     if (isSubmenuVisible && itemRef.current && submenuRef.current) {
       const itemRect = itemRef.current.getBoundingClientRect();
       const submenuHeight = submenuRef.current.offsetHeight;
+      const submenuWidth = submenuRef.current.offsetWidth;
       const windowHeight = window.innerHeight;
+      const windowWidth = window.innerWidth;
+      const margin = 8;
 
-      let top = -5; // Default top position relative to item
-
-      // Check if submenu goes below viewport
+      let top = -5;
       if (itemRect.top + submenuHeight > windowHeight - 20) {
-        // 20px buffer
-        // Adjust: Position upwards relative to the item's bottom
-        top = itemRect.height - submenuHeight + 5; // Adjust slightly above bottom
-        // Ensure it doesn't go above the viewport top
+        top = itemRect.height - submenuHeight + 5;
         if (itemRect.top + top < 10) {
-          top = -itemRect.top + 10; // Place 10px from viewport top
+          top = -itemRect.top + 10;
         }
       }
 
-      setSubmenuPosition({ top: `${top}px`, left: "100%", bottom: "auto" }); // Update position style
+      // Flip submenu to the left when it would overflow the right edge
+      let left = "100%";
+      let marginLeft: string | undefined = undefined;
+      if (itemRect.right + submenuWidth + 4 > windowWidth - margin) {
+        left = `${-(submenuWidth + 4)}px`;
+        marginLeft = "0px"; // cancel the ml-1 class
+      }
+
+      setSubmenuPosition({ top: `${top}px`, left, marginLeft });
     }
-  }, [isSubmenuVisible]); // Rerun when visibility changes
+  }, [isSubmenuVisible]);
 
   return (
     <div
@@ -117,7 +126,7 @@ export const ContextMenuItem: React.FC<ContextMenuItemProps> = ({ item }) => {
         <div
           ref={submenuRef}
           className="absolute left-full ml-1 bg-surface border border-base rounded shadow-lg z-context-menu py-1 min-w-[150px] max-h-[300px] overflow-y-auto custom-scrollbar"
-          style={{ top: submenuPosition.top, left: submenuPosition.left }}
+          style={{ top: submenuPosition.top, left: submenuPosition.left, marginLeft: submenuPosition.marginLeft }}
           onMouseEnter={handleSubmenuMouseEnter}
           onMouseLeave={handleMouseLeave}
         >

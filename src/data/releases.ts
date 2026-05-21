@@ -22,12 +22,22 @@ export const RELEASES: Release[] = [
     "version": "1.29.0",
     "type": "latest",
     "date": "2026-05-21",
-    "headline": "PEM / X.509 & .env Smart Views, 11 New Pipeline Operations",
-    "summary": "Full certificate viewer with chain analysis, validity timeline, and SHA-256 fingerprints; interactive .env editor with sort, clean, and export operations; plus Morse, NATO, Shannon entropy, URL defang/refang, and CSV filter/sort/transpose pipeline operations",
+    "headline": "Hex Viewer / Binary Inspector, PEM / X.509 & .env Smart Views, 11 New Pipeline Operations",
+    "summary": "Professional offline hex viewer and binary inspector with data decoding, entropy analysis, and byte editing; full certificate viewer with chain analysis and validity timeline; interactive .env editor with sort, clean, and export; plus Morse, NATO, Shannon entropy, URL defang/refang, and CSV filter/sort/transpose pipeline operations",
     "categories": [
       {
         "name": "New Features",
         "changes": [
+          "**Hex Viewer / Binary Inspector:** Professional offline hex viewer supporting four input modes — paste raw text, hex string, or Base64, or upload any binary file up to 2 MB; all rendering and analysis runs entirely in the browser",
+          "**Interactive Hex Grid:** Paginated grid with configurable bytes-per-row (8/16/32) and page size; click a byte to select it, Shift+click to extend the selection to a range",
+          "**In-Grid Byte Editing:** Double-click any byte cell to edit its value directly in the hex grid; changes sync back to the source editor panel and update the input text in real time",
+          "**Data Inspector Sidebar:** Decodes the selected byte offset into every standard numeric type — Binary (8-bit), Int8, Uint8, Int16, Uint16, Int32, Uint32, Int64, Uint64 (BigInt), Float32, Float64, and ASCII character; endianness toggle switches all multi-byte reads between little-endian and big-endian instantly",
+          "**Shannon Entropy Analysis:** Calculates information density for the full buffer or the active selection with a rated label — Low (structured), Low-Medium (text/source), Medium (dense binary/executable), High (compressed/media), Very High (encrypted/compressed)",
+          "**Byte Distribution Stats:** Breaks the buffer into four categories — null bytes, printable ASCII, control characters, and extended bytes — with percentage bars so file composition is visible at a glance",
+          "**Search:** Find any text string or hex sequence across the buffer; match count and current position are shown in the toolbar; next/previous navigation jumps to each match and pages to it automatically",
+          "**Export:** Copy the full buffer or active selection as space-separated hex, raw hex, Base64, C array (`unsigned char rawData[]`), JSON number array, or download as a raw binary file",
+          "**Smart Format Detection:** When content is sent from an editor tab, the input format is auto-detected — hex strings are opened in hex mode, Base64-padded strings in base64 mode, everything else as raw text",
+          "**Context Action:** Any editor tab gains an 'Open in Hex Viewer' option in the right-click menu, sending the tab's content directly to a new Hex Viewer tab",
           "**PEM / X.509 Smart View:** Parses certificates, private keys, public keys, and CSRs in the browser using a pure-JS DER/ASN.1 engine — no native dependencies, no server calls",
           "**Certificate Detail Panel:** Subject and issuer distinguished names, serial number, version, signature algorithm, validity dates, Subject Alternative Names (DNS, IP, Email, URI), Key Usage, and Extended Key Usage",
           "**Validity Timeline:** Visual progress bar showing where today falls in the certificate's validity window — green when healthy, amber when expiring within 30 days, red when expired",
@@ -57,6 +67,14 @@ export const RELEASES: Release[] = [
           "**Filter CSV Rows:** Keep rows where a column matches a condition — supports contains, not-contains, equals, not-equals, regex, greater-than, and less-than operators with optional case sensitivity; works by header name or column index",
           "**Sort CSV:** Sort rows by any column ascending or descending — auto-detects numeric columns or use explicit string/number mode; preserves the header row",
           "**Transpose CSV:** Swap rows and columns — each input row becomes a column in the output; handles unequal row lengths by padding with empty cells; preserves quoting throughout"
+        ]
+      },
+      {
+        "name": "Bug Fixes",
+        "changes": [
+          "**Tab bar action buttons obscured by scroll gradient:** The scroll indicator gradients are now scoped to the tab scroll area via a dedicated wrapper element; previously the right-side gradient could paint over the Plus, Clipboard, and Extension buttons when the tab bar was scrolled left, making the icons go dark",
+          "**Context menu clipped at viewport edges:** The tab context menu now measures its rendered dimensions with `useLayoutEffect` and adjusts its position before becoming visible, preventing the menu from being cut off at the bottom or right edges of the viewport",
+          "**Submenu overflows viewport right edge:** Context menu submenus that would extend beyond the right edge of the viewport now flip to open leftward instead; previously they would render off-screen and be inaccessible"
         ]
       }
     ]
