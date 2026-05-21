@@ -10,7 +10,7 @@ import { tabletMetadata } from "../tablets/tabletMetadata";
 
 // Helper function to convert a label to URL identifier format
 const labelToUrlIdentifier = (label: string): string => {
-  return label.toLowerCase().replace(/\s+/g, "-");
+  return label.toLowerCase().replace(/[/\\]/g, "-").replace(/\s+/g, "-").replace(/-{2,}/g, "-").replace(/^-|-$/g, "");
 };
 
 /**
