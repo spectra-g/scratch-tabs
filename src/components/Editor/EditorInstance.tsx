@@ -276,11 +276,12 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
     if (shouldFocus && !sidebarEditingId) {
       const timer = setTimeout(() => {
         try {
-          if (
-            editorRef.current &&
-            document.activeElement !==
-            editorRef.current.getDomNode()?.querySelector("textarea")
-          ) {
+          const active = document.activeElement;
+          const monacoTextarea = editorRef.current?.getDomNode()?.querySelector("textarea");
+          const isUserInInput =
+            active instanceof HTMLInputElement ||
+            (active instanceof HTMLTextAreaElement && active !== monacoTextarea);
+          if (editorRef.current && active !== monacoTextarea && !isUserInInput) {
             editorRef.current.focus();
           }
         } catch (error) {

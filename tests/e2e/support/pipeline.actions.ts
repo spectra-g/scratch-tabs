@@ -60,7 +60,9 @@ export class PipelineActions {
    */
   async searchOperation(searchText: string): Promise<void> {
     const searchInput = this.page.locator('input[placeholder="Search operations..."]');
-    await searchInput.fill(searchText);
+    await expect(searchInput).toBeVisible();
+    await searchInput.click();
+    await searchInput.pressSequentially(searchText, { delay: 20 });
   }
 
   /**
@@ -95,9 +97,12 @@ export class PipelineActions {
    * Add an operation by searching for it first
    */
   async searchAndAddOperation(operationName: string): Promise<void> {
-    await this.searchOperation(operationName);
-    // Wait for search results to appear
-    const operationItem = this.page.locator(`div.cursor-pointer:has-text("${operationName}")`).first();
+    const searchInput = this.page.locator('input[placeholder="Search operations..."]');
+    await expect(searchInput).toBeVisible();
+    await searchInput.fill(operationName);
+    // Wait for the search results container to render before looking for the item
+    await expect(this.page.locator('[data-testid="operation-search-results"]')).toBeVisible();
+    const operationItem = this.page.locator(`[data-testid="operation-item"]:has-text("${operationName}")`).first();
     await expect(operationItem).toBeVisible();
     await operationItem.click();
     // Clear search after adding

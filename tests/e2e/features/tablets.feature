@@ -150,6 +150,16 @@ Feature: Tablets Smoke Tests
     Then I should see a 6-digit TOTP code
     And I should see a countdown timer
 
+  Scenario: Hex Viewer tablet loads and displays hex grid
+    When I click the icon for "New tab"
+    And I click the icon for "New tablet"
+    And I select "Hex Viewer / Binary Inspector" from the tablet selector
+    And I wait for the tablet to be ready
+    Then the "Hex Viewer / Binary Inspector" tab should exist on the page
+    And I should see the hex viewer interface
+    When I type "Hello" into the hex viewer raw input
+    Then I should see hex bytes in the hex grid
+
   Scenario: Emoji as Data tablet loads and displays emojis
     When I click the icon for "New tab"
     And I click the icon for "New tablet"

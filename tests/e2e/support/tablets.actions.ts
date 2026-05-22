@@ -617,6 +617,33 @@ export class TabletsActions {
   }
 
   // ============================================================================
+  // Hex Viewer Tablet
+  // ============================================================================
+
+  async expectHexViewerInterfaceVisible() {
+    // The toolbar has an Input format selector with "Hex String", "Base64", "Raw Text", "Local File" options
+    const inputSelect = this.page.locator('select').filter({ hasText: /Hex String/i });
+    await expect(inputSelect).toBeVisible();
+  }
+
+  async typeIntoHexViewerRawInput(text: string) {
+    // Switch to Raw Text format so the source textarea is available
+    const inputSelect = this.page.locator('select').filter({ hasText: /Hex String/i });
+    await expect(inputSelect).toBeVisible();
+    await inputSelect.selectOption('raw');
+
+    const textarea = this.page.getByPlaceholder(/Enter raw text/i);
+    await expect(textarea).toBeVisible();
+    await textarea.fill(text);
+  }
+
+  async expectHexGridVisible() {
+    // Each byte cell has data-testid="byte-{offset}"; presence of byte-0 confirms the grid rendered
+    const firstByte = this.page.locator('[data-testid="byte-0"]');
+    await expect(firstByte).toBeVisible();
+  }
+
+  // ============================================================================
   // Emoji as Data Tablet
   // ============================================================================
 
