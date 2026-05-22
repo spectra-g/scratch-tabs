@@ -177,6 +177,99 @@ describe("HexViewerTablet", () => {
     });
   });
 
+  describe("undo/redo inputText sync", () => {
+    it("undo restores inputText alongside bytesHex", () => {
+      // "Heloo" with one edit: offset 3 changed from 0x6c ('l') to 0x6f ('o')
+      const mockState = createMockState({
+        inputFormat: "raw",
+        inputText: "Heloo",
+        bytesHex: "48656c6f6f",
+        editHistory: [{ offset: 3, oldValue: 0x6c, newValue: 0x6f }],
+        editHistoryIndex: 0,
+      });
+      render(HexViewerTablet.render(mockState, mockOnChange) as React.ReactElement);
+      fireEvent.click(screen.getByTitle("Undo (Ctrl+Z)"));
+      expect(mockOnChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            bytesHex: "48656c6c6f",
+            inputText: "Hello",
+          }),
+        })
+      );
+    });
+
+    it("redo re-applies inputText alongside bytesHex", () => {
+      // "Hello" with one undone edit: offset 4 would change from 0x6f ('o') to 0x41 ('A')
+      const mockState = createMockState({
+        inputFormat: "raw",
+        inputText: "Hello",
+        bytesHex: "48656c6c6f",
+        editHistory: [{ offset: 4, oldValue: 0x6f, newValue: 0x41 }],
+        editHistoryIndex: -1,
+      });
+      render(HexViewerTablet.render(mockState, mockOnChange) as React.ReactElement);
+      fireEvent.click(screen.getByTitle("Redo (Ctrl+Y)"));
+      expect(mockOnChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            bytesHex: "48656c6c41",
+            inputText: "HellA",
+          }),
+        })
+      );
+    });
+  });
+
+  describe("replace all", () => {
+    it("syncs inputText with updated bytesHex", () => {
+      const mockState = createMockState({
+        inputFormat: "raw",
+        inputText: "aaa",
+        bytesHex: "616161",
+        searchQuery: "a",
+        searchType: "text",
+        searchMatches: [0, 1, 2],
+        replaceQuery: "b",
+      });
+      render(HexViewerTablet.render(mockState, mockOnChange) as React.ReactElement);
+      fireEvent.click(screen.getByTitle("Toggle find & replace"));
+      fireEvent.click(screen.getByText("Replace All"));
+      expect(mockOnChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            bytesHex: "626262",
+            inputText: "bbb",
+          }),
+        })
+      );
+    });
+
+    it("skips overlapping matches to avoid buffer corruption", () => {
+      // bytes: [0x61, 0x61, 0x61]; search [0x61, 0x61] matches at offsets 0 AND 1 (overlapping)
+      // fix: only offset 0 is replaced → [0x58, 0x61]; bug: both replaced → [0x58, 0x58]
+      const mockState = createMockState({
+        inputFormat: "hex",
+        inputText: "61 61 61",
+        bytesHex: "616161",
+        searchQuery: "6161",
+        searchType: "hex",
+        searchMatches: [0, 1],
+        replaceQuery: "58",
+      });
+      render(HexViewerTablet.render(mockState, mockOnChange) as React.ReactElement);
+      fireEvent.click(screen.getByTitle("Toggle find & replace"));
+      fireEvent.click(screen.getByText("Replace All"));
+      expect(mockOnChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            bytesHex: "5861",
+          }),
+        })
+      );
+    });
+  });
+
   describe("createInitialState", () => {
     it("creates state with all required fields", () => {
       const state = HexViewerTablet.createInitialState();

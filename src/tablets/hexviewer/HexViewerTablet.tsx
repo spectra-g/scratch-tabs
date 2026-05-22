@@ -55,6 +55,7 @@ const replaceAllBytes = (data: Uint8Array, search: Uint8Array, replace: Uint8Arr
   const parts: Uint8Array[] = [];
   let cursor = 0;
   for (const pos of matches) {
+    if (pos < cursor) continue; // skip matches inside an already-replaced region
     if (pos > cursor) parts.push(data.slice(cursor, pos));
     parts.push(replace);
     cursor = pos + search.length;
@@ -66,6 +67,19 @@ const replaceAllBytes = (data: Uint8Array, search: Uint8Array, replace: Uint8Arr
   let offset = 0;
   for (const p of parts) { result.set(p, offset); offset += p.length; }
   return result;
+};
+
+const computeInputText = (hex: string, format: InputFormat, oldText: string): string => {
+  if (format === "file") return oldText;
+  if (format === "hex") return hex.match(/.{1,2}/g)?.join(" ") || hex;
+  if (format === "base64") {
+    const bytes = hexStrToBytes(hex);
+    let binary = "";
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+  }
+  if (format === "raw") return new TextDecoder().decode(hexStrToBytes(hex));
+  return oldText;
 };
 
 interface HexViewerTabletUIProps {
@@ -183,36 +197,6 @@ const HexViewerTabletUI: React.FC<HexViewerTabletUIProps> = ({ state, onChange, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, searchType, bytesHex, pageSize]);
 
-  // Keyboard shortcut handler (Ctrl+Z / Ctrl+Y / ?)
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "?") { setShowShortcuts(true); return; }
-      if ((e.ctrlKey || e.metaKey) && e.key === "z") {
-        e.preventDefault();
-        const hist = { entries: editHistory, index: editHistoryIndex };
-        const result = applyUndo(hist);
-        if (!result) return;
-        const { history: newHist, entry } = result;
-        const pos = entry.offset * 2;
-        const oldHex = entry.oldValue.toString(16).padStart(2, "0");
-        const newHexStr = stateRef.current.data.bytesHex.slice(0, pos) + oldHex + stateRef.current.data.bytesHex.slice(pos + 2);
-        updateData({ bytesHex: newHexStr, editHistory: newHist.entries, editHistoryIndex: newHist.index });
-      } else if ((e.ctrlKey || e.metaKey) && (e.key === "y" || (e.shiftKey && e.key === "z"))) {
-        e.preventDefault();
-        const hist = { entries: editHistory, index: editHistoryIndex };
-        const result = applyRedo(hist);
-        if (!result) return;
-        const { history: newHist, entry } = result;
-        const pos = entry.offset * 2;
-        const newHexByte = entry.newValue.toString(16).padStart(2, "0");
-        const newHexStr = stateRef.current.data.bytesHex.slice(0, pos) + newHexByte + stateRef.current.data.bytesHex.slice(pos + 2);
-        updateData({ bytesHex: newHexStr, editHistory: newHist.entries, editHistoryIndex: newHist.index });
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [editHistory, editHistoryIndex, updateData]);
-
   const searchBytesLength = useMemo(() => {
     if (!searchQuery) return 1;
     return searchType === "hex"
@@ -249,15 +233,17 @@ const HexViewerTabletUI: React.FC<HexViewerTabletUIProps> = ({ state, onChange, 
       replaceBytes = new TextEncoder().encode(replaceQuery);
     }
     const newBytes = replaceAllBytes(bytes, searchBytes, replaceBytes);
+    const newHexStr = bytesToHexStr(newBytes);
     updateData({
-      bytesHex: bytesToHexStr(newBytes),
+      bytesHex: newHexStr,
+      inputText: computeInputText(newHexStr, inputFormat, inputText),
       searchMatches: [],
       currentSearchMatchIndex: 0,
       selectedOffset: null,
       selectionStart: null,
       selectionEnd: null,
     });
-  }, [bytes, searchQuery, replaceQuery, searchType, updateData]);
+  }, [bytes, searchQuery, replaceQuery, searchType, inputFormat, inputText, updateData]);
 
   const handleJumpToOffset = useCallback((offset: number) => {
     if (offset < 0 || offset >= bytes.length) return;
@@ -340,20 +326,7 @@ const HexViewerTabletUI: React.FC<HexViewerTabletUIProps> = ({ state, onChange, 
     const newHex = bytesHex.slice(0, pos) + newHexByte + bytesHex.slice(pos + 2);
 
     const hist = pushEdit({ entries: editHistory, index: editHistoryIndex }, { offset, oldValue, newValue: val });
-
-    let newText = inputText;
-    if (inputFormat === "hex") {
-      newText = newHex.match(/.{1,2}/g)?.join(" ") || newHex;
-    } else if (inputFormat === "base64") {
-      const newBytes = hexStrToBytes(newHex);
-      let binary = "";
-      for (let i = 0; i < newBytes.length; i++) binary += String.fromCharCode(newBytes[i]);
-      newText = btoa(binary);
-    } else if (inputFormat === "raw") {
-      newText = new TextDecoder().decode(hexStrToBytes(newHex));
-    }
-
-    updateData({ bytesHex: newHex, inputText: newText, editHistory: hist.entries, editHistoryIndex: hist.index });
+    updateData({ bytesHex: newHex, inputText: computeInputText(newHex, inputFormat, inputText), editHistory: hist.entries, editHistoryIndex: hist.index });
   }, [bytesHex, inputFormat, inputText, editHistory, editHistoryIndex, updateData]);
 
   const handleUndo = useCallback(() => {
@@ -364,8 +337,8 @@ const HexViewerTabletUI: React.FC<HexViewerTabletUIProps> = ({ state, onChange, 
     const pos = entry.offset * 2;
     const oldHex = entry.oldValue.toString(16).padStart(2, "0");
     const newHexStr = bytesHex.slice(0, pos) + oldHex + bytesHex.slice(pos + 2);
-    updateData({ bytesHex: newHexStr, editHistory: newHist.entries, editHistoryIndex: newHist.index });
-  }, [bytesHex, editHistory, editHistoryIndex, updateData]);
+    updateData({ bytesHex: newHexStr, inputText: computeInputText(newHexStr, inputFormat, inputText), editHistory: newHist.entries, editHistoryIndex: newHist.index });
+  }, [bytesHex, inputFormat, inputText, editHistory, editHistoryIndex, updateData]);
 
   const handleRedo = useCallback(() => {
     const hist = { entries: editHistory, index: editHistoryIndex };
@@ -375,8 +348,24 @@ const HexViewerTabletUI: React.FC<HexViewerTabletUIProps> = ({ state, onChange, 
     const pos = entry.offset * 2;
     const newHexByte = entry.newValue.toString(16).padStart(2, "0");
     const newHexStr = bytesHex.slice(0, pos) + newHexByte + bytesHex.slice(pos + 2);
-    updateData({ bytesHex: newHexStr, editHistory: newHist.entries, editHistoryIndex: newHist.index });
-  }, [bytesHex, editHistory, editHistoryIndex, updateData]);
+    updateData({ bytesHex: newHexStr, inputText: computeInputText(newHexStr, inputFormat, inputText), editHistory: newHist.entries, editHistoryIndex: newHist.index });
+  }, [bytesHex, inputFormat, inputText, editHistory, editHistoryIndex, updateData]);
+
+  // Keyboard shortcut handler (Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y / ?)
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "?") { setShowShortcuts(true); return; }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        if (e.shiftKey) handleRedo(); else handleUndo();
+      } else if ((e.ctrlKey || e.metaKey) && e.key === "y") {
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [handleUndo, handleRedo]);
 
   const totalPages = Math.ceil(bytes.length / pageSize);
   const pageBytes = useMemo(() => {
