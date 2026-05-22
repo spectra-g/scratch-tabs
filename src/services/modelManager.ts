@@ -337,7 +337,10 @@ class ModelManager {
         }
       }
 
-      if (shouldUpdate) {
+      // Don't overwrite an explicitly locked language even when detection disagrees.
+      // Processors and the smart view callout above still ran; only the language
+      // assignment is skipped here.
+      if (shouldUpdate && !currentTab.languageLocked) {
         useRootStore
           .getState()
           .updateTabLanguage(tabId, newDetectedLanguage, false);

@@ -313,7 +313,7 @@ export const WelcomeScreen: React.FC = () => {
               />
               <h1 className="text-3xl font-mono font-medium text-main">SCRATCH_TABS</h1>
             </div>
-            <p className="text-muted text-sm font-mono mb-6">// v1.29.0</p>
+            <p className="text-muted text-sm font-mono mb-6">// v1.30.0</p>
 
             {/* Value Proposition */}
             <h2 className="text-2xl font-semibold text-main mb-4">

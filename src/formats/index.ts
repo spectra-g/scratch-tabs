@@ -43,6 +43,8 @@ import "./xml";
 import "./yaml";
 import "./yaml/index";
 import "./ndjson/index";
+import "./har";
+import "./har/index";
 import "./dotenv";
 import "./dotenv/index";
 import "./pem";
