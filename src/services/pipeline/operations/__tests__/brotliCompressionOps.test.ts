@@ -64,5 +64,20 @@ describe("Brotli Compression Pipeline Operations", () => {
             const brotli = await execute("compression.brotli", input);
             expect(brotli).not.toBe(gzipped);
         });
+
+        itIfSupported("respects outputEncoding=latin1 (regression: params was ignored)", async () => {
+            // With the bug, outputEncoding was ignored and always returned Base64
+            const input = "hello";
+            const base64Out = await execute("compression.brotli", input, { outputEncoding: "base64" });
+            const latin1Out = await execute("compression.brotli", input, { outputEncoding: "latin1" });
+            // Base64 output should not equal latin1 output
+            expect(base64Out).not.toBe(latin1Out);
+            // Base64 output should be valid base64
+            expect(base64Out).toMatch(/^[A-Za-z0-9+/]+=*$/);
+            // Latin1 output should contain non-base64 characters (raw binary)
+            // and should decompress correctly when fed back as latin1
+            const decompressed = await execute("compression.unbrotli", latin1Out, { inputEncoding: "latin1" });
+            expect(decompressed).toBe(input);
+        });
     });
 });

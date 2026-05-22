@@ -152,6 +152,26 @@ describe("CIDR Expand, CSV Dedupe, and Datetime Pipeline Operations", () => {
             await expect(execute("csv.dedupe", CSV_WITH_HEADERS, { column: "nonexistent" }))
                 .rejects.toThrow(/nonexistent/);
         });
+
+        it("treats column names starting with digits as names, not indices (regression: parseInt coercion)", async () => {
+            // "1st Name" starts with a digit — parseInt would return 1 (wrong column)
+            // The fix ensures only purely numeric strings are treated as indices
+            const input = "1st Name,email\nAlice,alice@example.com\nBob,bob@example.com\nAlice,alice@example.com";
+            const result = await execute("csv.dedupe", input, { column: "1st Name" });
+            const lines = result.split('\n');
+            // Should dedupe by the "1st Name" column (Alice appears twice → 3 lines total)
+            expect(lines).toHaveLength(3);
+            expect(lines[1]).toContain("Alice");
+            expect(lines[2]).toContain("Bob");
+        });
+
+        it("resolves purely numeric column spec as an index", async () => {
+            const input = "name,email\nAlice,a@x.com\nBob,b@x.com\nAlice,c@x.com";
+            // "0" should use index 0 (name column) — Alice appears twice
+            const result = await execute("csv.dedupe", input, { column: "0" });
+            const lines = result.split('\n');
+            expect(lines).toHaveLength(3);
+        });
     });
 
     // ── datetime.add / datetime.subtract ────────────────────────────────────

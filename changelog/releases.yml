@@ -3,6 +3,31 @@ config:
   max_versions: 100  # Maximum number of versions to display
 
 releases:
+  - version: "1.30.0"
+    type: "latest"
+    draft: false
+    date: "2026-05-22"
+    headline: "10 New Pipeline Operations — Ascii85, Punycode, Brotli, CIDR, CSV Dedupe & Date Arithmetic"
+    summary: "Ascii85/Base85 encode/decode, Punycode IDN encode/decode, Brotli compress/decompress, CIDR-to-IP-list expansion, CSV row deduplication, and date add/subtract — all offline, no new dependencies"
+    description: "Adds 10 new pipeline operations across six categories, closing further ground on CyberChef parity while keeping every operation entirely offline. Ascii85 (Base85) encode and decode complete the unusual-base encoding matrix after Base32 and Base58 — the format is used in PDFs, PostScript, and Python's base64.b85encode; the encoder handles the 'z' zero-group shorthand and partial last groups correctly. Punycode encode and decode convert internationalised domain names between Unicode form and ACE Punycode (xn-- prefix) using the punycode package already bundled in the app. Brotli compress and decompress use the browser-native CompressionStream('br') API available in Chrome 80+, Firefox 115+, and Safari 17+, with Base64 or raw Latin-1 output. CIDR Expand converts an IPv4 CIDR notation range (e.g. 192.168.1.0/24) into a newline-separated list of all addresses in that range, with toggles for including the network and broadcast addresses and a hard cap at 65,536 addresses to prevent accidental giant outputs. CSV Deduplicate Rows removes duplicate rows from CSV data, optionally scoped to a specific column by name or zero-based index with strict digit-only index detection to prevent column names like '1st Name' being silently coerced to an index, and a case-insensitive comparison mode. Date Add and Date Subtract perform calendar-aware date arithmetic using date-fns — input is any ISO date string or the literal 'now', the duration is specified as an amount and unit (seconds through years), and output can be ISO 8601, date-only, locale string, or Unix timestamp in milliseconds or seconds."
+    categories:
+      - name: "✨ New Pipeline Operations"
+        changes:
+          - "**Ascii85 / Base85 Encode:** Encode text to Adobe Ascii85 format (`<~` / `~>` delimiters, `z` zero-group shorthand, correct partial last-group handling) — used in PDFs, PostScript, and Python's `base64.b85encode`"
+          - "**Ascii85 / Base85 Decode:** Decode Ascii85 back to text; strips `<~` / `~>` delimiters automatically and tolerates embedded whitespace"
+          - "**Punycode Encode:** Convert a Unicode domain name to its ACE Punycode form (e.g. `münchen.de` → `xn--mnchen-3ya.de`) — handles full multi-label domains"
+          - "**Punycode Decode:** Convert an ACE Punycode domain back to Unicode (e.g. `xn--mnchen-3ya.de` → `münchen.de`); ASCII-only domains pass through unchanged"
+          - "**Brotli Compress:** Compress text using the browser-native `CompressionStream('br')` API (Chrome 80+, Firefox 115+, Safari 17+); outputs Base64 or raw Latin-1"
+          - "**Brotli Decompress:** Decompress Brotli-compressed data (Base64 or raw Latin-1 input) using the native `DecompressionStream('br')` API"
+          - "**CIDR Expand:** Expand an IPv4 CIDR range (e.g. `192.168.1.0/24`) to a newline-separated list of addresses; toggles for network and broadcast address inclusion; hard-capped at 65,536 addresses with a clear error for larger ranges"
+          - "**CSV Deduplicate Rows:** Remove duplicate rows from CSV data — dedupe on the full row or scope to a column by name or zero-based index; case-sensitive or case-insensitive comparison; preserves header row and first occurrence"
+          - "**Date Add:** Add a duration (seconds, minutes, hours, days, weeks, months, or years) to an ISO date string or `now`; outputs ISO 8601, date-only, locale string, or Unix timestamp"
+          - "**Date Subtract:** Subtract a duration from an ISO date string or `now` with the same unit and output options as Date Add"
+      - name: "🐛 Bug Fixes"
+        changes:
+          - "**Brotli Compress outputEncoding ignored:** The `outputEncoding` parameter (Base64 vs. Latin-1) was defined but never read because `params` was missing from the execute function signature — the operation always returned Base64 regardless of the selection"
+          - "**CSV Dedupe column name coercion:** Column names beginning with a digit (e.g. `1st Name`, `2024 Revenue`) were silently resolved to their leading numeric value as a column index via `parseInt`, targeting the wrong column — now uses a strict digit-only regex so only purely numeric strings are treated as indices"
+
   - version: "1.29.0"
     type: "latest"
     draft: false

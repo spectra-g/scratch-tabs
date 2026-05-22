@@ -341,7 +341,7 @@ export const compressionOperations: OperationDefinition[] = [
                 ]
             }
         ],
-        execute: async (input) => {
+        execute: async (input, params) => {
             if (!input) return "";
             if (typeof CompressionStream === 'undefined') {
                 throw new Error("CompressionStream API not supported in this environment");
@@ -363,7 +363,7 @@ export const compressionOperations: OperationDefinition[] = [
                 const bytes = new Uint8Array(buf);
                 let binary = '';
                 bytes.forEach(b => { binary += String.fromCharCode(b); });
-                return btoa(binary);
+                return params.outputEncoding === 'latin1' ? binary : btoa(binary);
             } catch (e) {
                 throw new Error("Brotli compression failed: " + (e as Error).message);
             }

@@ -1217,12 +1217,12 @@ export const dataFormatOperations: OperationDefinition[] = [
             const headerLine = hasHeaders ? lines[0] : null;
             const dataLines = hasHeaders ? lines.slice(1) : lines;
 
-            // Resolve column index
+            // Resolve column index — use strict digit-only test so names like "1st Name" aren't
+            // silently coerced to index 1 by parseInt
             let colIndex = -1;
             if (columnSpec !== "") {
-                const numeric = parseInt(columnSpec, 10);
-                if (!isNaN(numeric)) {
-                    colIndex = numeric;
+                if (/^\d+$/.test(columnSpec)) {
+                    colIndex = parseInt(columnSpec, 10);
                 } else if (headerLine) {
                     const headers = parseRow(headerLine);
                     colIndex = headers.findIndex(h => h.toLowerCase() === columnSpec.toLowerCase());
