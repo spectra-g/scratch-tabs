@@ -1,5 +1,5 @@
 import { TabletActionContext, TabletAction } from "./types";
-import { FileText, Type, Shield, Network, Palette, QrCode } from "../components/Icons";
+import { FileText, Type, Shield, Network, Palette, QrCode, Binary } from "../components/Icons";
 import { tabletActionService } from "../services/tabletActionService";
 
 export interface TabletMetadata {
@@ -443,6 +443,39 @@ export const tabletMetadata: TabletMetadata[] = [
             },
           ];
         }
+      }
+      return [];
+    },
+  },
+  {
+    id: "hexviewer",
+    label: "Hex Viewer / Binary Inspector",
+    description: "A professional, premium offline hex viewer, binary inspector, and byte editor with data decoding, Shannon entropy analysis, and byte distribution stats.",
+    keywords: ["hex", "binary", "base64", "inspector", "editor", "bytes", "entropy", "raw", "octal", "viewer"],
+    getActionsForContext: (context) => {
+      if (context.source === "editor-tab" && context.content && context.content.length > 0) {
+        return [
+          {
+            id: "hexviewer.inspect",
+            label: "Open in Hex Viewer",
+            icon: Binary,
+            action: () => {
+              tabletActionService.handleAction({
+                targetTablet: "hexviewer",
+                action: "new-tab",
+                payload: {
+                  content: context.content || "",
+                  title: context.tab?.title,
+                },
+                source: {
+                  tabId: context.tab?.id,
+                  titleHint: "Hex Viewer",
+                  side: context.side,
+                },
+              });
+            },
+          },
+        ];
       }
       return [];
     },

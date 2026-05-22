@@ -15,12 +15,88 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.28.0';
+export const APP_VERSION = '1.29.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.28.0",
+    "version": "1.29.0",
     "type": "latest",
+    "date": "2026-05-21",
+    "headline": "Hex Viewer Expanded (12 New Capabilities), PEM / X.509 & .env Smart Views, 11 New Pipeline Operations",
+    "summary": "Major hex viewer expansion with magic-byte detection, find & replace, undo/redo, strings extraction, 256-bucket histogram, checksums, decoded text panel, drag-and-drop, jump-to-offset, keyboard shortcuts, and 16 MB file support; full certificate viewer with chain analysis; interactive .env editor; plus Morse, NATO, Shannon entropy, URL defang/refang, and CSV pipeline operations",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Hex Viewer / Binary Inspector:** Professional offline hex viewer supporting four input modes — paste raw text, hex string, or Base64, or upload any binary file up to 16 MB; all rendering and analysis runs entirely in the browser",
+          "**Interactive Hex Grid:** Paginated grid with configurable bytes-per-row (8/16/32) and page size; click a byte to select it, Shift+click to extend the selection to a range",
+          "**In-Grid Byte Editing:** Type hex nibbles directly into the selected byte cell; changes sync back to the source editor panel in real time",
+          "**Undo / Redo for Byte Edits:** Every byte edit is recorded in a 100-entry history stack; Ctrl+Z undoes the last edit, Ctrl+Y or Ctrl+Shift+Z redoes it — edits made after an undo correctly prune the redo branch",
+          "**Find & Replace:** A toggle button in the search bar reveals a replace field; Replace All substitutes every occurrence of the search sequence (text or hex bytes) in a single pass, handles variable-length replacements correctly",
+          "**Magic-Byte File Type Detection:** On every file load, the first 16 bytes are scanned against a 29-signature table — PNG, JPEG, GIF, PDF, ZIP, ELF, PE, Mach-O, SQLite, MP4, GZip, BZip2, RAR, 7-Zip, XZ, HDF5, and more; the detected type, MIME, and extension are shown in a banner below the toolbar",
+          "**Jump-to-Offset:** Toolbar input accepts a hex address (0x1A3F00) or decimal offset and navigates instantly to the containing page with the byte selected",
+          "**Drag-and-Drop File Loading:** Drop any binary file onto the empty state dropzone or the loaded hex grid at any time; the hex viewer suppresses the app-level file drop handler while mounted so drops stay local",
+          "**Strings Extraction Panel:** Sidebar 'Strings' tab scans the buffer for runs of ≥N consecutive printable ASCII bytes (minimum length configurable: 3–16); each result lists its offset and length; a live filter narrows the list; clicking any row jumps the grid to that offset",
+          "**256-Bucket Byte Histogram:** Sidebar 'Histogram' tab renders one bar per byte value 0x00–0xFF normalised to the tallest bar, colour-coded by category (null / control / ASCII / extended); hover tooltip shows exact count and percentage — flat histogram indicates encrypted or compressed data, ASCII spike indicates text",
+          "**Checksum Panel:** Sidebar 'Checksums' tab computes CRC32 (IEEE 802.3 lookup table), SHA-1, and SHA-256 (SubtleCrypto) asynchronously for the full buffer or the active selection; one-click copy on each result",
+          "**Decoded Text Panel:** Inspector tab shows the selected bytes (or the first 256 bytes when nothing is selected) decoded as UTF-8, UTF-16 LE, UTF-16 BE, and Latin-1 — replacement characters mark invalid sequences",
+          "**Sidebar Tabs:** Sidebar is reorganised into four tabs — Inspect (data inspector + decoded text), Strings, Histogram, and Checksums — keeping the inspector uncluttered while surfacing all analysis panels",
+          "**Python & C/JS Escaped String Exports:** Two new formats join the Export menu — Python bytes literal (`b'\\x48\\x65...'`) and C/JS hex-escaped string (`\\x48\\x65...`); both apply to the full buffer or active selection",
+          "**16 MB File Size Support:** File size cap raised from 2 MB to 16 MB; a non-blocking warning appears for files above 8 MB",
+          "**Keyboard Shortcut Reference:** Press `?` or click the toolbar help button to open an overlay listing all navigation, selection, editing, and search shortcuts",
+          "**Data Inspector Sidebar:** Decodes the selected byte offset into every standard numeric type — Binary (8-bit), Int8, Uint8, Int16, Uint16, Int32, Uint32, Int64, Uint64 (BigInt), Float32, Float64, and ASCII character; endianness toggle switches all multi-byte reads between little-endian and big-endian instantly",
+          "**Shannon Entropy Analysis:** Calculates information density for the full buffer or the active selection with a rated label — Low (structured), Low-Medium (text/source), Medium (dense binary/executable), High (compressed/media), Very High (encrypted/compressed)",
+          "**Search:** Find any text string or hex sequence across the buffer; match count and current position are shown in the toolbar; next/previous navigation jumps to each match and pages to it automatically",
+          "**Export:** Copy the full buffer or active selection as space-separated hex, raw hex, Base64, C array (`unsigned char rawData[]`), JSON number array, Python bytes literal, C/JS hex-escaped string, or download as a raw binary file",
+          "**Smart Format Detection:** When content is sent from an editor tab, the input format is auto-detected — hex strings are opened in hex mode, Base64-padded strings in base64 mode, everything else as raw text",
+          "**Context Action:** Any editor tab gains an 'Open in Hex Viewer' option in the right-click menu, sending the tab's content directly to a new Hex Viewer tab",
+          "**PEM / X.509 Smart View:** Parses certificates, private keys, public keys, and CSRs in the browser using a pure-JS DER/ASN.1 engine — no native dependencies, no server calls",
+          "**Certificate Detail Panel:** Subject and issuer distinguished names, serial number, version, signature algorithm, validity dates, Subject Alternative Names (DNS, IP, Email, URI), Key Usage, and Extended Key Usage",
+          "**Validity Timeline:** Visual progress bar showing where today falls in the certificate's validity window — green when healthy, amber when expiring within 30 days, red when expired",
+          "**SHA-256 Fingerprint:** Computed asynchronously via the SubtleCrypto Web API and displayed as uppercase colon-separated hex pairs",
+          "**RSA Key-Size Detection:** Reads the SubjectPublicKeyInfo modulus to report key length in bits; colour-coded badge highlights weak keys (<2048-bit in red, ≥4096-bit in green)",
+          "**Certificate Chain Analysis:** Links intermediate and leaf certificates to their issuer by matching subject/issuer CN and O fields; chain-root certificates are labelled",
+          "**CA, Self-Signed & Root Badges:** Each certificate card shows the relevant badges so the role in a chain is immediately clear",
+          "**Split Certificates:** When a PEM bundle contains multiple certificates, a Split button opens each as its own tab with the CN as the title",
+          "**Key & CSR Support:** Private key blocks show key type and a 'never share' warning; public key blocks show key type; CSR blocks surface the subject DN",
+          "**.env Smart View:** Interactive variable editor — click any key or value to edit inline; commits on Enter or blur, cancels on Escape",
+          "**Type Inference & Icons:** Each variable is annotated as URL, boolean, number, JSON, secret, or string with a matching icon and colour",
+          "**Secret Masking:** Keys matching secret patterns (API_KEY, TOKEN, PASSWORD…) are auto-masked with a reveal/hide toggle",
+          "**Sort A → Z:** Alphabetically sorts keys while keeping comment-delimited sections intact — comments travel with their block",
+          "**Group by Prefix:** Reorganises variables by their first underscore-delimited component (DB_, APP_, AWS_…) with auto-generated section headers",
+          "**Remove Duplicates:** Scans for repeated keys and keeps only the last occurrence, matching shell semantics",
+          "**Clean Operations:** Strip comments, collapse consecutive blank lines to one, or remove all blank lines",
+          "**Export as JSON / Shell / Docker:** One-click conversion opens the variable set as a new tab — pretty JSON object, `export KEY=\"value\"` shell script, or Docker `-e KEY=\"value\"` flags",
+          "**Validation Panel:** Surfaces duplicate keys and empty values with counts; duplicate-key link triggers remove-duplicates in one click",
+          "**Search & Filter:** Live search across key names and values narrows the visible rows without modifying the file",
+          "**Add & Delete Variables:** Add button appends a new editable row; per-row delete removes the variable from the file",
+          "**Morse Code Encode/Decode:** Convert text to Morse code (dots and dashes) and back — configurable word separator (slash, pipe, or newline); round-trips correctly for all alphanumeric and punctuation characters in the standard ITU table",
+          "**NATO Phonetic Alphabet:** Convert text to NATO words (A → Alfa, B → Bravo…) with delimiter options (space, newline, comma, dash) and uppercase toggle — covers A–Z, 0–9, and space",
+          "**Unicode Escape/Unescape:** Escape characters to \\uXXXX sequences (non-ASCII only or all characters) and decode them back — handles both \\uXXXX and \\u{XXXXX} surrogate-pair form for emoji and supplementary code points",
+          "**Shannon Entropy:** Calculate information density in bits/character — full report mode shows entropy, length, unique character count, and theoretical maximum; value-only mode outputs a single number for pipeline chaining",
+          "**Defang URL:** Replace https:// → hxxps://, http:// → hxxp://, and dots → [.] for safe sharing in threat intelligence reports and IOC feeds — each substitution is independently toggleable",
+          "**Refang URL:** Reverse all common defang substitutions (hxxps://, [.], [@], [:]) back to working URLs — handles case-insensitive hxxp variants and colon-bracket notation",
+          "**Filter CSV Rows:** Keep rows where a column matches a condition — supports contains, not-contains, equals, not-equals, regex, greater-than, and less-than operators with optional case sensitivity; works by header name or column index",
+          "**Sort CSV:** Sort rows by any column ascending or descending — auto-detects numeric columns or use explicit string/number mode; preserves the header row",
+          "**Transpose CSV:** Swap rows and columns — each input row becomes a column in the output; handles unequal row lengths by padding with empty cells; preserves quoting throughout"
+        ]
+      },
+      {
+        "name": "Bug Fixes",
+        "changes": [
+          "**Tab bar action buttons obscured by scroll gradient:** The scroll indicator gradients are now scoped to the tab scroll area via a dedicated wrapper element; previously the right-side gradient could paint over the Plus, Clipboard, and Extension buttons when the tab bar was scrolled left, making the icons go dark",
+          "**Context menu clipped at viewport edges:** The tab context menu now measures its rendered dimensions with `useLayoutEffect` and adjusts its position before becoming visible, preventing the menu from being cut off at the bottom or right edges of the viewport",
+          "**Submenu overflows viewport right edge:** Context menu submenus that would extend beyond the right edge of the viewport now flip to open leftward instead; previously they would render off-screen and be inaccessible",
+          "**Hex Viewer route broken by slash in label:** The URL slug generator now strips `/` and `\\` from tablet labels before hyphenating, preventing 'Hex Viewer / Binary Inspector' from generating a two-segment path that React Router could not match",
+          "**Hex Viewer drag-and-drop file content wiped on load:** Dropping a file while the input format was set to 'raw', 'hex', or 'base64' caused the inputText→bytesHex sync effect to fire immediately after load and clear the buffer; the file reader callback now sets inputFormat to 'file' atomically so the sync effect's early-return fires correctly",
+          "**Hex Viewer drag-and-drop conflicts with app-level file drop handler:** The hex viewer now calls setGlobalDragDropSuppressed(true) on mount (cleared on unmount), matching the pattern used by the Checksum tablet; drag events also call stopPropagation to prevent the DragDropOverlay from intercepting drops intended for the hex viewer"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.28.0",
+    "type": "release",
     "date": "2026-05-19",
     "headline": "SSH Key Generator & TOTP 2FA Generator",
     "summary": "Two new offline security tablets: generate Ed25519, RSA, and ECDSA SSH key pairs with passphrase encryption, inspect and validate any key — plus a multi-account TOTP authenticator with animated countdown rings",

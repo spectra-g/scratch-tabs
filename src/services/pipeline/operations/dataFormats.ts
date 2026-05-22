@@ -782,7 +782,365 @@ export const dataFormatOperations: OperationDefinition[] = [
         },
         keywords: ["json", "markdown", "table", "convert", "documentation"],
         source: "core",
-    }
+    },
+
+    // === CSV FILTER / SORT / TRANSPOSE ===
+    {
+        id: "csv.filter-rows",
+        name: "Filter CSV Rows",
+        description: "Keep rows where a column matches a condition",
+        categories: ["filtering", "utilities"],
+        parameters: [
+            {
+                name: "column",
+                label: "Column",
+                type: "string",
+                default: "0",
+                description: "Column index (0-based) or header name",
+            },
+            {
+                name: "operator",
+                label: "Operator",
+                type: "select",
+                default: "contains",
+                options: [
+                    { value: "contains", label: "Contains" },
+                    { value: "not-contains", label: "Does not contain" },
+                    { value: "equals", label: "Equals" },
+                    { value: "not-equals", label: "Not equals" },
+                    { value: "regex", label: "Matches regex" },
+                    { value: "gt", label: "Greater than (number)" },
+                    { value: "lt", label: "Less than (number)" },
+                ],
+            },
+            {
+                name: "value",
+                label: "Value",
+                type: "string",
+                default: "",
+                description: "Value or pattern to compare against",
+            },
+            {
+                name: "caseSensitive",
+                label: "Case Sensitive",
+                type: "boolean",
+                default: false,
+            },
+            {
+                name: "hasHeaders",
+                label: "Has Headers",
+                type: "boolean",
+                default: true,
+            },
+            {
+                name: "delimiter",
+                label: "Delimiter",
+                type: "select",
+                default: ",",
+                options: [
+                    { value: ",", label: "Comma" },
+                    { value: "\t", label: "Tab" },
+                    { value: ";", label: "Semicolon" },
+                    { value: "|", label: "Pipe" },
+                ],
+            },
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const columnSpec = (params.column as string) ?? "0";
+            const operator = (params.operator as string) ?? "contains";
+            const filterValue = (params.value as string) ?? "";
+            const caseSensitive = params.caseSensitive ?? false;
+            const hasHeaders = params.hasHeaders ?? true;
+            const delimiter = (params.delimiter as string) ?? ",";
+
+            const lines = input.split("\n");
+            if (lines.length === 0) return "";
+
+            const parseRow = (row: string): string[] => {
+                const cells: string[] = [];
+                let cell = "";
+                let inQuotes = false;
+                for (let i = 0; i < row.length; i++) {
+                    const ch = row[i];
+                    if (ch === '"') {
+                        if (inQuotes && row[i + 1] === '"') { cell += '"'; i++; }
+                        else inQuotes = !inQuotes;
+                    } else if (ch === delimiter && !inQuotes) {
+                        cells.push(cell.trim());
+                        cell = "";
+                    } else {
+                        cell += ch;
+                    }
+                }
+                cells.push(cell.trim());
+                return cells.map((c) => {
+                    const t = c.trim();
+                    return t.startsWith('"') && t.endsWith('"') ? t.slice(1, -1).replace(/""/g, '"') : t;
+                });
+            };
+
+            const headerRow = hasHeaders ? lines[0] : null;
+            const dataLines = hasHeaders ? lines.slice(1) : lines;
+
+            let columnIndex: number;
+            if (hasHeaders && headerRow) {
+                const headers = parseRow(headerRow);
+                const numericIndex = parseInt(columnSpec);
+                if (!isNaN(numericIndex)) {
+                    columnIndex = numericIndex;
+                } else {
+                    columnIndex = headers.findIndex(
+                        (h) => h.toLowerCase() === columnSpec.toLowerCase(),
+                    );
+                    if (columnIndex === -1) {
+                        throw new Error(`Column "${columnSpec}" not found`);
+                    }
+                }
+            } else {
+                columnIndex = parseInt(columnSpec);
+                if (isNaN(columnIndex)) throw new Error("Column must be numeric when hasHeaders is false");
+            }
+
+            const matches = (cellValue: string): boolean => {
+                const a = caseSensitive ? cellValue : cellValue.toLowerCase();
+                const b = caseSensitive ? filterValue : filterValue.toLowerCase();
+                switch (operator) {
+                    case "contains": return a.includes(b);
+                    case "not-contains": return !a.includes(b);
+                    case "equals": return a === b;
+                    case "not-equals": return a !== b;
+                    case "regex": {
+                        const flags = caseSensitive ? "" : "i";
+                        try { return new RegExp(filterValue, flags).test(cellValue); }
+                        catch { return false; }
+                    }
+                    case "gt": return parseFloat(cellValue) > parseFloat(filterValue);
+                    case "lt": return parseFloat(cellValue) < parseFloat(filterValue);
+                    default: return true;
+                }
+            };
+
+            const filtered = dataLines.filter((line) => {
+                if (!line.trim()) return false;
+                const cells = parseRow(line);
+                const cell = columnIndex < cells.length ? cells[columnIndex] : "";
+                return matches(cell);
+            });
+
+            const result = headerRow ? [headerRow, ...filtered] : filtered;
+            return result.join("\n");
+        },
+        keywords: ["csv", "filter", "rows", "query", "search", "where"],
+        source: "core",
+    },
+    {
+        id: "csv.sort",
+        name: "Sort CSV",
+        description: "Sort CSV rows by a column value",
+        categories: ["sorting", "utilities"],
+        parameters: [
+            {
+                name: "column",
+                label: "Column",
+                type: "string",
+                default: "0",
+                description: "Column index (0-based) or header name to sort by",
+            },
+            {
+                name: "order",
+                label: "Order",
+                type: "select",
+                default: "asc",
+                options: [
+                    { value: "asc", label: "Ascending" },
+                    { value: "desc", label: "Descending" },
+                ],
+            },
+            {
+                name: "type",
+                label: "Sort Type",
+                type: "select",
+                default: "auto",
+                options: [
+                    { value: "auto", label: "Auto (numeric if possible)" },
+                    { value: "string", label: "String" },
+                    { value: "number", label: "Number" },
+                ],
+            },
+            {
+                name: "hasHeaders",
+                label: "Has Headers",
+                type: "boolean",
+                default: true,
+            },
+            {
+                name: "delimiter",
+                label: "Delimiter",
+                type: "select",
+                default: ",",
+                options: [
+                    { value: ",", label: "Comma" },
+                    { value: "\t", label: "Tab" },
+                    { value: ";", label: "Semicolon" },
+                    { value: "|", label: "Pipe" },
+                ],
+            },
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const columnSpec = (params.column as string) ?? "0";
+            const order = (params.order as string) ?? "asc";
+            const sortType = (params.type as string) ?? "auto";
+            const hasHeaders = params.hasHeaders ?? true;
+            const delimiter = (params.delimiter as string) ?? ",";
+
+            const lines = input.split("\n").filter((l) => l.trim());
+            if (lines.length === 0) return "";
+
+            const parseRow = (row: string): string[] => {
+                const cells: string[] = [];
+                let cell = "";
+                let inQuotes = false;
+                for (let i = 0; i < row.length; i++) {
+                    const ch = row[i];
+                    if (ch === '"') {
+                        if (inQuotes && row[i + 1] === '"') { cell += '"'; i++; }
+                        else inQuotes = !inQuotes;
+                    } else if (ch === delimiter && !inQuotes) {
+                        cells.push(cell.trim());
+                        cell = "";
+                    } else {
+                        cell += ch;
+                    }
+                }
+                cells.push(cell.trim());
+                return cells.map((c) => {
+                    const t = c.trim();
+                    return t.startsWith('"') && t.endsWith('"') ? t.slice(1, -1).replace(/""/g, '"') : t;
+                });
+            };
+
+            const headerRow = hasHeaders ? lines[0] : null;
+            const dataLines = hasHeaders ? lines.slice(1) : lines;
+
+            let columnIndex: number;
+            if (hasHeaders && headerRow) {
+                const headers = parseRow(headerRow);
+                const numericIndex = parseInt(columnSpec);
+                if (!isNaN(numericIndex)) {
+                    columnIndex = numericIndex;
+                } else {
+                    columnIndex = headers.findIndex(
+                        (h) => h.toLowerCase() === columnSpec.toLowerCase(),
+                    );
+                    if (columnIndex === -1) {
+                        throw new Error(`Column "${columnSpec}" not found`);
+                    }
+                }
+            } else {
+                columnIndex = parseInt(columnSpec);
+                if (isNaN(columnIndex)) throw new Error("Column must be numeric when hasHeaders is false");
+            }
+
+            const getValue = (line: string): string => {
+                const cells = parseRow(line);
+                return columnIndex < cells.length ? cells[columnIndex] : "";
+            };
+
+            const sorted = [...dataLines].sort((a, b) => {
+                const va = getValue(a);
+                const vb = getValue(b);
+                let cmp: number;
+
+                const numA = parseFloat(va);
+                const numB = parseFloat(vb);
+                const useNumeric =
+                    sortType === "number" ||
+                    (sortType === "auto" && !isNaN(numA) && !isNaN(numB));
+
+                if (useNumeric) {
+                    cmp = (isNaN(numA) ? 0 : numA) - (isNaN(numB) ? 0 : numB);
+                } else {
+                    cmp = va.localeCompare(vb);
+                }
+
+                return order === "desc" ? -cmp : cmp;
+            });
+
+            const result = headerRow ? [headerRow, ...sorted] : sorted;
+            return result.join("\n");
+        },
+        keywords: ["csv", "sort", "order", "alphabetical", "numeric"],
+        source: "core",
+    },
+    {
+        id: "csv.transpose",
+        name: "Transpose CSV",
+        description: "Swap rows and columns — each row becomes a column",
+        categories: ["conversion", "utilities"],
+        parameters: [
+            {
+                name: "delimiter",
+                label: "Delimiter",
+                type: "select",
+                default: ",",
+                options: [
+                    { value: ",", label: "Comma" },
+                    { value: "\t", label: "Tab" },
+                    { value: ";", label: "Semicolon" },
+                    { value: "|", label: "Pipe" },
+                ],
+            },
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const delimiter = (params.delimiter as string) ?? ",";
+
+            const lines = input.split("\n").filter((l) => l.trim());
+            if (lines.length === 0) return "";
+
+            const parseRow = (row: string): string[] => {
+                const cells: string[] = [];
+                let cell = "";
+                let inQuotes = false;
+                for (let i = 0; i < row.length; i++) {
+                    const ch = row[i];
+                    if (ch === '"') {
+                        if (inQuotes && row[i + 1] === '"') { cell += '"'; i++; }
+                        else inQuotes = !inQuotes;
+                    } else if (ch === delimiter && !inQuotes) {
+                        cells.push(cell);
+                        cell = "";
+                    } else {
+                        cell += ch;
+                    }
+                }
+                cells.push(cell);
+                return cells;
+            };
+
+            const escapeCell = (val: string): string => {
+                if (val.includes(delimiter) || val.includes('"') || val.includes("\n")) {
+                    return `"${val.replace(/"/g, '""')}"`;
+                }
+                return val;
+            };
+
+            const rows = lines.map(parseRow);
+            const colCount = Math.max(...rows.map((r) => r.length));
+
+            const transposed: string[] = [];
+            for (let col = 0; col < colCount; col++) {
+                const newRow = rows.map((row) => escapeCell(row[col] ?? ""));
+                transposed.push(newRow.join(delimiter));
+            }
+
+            return transposed.join("\n");
+        },
+        keywords: ["csv", "transpose", "pivot", "rotate", "columns", "rows"],
+        source: "core",
+    },
 ];
 
 // Self-register all operations

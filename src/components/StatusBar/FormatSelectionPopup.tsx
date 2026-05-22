@@ -15,8 +15,12 @@ export const FormatSelectionPopup: React.FC<FormatSelectionPopupProps> = ({
   title,
 }) => {
   const popupRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    searchInputRef.current?.focus();
+  }, []);
 
   // Filter formats based on search term
   const filteredFormats = useMemo(() => {
@@ -27,13 +31,6 @@ export const FormatSelectionPopup: React.FC<FormatSelectionPopupProps> = ({
       !item.isSeparator && item.name.toLowerCase().includes(term)
     );
   }, [formats, searchTerm]);
-
-  // Focus input when popup opens
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, []);
 
   // Handle click outside to close - using a more direct approach that works better with Monaco editor
   useEffect(() => {
@@ -70,7 +67,7 @@ export const FormatSelectionPopup: React.FC<FormatSelectionPopupProps> = ({
     >
       <div className="px-3 py-2 border-b border-base">
         <input
-          ref={inputRef}
+          ref={searchInputRef}
           type="text"
           placeholder="Search formats..."
           value={searchTerm}

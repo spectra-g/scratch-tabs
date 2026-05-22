@@ -521,7 +521,11 @@ class ModelManager {
       }
     }
 
-    const tabWithContent = await this.ensureTabContent(tab);
+    // Read the freshest tab state from the store to avoid stale React closure content.
+    // EditorInstance may mount with a slightly-behind activeTab if React commits the
+    // smart-view-close transition before the Zustand subscription re-renders the component.
+    const freshTab = useTabsStore.getState().tabs.find((t) => t.id === tab.id);
+    const tabWithContent = await this.ensureTabContent(freshTab ?? tab);
     const content = tabWithContent.content || "";
     this.lastContent.set(tab.id, content); // Set initial content for comparison
 

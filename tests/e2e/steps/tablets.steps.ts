@@ -265,6 +265,22 @@ Then('I should see a countdown timer', async function () {
 });
 
 // ============================================================================
+// Hex Viewer Tablet Steps
+// ============================================================================
+
+Then('I should see the hex viewer interface', async function () {
+  await this.tablets.expectHexViewerInterfaceVisible();
+});
+
+When('I type {string} into the hex viewer raw input', async function (text: string) {
+  await this.tablets.typeIntoHexViewerRawInput(text);
+});
+
+Then('I should see hex bytes in the hex grid', async function () {
+  await this.tablets.expectHexGridVisible();
+});
+
+// ============================================================================
 // Emoji as Data Tablet Steps
 // ============================================================================
 

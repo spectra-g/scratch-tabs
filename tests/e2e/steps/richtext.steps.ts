@@ -279,6 +279,8 @@ When('I select the text {string}', async function (text: string) {
         if (selection) {
           selection.removeAllRanges();
           selection.addRange(range);
+          // Notify ProseMirror so it syncs its internal selection state
+          document.dispatchEvent(new Event('selectionchange'));
           break;
         }
       }
@@ -422,11 +424,12 @@ When('I select all text in the Rich Text editor', async function () {
     const range = document.createRange();
     range.selectNodeContents(editor);
 
-    // Apply the selection
+    // Apply the selection and notify ProseMirror
     const selection = window.getSelection();
     if (selection) {
       selection.removeAllRanges();
       selection.addRange(range);
+      document.dispatchEvent(new Event('selectionchange'));
     }
   });
 });

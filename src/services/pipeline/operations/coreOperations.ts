@@ -1291,6 +1291,52 @@ const coreOperations: OperationDefinition[] = [
         keywords: ["javascript", "js", "script", "code", "custom"],
         source: "core",
     },
+
+    // === ANALYSIS ===
+    {
+        id: "text.entropy",
+        name: "Shannon Entropy",
+        description: "Calculate the Shannon entropy of the input text (bits per character)",
+        categories: ["text", "utilities"],
+        parameters: [
+            {
+                name: "format",
+                label: "Output Format",
+                type: "select",
+                default: "full",
+                options: [
+                    { value: "full", label: "Full report" },
+                    { value: "value", label: "Value only (bits/char)" },
+                ],
+            },
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const format = (params.format as string) ?? "full";
+            if (!input) return format === "value" ? "0" : "Entropy: 0.0000 bits/char\nLength: 0 characters\nUnique characters: 0";
+
+            const freq: Record<string, number> = {};
+            for (const char of input) {
+                freq[char] = (freq[char] ?? 0) + 1;
+            }
+
+            const len = input.length;
+            let entropy = 0;
+            for (const count of Object.values(freq)) {
+                const p = count / len;
+                entropy -= p * Math.log2(p);
+            }
+
+            const value = entropy.toFixed(4);
+            if (format === "value") return value;
+
+            const uniqueChars = Object.keys(freq).length;
+            const maxEntropy = uniqueChars > 1 ? Math.log2(uniqueChars).toFixed(4) : "0.0000";
+            return `Entropy: ${value} bits/char\nLength: ${len} characters\nUnique characters: ${uniqueChars}\nMax possible: ${maxEntropy} bits/char`;
+        },
+        keywords: ["entropy", "shannon", "information", "security", "analysis", "randomness"],
+        source: "core",
+    },
 ];
 
 // Self-register

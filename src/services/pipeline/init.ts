@@ -27,6 +27,7 @@ import "./operations/code";
 import "./operations/crypto";
 import "./operations/utilities";
 import "./operations/xml";
+import "./operations/network";
 
 // Auto-discovery for formats/tablets is now handled in `./operations/discovery.ts`
 // which should be imported in the main application entry point (main.tsx)

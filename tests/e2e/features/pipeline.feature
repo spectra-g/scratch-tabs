@@ -528,3 +528,76 @@ Feature: Transformations Pipeline
     Then the pipeline should have 2 steps
     And the pipeline output should contain "<name>test</name>"
     And the pipeline output should contain "<value>123</value>"
+
+  Scenario: Defang URL operation
+    When I click the icon for "New tab"
+    And I type "https://evil.example.com/malware" into the editor
+    And I right-click the "Scratch 1" tab
+    And I select "Transformation Pipeline" from the context menu
+    And I add the "Defang URL" operation
+    Then the pipeline output should contain "hxxps://"
+    And the pipeline output should contain "[.]"
+    And the pipeline output should show as modified
+
+  Scenario: Defang URL then Refang URL round-trips to original
+    When I click the icon for "New tab"
+    And I type "https://evil.example.com/path" into the editor
+    And I right-click the "Scratch 1" tab
+    And I select "Transformation Pipeline" from the context menu
+    And I add the "Defang URL" operation
+    And I add the "Refang URL" operation
+    Then the pipeline should have 2 steps
+    And the pipeline output should be "https://evil.example.com/path"
+
+  Scenario: Sort CSV rows by a column
+    When I click the icon for "New tab"
+    And I type the following content into the active editor:
+      """
+      name,score
+      Charlie,85
+      Alice,92
+      Bob,78
+      """
+    And I right-click the "Scratch 1" tab
+    And I select "Transformation Pipeline" from the context menu
+    And I add the "Sort CSV" operation
+    Then the pipeline output should contain "Alice"
+    And the pipeline output should contain "Charlie"
+    And the pipeline output should contain "Bob"
+
+  Scenario: Filter CSV rows by column value
+    When I click the icon for "New tab"
+    And I type the following content into the active editor:
+      """
+      name,city
+      Alice,London
+      Bob,Paris
+      Charlie,London
+      """
+    And I right-click the "Scratch 1" tab
+    And I select "Transformation Pipeline" from the context menu
+    And I add the "Filter CSV Rows" operation
+    And I set parameter "Value" to "London"
+    Then the pipeline output should contain "Alice"
+    And the pipeline output should contain "Charlie"
+    And the pipeline output should contain "London"
+
+  Scenario: Shannon Entropy produces a report
+    When I click the icon for "New tab"
+    And I type "Hello World" into the editor
+    And I right-click the "Scratch 1" tab
+    And I select "Transformation Pipeline" from the context menu
+    And I add the "Shannon Entropy" operation
+    Then the pipeline output should contain "Entropy:"
+    And the pipeline output should contain "Length:"
+    And the pipeline output should show as modified
+
+  Scenario: Morse code encode and decode
+    When I click the icon for "New tab"
+    And I type "SOS" into the editor
+    And I right-click the "Scratch 1" tab
+    And I select "Transformation Pipeline" from the context menu
+    And I add the "Text to Morse Code" operation
+    Then the pipeline output should contain "..."
+    And the pipeline output should contain "---"
+    And the pipeline output should show as modified

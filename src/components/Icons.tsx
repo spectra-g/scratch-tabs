@@ -192,6 +192,7 @@ export {
   PanelRightClose,
   QrCode,
   ScanQrCode,
+  Replace,
 } from 'lucide-react';
 
 // Export types separately

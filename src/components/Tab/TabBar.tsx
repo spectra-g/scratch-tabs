@@ -622,103 +622,97 @@ export const TabBar: React.FC<TabBarProps> = ({
         onMouseLeave={handleTabBarMouseLeave}
         key={tabsKey}
       >
-        <div
-          ref={tabsContainerRef}
-          className="flex-1 flex min-w-0 overflow-x-auto overflow-y-hidden no-scrollbar"
-          onDoubleClick={handleEmptyAreaDoubleClick}
-          onWheel={handleWheel}
-          onKeyDown={handleKeyDown}
-          tabIndex={0}
-          data-testid="tab-bar-empty-area"
-        >
-          <div ref={tabsWrapperRef} className="flex h-full">
-            <DndContext
-              sensors={sensors}
-              modifiers={[restrictToHorizontalAxis]}
-              onDragEnd={handleDragEnd}
-              onDragStart={handleDragStart}
-            >
-              {/* Pinned tabs */}
-              {pinnedTabs.length > 0 && (
-                <SortableTabList
-                  tabs={visibleTabs}
-                  activeTabId={activeSideTabId}
-                  tabIds={tabIds}
-                  editingTabId={editingTabId}
-                  editingTitle={editingTitle}
-                  maxLineCount={maxLineCount}
-                  isPinned={true}
-                  side={side}
-                  onTabClick={handleTabClick}
-                  onTabClose={handleTabClose}
-                  onTabDoubleClick={handleDoubleClick}
-                  onTabContextMenu={handleContextMenu}
-                  onEditChange={setEditingTitle}
-                  onEditSubmit={handleInputBlur}
-                  onEditCancel={() => setEditingTabId(null)}
-                  onMouseEnterTab={handleTabMouseEnter}
-                  onMouseLeaveTab={handleTabMouseLeave}
-                  onForceHideTooltip={clearCommonTooltipState}
-                />
-              )}
+        <div className="flex-1 relative min-w-0">
+          <div
+            ref={tabsContainerRef}
+            className="w-full h-full flex overflow-x-auto overflow-y-hidden no-scrollbar min-w-0"
+            onDoubleClick={handleEmptyAreaDoubleClick}
+            onWheel={handleWheel}
+            onKeyDown={handleKeyDown}
+            tabIndex={0}
+            data-testid="tab-bar-empty-area"
+          >
+            <div ref={tabsWrapperRef} className="flex h-full">
+              <DndContext
+                sensors={sensors}
+                modifiers={[restrictToHorizontalAxis]}
+                onDragEnd={handleDragEnd}
+                onDragStart={handleDragStart}
+              >
+                {/* Pinned tabs */}
+                {pinnedTabs.length > 0 && (
+                  <SortableTabList
+                    tabs={visibleTabs}
+                    activeTabId={activeSideTabId}
+                    tabIds={tabIds}
+                    editingTabId={editingTabId}
+                    editingTitle={editingTitle}
+                    maxLineCount={maxLineCount}
+                    isPinned={true}
+                    side={side}
+                    onTabClick={handleTabClick}
+                    onTabClose={handleTabClose}
+                    onTabDoubleClick={handleDoubleClick}
+                    onTabContextMenu={handleContextMenu}
+                    onEditChange={setEditingTitle}
+                    onEditSubmit={handleInputBlur}
+                    onEditCancel={() => setEditingTabId(null)}
+                    onMouseEnterTab={handleTabMouseEnter}
+                    onMouseLeaveTab={handleTabMouseLeave}
+                    onForceHideTooltip={clearCommonTooltipState}
+                  />
+                )}
 
-              {/* Unpinned tabs */}
-              {unpinnedTabs.length > 0 && (
-                <SortableTabList
-                  tabs={visibleTabs}
-                  activeTabId={activeSideTabId}
-                  tabIds={tabIds}
-                  editingTabId={editingTabId}
-                  editingTitle={editingTitle}
-                  maxLineCount={maxLineCount}
-                  side={side}
-                  onTabClick={handleTabClick}
-                  onTabClose={handleTabClose}
-                  onTabDoubleClick={handleDoubleClick}
-                  onTabContextMenu={handleContextMenu}
-                  onEditChange={setEditingTitle}
-                  onEditSubmit={handleInputBlur}
-                  onEditCancel={() => setEditingTabId(null)}
-                  onMouseEnterTab={handleTabMouseEnter}
-                  onMouseLeaveTab={handleTabMouseLeave}
-                  onForceHideTooltip={clearCommonTooltipState}
-                />
-              )}
-            </DndContext>
+                {/* Unpinned tabs */}
+                {unpinnedTabs.length > 0 && (
+                  <SortableTabList
+                    tabs={visibleTabs}
+                    activeTabId={activeSideTabId}
+                    tabIds={tabIds}
+                    editingTabId={editingTabId}
+                    editingTitle={editingTitle}
+                    maxLineCount={maxLineCount}
+                    side={side}
+                    onTabClick={handleTabClick}
+                    onTabClose={handleTabClose}
+                    onTabDoubleClick={handleDoubleClick}
+                    onTabContextMenu={handleContextMenu}
+                    onEditChange={setEditingTitle}
+                    onEditSubmit={handleInputBlur}
+                    onEditCancel={() => setEditingTabId(null)}
+                    onMouseEnterTab={handleTabMouseEnter}
+                    onMouseLeaveTab={handleTabMouseLeave}
+                    onForceHideTooltip={clearCommonTooltipState}
+                  />
+                )}
+              </DndContext>
+            </div>
           </div>
+
+          {/* Left gradient indicator - scoped to tab scroll area */}
+          {showLeftGradient && (
+            <div
+              className="absolute left-0 top-0 bottom-0 w-16 pointer-events-none z-10 transition-opacity duration-300"
+              style={{
+                background: 'linear-gradient(to right, rgb(var(--color-surface-tab-bar)) 20%, transparent 100%)',
+              }}
+              aria-hidden="true"
+              data-testid="tab-bar-left-gradient"
+            />
+          )}
+
+          {/* Right gradient indicator - scoped to tab scroll area */}
+          {showRightGradient && (
+            <div
+              className="absolute right-0 top-0 bottom-0 w-16 pointer-events-none z-10 transition-opacity duration-300"
+              style={{
+                background: 'linear-gradient(to left, rgb(var(--color-surface-tab-bar)) 20%, transparent 100%)',
+              }}
+              aria-hidden="true"
+              data-testid="tab-bar-right-gradient"
+            />
+          )}
         </div>
-
-        {/* Left gradient indicator - fixed to left edge */}
-        {showLeftGradient && (
-          <div
-            className="absolute left-0 top-0 bottom-0 w-16 pointer-events-none z-10 bg-gradient-to-r from-surface-tab-bar to-transparent transition-opacity duration-300"
-            style={{
-              // Fallback for custom property opacity issues if needed, or precise control
-              background: 'linear-gradient(to right, rgb(var(--color-surface-tab-bar)) 20%, transparent 100%)',
-            }}
-            aria-hidden="true"
-            data-testid="tab-bar-left-gradient"
-          />
-        )}
-
-        {/* Right gradient indicator - fixed to right edge (before actions) */}
-        {showRightGradient && (
-          <div
-            className="absolute top-0 bottom-0 w-16 pointer-events-none z-10 bg-gradient-to-l from-surface-tab-bar to-transparent transition-opacity duration-300"
-            style={{
-              right: isRightSide
-                ? splitView.isSplit
-                  ? '96px'   // Right side in split view (Hamburger + TabActions)
-                  : '96px'   // Right side not split
-                : splitView.isSplit
-                  ? '96px'   // Left side in split
-                  : '96px',  // Left side not split
-              background: 'linear-gradient(to left, rgb(var(--color-surface-tab-bar)) 20%, transparent 100%)',
-            }}
-            aria-hidden="true"
-            data-testid="tab-bar-right-gradient"
-          />
-        )}
 
 
         <div className="flex items-center space-x-1 pr-2">

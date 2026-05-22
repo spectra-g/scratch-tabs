@@ -62,6 +62,7 @@ export const OperationPalette: React.FC<OperationPaletteProps> = ({
   const renderOperation = (operation: OperationDefinition) => (
     <div
       key={operation.id}
+      data-testid="operation-item"
       className="flex items-center justify-between px-3 py-2 hover:bg-element-hover cursor-pointer rounded group"
       onClick={() => onAddOperation(operation)}
       title={operation.description}
@@ -96,7 +97,7 @@ export const OperationPalette: React.FC<OperationPaletteProps> = ({
       <div className="flex-1 overflow-auto custom-scrollbar">
         {searchResults !== null ? (
           // Search Results
-          <div className="p-2">
+          <div className="p-2" data-testid="operation-search-results">
             {searchResults.length === 0 ? (
               <div className="text-sm text-muted text-center py-4">
                 No operations found

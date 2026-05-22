@@ -18,6 +18,7 @@ import { modelManager } from "../modelManager";
 jest.mock("../../stores/tabsStore", () => ({
   useTabsStore: {
     getState: jest.fn(() => ({
+      tabs: [],
       updateTabContent: jest.fn(),
       updateTabState: jest.fn(),
     })),
@@ -178,6 +179,7 @@ describe("ModelManager", () => {
       (
         require("../../stores/tabsStore").useTabsStore.getState as jest.Mock
       ).mockReturnValue({
+        tabs: [],
         updateTabContent,
       });
 
@@ -205,6 +207,7 @@ describe("ModelManager", () => {
       (
         require("../../stores/tabsStore").useTabsStore.getState as jest.Mock
       ).mockReturnValue({
+        tabs: [],
         updateTabContent,
       });
 
@@ -290,6 +293,7 @@ describe("ModelManager", () => {
       (
         require("../../stores/tabsStore").useTabsStore.getState as jest.Mock
       ).mockReturnValue({
+        tabs: [],
         updateTabContent,
       });
 
@@ -445,6 +449,7 @@ describe("ModelManager", () => {
       (
         require("../../stores/tabsStore").useTabsStore.getState as jest.Mock
       ).mockReturnValue({
+        tabs: [],
         updateTabContent: jest.fn(),
         updateTabState: mockUpdateTabState,
       });

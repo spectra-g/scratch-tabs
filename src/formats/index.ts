@@ -43,6 +43,10 @@ import "./xml";
 import "./yaml";
 import "./yaml/index";
 import "./ndjson/index";
+import "./dotenv";
+import "./dotenv/index";
+import "./pem";
+import "./pem/index";
 
 // Export the registry for use in the application
 export { formatRegistry };
