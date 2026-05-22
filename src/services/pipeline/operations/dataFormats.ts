@@ -1141,6 +1141,112 @@ export const dataFormatOperations: OperationDefinition[] = [
         keywords: ["csv", "transpose", "pivot", "rotate", "columns", "rows"],
         source: "core",
     },
+    {
+        id: "csv.dedupe",
+        name: "CSV Deduplicate Rows",
+        description: "Remove duplicate rows from CSV data, optionally by a specific column",
+        categories: ["formatting", "utilities"],
+        parameters: [
+            {
+                name: "column",
+                label: "Dedupe By Column",
+                type: "string",
+                default: "",
+                description: "Column name or 0-based index to dedupe by. Leave empty to dedupe on entire row.",
+                placeholder: "e.g. email or 2"
+            },
+            {
+                name: "hasHeaders",
+                label: "Has Headers",
+                type: "boolean",
+                default: true,
+                description: "First row contains column headers"
+            },
+            {
+                name: "delimiter",
+                label: "Delimiter",
+                type: "select",
+                default: ",",
+                options: [
+                    { value: ",", label: "Comma" },
+                    { value: "\t", label: "Tab" },
+                    { value: ";", label: "Semicolon" },
+                    { value: "|", label: "Pipe" }
+                ]
+            },
+            {
+                name: "caseSensitive",
+                label: "Case Sensitive",
+                type: "boolean",
+                default: true,
+                description: "Treat values as case-sensitive when comparing"
+            }
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            if (!input.trim()) return "";
+
+            const delimiter = (params.delimiter as string) ?? ",";
+            const hasHeaders = params.hasHeaders ?? true;
+            const columnSpec = (params.column as string) ?? "";
+            const caseSensitive = params.caseSensitive ?? true;
+
+            const lines = input.trimEnd().split('\n');
+
+            const parseRow = (row: string): string[] => {
+                const cells: string[] = [];
+                let currentCell = '';
+                let inQuotes = false;
+                for (let i = 0; i < row.length; i++) {
+                    const char = row[i];
+                    const nextChar = row[i + 1];
+                    if (char === '"') {
+                        if (inQuotes && nextChar === '"') { currentCell += '"'; i++; }
+                        else { inQuotes = !inQuotes; }
+                    } else if (char === delimiter && !inQuotes) {
+                        cells.push(currentCell);
+                        currentCell = '';
+                    } else {
+                        currentCell += char;
+                    }
+                }
+                cells.push(currentCell);
+                return cells;
+            };
+
+            const headerLine = hasHeaders ? lines[0] : null;
+            const dataLines = hasHeaders ? lines.slice(1) : lines;
+
+            // Resolve column index — use strict digit-only test so names like "1st Name" aren't
+            // silently coerced to index 1 by parseInt
+            let colIndex = -1;
+            if (columnSpec !== "") {
+                if (/^\d+$/.test(columnSpec)) {
+                    colIndex = parseInt(columnSpec, 10);
+                } else if (headerLine) {
+                    const headers = parseRow(headerLine);
+                    colIndex = headers.findIndex(h => h.toLowerCase() === columnSpec.toLowerCase());
+                    if (colIndex === -1) throw new Error(`Column "${columnSpec}" not found in headers`);
+                }
+            }
+
+            const seen = new Set<string>();
+            const deduped = dataLines.filter(line => {
+                const key = colIndex >= 0
+                    ? (parseRow(line)[colIndex] ?? line)
+                    : line;
+                const normalised = caseSensitive ? key : key.toLowerCase();
+                if (seen.has(normalised)) return false;
+                seen.add(normalised);
+                return true;
+            });
+
+            const result = headerLine ? [headerLine, ...deduped] : deduped;
+            return result.join('\n');
+        },
+        keywords: ["csv", "dedupe", "deduplicate", "unique", "rows", "distinct"],
+        source: "core",
+    },
 ];
 
 // Self-register all operations

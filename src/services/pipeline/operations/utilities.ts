@@ -1,5 +1,6 @@
 import { OperationDefinition } from "../types";
 import { operationRegistry } from "../OperationRegistry";
+import { add as dateFnsAdd, sub as dateFnsSub } from 'date-fns';
 
 /**
  * Utility Pipeline Operations
@@ -374,7 +375,145 @@ export const utilityOperations: OperationDefinition[] = [
         },
         keywords: ["sequence", "numbers", "letters", "generate", "list", "range"],
         source: "core",
-    }
+    },
+    {
+        id: "datetime.add",
+        name: "Date Add",
+        description: "Add a duration to a date. Input: ISO date string or 'now'.",
+        categories: ["utilities"],
+        parameters: [
+            {
+                name: "amount",
+                label: "Amount",
+                type: "number",
+                default: 1,
+                min: 0,
+                description: "How much to add"
+            },
+            {
+                name: "unit",
+                label: "Unit",
+                type: "select",
+                default: "days",
+                options: [
+                    { value: "seconds", label: "Seconds" },
+                    { value: "minutes", label: "Minutes" },
+                    { value: "hours", label: "Hours" },
+                    { value: "days", label: "Days" },
+                    { value: "weeks", label: "Weeks" },
+                    { value: "months", label: "Months" },
+                    { value: "years", label: "Years" },
+                ]
+            },
+            {
+                name: "outputFormat",
+                label: "Output Format",
+                type: "select",
+                default: "iso",
+                options: [
+                    { value: "iso", label: "ISO 8601 (full)" },
+                    { value: "date", label: "Date only (YYYY-MM-DD)" },
+                    { value: "locale", label: "Locale string" },
+                    { value: "unix-ms", label: "Unix timestamp (ms)" },
+                    { value: "unix-s", label: "Unix timestamp (s)" },
+                ]
+            }
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const raw = input.trim();
+            if (!raw) return "";
+
+            const base = raw.toLowerCase() === 'now' ? new Date() : new Date(raw);
+            if (isNaN(base.getTime())) throw new Error(`Cannot parse date: "${raw}"`);
+
+            const amount = (params.amount as number) ?? 1;
+            const unit = (params.unit as string) ?? "days";
+            const outputFormat = (params.outputFormat as string) ?? "iso";
+
+            const duration: Record<string, number> = { [unit]: amount };
+            const result = dateFnsAdd(base, duration);
+
+            switch (outputFormat) {
+                case "date": return result.toISOString().split('T')[0];
+                case "locale": return result.toLocaleString();
+                case "unix-ms": return String(result.getTime());
+                case "unix-s": return String(Math.floor(result.getTime() / 1000));
+                default: return result.toISOString();
+            }
+        },
+        keywords: ["date", "add", "duration", "arithmetic", "time", "datetime", "plus"],
+        source: "core",
+    },
+    {
+        id: "datetime.subtract",
+        name: "Date Subtract",
+        description: "Subtract a duration from a date. Input: ISO date string or 'now'.",
+        categories: ["utilities"],
+        parameters: [
+            {
+                name: "amount",
+                label: "Amount",
+                type: "number",
+                default: 1,
+                min: 0,
+                description: "How much to subtract"
+            },
+            {
+                name: "unit",
+                label: "Unit",
+                type: "select",
+                default: "days",
+                options: [
+                    { value: "seconds", label: "Seconds" },
+                    { value: "minutes", label: "Minutes" },
+                    { value: "hours", label: "Hours" },
+                    { value: "days", label: "Days" },
+                    { value: "weeks", label: "Weeks" },
+                    { value: "months", label: "Months" },
+                    { value: "years", label: "Years" },
+                ]
+            },
+            {
+                name: "outputFormat",
+                label: "Output Format",
+                type: "select",
+                default: "iso",
+                options: [
+                    { value: "iso", label: "ISO 8601 (full)" },
+                    { value: "date", label: "Date only (YYYY-MM-DD)" },
+                    { value: "locale", label: "Locale string" },
+                    { value: "unix-ms", label: "Unix timestamp (ms)" },
+                    { value: "unix-s", label: "Unix timestamp (s)" },
+                ]
+            }
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const raw = input.trim();
+            if (!raw) return "";
+
+            const base = raw.toLowerCase() === 'now' ? new Date() : new Date(raw);
+            if (isNaN(base.getTime())) throw new Error(`Cannot parse date: "${raw}"`);
+
+            const amount = (params.amount as number) ?? 1;
+            const unit = (params.unit as string) ?? "days";
+            const outputFormat = (params.outputFormat as string) ?? "iso";
+
+            const duration: Record<string, number> = { [unit]: amount };
+            const result = dateFnsSub(base, duration);
+
+            switch (outputFormat) {
+                case "date": return result.toISOString().split('T')[0];
+                case "locale": return result.toLocaleString();
+                case "unix-ms": return String(result.getTime());
+                case "unix-s": return String(Math.floor(result.getTime() / 1000));
+                default: return result.toISOString();
+            }
+        },
+        keywords: ["date", "subtract", "duration", "arithmetic", "time", "datetime", "minus"],
+        source: "core",
+    },
 ];
 
 // Self-register all operations

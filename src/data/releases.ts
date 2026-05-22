@@ -15,9 +15,50 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.29.0';
+export const APP_VERSION = '1.30.0';
 
 export const RELEASES: Release[] = [
+  {
+    "version": "1.30.0",
+    "type": "latest",
+    "date": "2026-05-22",
+    "headline": "HAR Network Traffic Viewer & 10 New Pipeline Operations",
+    "summary": "Full offline HAR viewer with waterfall, request detail panel, privacy detection, and cURL export — plus Ascii85, Punycode, Brotli, CIDR, CSV Dedupe & Date Arithmetic pipeline operations",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**HAR Network Traffic Viewer:** Full offline Smart View for HTTP Archive (.har) files — no data leaves the browser; opens captures of any size using virtualized rendering",
+          "**Waterfall Timeline:** DevTools-style waterfall with per-request colour-coded timing bars, start-offset positioning, and a total-duration axis; handles 1,000+ entry captures without frame drops",
+          "**Table View:** Sortable, virtualized table showing method, status, host, path, type, transfer size, and time — switch between Waterfall and Table with one click",
+          "**Request Detail Panel:** Resizable side panel with five tabs — Headers (general, response, request, query params), Request body, Response body, Cookies, and Timing breakdown",
+          "**Timing Breakdown:** Colour-coded bar chart for each phase (Queued, DNS, TCP Connect, SSL/TLS, Request Sent, TTFB, Download); HAR 1.2 spec-compliant — SSL duration is subtracted from connect to avoid double-counting; zero-duration phases (cached DNS) are shown rather than hidden",
+          "**Response Body Previews:** JSON responses are pretty-printed (bypassed above 500 KB to prevent main-thread freeze with a raw-text fallback and notice); base64-encoded image responses render as an inline image preview instead of dumping the base64 string",
+          "**Privacy Banner:** Automatically detected when the capture contains Authorization headers, cookies, API keys, token-bearing URLs, or other sensitive data — lists the specific data types found",
+          "**Filtering:** Filter by URL/method/status/MIME search, status category pills (2xx/3xx/4xx/5xx), HTTP method checkboxes, errors-only toggle, and a page selector for multi-page HAR files (shown only when `log.pages` has more than one entry)",
+          "**cURL Export:** Generate a cURL command for any request using `--data-raw` (prevents `@`-file and newline stripping) and `--compressed` (matches Chrome DevTools output); copy to clipboard or open directly in a new curl-format tab",
+          "**HAR & CSV Export:** Export filtered entries as a HAR file or CSV summary to a background tab; tabs open with the correct language locked so they are not misidentified as JSON",
+          "**Data URI Safety:** Entries with `data:` URLs are fast-pathed before URL parsing — hostname shown as `(data URI)` and pathname truncated to 60 characters to prevent megabyte strings from reaching the table layout engine",
+          "**Out-of-Order Entry Handling:** Start offsets and the summary total-time are derived from the chronological minimum timestamp across all entries rather than assuming `entries[0]` is earliest — correctly handles HAR files from async capture tools"
+        ]
+      },
+      {
+        "name": "New Pipeline Operations",
+        "changes": [
+          "**Ascii85 / Base85 Encode:** Encode text to Adobe Ascii85 format (`<~` / `~>` delimiters, `z` zero-group shorthand, correct partial last-group handling) — used in PDFs, PostScript, and Python's `base64.b85encode`",
+          "**Ascii85 / Base85 Decode:** Decode Ascii85 back to text; strips `<~` / `~>` delimiters automatically and tolerates embedded whitespace",
+          "**Punycode Encode:** Convert a Unicode domain name to its ACE Punycode form (e.g. `münchen.de` → `xn--mnchen-3ya.de`) — handles full multi-label domains",
+          "**Punycode Decode:** Convert an ACE Punycode domain back to Unicode (e.g. `xn--mnchen-3ya.de` → `münchen.de`); ASCII-only domains pass through unchanged",
+          "**Brotli Compress:** Compress text using the browser-native `CompressionStream('br')` API (Chrome 80+, Firefox 115+, Safari 17+); outputs Base64 or raw Latin-1",
+          "**Brotli Decompress:** Decompress Brotli-compressed data (Base64 or raw Latin-1 input) using the native `DecompressionStream('br')` API",
+          "**CIDR Expand:** Expand an IPv4 CIDR range (e.g. `192.168.1.0/24`) to a newline-separated list of addresses; toggles for network and broadcast address inclusion; hard-capped at 65,536 addresses with a clear error for larger ranges",
+          "**CSV Deduplicate Rows:** Remove duplicate rows from CSV data — dedupe on the full row or scope to a column by name or zero-based index; case-sensitive or case-insensitive comparison; preserves header row and first occurrence",
+          "**Date Add:** Add a duration (seconds, minutes, hours, days, weeks, months, or years) to an ISO date string or `now`; outputs ISO 8601, date-only, locale string, or Unix timestamp",
+          "**Date Subtract:** Subtract a duration from an ISO date string or `now` with the same unit and output options as Date Add"
+        ]
+      }
+    ]
+  },
   {
     "version": "1.29.0",
     "type": "latest",

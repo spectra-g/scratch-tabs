@@ -1,4 +1,5 @@
 import { OperationDefinition } from "../types";
+import punycode from 'punycode/';
 
 // === Base32 helpers (RFC 4648) ===
 const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -103,6 +104,76 @@ function decodeBase58(input: string): string {
         return new TextDecoder().decode(allBytes);
     }
     return Array.from(allBytes).map(b => String.fromCharCode(b)).join('');
+}
+
+// === Ascii85 (Base85 / Adobe) helpers ===
+
+function encodeBase85(input: string): string {
+    const bytes: number[] = typeof TextEncoder !== 'undefined'
+        ? Array.from(new TextEncoder().encode(input))
+        : Array.from(input).map(c => c.charCodeAt(0) & 0xff);
+
+    const parts: string[] = ['<~'];
+
+    for (let i = 0; i < bytes.length; i += 4) {
+        const chunk = bytes.slice(i, i + 4);
+        const n = chunk.length;
+        while (chunk.length < 4) chunk.push(0);
+
+        const val = ((chunk[0] << 24) | (chunk[1] << 16) | (chunk[2] << 8) | chunk[3]) >>> 0;
+
+        if (val === 0 && n === 4) {
+            parts.push('z');
+        } else {
+            const c: number[] = new Array(5);
+            let v = val;
+            for (let j = 4; j >= 0; j--) {
+                c[j] = 33 + (v % 85);
+                v = Math.floor(v / 85);
+            }
+            parts.push(String.fromCharCode(...c.slice(0, n + 1)));
+        }
+    }
+
+    parts.push('~>');
+    return parts.join('');
+}
+
+function decodeBase85(input: string): string {
+    let clean = input.trim();
+    if (clean.startsWith('<~')) clean = clean.slice(2);
+    if (clean.endsWith('~>')) clean = clean.slice(0, -2);
+    clean = clean.replace(/\s/g, '');
+
+    const bytes: number[] = [];
+    let i = 0;
+
+    while (i < clean.length) {
+        if (clean[i] === 'z') {
+            bytes.push(0, 0, 0, 0);
+            i++;
+            continue;
+        }
+        const chunkLen = Math.min(5, clean.length - i);
+        const padded = clean.slice(i, i + chunkLen).padEnd(5, 'u');
+        i += chunkLen;
+
+        let val = 0;
+        for (let j = 0; j < 5; j++) {
+            const code = padded.charCodeAt(j) - 33;
+            if (code < 0 || code > 84) throw new Error(`Invalid Ascii85 character: ${JSON.stringify(padded[j])}`);
+            val = val * 85 + code;
+        }
+        val = val >>> 0;
+
+        const outBytes = [(val >>> 24) & 0xff, (val >>> 16) & 0xff, (val >>> 8) & 0xff, val & 0xff];
+        bytes.push(...outBytes.slice(0, chunkLen - 1));
+    }
+
+    if (typeof TextDecoder !== 'undefined') {
+        return new TextDecoder().decode(new Uint8Array(bytes));
+    }
+    return bytes.map(b => String.fromCharCode(b)).join('');
 }
 
 // === Morse code lookup tables ===
@@ -998,6 +1069,70 @@ export const encodingOperations: OperationDefinition[] = [
                 );
         },
         keywords: ["unicode", "unescape", "codepoint", "uxxxx", "js", "json"],
+        source: "core",
+    },
+
+    // === ASCII85 / BASE85 ===
+    {
+        id: "encoding.base85-encode",
+        name: "Base85 Encode (Ascii85)",
+        description: "Encode text to Ascii85 / Base85 (Adobe format, used in PDFs and PostScript)",
+        categories: ["encoding"],
+        parameters: [],
+        processingMode: "entire",
+        execute: (input) => encodeBase85(input),
+        keywords: ["base85", "ascii85", "encode", "pdf", "postscript", "adobe"],
+        source: "core",
+    },
+    {
+        id: "encoding.base85-decode",
+        name: "Base85 Decode (Ascii85)",
+        description: "Decode Ascii85 / Base85 back to text (strips <~ ~> delimiters automatically)",
+        categories: ["encoding"],
+        parameters: [],
+        processingMode: "entire",
+        execute: (input) => decodeBase85(input),
+        keywords: ["base85", "ascii85", "decode", "pdf", "postscript", "adobe"],
+        source: "core",
+    },
+
+    // === PUNYCODE ===
+    {
+        id: "encoding.punycode-encode",
+        name: "Punycode Encode",
+        description: "Encode a Unicode domain name to Punycode ACE form (e.g. münchen.de → xn--mnchen-3ya.de)",
+        categories: ["encoding", "web"],
+        parameters: [],
+        processingMode: "entire",
+        execute: (input) => {
+            const trimmed = input.trim();
+            if (!trimmed) return "";
+            try {
+                return punycode.toASCII(trimmed);
+            } catch (e) {
+                throw new Error(`Punycode encode failed: ${(e as Error).message}`);
+            }
+        },
+        keywords: ["punycode", "idn", "domain", "unicode", "internationalized", "xn--"],
+        source: "core",
+    },
+    {
+        id: "encoding.punycode-decode",
+        name: "Punycode Decode",
+        description: "Decode a Punycode domain back to Unicode (e.g. xn--mnchen-3ya.de → münchen.de)",
+        categories: ["encoding", "web"],
+        parameters: [],
+        processingMode: "entire",
+        execute: (input) => {
+            const trimmed = input.trim();
+            if (!trimmed) return "";
+            try {
+                return punycode.toUnicode(trimmed);
+            } catch (e) {
+                throw new Error(`Punycode decode failed: ${(e as Error).message}`);
+            }
+        },
+        keywords: ["punycode", "idn", "domain", "unicode", "internationalized", "xn--"],
         source: "core",
     },
 

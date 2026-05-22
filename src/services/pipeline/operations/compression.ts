@@ -324,6 +324,106 @@ export const compressionOperations: OperationDefinition[] = [
         keywords: ["zlib", "inflate", "decompress", "deflate"],
         source: "core",
     },
+    {
+        id: "compression.brotli",
+        name: "Brotli Compress",
+        description: "Compress data using Brotli (browser-native: Chrome 80+, Firefox 115+, Safari 17+)",
+        categories: ["compression"],
+        parameters: [
+            {
+                name: "outputEncoding",
+                label: "Output Encoding",
+                type: "select",
+                default: "base64",
+                options: [
+                    { value: "base64", label: "Base64" },
+                    { value: "latin1", label: "Raw String (Latin-1)" }
+                ]
+            }
+        ],
+        execute: async (input, params) => {
+            if (!input) return "";
+            if (typeof CompressionStream === 'undefined') {
+                throw new Error("CompressionStream API not supported in this environment");
+            }
+            try {
+                let Encoder;
+                if (typeof TextEncoder === 'undefined') {
+                    Encoder = require('util').TextEncoder;
+                } else {
+                    Encoder = TextEncoder;
+                }
+                const inputBytes = new Encoder().encode(input);
+                // 'br' is not yet in TypeScript's CompressionFormat union but is supported in modern browsers
+                const cs = new CompressionStream('br' as CompressionFormat);
+                const writer = cs.writable.getWriter();
+                writer.write(inputBytes);
+                writer.close();
+                const buf = await new Response(cs.readable).arrayBuffer();
+                const bytes = new Uint8Array(buf);
+                let binary = '';
+                bytes.forEach(b => { binary += String.fromCharCode(b); });
+                return params.outputEncoding === 'latin1' ? binary : btoa(binary);
+            } catch (e) {
+                throw new Error("Brotli compression failed: " + (e as Error).message);
+            }
+        },
+        keywords: ["brotli", "br", "compress", "web", "http"],
+        source: "core",
+    },
+    {
+        id: "compression.unbrotli",
+        name: "Brotli Decompress",
+        description: "Decompress Brotli-compressed data (Base64 input)",
+        categories: ["compression"],
+        parameters: [
+            {
+                name: "inputEncoding",
+                label: "Input Encoding",
+                type: "select",
+                default: "base64",
+                options: [
+                    { value: "base64", label: "Base64" },
+                    { value: "latin1", label: "Raw String" }
+                ]
+            }
+        ],
+        execute: async (input, params) => {
+            if (!input) return "";
+            if (typeof DecompressionStream === 'undefined') {
+                throw new Error("DecompressionStream API not supported in this environment");
+            }
+            let binaryString = input;
+            if (params.inputEncoding !== 'latin1') {
+                try {
+                    binaryString = atob(input.replace(/\s/g, ''));
+                } catch {
+                    throw new Error("Invalid Base64 input");
+                }
+            }
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+            try {
+                // 'br' is not yet in TypeScript's CompressionFormat union but is supported in modern browsers
+                const ds = new DecompressionStream('br' as CompressionFormat);
+                const writer = ds.writable.getWriter();
+                writer.write(bytes);
+                writer.close();
+                let Decoder;
+                if (typeof TextDecoder === 'undefined') {
+                    Decoder = require('util').TextDecoder;
+                } else {
+                    Decoder = TextDecoder;
+                }
+                const buf = await new Response(ds.readable).arrayBuffer();
+                return new Decoder('utf-8').decode(buf as ArrayBuffer);
+            } catch (e) {
+                throw new Error("Brotli decompression failed: " + (e as Error).message);
+            }
+        },
+        keywords: ["brotli", "br", "decompress", "web", "http"],
+        source: "core",
+    },
 ];
 
 // Self-register all operations
