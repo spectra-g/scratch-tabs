@@ -625,7 +625,7 @@ export const TabBar: React.FC<TabBarProps> = ({
         <div className="flex-1 relative min-w-0">
           <div
             ref={tabsContainerRef}
-            className="w-full h-full flex overflow-x-auto overflow-y-hidden no-scrollbar"
+            className="w-full h-full flex overflow-x-auto overflow-y-hidden no-scrollbar min-w-0"
             onDoubleClick={handleEmptyAreaDoubleClick}
             onWheel={handleWheel}
             onKeyDown={handleKeyDown}
@@ -692,7 +692,7 @@ export const TabBar: React.FC<TabBarProps> = ({
           {/* Left gradient indicator - scoped to tab scroll area */}
           {showLeftGradient && (
             <div
-              className="absolute left-0 top-0 bottom-0 w-16 pointer-events-none z-10"
+              className="absolute left-0 top-0 bottom-0 w-16 pointer-events-none z-10 transition-opacity duration-300"
               style={{
                 background: 'linear-gradient(to right, rgb(var(--color-surface-tab-bar)) 20%, transparent 100%)',
               }}
@@ -704,7 +704,7 @@ export const TabBar: React.FC<TabBarProps> = ({
           {/* Right gradient indicator - scoped to tab scroll area */}
           {showRightGradient && (
             <div
-              className="absolute right-0 top-0 bottom-0 w-16 pointer-events-none z-10"
+              className="absolute right-0 top-0 bottom-0 w-16 pointer-events-none z-10 transition-opacity duration-300"
               style={{
                 background: 'linear-gradient(to left, rgb(var(--color-surface-tab-bar)) 20%, transparent 100%)',
               }}
