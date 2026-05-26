@@ -614,4 +614,266 @@ Bob Johnson,45,Chicago,USA`;
       expect(result.current.data[1].cells[2].value).toBe("32"); // Original age shifted right
     });
   });
+
+  describe("promoteFirstRowToHeader", () => {
+    it("should use first data row values as column names", () => {
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange),
+      );
+
+      act(() => {
+        result.current.promoteFirstRowToHeader();
+      });
+
+      // First data row was "John Doe,28,New York" — those become the headers
+      expect(result.current.columns[0].name).toBe("John Doe");
+      expect(result.current.columns[1].name).toBe("28");
+      expect(result.current.columns[2].name).toBe("New York");
+    });
+
+    it("should remove the promoted row from data", () => {
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange),
+      );
+
+      const initialRowCount = result.current.data.length;
+
+      act(() => {
+        result.current.promoteFirstRowToHeader();
+      });
+
+      expect(result.current.data).toHaveLength(initialRowCount - 1);
+      // The new first row should be what was previously row 2
+      expect(result.current.data[0].cells[0].value).toBe("Jane Smith");
+    });
+
+    it("should be a no-op when there is no data", () => {
+      const { result } = renderHook(() =>
+        useCsvData("Name,Age,City", mockOnContentChange),
+      );
+
+      const originalColumns = result.current.columns.map((c) => c.name);
+
+      act(() => {
+        result.current.promoteFirstRowToHeader();
+      });
+
+      expect(result.current.columns.map((c) => c.name)).toEqual(originalColumns);
+      expect(result.current.data).toHaveLength(0);
+    });
+
+    it("should integrate with undo/redo", () => {
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange),
+      );
+
+      const originalHeaders = result.current.columns.map((c) => c.name);
+      const originalRowCount = result.current.data.length;
+
+      act(() => {
+        result.current.promoteFirstRowToHeader();
+      });
+
+      expect(result.current.canUndo).toBe(true);
+
+      act(() => {
+        result.current.undo();
+      });
+
+      expect(result.current.columns.map((c) => c.name)).toEqual(originalHeaders);
+      expect(result.current.data).toHaveLength(originalRowCount);
+    });
+
+    it("should sync content after promoting", async () => {
+      mockOnContentChange.mockClear();
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange),
+      );
+
+      act(() => {
+        result.current.promoteFirstRowToHeader();
+      });
+
+      await waitFor(
+        () => {
+          expect(mockOnContentChange).toHaveBeenCalled();
+        },
+        { timeout: 1000 },
+      );
+
+      const newContent: string =
+        mockOnContentChange.mock.calls[
+          mockOnContentChange.mock.calls.length - 1
+        ][0];
+      expect(newContent).toContain("John Doe");
+      expect(newContent).toContain("Jane Smith");
+    });
+  });
+
+  describe("demoteHeaderToFirstRow", () => {
+    it("should prepend a new row with current header values", () => {
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange),
+      );
+
+      const initialRowCount = result.current.data.length;
+
+      act(() => {
+        result.current.demoteHeaderToFirstRow();
+      });
+
+      expect(result.current.data).toHaveLength(initialRowCount + 1);
+      expect(result.current.data[0].cells[0].value).toBe("Name");
+      expect(result.current.data[0].cells[1].value).toBe("Age");
+      expect(result.current.data[0].cells[2].value).toBe("City");
+    });
+
+    it("should reset column names to Column N", () => {
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange),
+      );
+
+      act(() => {
+        result.current.demoteHeaderToFirstRow();
+      });
+
+      expect(result.current.columns[0].name).toBe("Column 1");
+      expect(result.current.columns[1].name).toBe("Column 2");
+      expect(result.current.columns[2].name).toBe("Column 3");
+    });
+
+    it("should integrate with undo/redo", () => {
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange),
+      );
+
+      const originalHeaders = result.current.columns.map((c) => c.name);
+      const originalRowCount = result.current.data.length;
+
+      act(() => {
+        result.current.demoteHeaderToFirstRow();
+      });
+
+      expect(result.current.canUndo).toBe(true);
+
+      act(() => {
+        result.current.undo();
+      });
+
+      expect(result.current.columns.map((c) => c.name)).toEqual(originalHeaders);
+      expect(result.current.data).toHaveLength(originalRowCount);
+    });
+
+    it("should work on empty data (only headers exist)", () => {
+      const { result } = renderHook(() =>
+        useCsvData("Name,Age,City", mockOnContentChange),
+      );
+
+      expect(result.current.data).toHaveLength(0);
+
+      act(() => {
+        result.current.demoteHeaderToFirstRow();
+      });
+
+      expect(result.current.data).toHaveLength(1);
+      expect(result.current.data[0].cells[0].value).toBe("Name");
+      expect(result.current.columns[0].name).toBe("Column 1");
+    });
+
+    it("should be the inverse of promoteFirstRowToHeader", () => {
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange),
+      );
+
+      const originalHeaders = result.current.columns.map((c) => c.name);
+      const originalFirstRow = result.current.data[0].cells.map((c) => c.value);
+
+      act(() => {
+        result.current.demoteHeaderToFirstRow();
+      });
+      act(() => {
+        result.current.promoteFirstRowToHeader();
+      });
+
+      expect(result.current.columns.map((c) => c.name)).toEqual(originalHeaders);
+      expect(result.current.data[0].cells.map((c) => c.value)).toEqual(
+        originalFirstRow,
+      );
+    });
+  });
+
+  describe("changeDelimiter", () => {
+    it("should detect comma delimiter from CSV content", () => {
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange),
+      );
+
+      expect(result.current.detectedDelimiter).toBe(",");
+    });
+
+    it("should detect tab delimiter from TSV content", () => {
+      const tsvContent = "Name\tAge\tCity\nJohn\t28\tNY";
+      const { result } = renderHook(() =>
+        useCsvData(tsvContent, mockOnContentChange),
+      );
+
+      expect(result.current.detectedDelimiter).toBe("\t");
+    });
+
+    it("should detect pipe delimiter", () => {
+      const pipeContent = "Name|Age|City\nJohn|28|NY";
+      const { result } = renderHook(() =>
+        useCsvData(pipeContent, mockOnContentChange),
+      );
+
+      expect(result.current.detectedDelimiter).toBe("|");
+    });
+
+    it("should call onContentChange immediately (not debounced) with new delimiter", () => {
+      mockOnContentChange.mockClear();
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange),
+      );
+
+      act(() => {
+        result.current.changeDelimiter("\t");
+      });
+
+      // changeDelimiter calls onContentChange synchronously, not via debounce
+      expect(mockOnContentChange).toHaveBeenCalledTimes(1);
+      const newContent: string = mockOnContentChange.mock.calls[0][0];
+      expect(newContent).toContain("\t");
+      expect(newContent).not.toContain(",");
+    });
+
+    it("should preserve all data values when converting delimiter", () => {
+      mockOnContentChange.mockClear();
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange),
+      );
+
+      act(() => {
+        result.current.changeDelimiter(";");
+      });
+
+      const newContent: string = mockOnContentChange.mock.calls[0][0];
+      expect(newContent).toContain("Name;Age;City");
+      expect(newContent).toContain("John Doe;28;New York");
+      expect(newContent).toContain("Jane Smith;32;San Francisco");
+    });
+
+    it("should include headers in converted content when hasHeader is true", () => {
+      mockOnContentChange.mockClear();
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange, { hasHeader: true }),
+      );
+
+      act(() => {
+        result.current.changeDelimiter("|");
+      });
+
+      const newContent: string = mockOnContentChange.mock.calls[0][0];
+      expect(newContent.split("\n")[0]).toContain("Name|Age|City");
+    });
+  });
 });

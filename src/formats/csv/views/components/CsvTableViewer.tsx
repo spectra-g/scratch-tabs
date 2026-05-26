@@ -121,6 +121,10 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
     deleteSnapshot,
     getColumnStats,
     insertAndShift,
+    promoteFirstRowToHeader,
+    demoteHeaderToFirstRow,
+    detectedDelimiter,
+    changeDelimiter,
     toCsv,
     toJson,
     toMarkdown,
@@ -1058,6 +1062,10 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
         onExportJson={handleExportJson}
         onExportMarkdown={handleExportMarkdown}
         onExportSql={handleExportSql}
+        onPromoteFirstRowToHeader={promoteFirstRowToHeader}
+        onDemoteHeaderToFirstRow={demoteHeaderToFirstRow}
+        currentDelimiter={detectedDelimiter}
+        onChangeDelimiter={changeDelimiter}
         rowCount={data.length}
         columnCount={columns.length}
         diagnostics={diagnostics}

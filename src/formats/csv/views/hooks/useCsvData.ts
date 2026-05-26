@@ -33,6 +33,8 @@ export interface UseCsvDataReturn {
   duplicateColumn: (columnId: string) => void;
   renameColumn: (columnId: string, newName: string) => void;
   insertAndShift: (cellIdentifiers: Array<{rowId: string, columnId: string}>) => void;
+  promoteFirstRowToHeader: () => void;
+  demoteHeaderToFirstRow: () => void;
 
   // Undo/Redo (simplified)
   canUndo: boolean;
@@ -51,6 +53,10 @@ export interface UseCsvDataReturn {
   toJson: () => string;
   toMarkdown: () => string;
   toSql: (tableName: string) => string;
+
+  // Delimiter
+  detectedDelimiter: string;
+  changeDelimiter: (newDelimiter: string) => void;
 
   // Statistics
   getColumnStats: (columnId: string) => CsvColumnStats;
@@ -579,6 +585,48 @@ export const useCsvData = (
     [csvState, saveToHistory, syncToContent],
   );
 
+  const promoteFirstRowToHeader = useCallback(() => {
+    if (csvState.data.length === 0) return;
+
+    const firstRow = csvState.data[0];
+    const newColumns = csvState.columns.map((col, index) => ({
+      ...col,
+      name: firstRow.cells[index]?.value || col.name,
+    }));
+    const newState = { columns: newColumns, data: csvState.data.slice(1) };
+    setCsvState(newState);
+    saveToHistory(newState);
+    syncToContent(newState);
+  }, [csvState, saveToHistory, syncToContent]);
+
+  const demoteHeaderToFirstRow = useCallback(() => {
+    const headerRow: CsvRow = {
+      id: `row_${Date.now()}_${Math.random()}`,
+      cells: csvState.columns.map((col) => ({ value: col.name, isValid: true })),
+      originalIndex: 0,
+      isValid: true,
+    };
+    const newColumns = csvState.columns.map((col, index) => ({
+      ...col,
+      name: `Column ${index + 1}`,
+    }));
+    const newState = { columns: newColumns, data: [headerRow, ...csvState.data] };
+    setCsvState(newState);
+    saveToHistory(newState);
+    syncToContent(newState);
+  }, [csvState, saveToHistory, syncToContent]);
+
+  const changeDelimiter = useCallback(
+    (newDelimiter: string) => {
+      const headers = hasHeader ? [csvState.columns.map((col) => col.name)] : [];
+      const rows = csvState.data.map((row) => row.cells.map((cell) => cell.value));
+      const newContent = Papa.unparse([...headers, ...rows], { delimiter: newDelimiter });
+      lastSyncedContentRef.current = newContent;
+      onContentChange(newContent);
+    },
+    [csvState, hasHeader, onContentChange],
+  );
+
   // Undo/Redo
   const undo = useCallback(() => {
     if (historyIndex > 0) {
@@ -829,6 +877,8 @@ export const useCsvData = (
     duplicateColumn,
     renameColumn,
     insertAndShift,
+    promoteFirstRowToHeader,
+    demoteHeaderToFirstRow,
 
     // Undo/Redo
     canUndo: historyIndex > 0,
@@ -847,6 +897,10 @@ export const useCsvData = (
     toJson,
     toMarkdown,
     toSql,
+
+    // Delimiter
+    detectedDelimiter: delimiter,
+    changeDelimiter,
 
     // Statistics
     getColumnStats,

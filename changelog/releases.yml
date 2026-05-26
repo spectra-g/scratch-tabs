@@ -3,8 +3,23 @@ config:
   max_versions: 100  # Maximum number of versions to display
 
 releases:
-  - version: "1.30.0"
+  - version: "1.31.0"
     type: "latest"
+    draft: false
+    date: "2026-05-26"
+    headline: "CSV Smart View: Header Promotion & Delimiter Conversion"
+    summary: "Two new CSV table actions — promote any data row to the header or demote the header back to a data row, plus a one-click delimiter converter to switch between comma, tab, semicolon, and pipe"
+    description: "Adds two quality-of-life improvements to the CSV Smart View toolbar. Header promotion solves a common friction point: when a CSV file has no header row, the smart view generates generic column names (Column 1, Column 2…) and the real header values end up as the first data row. A new 'Row 1 → Header' button takes the first data row's cell values and promotes them to become the column names, removing that row from the data. The reverse, 'Header → Row 1', pushes the current column names back down as the first data row and resets column names to Column 1, Column 2… — useful for stripping auto-generated headers before export or for toggling header interpretation without leaving the smart view. Both operations integrate with the existing undo/redo stack. The delimiter converter is a toolbar selector that shows the currently detected delimiter (comma, tab, semicolon, or pipe) and immediately re-serializes the entire document when changed. Switching from Tab to Comma converts a TSV to a CSV in one click; all cell values, quoting, and the header row are preserved faithfully through PapaParse's unparse engine. Auto-detection continues to drive the displayed value after conversion, so the selector always reflects the live document state."
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**Row 1 → Header:** Promote the first data row to column headers in one click — the row's cell values become the column names and the row is removed from the data; only shown when at least one data row exists"
+          - "**Header → Row 1:** Demote the current column headers back to the first data row and reset column names to Column 1, Column 2… — works even when the table has no data rows"
+          - "**Delimiter Converter:** Toolbar selector showing the auto-detected delimiter (Comma, Tab, Semicolon, Pipe); changing it immediately re-serializes the document with the new separator, converting TSV ↔ CSV ↔ PSV without leaving the smart view"
+          - "**Undo/Redo for header changes:** Both promote and demote operations are recorded in the undo stack and can be reversed with the existing undo/redo buttons"
+
+  - version: "1.30.0"
+    type: "release"
     draft: false
     date: "2026-05-22"
     headline: "HAR Network Traffic Viewer & 10 New Pipeline Operations"
