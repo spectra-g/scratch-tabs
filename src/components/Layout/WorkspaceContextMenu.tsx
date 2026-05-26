@@ -5,6 +5,7 @@ import { ContextMenuItem } from "../Tab/ContextMenuItem";
 import { MenuItem } from "../Tab/types";
 import {
     Plus,
+    ClipboardPlus,
     Edit,
     Trash2
 } from "../Icons";
@@ -55,6 +56,16 @@ export const WorkspaceContextMenu: React.FC<WorkspaceContextMenuProps> = ({
         onClose();
     };
 
+    const handlePasteNewTab = async () => {
+        const { activeWorkspaceId, switchWorkspace } = useWorkspaceStore.getState();
+        if (workspaceId !== activeWorkspaceId) {
+            await switchWorkspace(workspaceId);
+        }
+        const { useRootStore } = await import("../../stores/rootStore");
+        await useRootStore.getState().handleNewTabFromPaste(false);
+        onClose();
+    };
+
     const handleRename = () => {
         if (workspace) {
             setEditingId(workspaceId, workspace.name);
@@ -85,6 +96,12 @@ export const WorkspaceContextMenu: React.FC<WorkspaceContextMenuProps> = ({
             label: "New Tab",
             icon: Plus,
             action: handleNewTab,
+        },
+        {
+            id: "paste-new-tab",
+            label: "Paste as New Tab",
+            icon: ClipboardPlus,
+            action: handlePasteNewTab,
         },
         {
             id: "separator-1",

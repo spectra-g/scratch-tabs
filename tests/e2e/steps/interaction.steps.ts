@@ -1,6 +1,6 @@
 const { When } = require('@cucumber/cucumber');
 const { expect } = require('@playwright/test');
-import { waitForSaveIndicator, waitForCursorIndicator } from '../support/testIndicator.utils';
+import { waitForSaveIndicator, waitForCursorAtLine } from '../support/testIndicator.utils';
 
 // Updated to use action classes directly instead of delegate methods
 // Aliases for quoted and unquoted variants
@@ -82,13 +82,25 @@ When('I refresh the page', async function () {
 });
 
 When('I click in the editor at line {int}', async function (lineNumber) {
-
+  // Capture the timestamp before the click so the wait step can distinguish a
+  // fresh save from a stale one at the same line number.
+  const indicator = this.page.locator('#test-cursor-indicator');
+  this._preCursorTimestamp = await indicator.getAttribute('data-last-cursor-save');
+  this._expectedCursorLine = lineNumber;
   await this.editor.clickAtLine(lineNumber);
 });
 
 When('I wait for cursor position to stabilize', async function () {
-  // Wait for cursor position changes to settle and be persisted
-  await waitForCursorIndicator(this.page);
+  // Wait until the app saves the specific line number we clicked (data-cursor-line).
+  // This is immune to background cursor debounces (setModel, other tabs) that
+  // happen to fire before or after the click — they save different line numbers
+  // and won't satisfy the condition.  The pre-click timestamp guards against a
+  // stale previous save at the same line.
+  const expectedLine = this._expectedCursorLine;
+  const preTimestamp = this._preCursorTimestamp;
+  this._expectedCursorLine = undefined;
+  this._preCursorTimestamp = undefined;
+  await waitForCursorAtLine(this.page, expectedLine, preTimestamp);
 });
 
 When('I click the "{string}" link', async function (linkText) {
