@@ -402,7 +402,67 @@ header nav a {
   color: #F5F5F5;
 }
 
-/* ===== PART 11: FAQ Specific ===== */
+/* ===== PART 11: Capability Marquee ===== */
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.marquee-row {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+}
+
+.marquee-track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  animation: marquee-scroll var(--marquee-duration, 45s) linear infinite;
+  will-change: transform;
+}
+
+.marquee-item {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  padding: 0.2rem 0.6rem;
+  margin-right: 0.5rem;
+  border: 1px solid;
+  border-radius: 2px;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.68rem;
+  flex-shrink: 0;
+}
+
+.marquee-item.tool {
+  background: rgba(16, 185, 129, 0.04);
+  border-color: rgba(16, 185, 129, 0.18);
+  color: #10b981;
+}
+
+.marquee-item.format {
+  background: rgba(156, 163, 175, 0.03);
+  border-color: rgba(75, 85, 99, 0.35);
+  color: #6b7280;
+}
+
+.marquee-item.capability {
+  background: rgba(167, 139, 250, 0.04);
+  border-color: rgba(167, 139, 250, 0.18);
+  color: #a78bfa;
+}
+
+.marquee-sep {
+  color: #1f2937;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.6rem;
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+/* ===== PART 12: FAQ Specific ===== */
 .faq-item {
   background: #0a0a0a;
   border: 1px solid #374151;

@@ -56,6 +56,7 @@
 
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
   <link rel="icon" href="https://scratchtabs.b-cdn.net/favicon.svg" type="image/svg+xml" />
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
   <link
     href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600;700&display=swap"
     rel="stylesheet" />
@@ -129,48 +130,40 @@
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
 
-        <!-- Version 1.30.0 -->
+        <!-- Version 1.31.0 -->
         <div class="changelog-entry latest">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-white">V1.30.0</h2>
+              <h2 class="text-2xl font-bold text-white">V1.31.0</h2>
               <span class="badge latest">LATEST</span>
             </div>
-            <span class="text-gray-500 text-xs font-mono">05/22/2026</span>
+            <span class="text-gray-500 text-xs font-mono">05/26/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">HAR NETWORK TRAFFIC VIEWER & 10 NEW PIPELINE OPERATIONS</h3>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">CSV SMART VIEW: HEADER PROMOTION & DELIMITER CONVERSION</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">Adds a fully offline HAR (HTTP Archive) Smart View and 10 new pipeline operations. The HAR viewer opens any .har file and renders a DevTools-style waterfall timeline with virtualized rows (no jank on 1,000+ entry captures), a sortable table view, and a resizable request detail panel covering headers, request and response bodies, cookies, and a colour-coded timing breakdown. A privacy banner automatically surfaces when the capture contains Authorization headers, cookies, API keys, or token-bearing URLs. Filtering covers URL search, status category (1xx–5xx), HTTP method, resource type, errors-only, and a page selector for multi-page HAR files. The timing chart is HAR 1.2 spec-compliant — SSL time is subtracted from the connect phase rather than stacked on top, and zero-duration phases (cached DNS lookups) are shown rather than hidden. Large response bodies over 500 KB bypass JSON formatting to prevent main-thread freezes; image responses render as a preview rather than dumping base64 text. Data URI entries are fast-pathed to avoid passing megabyte strings through the URL parser. The cURL export uses `--data-raw` and `--compressed` matching Chrome DevTools output and can be opened directly in a new curl-format tab. Filtered captures and CSV summaries export to background tabs with the language locked so they open as HAR or CSV rather than falling back to JSON. Pipeline additions: Ascii85/Base85 encode and decode complete the unusual-base encoding matrix; Punycode encode and decode handle internationalised domain names; Brotli compress and decompress use the browser-native CompressionStream API; CIDR Expand converts IPv4 CIDR notation to address lists; CSV Deduplicate Rows removes duplicate rows with column-scoped deduplication; Date Add and Date Subtract perform calendar-aware arithmetic using date-fns.</p>
+            <p class="mb-4">Adds two quality-of-life improvements to the CSV Smart View toolbar. Header promotion solves a common friction point: when a CSV file has no header row, the smart view generates generic column names (Column 1, Column 2…) and the real header values end up as the first data row. A new 'Row 1 → Header' button takes the first data row's cell values and promotes them to become the column names, removing that row from the data. The reverse, 'Header → Row 1', pushes the current column names back down as the first data row and resets column names to Column 1, Column 2… — useful for stripping auto-generated headers before export or for toggling header interpretation without leaving the smart view. Both operations integrate with the existing undo/redo stack. The delimiter converter is a toolbar selector that shows the currently detected delimiter (comma, tab, semicolon, or pipe) and immediately re-serializes the entire document when changed. Switching from Tab to Comma converts a TSV to a CSV in one click; all cell values, quoting, and the header row are preserved faithfully through PapaParse's unparse engine. Auto-detection continues to drive the displayed value after conversion, so the selector always reflects the live document state.</p>
 
             <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
             <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>HAR Network Traffic Viewer:</strong> Full offline Smart View for HTTP Archive (.har) files — no data leaves the browser; opens captures of any size using virtualized rendering</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Waterfall Timeline:</strong> DevTools-style waterfall with per-request colour-coded timing bars, start-offset positioning, and a total-duration axis; handles 1,000+ entry captures without frame drops</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Table View:</strong> Sortable, virtualized table showing method, status, host, path, type, transfer size, and time — switch between Waterfall and Table with one click</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Request Detail Panel:</strong> Resizable side panel with five tabs — Headers (general, response, request, query params), Request body, Response body, Cookies, and Timing breakdown</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Timing Breakdown:</strong> Colour-coded bar chart for each phase (Queued, DNS, TCP Connect, SSL/TLS, Request Sent, TTFB, Download); HAR 1.2 spec-compliant — SSL duration is subtracted from connect to avoid double-counting; zero-duration phases (cached DNS) are shown rather than hidden</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Response Body Previews:</strong> JSON responses are pretty-printed (bypassed above 500 KB to prevent main-thread freeze with a raw-text fallback and notice); base64-encoded image responses render as an inline image preview instead of dumping the base64 string</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Privacy Banner:</strong> Automatically detected when the capture contains Authorization headers, cookies, API keys, token-bearing URLs, or other sensitive data — lists the specific data types found</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Filtering:</strong> Filter by URL/method/status/MIME search, status category pills (2xx/3xx/4xx/5xx), HTTP method checkboxes, errors-only toggle, and a page selector for multi-page HAR files (shown only when `log.pages` has more than one entry)</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>cURL Export:</strong> Generate a cURL command for any request using `--data-raw` (prevents `@`-file and newline stripping) and `--compressed` (matches Chrome DevTools output); copy to clipboard or open directly in a new curl-format tab</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>HAR & CSV Export:</strong> Export filtered entries as a HAR file or CSV summary to a background tab; tabs open with the correct language locked so they are not misidentified as JSON</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Data URI Safety:</strong> Entries with `data:` URLs are fast-pathed before URL parsing — hostname shown as `(data URI)` and pathname truncated to 60 characters to prevent megabyte strings from reaching the table layout engine</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Out-of-Order Entry Handling:</strong> Start offsets and the summary total-time are derived from the chronological minimum timestamp across all entries rather than assuming `entries[0]` is earliest — correctly handles HAR files from async capture tools</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Row 1 → Header:</strong> Promote the first data row to column headers in one click — the row's cell values become the column names and the row is removed from the data; only shown when at least one data row exists</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Header → Row 1:</strong> Demote the current column headers back to the first data row and reset column names to Column 1, Column 2… — works even when the table has no data rows</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Delimiter Converter:</strong> Toolbar selector showing the auto-detected delimiter (Comma, Tab, Semicolon, Pipe); changing it immediately re-serializes the document with the new separator, converting TSV  CSV  PSV without leaving the smart view</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Undo/Redo for header changes:</strong> Both promote and demote operations are recorded in the undo stack and can be reversed with the existing undo/redo buttons</span></li>
             </ul>
-
-            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_pipeline_operations</h4>
-            <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Ascii85 / Base85 Encode:</strong> Encode text to Adobe Ascii85 format (`<~` / `~>` delimiters, `z` zero-group shorthand, correct partial last-group handling) — used in PDFs, PostScript, and Python's `base64.b85encode`</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Ascii85 / Base85 Decode:</strong> Decode Ascii85 back to text; strips `<~` / `~>` delimiters automatically and tolerates embedded whitespace</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Punycode Encode:</strong> Convert a Unicode domain name to its ACE Punycode form (e.g. `münchen.de` → `xn--mnchen-3ya.de`) — handles full multi-label domains</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Punycode Decode:</strong> Convert an ACE Punycode domain back to Unicode (e.g. `xn--mnchen-3ya.de` → `münchen.de`); ASCII-only domains pass through unchanged</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Brotli Compress:</strong> Compress text using the browser-native `CompressionStream('br')` API (Chrome 80+, Firefox 115+, Safari 17+); outputs Base64 or raw Latin-1</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Brotli Decompress:</strong> Decompress Brotli-compressed data (Base64 or raw Latin-1 input) using the native `DecompressionStream('br')` API</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>CIDR Expand:</strong> Expand an IPv4 CIDR range (e.g. `192.168.1.0/24`) to a newline-separated list of addresses; toggles for network and broadcast address inclusion; hard-capped at 65,536 addresses with a clear error for larger ranges</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>CSV Deduplicate Rows:</strong> Remove duplicate rows from CSV data — dedupe on the full row or scope to a column by name or zero-based index; case-sensitive or case-insensitive comparison; preserves header row and first occurrence</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Date Add:</strong> Add a duration (seconds, minutes, hours, days, weeks, months, or years) to an ISO date string or `now`; outputs ISO 8601, date-only, locale string, or Unix timestamp</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Date Subtract:</strong> Subtract a duration from an ISO date string or `now` with the same unit and output options as Date Add</span></li>
-            </ul>
+          </div>
+        </div>
+        <!-- Version 1.30.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.30.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">05/22/2026</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">HAR NETWORK TRAFFIC VIEWER & 10 NEW PIPELINE OPERATIONS</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p>Full offline HAR viewer with waterfall, request detail panel, privacy detection, and cURL export — plus Ascii85, Punycode, Brotli, CIDR, CSV Dedupe & Date Arithmetic pipeline operations</p>
           </div>
         </div>
         <!-- Version 1.29.0 -->
@@ -178,7 +171,7 @@
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
               <h2 class="text-xl font-bold text-white uppercase">V1.29.0</h2>
-              <span class="badge latest">LATEST</span>
+              <span class="badge release">RELEASE</span>
             </div>
             <span class="text-gray-500 text-xs font-mono">05/21/2026</span>
           </div>
@@ -714,7 +707,7 @@
             <h3 class="text-emerald-500 font-mono text-sm">// THE_ARSENAL</h3>
           </div>
           <h4 class="text-white font-bold text-xl mb-2">The Utility Belt</h4>
-          <p class="text-gray-400 text-sm">25+ standalone tablets: JWT Toolkit, REST Client, Regex Tester, Password Generator, and more.</p>
+          <p class="text-gray-400 text-sm">40+ tools: JWT Toolkit, REST Client, Regex Tester, Password Generator, and more.</p>
         </a>
         <a href="index.html#tech-specs" class="card-sharp p-8 block group">
           <div class="flex justify-between items-start mb-4">
@@ -746,7 +739,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.30.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.31.0</span>
         </div>
 
         <div class="flex space-x-8">

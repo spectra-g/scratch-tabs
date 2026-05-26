@@ -30,28 +30,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Scratch Tabs | Local-First Developer Workspace</title>
+  <title>Scratch Tabs | Developer Scratchpad & Toolkit</title>
   <meta name="description"
-    content="Replace your messy dev environment. A private, offline-first workspace with Transformation Pipelines, Smart Views, and 25+ developer tools. No accounts, zero data egress." />
+    content="Your private, offline-first scratchpad for the data that doesn't belong in git. Auto detects formats, transforms data, unlimited tabs, workspaces and more. No accounts, free and open-source." />
   <meta name="keywords"
-    content="developer workspace, transformation pipeline, json editor, local data tools, offline dev tools, jwt decoder, regex tester, monaco editor, scratchpad, privacy-first tools, rest client, api testing" />
+    content="developer scratchpad, developer toolkit, transformation pipeline, json editor, offline dev tools, jwt decoder, regex tester, monaco editor, scratchpad, privacy-first tools, rest client, api testing" />
 
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://scratchtabs.com/" />
-  <meta property="og:title" content="Scratch Tabs | Local-First Developer Workspace" />
+  <meta property="og:title" content="Scratch Tabs | Developer Scratchpad & Toolkit" />
   <meta property="og:description"
-    content="Eliminate the clipboard shuffle. A private workspace for your temporary data with Pipelines, Smart Views, and no server interaction." />
+    content="Your private, offline-first scratchpad for the data that doesn't belong in git. Auto detects formats, transforms data, unlimited tabs, workspaces and more. No accounts, free and open-source." />
   <meta property="og:image" content="https://scratchtabs.b-cdn.net/og-image.png" />
 
   <meta property="twitter:card" content="summary_large_image" />
   <meta property="twitter:url" content="https://scratchtabs.com/" />
-  <meta property="twitter:title" content="Scratch Tabs | Local-First Developer Workspace" />
+  <meta property="twitter:title" content="Scratch Tabs | Developer Scratchpad & Toolkit" />
   <meta property="twitter:description"
-    content="Eliminate the clipboard shuffle. A private workspace for your temporary data with Pipelines, Smart Views, and no server interaction." />
+    content="Your private, offline-first scratchpad for the data that doesn't belong in git. Auto detects formats, transforms data, unlimited tabs, workspaces and more. No accounts, free and open-source." />
   <meta property="twitter:image" content="https://scratchtabs.b-cdn.net/og-image.png" />
 
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
   <link rel="icon" href="https://scratchtabs.b-cdn.net/favicon.svg" type="image/svg+xml" />
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
   <link
     href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600;700&display=swap"
     rel="stylesheet" />
@@ -69,11 +70,11 @@
             "@type": "WebPage",
             "@id": "https://scratchtabs.com"
           },
-          "description": "Your private, persistent, browser-based data workspace. Scratch Tabs is the ultimate client-side toolkit for JSON editing, Transformation Pipelines, REST client requests, JWT decoding, and more. All tools work offline with zero data egress.",
+          "description": "Your private, offline-first developer scratchpad. Scratch Tabs is a browser-based toolkit with 40+ tools for JSON editing, Transformation Pipelines, REST client requests, JWT decoding, and more. All tools work offline with zero data egress.",
           "applicationCategory": "DeveloperApplication",
           "operatingSystem": "All (Web Browser)",
           "browserRequirements": "Requires modern web browser with JavaScript and IndexedDB.",
-          "keywords": "developer workspace, transformation pipeline, json editor, local data tools, offline dev tools, privacy-focused, smart views, jwt decoder, regex tester, rest client, api testing",
+          "keywords": "developer scratchpad, developer toolkit, transformation pipeline, json editor, offline dev tools, privacy-focused, smart views, jwt decoder, regex tester, rest client, api testing",
           "featureList": [
             "Transformation Pipelines: Chain operations like Unix pipes",
             "Persistent Workspaces & Split-View UI",
@@ -161,11 +162,11 @@
   </header>
 
   <!-- HERO: THE PITCH -->
-  <section id="hero" class="pt-16 pb-12 md:pt-24 md:pb-16">
+  <section id="hero" class="pt-16 pb-6 md:pt-24 md:pb-8">
     <div class="container mx-auto px-6">
       <div class="flex flex-col items-center text-center mb-12">
         <div class="inline-flex items-center space-x-2 px-2 py-1 border border-gray-800 bg-gray-900 mb-6">
-          <span class="text-emerald-500 font-mono text-xs">v1.30.0 // LATEST</span>
+          <span class="text-emerald-500 font-mono text-xs">v1.31.0 // LATEST</span>
         </div>
         <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight mb-6">
           The Missing Half of Your <span class="text-emerald-500">Dev Environment.</span>
@@ -186,7 +187,7 @@
           </div>
         </div>
         <p class="text-lg text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
-          Your private, offline-first workbench for the data that doesn't belong in git. Detects formats, transforms data, and remembers everything. Open-source on GitHub.
+          Your private, offline-first scratchpad for the data that doesn't belong in git. Auto detects formats, transforms data, unlimited tabs, workspaces and more. No accounts, free and open-source.
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <a href="https://app.scratchtabs.com" target="_blank" class="terminal-button text-lg px-8 py-3">
@@ -197,32 +198,210 @@
     </div>
   </section>
 
+  <!-- CAPABILITY MARQUEE -->
+  <section class="pt-5 pb-10 border-b border-gray-800" aria-hidden="true">
+    <!-- Row 1: Tools (emerald) -->
+    <div class="marquee-row mb-3" style="--marquee-duration: 55s">
+      <div class="marquee-track">
+        <span class="marquee-item tool">JWT Decoder</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Regex Tester</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">REST Client</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">UUID Generator</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Base64 Encoder</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Diff Tool</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">QR Code</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">TOTP Authenticator</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">SSH Keygen</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">GraphQL Explorer</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Hex Viewer</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">JSON Mapper</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">URL Parser</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Cron Parser</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Password Generator</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Shape Snap</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Color Palette</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Word Count</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Pomodoro Timer</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Lorem Ipsum</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Calculator</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Emoji Picker</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Temp Email</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">User Generator</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Vault</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Checksum</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">DateTime Converter</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">IP Details</span><span class="marquee-sep">//</span>
+        <!-- duplicate for seamless loop -->
+        <span class="marquee-item tool">JWT Decoder</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Regex Tester</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">REST Client</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">UUID Generator</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Base64 Encoder</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Diff Tool</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">QR Code</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">TOTP Authenticator</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">SSH Keygen</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">GraphQL Explorer</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Hex Viewer</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">JSON Mapper</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">URL Parser</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Cron Parser</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Password Generator</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Shape Snap</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Color Palette</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Word Count</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Pomodoro Timer</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Lorem Ipsum</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Calculator</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Emoji Picker</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Temp Email</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">User Generator</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Vault</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Checksum</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">DateTime Converter</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">IP Details</span><span class="marquee-sep">//</span>
+      </div>
+    </div>
+    <!-- Row 2: Formats (gray), slower -->
+    <div class="marquee-row mb-3" style="--marquee-duration: 80s">
+      <div class="marquee-track">
+        <span class="marquee-item format">JSON</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">YAML</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">TOML</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">CSV</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Markdown</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">HTML</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">XML</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">SQL</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">HAR</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">PEM</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">.env</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">NDJSON</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Dockerfile</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">HCL</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">cURL</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Bash</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Python</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Go</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Rust</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">TypeScript</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Kotlin</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Scala</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">GraphQL Schema</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Access Log</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Stack Trace</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">SVG</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">INI</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Java</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Ruby</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">PHP</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">C#</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">C++</span><span class="marquee-sep">//</span>
+        <!-- duplicate for seamless loop -->
+        <span class="marquee-item format">JSON</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">YAML</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">TOML</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">CSV</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Markdown</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">HTML</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">XML</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">SQL</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">HAR</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">PEM</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">.env</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">NDJSON</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Dockerfile</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">HCL</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">cURL</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Bash</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Python</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Go</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Rust</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">TypeScript</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Kotlin</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Scala</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">GraphQL Schema</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Access Log</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Stack Trace</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">SVG</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">INI</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Java</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Ruby</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">PHP</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">C#</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">C++</span><span class="marquee-sep">//</span>
+      </div>
+    </div>
+    <!-- Row 3: Capabilities (purple), fastest -->
+    <div class="marquee-row" style="--marquee-duration: 38s">
+      <div class="marquee-track">
+        <span class="marquee-item capability">Transformation Pipelines</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Smart Views</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Split View</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Persistent Workspaces</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Macros</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Share via URL</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Import / Export</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Offline Mode</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Auto-save</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">JMESPath Queries</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">AI Summarization</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Format Detection</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Syntax Highlighting</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Multi-tab</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Pipeline Replay</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Hash-based URLs</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Zero Data Egress</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Open Source</span><span class="marquee-sep">//</span>
+        <!-- duplicate for seamless loop -->
+        <span class="marquee-item capability">Transformation Pipelines</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Smart Views</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Split View</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Persistent Workspaces</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Macros</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Share via URL</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Import / Export</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Offline Mode</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Auto-save</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">JMESPath Queries</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">AI Summarization</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Format Detection</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Syntax Highlighting</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Multi-tab</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Pipeline Replay</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Hash-based URLs</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Zero Data Egress</span><span class="marquee-sep">//</span>
+        <span class="marquee-item capability">Open Source</span><span class="marquee-sep">//</span>
+      </div>
+    </div>
+  </section>
+
   <section class="py-16 md:py-20 border-b border-gray-800 bg-[#050505]">
     <div class="container mx-auto px-6">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <!-- Card 1 -->
         <div class="p-6 border border-gray-800 bg-[#0a0a0a] rounded hover:border-emerald-500/50 transition-colors">
-          <div class="text-emerald-500 font-mono text-xs mb-3">01 // THE_EDITOR</div>
-          <h3 class="text-white font-bold text-lg mb-3">Monaco Core</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">The same engine as VS Code. Syntax highlighting for 40+ languages.</p>
+          <div class="text-emerald-500 font-mono text-xs mb-3">01 // PASTE</div>
+          <h3 class="text-white font-bold text-lg mb-3">Write or Paste</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">VS Code's Monaco engine. Syntax highlighting for 40+ languages, multi-cursor, find & replace, unlimited tabs.</p>
         </div>
         <!-- Card 2 -->
         <div class="p-6 border border-gray-800 bg-[#0a0a0a] rounded hover:border-emerald-500/50 transition-colors">
-          <div class="text-emerald-500 font-mono text-xs mb-3">02 // THE_WORKSPACE</div>
-          <h3 class="text-white font-bold text-lg mb-3">Persistent State</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">Organize tasks into persistent workspaces. Split views and auto-save.</p>
+          <div class="text-emerald-500 font-mono text-xs mb-3">02 // DETECT</div>
+          <h3 class="text-white font-bold text-lg mb-3">Smart Views</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">Format detected automatically. JSON becomes a tree, CSV becomes a spreadsheet, Markdown becomes a live preview.</p>
         </div>
         <!-- Card 3 -->
         <div class="p-6 border border-gray-800 bg-[#0a0a0a] rounded hover:border-emerald-500/50 transition-colors">
-          <div class="text-emerald-500 font-mono text-xs mb-3">03 // INTELLIGENCE</div>
-          <h3 class="text-white font-bold text-lg mb-3">Smart Views</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">Paste raw data, get a UI. JSON becomes a tree, CSV becomes a spreadsheet.</p>
+          <div class="text-emerald-500 font-mono text-xs mb-3">03 // TRANSFORM</div>
+          <h3 class="text-white font-bold text-lg mb-3">Pipelines</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">Chain operations like Unix pipes. Decode → extract → parse → query. Save and replay.</p>
         </div>
         <!-- Card 4 -->
         <div class="p-6 border border-gray-800 bg-[#0a0a0a] rounded hover:border-emerald-500/50 transition-colors">
-          <div class="text-emerald-500 font-mono text-xs mb-3">04 // DEV TOOLS</div>
+          <div class="text-emerald-500 font-mono text-xs mb-3">04 // USE_TOOLS</div>
           <h3 class="text-white font-bold text-lg mb-3">Dev Tool Arsenal</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">25+ specialized tools like JWT Decoders, Regex Testers, and REST Client.</p>
+          <p class="text-gray-400 text-sm leading-relaxed">Dozens of built-in tools - JWT Decoder, Regex Tester, REST Client, and more. Everything in one place.</p>
         </div>
       </div>
     </div>
@@ -256,7 +435,13 @@
                   <span class="text-emerald-500 font-mono text-xs">INPUT</span>
                   <span class="text-gray-600 text-[10px]">api.log</span>
                 </div>
-                <div class="font-mono text-[10px] text-gray-500 truncate">2024-01-15 INFO {"data":"{\"users\":[{\"email\":\"alice@...</div>
+                <div class="font-mono text-[10px] text-gray-500 leading-relaxed">
+                  <span class="text-gray-600">2024-01-15 INFO</span> {<br/>
+                  &nbsp;&nbsp;"data": "{\"users\":[<br/>
+                  &nbsp;&nbsp;&nbsp;&nbsp;{\"email\":\"alice@acme.io\"}<br/>
+                  &nbsp;&nbsp;]}"<br/>
+                  }
+                </div>
               </div>
 
               <div class="h-4 w-0.5 bg-gradient-to-b from-gray-700 to-emerald-500/50 mx-auto"></div>
@@ -383,36 +568,6 @@
     </div>
   </section>
 
-  <!-- EXPLORE MORE -->
-  <section class="py-16 md:py-24 border-t border-gray-800">
-    <div class="container mx-auto px-6">
-      <div class="text-center mb-16">
-        <h2 class="text-3xl md:text-4xl font-mono text-white mb-6">Explore the Platform</h2>
-        <p class="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
-          More than a text editor. An intelligent workbench with specialized utilities.
-        </p>
-      </div>
-      <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-        <a href="features.html" class="card-sharp p-8 block group">
-          <div class="flex justify-between items-start mb-5">
-            <h3 class="text-emerald-500 font-mono text-sm">// THE_WORKBENCH</h3>
-            <span class="text-gray-600 group-hover:text-emerald-500 transition-colors">-></span>
-          </div>
-          <h4 class="text-white font-bold text-xl mb-3">The Intelligent Workbench</h4>
-          <p class="text-gray-400 text-sm leading-relaxed">Monaco editor, Smart Views for JSON/CSV/Markdown, and workspace management.</p>
-        </a>
-        <a href="tablets.html" class="card-sharp p-8 block group">
-          <div class="flex justify-between items-start mb-5">
-            <h3 class="text-emerald-500 font-mono text-sm">// THE_ARSENAL</h3>
-            <span class="text-gray-600 group-hover:text-emerald-500 transition-colors">-></span>
-          </div>
-          <h4 class="text-white font-bold text-xl mb-3">The Utility Belt</h4>
-          <p class="text-gray-400 text-sm leading-relaxed">25+ tools: JWT Toolkit, REST Client, Regex Tester, and more.</p>
-        </a>
-      </div>
-    </div>
-  </section>
-
   <!-- Final CTA -->
   <section class="py-20 border-t border-gray-800">
     <div class="container mx-auto px-6 text-center">
@@ -430,7 +585,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.30.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.31.0</span>
         </div>
 
         <div class="flex space-x-8">

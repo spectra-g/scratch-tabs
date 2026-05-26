@@ -64,6 +64,14 @@ interface CsvToolbarProps {
   onExportMarkdown: () => void;
   onExportSql: (tableName: string) => void;
 
+  // Header management
+  onPromoteFirstRowToHeader: () => void;
+  onDemoteHeaderToFirstRow: () => void;
+
+  // Delimiter
+  currentDelimiter: string;
+  onChangeDelimiter: (delimiter: string) => void;
+
   // Data info
   rowCount: number;
   columnCount: number;
@@ -98,6 +106,10 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
   onExportJson,
   onExportMarkdown,
   onExportSql,
+  onPromoteFirstRowToHeader,
+  onDemoteHeaderToFirstRow,
+  currentDelimiter,
+  onChangeDelimiter,
   rowCount,
   columnCount,
   diagnostics,
@@ -333,6 +345,49 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
               </div>
             </>
           )}
+        </div>
+
+        <div className="w-px h-6 bg-element mx-2" />
+
+        {/* Header management */}
+        <div className="flex items-center space-x-1">
+          {rowCount > 0 && (
+            <button
+              onClick={onPromoteFirstRowToHeader}
+              title="Use the first data row as column headers"
+              className="px-3 py-1 rounded text-sm bg-element text-main hover:bg-element-hover"
+              data-testid="promote-row-to-header"
+            >
+              Row 1 → Header
+            </button>
+          )}
+          <button
+            onClick={onDemoteHeaderToFirstRow}
+            title="Move column headers down as first data row"
+            className="px-3 py-1 rounded text-sm bg-element text-main hover:bg-element-hover"
+            data-testid="demote-header-to-row"
+          >
+            Header → Row 1
+          </button>
+        </div>
+
+        <div className="w-px h-6 bg-element mx-2" />
+
+        {/* Delimiter selector */}
+        <div className="flex items-center space-x-1">
+          <span className="text-xs text-secondary">Delimiter:</span>
+          <select
+            value={currentDelimiter}
+            onChange={(e) => onChangeDelimiter(e.target.value)}
+            className="bg-element text-main border border-base rounded px-2 py-1 text-sm focus:outline-none focus:border-focus cursor-pointer"
+            title="Convert delimiter"
+            data-testid="delimiter-select"
+          >
+            <option value=",">Comma (,)</option>
+            <option value={"\t"}>Tab</option>
+            <option value=";">Semicolon (;)</option>
+            <option value="|">Pipe (|)</option>
+          </select>
         </div>
 
         <div className="w-px h-6 bg-element mx-2" />

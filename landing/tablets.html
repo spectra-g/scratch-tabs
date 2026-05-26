@@ -30,7 +30,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The Utility Belt | 25+ Standalone Developer Tools</title>
+  <title>The Utility Belt | 40+ Standalone Developer Tools</title>
   <meta name="description"
     content="A comprehensive arsenal of offline developer tools: JWT Toolkit, Regex Tester, Password Generator, UUID Creator, and more. No context-switching required." />
   <meta name="keywords"
@@ -39,7 +39,7 @@
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://scratchtabs.com/tablets.html" />
-  <meta property="og:title" content="The Utility Belt | 25+ Standalone Developer Tools" />
+  <meta property="og:title" content="The Utility Belt | 40+ Standalone Developer Tools" />
   <meta property="og:description"
     content="A comprehensive arsenal of offline developer tools: JWT Toolkit, Regex Tester, Password Generator, and more. No context-switching required." />
   <meta property="og:image" content="https://scratchtabs.b-cdn.net/og-image.png" />
@@ -47,13 +47,14 @@
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image" />
   <meta property="twitter:url" content="https://scratchtabs.com/tablets.html" />
-  <meta property="twitter:title" content="The Utility Belt | 25+ Standalone Developer Tools" />
+  <meta property="twitter:title" content="The Utility Belt | 40+ Standalone Developer Tools" />
   <meta property="twitter:description"
     content="A comprehensive arsenal of offline developer tools: JWT Toolkit, Regex Tester, Password Generator, and more. No context-switching required." />
   <meta property="twitter:image" content="https://scratchtabs.b-cdn.net/og-image.png" />
 
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
   <link rel="icon" href="https://scratchtabs.b-cdn.net/favicon.svg" type="image/svg+xml" />
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
   <link
     href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600;700&display=swap"
     rel="stylesheet" />
@@ -114,11 +115,45 @@
         Standalone Tools. <span class="text-emerald-500">Zero Context-Switching.</span>
       </h1>
       <p class="text-lg md:text-xl text-gray-400 mb-4 max-w-3xl mx-auto leading-relaxed">
-        Unlike <a href="features.html" class="text-emerald-500 hover:underline">Smart Views</a> that transform your pasted content, Tablets are purpose-built utilities for generating, calculating, and testing. No data intake required - just pure, offline utility.
+        Purpose-built utilities for generating, calculating, and testing. No data intake required - just open and use.
       </p>
       <p class="text-base text-gray-500 max-w-2xl mx-auto">
-        JWT decode here, regex test there, password generate somewhere else? Not anymore. Open-source on GitHub.
+        JWT decode here, regex test there, password generate somewhere else? Not anymore.
       </p>
+    </div>
+  </section>
+
+  <!-- TABLETS VS SMART VIEWS -->
+  <section class="py-10 border-b border-gray-800 bg-gray-900/20">
+    <div class="container mx-auto px-6">
+      <div class="max-w-4xl mx-auto">
+        <div class="section-tag mb-6">
+          <span>[CLARIFICATION] // TABLETS_VS_SMART_VIEWS</span>
+        </div>
+        <h2 class="text-2xl md:text-3xl font-mono text-white mb-6">What's the Difference?</h2>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="card-sharp p-6 border-emerald-500/30">
+            <h3 class="text-emerald-500 font-mono text-sm mb-3">// Tablets (This Page)</h3>
+            <p class="text-gray-400 text-sm mb-4">Standalone tools for <strong class="text-white">generating, calculating, or testing</strong>. No content required - just open and use.</p>
+            <ul class="text-gray-500 text-xs space-y-1">
+              <li>-> Generate a UUID</li>
+              <li>-> Test a regex pattern</li>
+              <li>-> Decode a JWT</li>
+              <li>-> Build a cron expression</li>
+            </ul>
+          </div>
+          <div class="card-sharp p-6">
+            <h3 class="text-gray-400 font-mono text-sm mb-3">// Smart Views <a href="features.html" class="hover:text-emerald-500 transition-colors">(Features Page →)</a></h3>
+            <p class="text-gray-400 text-sm mb-4">Specialized views that <strong class="text-white">activate when you paste content</strong>. They understand your data structure.</p>
+            <ul class="text-gray-500 text-xs space-y-1">
+              <li>-> Paste JSON -> Tree explorer</li>
+              <li>-> Paste CSV -> Spreadsheet view</li>
+              <li>-> Paste Markdown -> Live preview</li>
+              <li>-> Paste diff -> Side-by-side comparison</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -351,122 +386,6 @@
         </div>
       </div>
 
-      <!-- CATEGORY: Productivity & Visualization -->
-      <div class="mb-16">
-        <div class="section-tag mb-6">
-          <span>[CATEGORY] // PRODUCTIVITY_VISUALIZATION</span>
-        </div>
-        <p class="text-gray-400 max-w-4xl mb-8 text-lg">Tools to keep you focused, organized, and productive.</p>
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div class="card-sharp p-6 flex flex-col">
-            <h3 class="text-xl font-bold text-white mb-2">Diagram Editor<span class="new-badge">New</span></h3>
-            <p class="text-gray-400 text-sm mb-4">Create flowcharts, sequence diagrams, and entity relationships using Mermaid syntax with live preview.</p>
-            <div class="mt-auto pt-4 flex flex-wrap gap-2">
-              <span class="keyword-badge">mermaid</span>
-              <span class="keyword-badge">flowchart</span>
-              <span class="keyword-badge">diagram</span>
-            </div>
-          </div>
-          <div class="card-sharp p-6 flex flex-col">
-            <h3 class="text-xl font-bold text-white mb-2">Shape Snap</h3>
-            <p class="text-gray-400 text-sm mb-4">Freehand drawing that automatically recognizes and converts to perfect shapes. Great for quick mockups.</p>
-            <div class="mt-auto pt-4 flex flex-wrap gap-2">
-              <span class="keyword-badge">draw</span>
-              <span class="keyword-badge">shapes</span>
-              <span class="keyword-badge">sketch</span>
-            </div>
-          </div>
-          <div class="card-sharp p-6 flex flex-col">
-            <h3 class="text-xl font-bold text-white mb-2">Command Vault</h3>
-            <p class="text-gray-400 text-sm mb-4">Your personal, searchable snippet library. Store commands, code snippets, and notes for quick access.</p>
-            <div class="mt-auto pt-4 flex flex-wrap gap-2">
-              <span class="keyword-badge">snippets</span>
-              <span class="keyword-badge">commands</span>
-              <span class="keyword-badge">notes</span>
-            </div>
-          </div>
-          <div class="card-sharp p-6 flex flex-col">
-            <h3 class="text-xl font-bold text-white mb-2">Pomodoro Timer</h3>
-            <p class="text-gray-400 text-sm mb-4">Built-in focus timer with customizable work/break intervals. Stay in the zone with audio notifications.</p>
-            <div class="mt-auto pt-4 flex flex-wrap gap-2">
-              <span class="keyword-badge">timer</span>
-              <span class="keyword-badge">focus</span>
-              <span class="keyword-badge">productivity</span>
-            </div>
-          </div>
-          <div class="card-sharp p-6 flex flex-col">
-            <h3 class="text-xl font-bold text-white mb-2">Clipboard Manager</h3>
-            <p class="text-gray-400 text-sm mb-4">Keep a history of your clipboard items. Perfect for gathering data from multiple sources.</p>
-            <div class="mt-auto pt-4 flex flex-wrap gap-2">
-              <span class="keyword-badge">clipboard</span>
-              <span class="keyword-badge">history</span>
-              <span class="keyword-badge">paste</span>
-            </div>
-          </div>
-          <div class="card-sharp p-6 flex flex-col">
-            <h3 class="text-xl font-bold text-white mb-2">Emoji Picker</h3>
-            <p class="text-gray-400 text-sm mb-4">Searchable emoji reference with categories and skin tone support. Copy with one click.</p>
-            <div class="mt-auto pt-4 flex flex-wrap gap-2">
-              <span class="keyword-badge">emoji</span>
-              <span class="keyword-badge">unicode</span>
-              <span class="keyword-badge">copy</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- TABLETS VS SMART VIEWS -->
-  <section class="py-16 bg-gray-900/30 border-t border-gray-800">
-    <div class="container mx-auto px-6">
-      <div class="max-w-4xl mx-auto">
-        <div class="section-tag mb-6">
-          <span>[CLARIFICATION] // TABLETS_VS_SMART_VIEWS</span>
-        </div>
-        <h2 class="text-2xl md:text-3xl font-mono text-white mb-6">What's the Difference?</h2>
-        <div class="grid md:grid-cols-2 gap-6">
-          <div class="card-sharp p-6 border-emerald-500/30">
-            <h3 class="text-emerald-500 font-mono text-sm mb-3">// Tablets (This Page)</h3>
-            <p class="text-gray-400 text-sm mb-4">Standalone tools for <strong class="text-white">generating, calculating, or testing</strong>. No content required - just open and use.</p>
-            <ul class="text-gray-500 text-xs space-y-1">
-              <li>-> Generate a UUID</li>
-              <li>-> Test a regex pattern</li>
-              <li>-> Decode a JWT</li>
-              <li>-> Build a cron expression</li>
-            </ul>
-          </div>
-          <div class="card-sharp p-6">
-            <h3 class="text-gray-400 font-mono text-sm mb-3">// Smart Views (Features Page)</h3>
-            <p class="text-gray-400 text-sm mb-4">Specialized views that <strong class="text-white">activate when you paste content</strong>. They understand your data structure.</p>
-            <ul class="text-gray-500 text-xs space-y-1">
-              <li>-> Paste JSON -> Tree explorer</li>
-              <li>-> Paste CSV -> Spreadsheet view</li>
-              <li>-> Paste Markdown -> Live preview</li>
-              <li>-> Paste diff -> Side-by-side comparison</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- AND MORE TO COME -->
-  <section class="py-16 bg-black border-t border-gray-800">
-    <div class="container mx-auto px-6 text-center">
-      <h2 class="text-3xl md:text-4xl font-mono text-white mb-4">AN EVER-GROWING TOOLKIT</h2>
-      <p class="text-gray-400 text-lg max-w-2xl mx-auto mb-8">
-        The Tablet ecosystem is constantly expanding. Have an idea for a tool that would make your life easier?
-      </p>
-      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-        <a href="https://github.com/spectra-g/scratch-tabs" target="_blank"
-          class="terminal-button px-8 py-3">
-          <span class="text-gray-500 mr-2">$</span> suggest_on_github<span class="cursor-blink">|</span>
-        </a>
-        <a href="https://discord.gg/HwsfpTzMVS" target="_blank" class="terminal-button px-8 py-3">
-          <span class="text-gray-500 mr-2">$</span> join_the_discord<span class="cursor-blink">|</span>
-        </a>
-      </div>
     </div>
   </section>
 
@@ -518,7 +437,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.30.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.31.0</span>
         </div>
 
         <div class="flex space-x-8">

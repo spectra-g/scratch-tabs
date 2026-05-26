@@ -246,7 +246,7 @@ export const WelcomeScreen: React.FC = () => {
     {
       icon: Extension,
       title: "Dev Tools",
-      description: "25+ offline utilities",
+      description: "40+ offline utilities",
       hint: "JWT, Regex, Cron, Diff, UUID, Base64, and converters",
       onClick: handleOpenToolSelector,
       colorScheme: "info",
@@ -313,14 +313,14 @@ export const WelcomeScreen: React.FC = () => {
               />
               <h1 className="text-3xl font-mono font-medium text-main">SCRATCH_TABS</h1>
             </div>
-            <p className="text-muted text-sm font-mono mb-6">// v1.30.0</p>
+            <p className="text-muted text-sm font-mono mb-6">// v1.31.0</p>
 
             {/* Value Proposition */}
             <h2 className="text-2xl font-semibold text-main mb-4">
               Your Private Dev Workspace
             </h2>
             <p className="text-sm text-muted mb-6">
-              Monaco editor • <span className="text-primary">Smart Views</span> • 25+ Dev Tools
+              Monaco editor • <span className="text-primary">Smart Views</span> • 40+ Dev Tools
             </p>
 
             {/* Trust Badges */}

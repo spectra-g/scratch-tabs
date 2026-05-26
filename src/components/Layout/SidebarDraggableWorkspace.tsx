@@ -1,7 +1,7 @@
 import React, { useCallback, useRef, useEffect } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { Folder, FolderOpen, ChevronDown, ChevronRight, Edit, ArrowRightLeft } from "../Icons";
+import { Folder, FolderOpen, ChevronDown, ChevronRight, ArrowRightLeft, ClipboardPlus } from "../Icons";
 import { clsx } from "clsx";
 import { useSidebarStore } from "../../stores/sidebarStore";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
@@ -180,14 +180,19 @@ export const SidebarDraggableWorkspace: React.FC<SidebarDraggableWorkspaceProps>
               </button>
             )}
             <button
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
-                setEditingId(id, name);
+                const { activeWorkspaceId, switchWorkspace: sw } = useWorkspaceStore.getState();
+                if (id !== activeWorkspaceId) {
+                  await sw(id);
+                }
+                const { useRootStore } = await import("../../stores/rootStore");
+                await useRootStore.getState().handleNewTabFromPaste(false);
               }}
               className="p-0.5 hover:bg-surface-raised rounded text-secondary hover:text-main"
-              title="Rename workspace"
+              title="Paste clipboard as new tab"
             >
-              <Edit size={12} />
+              <ClipboardPlus size={12} />
             </button>
           </div>
           <span

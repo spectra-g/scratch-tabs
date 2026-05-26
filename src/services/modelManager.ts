@@ -423,7 +423,7 @@ class ModelManager {
         useTabsStore.getState().updateTabState(tabId, { cursorPosition });
 
         // Update DOM element for E2E tests to detect cursor position save completion
-        updateCursorIndicator();
+        updateCursorIndicator(cursorPosition.lineNumber);
 
         this.debouncedCursorPersistence.delete(tabId);
       } catch (error) {

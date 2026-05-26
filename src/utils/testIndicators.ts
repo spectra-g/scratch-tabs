@@ -22,8 +22,15 @@ export function updateSaveIndicator(): void {
 }
 
 /**
- * Updates the cursor position test indicator
+ * Updates the cursor position test indicator.
+ * Also writes data-cursor-line so E2E tests can wait for a specific line save.
  */
-export function updateCursorIndicator(): void {
-  updateTestIndicator('test-cursor-indicator', 'data-last-cursor-save');
+export function updateCursorIndicator(lineNumber?: number): void {
+  const indicator = document.getElementById('test-cursor-indicator');
+  if (indicator) {
+    indicator.setAttribute('data-last-cursor-save', Date.now().toString());
+    if (lineNumber !== undefined) {
+      indicator.setAttribute('data-cursor-line', lineNumber.toString());
+    }
+  }
 }

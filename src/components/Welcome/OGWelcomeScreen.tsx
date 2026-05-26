@@ -178,7 +178,7 @@ export const OGWelcomeScreen: React.FC = () => {
               Tablet Arsenal
             </h3>
             <p style={{ color: '#9ca3af', fontSize: '12px', lineHeight: '1.5' }}>
-              25+ tools: JWT, REST Client, Regex Tester
+              40+ tools: JWT, REST Client, Regex Tester
             </p>
           </div>
         </div>

@@ -35,27 +35,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FAQ | Scratch Tabs</title>
   <meta name="description"
-    content="Frequently Asked Questions about Scratch Tabs - Your Local Data Playground & JSON Toolkit" />
-  <meta name="keywords" content="faq, frequently asked questions, scratch tabs, json editor, developer tools" />
+    content="Frequently Asked Questions about Scratch Tabs - a private, offline-first developer scratchpad with 40+ tools, Transformation Pipelines, and Smart Views. No accounts, no data egress." />
+  <meta name="keywords" content="faq, frequently asked questions, scratch tabs, developer workspace, offline tools, privacy, local-first, json editor, jwt decoder" />
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://scratchtabs.com/faq.html" />
-  <meta property="og:title" content="FAQ - Scratch Tabs" />
+  <meta property="og:title" content="FAQ | Scratch Tabs" />
   <meta property="og:description"
-    content="Frequently Asked Questions about Scratch Tabs - Your Local Data Playground & JSON Toolkit" />
+    content="Frequently Asked Questions about Scratch Tabs - a private, offline-first developer scratchpad with 40+ tools, Transformation Pipelines, and Smart Views." />
   <meta property="og:image" content="https://scratchtabs.b-cdn.net/og-image.png" />
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image" />
   <meta property="twitter:url" content="https://scratchtabs.com/faq.html" />
-  <meta property="twitter:title" content="FAQ - Scratch Tabs" />
+  <meta property="twitter:title" content="FAQ | Scratch Tabs" />
   <meta property="twitter:description"
-    content="Frequently Asked Questions about Scratch Tabs - Your Local Data Playground & JSON Toolkit" />
+    content="Frequently Asked Questions about Scratch Tabs - a private, offline-first developer scratchpad with 40+ tools, Transformation Pipelines, and Smart Views." />
   <meta property="twitter:image" content="https://scratchtabs.b-cdn.net/og-image.png" />
 
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
   <link rel="icon" href="https://scratchtabs.b-cdn.net/favicon.svg" type="image/svg+xml" />
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
   <link
     href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600;700&display=swap"
     rel="stylesheet" />
@@ -161,15 +162,19 @@
 
         <details class="faq-item">
           <summary>
-            How does client-side processing work?
+            Does it really work offline? How?
             <svg class="arrow w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
             </svg>
           </summary>
           <div class="faq-content">
+            <p class="mb-4">
+              Yes. All processing happens directly in your browser using JavaScript - no data is ever sent to a server.
+              Your JSON, passwords, and everything else stays on your machine.
+            </p>
             <p>
-              All processing happens directly in your browser using JavaScript. No data is sent to any server, ensuring
-              complete privacy. Your JSON, passwords, and all other data stay on your machine.
+              Once the app has loaded, it works completely offline. All features including editing, AI summarisation, and
+              data conversion work without an internet connection.
             </p>
           </div>
         </details>
@@ -183,9 +188,8 @@
           </summary>
           <div class="faq-content">
             <p>
-              No account required! Scratch Tabs works entirely offline and stores your data locally in your browser.
-              Just launch the app and start working immediately.
-            </p>
+              No account required. Scratch Tabs stores everything locally in your browser's IndexedDB. Just launch the
+              app and start working immediately.
             </p>
           </div>
         </details>
@@ -200,20 +204,6 @@
             <p>
               Scratch Tabs works on all modern browsers including Chrome, Firefox, Safari, and Edge. We recommend using
               the latest version for the best experience.
-            </p>
-          </div>
-        </details>
-        <details class="faq-item">
-          <summary>
-            Can I use it offline?
-            <svg class="arrow w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
-          </summary>
-          <div class="faq-content">
-            <p>
-              Absolutely! Once loaded, Scratch Tabs works completely offline. All features including editing, AI
-              summary, and data conversion work without an internet connection.
             </p>
           </div>
         </details>
@@ -298,7 +288,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.30.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.31.0</span>
         </div>
 
         <div class="flex space-x-8">
