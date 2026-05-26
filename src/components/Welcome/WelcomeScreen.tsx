@@ -246,7 +246,7 @@ export const WelcomeScreen: React.FC = () => {
     {
       icon: Extension,
       title: "Dev Tools",
-      description: "25+ offline utilities",
+      description: "40+ offline utilities",
       hint: "JWT, Regex, Cron, Diff, UUID, Base64, and converters",
       onClick: handleOpenToolSelector,
       colorScheme: "info",
@@ -320,7 +320,7 @@ export const WelcomeScreen: React.FC = () => {
               Your Private Dev Workspace
             </h2>
             <p className="text-sm text-muted mb-6">
-              Monaco editor • <span className="text-primary">Smart Views</span> • 25+ Dev Tools
+              Monaco editor • <span className="text-primary">Smart Views</span> • 40+ Dev Tools
             </p>
 
             {/* Trust Badges */}
