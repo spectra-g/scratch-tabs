@@ -15,12 +15,30 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.30.0';
+export const APP_VERSION = '1.31.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.30.0",
+    "version": "1.31.0",
     "type": "latest",
+    "date": "2026-05-26",
+    "headline": "CSV Smart View: Header Promotion & Delimiter Conversion",
+    "summary": "Two new CSV table actions — promote any data row to the header or demote the header back to a data row, plus a one-click delimiter converter to switch between comma, tab, semicolon, and pipe",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Row 1 → Header:** Promote the first data row to column headers in one click — the row's cell values become the column names and the row is removed from the data; only shown when at least one data row exists",
+          "**Header → Row 1:** Demote the current column headers back to the first data row and reset column names to Column 1, Column 2… — works even when the table has no data rows",
+          "**Delimiter Converter:** Toolbar selector showing the auto-detected delimiter (Comma, Tab, Semicolon, Pipe); changing it immediately re-serializes the document with the new separator, converting TSV  CSV  PSV without leaving the smart view",
+          "**Undo/Redo for header changes:** Both promote and demote operations are recorded in the undo stack and can be reversed with the existing undo/redo buttons"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.30.0",
+    "type": "release",
     "date": "2026-05-22",
     "headline": "HAR Network Traffic Viewer & 10 New Pipeline Operations",
     "summary": "Full offline HAR viewer with waterfall, request detail panel, privacy detection, and cURL export — plus Ascii85, Punycode, Brotli, CIDR, CSV Dedupe & Date Arithmetic pipeline operations",
@@ -61,7 +79,7 @@ export const RELEASES: Release[] = [
   },
   {
     "version": "1.29.0",
-    "type": "latest",
+    "type": "release",
     "date": "2026-05-21",
     "headline": "Hex Viewer Expanded (12 New Capabilities), PEM / X.509 & .env Smart Views, 11 New Pipeline Operations",
     "summary": "Major hex viewer expansion with magic-byte detection, find & replace, undo/redo, strings extraction, 256-bucket histogram, checksums, decoded text panel, drag-and-drop, jump-to-offset, keyboard shortcuts, and 16 MB file support; full certificate viewer with chain analysis; interactive .env editor; plus Morse, NATO, Shannon entropy, URL defang/refang, and CSV pipeline operations",

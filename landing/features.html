@@ -117,9 +117,6 @@
       <p class="text-lg md:text-xl text-gray-400 mb-8 max-w-3xl mx-auto leading-relaxed">
         Paste JSON, CSV, or Markdown and watch the editor transform into a specialized tool. Not just syntax highlighting - structural intelligence that adapts to your content.
       </p>
-      <p class="text-base text-gray-500 max-w-2xl mx-auto">
-        Scratch Tabs is open-source and community-driven.
-      </p>
     </div>
   </section>
 
@@ -214,7 +211,7 @@
         </div>
         <h2 class="text-3xl md:text-4xl font-mono text-white mb-4">Beyond Syntax Highlighting.</h2>
         <p class="text-lg text-gray-400 max-w-3xl leading-relaxed">
-          When you paste structured data, the editor doesn't just colourize it - it understands the structure and offers purpose-built tools. This flows naturally from the Pipeline concept: first we process, then we visualize.
+          When you paste structured data, the editor doesn't just colourize it - it understands the structure and offers purpose-built tools.
         </p>
       </div>
 
@@ -325,8 +322,8 @@
 
         <!-- Tab Management -->
         <div class="card-sharp p-6">
-          <h3 class="text-emerald-500 font-mono text-sm mb-3">// Tab Grouping</h3>
-          <h4 class="text-white font-bold text-lg mb-2">Advanced Tab Control</h4>
+          <h3 class="text-emerald-500 font-mono text-sm mb-3">// Tab Control</h3>
+          <h4 class="text-white font-bold text-lg mb-2">Advanced Tab Management</h4>
           <ul class="text-gray-400 text-sm space-y-2">
             <li>-> Pin critical tabs to the top</li>
             <li>-> Close left/right/all-except operations</li>
@@ -335,39 +332,15 @@
           </ul>
         </div>
 
-        <!-- Split-Pane History -->
-        <div class="card-sharp p-6">
-          <h3 class="text-emerald-500 font-mono text-sm mb-3">// Split-Pane History</h3>
-          <h4 class="text-white font-bold text-lg mb-2">Remember Everything</h4>
-          <ul class="text-gray-400 text-sm space-y-2">
-            <li>-> Per-pane tab history</li>
-            <li>-> Quick switch between recent tabs</li>
-            <li>-> Persistent split ratio per workspace</li>
-            <li>-> Cursor position memory per tab</li>
-          </ul>
-        </div>
-
-        <!-- Global Search -->
-        <div class="card-sharp p-6">
-          <h3 class="text-emerald-500 font-mono text-sm mb-3">// Global Search</h3>
-          <h4 class="text-white font-bold text-lg mb-2">Find Anything, Fast</h4>
-          <ul class="text-gray-400 text-sm space-y-2">
-            <li>-> Search across all tabs</li>
-            <li>-> Filter by format/language</li>
-            <li>-> Content preview in results</li>
-            <li>-> Jump to matches instantly</li>
-          </ul>
-        </div>
-
         <!-- Persistence -->
         <div class="card-sharp p-6">
           <h3 class="text-emerald-500 font-mono text-sm mb-3">// Auto-Persistence</h3>
           <h4 class="text-white font-bold text-lg mb-2">Never Lose Work</h4>
           <ul class="text-gray-400 text-sm space-y-2">
-            <li>-> Debounced auto-save (2.5s intervals)</li>
-            <li>-> IndexedDB local storage</li>
+            <li>-> Auto-save to local IndexedDB</li>
             <li>-> Instant recovery on reload</li>
             <li>-> Per-tab undo/redo history</li>
+            <li>-> Cursor position memory per tab</li>
           </ul>
         </div>
 
@@ -378,74 +351,9 @@
           <ul class="text-gray-400 text-sm space-y-2">
             <li>-> Export workspace as ZIP archive</li>
             <li>-> Import with conflict resolution</li>
-            <li>-> SHA-256 integrity verification</li>
             <li>-> Share tabs via hash-based URLs</li>
+            <li>-> SHA-256 integrity verification</li>
           </ul>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FORMAT SUPPORT SUMMARY -->
-  <section class="py-16 md:py-24 border-t border-gray-800 bg-black">
-    <div class="container mx-auto px-6">
-      <div class="mb-10">
-        <div class="section-tag">
-          <span>[FORMAT_SUPPORT] // 40+_LANGUAGES</span>
-        </div>
-        <h2 class="text-3xl md:text-4xl font-mono text-white mb-4">Polyglot by Design.</h2>
-        <p class="text-lg text-gray-400 max-w-3xl leading-relaxed">
-          Automatic detection and syntax highlighting for every language and format you work with. Paste anything - it just works.
-        </p>
-      </div>
-
-      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="card-sharp p-5">
-          <h3 class="text-emerald-500 font-mono text-xs mb-3">// Languages</h3>
-          <div class="flex flex-wrap gap-1">
-            <span class="format-badge">JavaScript</span>
-            <span class="format-badge">TypeScript</span>
-            <span class="format-badge">Python</span>
-            <span class="format-badge">Go</span>
-            <span class="format-badge">Rust</span>
-            <span class="format-badge">Java</span>
-            <span class="format-badge">C++</span>
-            <span class="format-badge">Ruby</span>
-          </div>
-        </div>
-
-        <div class="card-sharp p-5">
-          <h3 class="text-emerald-500 font-mono text-xs mb-3">// Data Formats</h3>
-          <div class="flex flex-wrap gap-1">
-            <span class="format-badge">JSON</span>
-            <span class="format-badge">YAML</span>
-            <span class="format-badge">CSV</span>
-            <span class="format-badge">XML</span>
-            <span class="format-badge">NDJSON</span>
-            <span class="format-badge">GraphQL</span>
-          </div>
-        </div>
-
-        <div class="card-sharp p-5">
-          <h3 class="text-emerald-500 font-mono text-xs mb-3">// Infrastructure</h3>
-          <div class="flex flex-wrap gap-1">
-            <span class="format-badge">Dockerfile</span>
-            <span class="format-badge">Terraform</span>
-            <span class="format-badge">TOML</span>
-            <span class="format-badge">Bash</span>
-            <span class="format-badge">cURL</span>
-          </div>
-        </div>
-
-        <div class="card-sharp p-5">
-          <h3 class="text-emerald-500 font-mono text-xs mb-3">// Web & Docs</h3>
-          <div class="flex flex-wrap gap-1">
-            <span class="format-badge">HTML</span>
-            <span class="format-badge">CSS</span>
-            <span class="format-badge">Markdown</span>
-            <span class="format-badge">SVG</span>
-            <span class="format-badge">Diff</span>
-          </div>
         </div>
       </div>
     </div>
@@ -499,7 +407,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.30.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.31.0</span>
         </div>
 
         <div class="flex space-x-8">

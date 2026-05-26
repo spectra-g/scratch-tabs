@@ -54,7 +54,7 @@ releases:
           - "**Date Subtract:** Subtract a duration from an ISO date string or `now` with the same unit and output options as Date Add"
 
   - version: "1.29.0"
-    type: "latest"
+    type: "release"
     draft: false
     date: "2026-05-21"
     headline: "Hex Viewer Expanded (12 New Capabilities), PEM / X.509 & .env Smart Views, 11 New Pipeline Operations"
