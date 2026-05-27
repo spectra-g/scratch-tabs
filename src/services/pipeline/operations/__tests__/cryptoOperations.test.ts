@@ -476,4 +476,68 @@ describe("Crypto Pipeline Operations", () => {
             });
         });
     });
+
+    // ── hash.ripemd160 ───────────────────────────────────────────────────────
+
+    describe("hash.ripemd160", () => {
+        it("hashes empty string to known test vector", async () => {
+            expect(await execute("hash.ripemd160", "")).toBe("9c1185a5c5e9fc54612808977ee8f548b2258d31");
+        });
+
+        it('hashes "abc" to known test vector', async () => {
+            expect(await execute("hash.ripemd160", "abc")).toBe("8eb208f7e05d987a9b044a8e98c6b087f15a0bfc");
+        });
+
+        it('hashes "message digest" to known test vector', async () => {
+            expect(await execute("hash.ripemd160", "message digest")).toBe("5d0689ef49d2fae572b881b123a85ffa21595f36");
+        });
+
+        it("produces 40 hex characters (160 bits)", async () => {
+            const result = await execute("hash.ripemd160", "hello world");
+            expect(result).toHaveLength(40);
+            expect(result).toMatch(/^[0-9a-f]+$/);
+        });
+
+        it("produces base64 output when requested", async () => {
+            const hex = await execute("hash.ripemd160", "abc");
+            const b64 = await execute("hash.ripemd160", "abc", { outputFormat: "base64" });
+            expect(Buffer.from(b64, "base64").toString("hex")).toBe(hex);
+        });
+
+        it("different inputs produce different hashes", async () => {
+            const h1 = await execute("hash.ripemd160", "hello");
+            const h2 = await execute("hash.ripemd160", "world");
+            expect(h1).not.toBe(h2);
+        });
+    });
+
+    // ── hash.keccak ──────────────────────────────────────────────────────────
+
+    describe("hash.keccak", () => {
+        it("hashes empty string to known Keccak-256 test vector", async () => {
+            expect(await execute("hash.keccak", "")).toBe("c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470");
+        });
+
+        it('hashes "abc" to known Keccak-256 test vector', async () => {
+            expect(await execute("hash.keccak", "abc")).toBe("4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45");
+        });
+
+        it("produces 64 hex characters (256 bits)", async () => {
+            const result = await execute("hash.keccak", "hello world");
+            expect(result).toHaveLength(64);
+            expect(result).toMatch(/^[0-9a-f]+$/);
+        });
+
+        it("produces base64 output when requested", async () => {
+            const hex = await execute("hash.keccak", "abc");
+            const b64 = await execute("hash.keccak", "abc", { outputFormat: "base64" });
+            expect(Buffer.from(b64, "base64").toString("hex")).toBe(hex);
+        });
+
+        it("differs from FIPS SHA3-256 (different padding)", async () => {
+            // Keccak-256("") = c5d246..., SHA3-256("") = a7ffc6...
+            const result = await execute("hash.keccak", "");
+            expect(result).not.toBe("a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a");
+        });
+    });
 });

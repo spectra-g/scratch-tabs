@@ -15,12 +15,42 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.31.0';
+export const APP_VERSION = '1.32.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.31.0",
+    "version": "1.32.0",
     "type": "latest",
+    "date": "2026-05-27",
+    "headline": "16 New Pipeline Operations — AES-GCM, RIPEMD-160, Keccak-256, IPv6, Reading Time & More",
+    "summary": "AES-256-GCM encrypt/decrypt, ROT-13/47, slugify, text diff, number formatting, CSV stats, CIDR info, datetime diff, RIPEMD-160, Keccak-256, IPv6 expand/compress, and reading time — all offline, zero dependencies",
+    "categories": [
+      {
+        "name": "New Pipeline Operations",
+        "changes": [
+          "**AES-GCM Encrypt:** Encrypt with AES-256-GCM — passphrase via PBKDF2-SHA256, random salt + IV per invocation, Base64 or hex output; Web Crypto API with Node.js fallback",
+          "**AES-GCM Decrypt:** Decrypt and verify AES-GCM ciphertext — re-derives the key from the embedded salt and validates the auth tag; fails immediately on wrong passphrase or tampered data",
+          "**ROT-13:** Letter substitution over A–Z/a–z; non-letters pass through unchanged; self-inverse",
+          "**ROT-47:** Rotation over all 94 printable ASCII characters ('!' through '~'); self-inverse; whitespace preserved",
+          "**Slugify:** URL-safe lowercase slug with configurable separator — NFD decomposition for accented chars, overrides table for ligatures (Æ → ae, ø → o, ß → ss, Þ → th); configurable per-line or full-text mode",
+          "**Text Diff:** Unified diff between pipeline input and a second text parameter — configurable context lines, pure-JS LCS, no dependencies",
+          "**Format Number:** Locale-aware formatting via Intl.NumberFormat — thousands separators, decimal places, currency, and percent style; strips commas from input before parsing",
+          "**CSV Stats:** Per-column statistics with auto-detected delimiter — numeric columns get min/max/mean/median/distinct; text columns get distinct count and top-3 values",
+          "**CIDR Info:** Network address, broadcast, subnet mask, wildcard, first/last usable host, and host counts for any IPv4 CIDR — /31 and /32 handled as special cases",
+          "**Datetime Diff:** Signed difference between two ISO 8601 dates in seconds, minutes, hours, days, weeks, months, or years via date-fns; absolute-value option available",
+          "**RIPEMD-160:** 160-bit digest; Node.js crypto with pure-JS browser fallback; hex or Base64 output",
+          "**Keccak-256:** Ethereum's SHA3 variant (0x01 padding, not FIPS 0x06); pure-JS BigInt Keccak-f[1600] sponge; hex or Base64 output",
+          "**IPv6 Expand:** Expand compressed IPv6 to full 8-group notation (`::1` → `0000:0000:…:0001`); handles `::`, zone IDs, and IPv4-mapped suffixes",
+          "**IPv6 Compress:** Compress to shortest `::` form; longest zero-run gets `::` replacement; round-trips with IPv6 Expand",
+          "**Sort JSON Keys — Deep/Shallow:** New `mode` param (deep recursive or shallow top-level), `output` (pretty/minified), and `indent` size; backward-compatible with no params",
+          "**Reading Time:** Estimate reading time from word count; separate WPM rates for prose (default 200) and fenced code blocks (default 100)"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.31.0",
+    "type": "release",
     "date": "2026-05-26",
     "headline": "CSV Smart View: Header Promotion & Delimiter Conversion",
     "summary": "Two new CSV table actions — promote any data row to the header or demote the header back to a data row, plus a one-click delimiter converter to switch between comma, tab, semicolon, and pipe",

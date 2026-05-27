@@ -7,9 +7,9 @@ releases:
     type: "latest"
     draft: false
     date: "2026-05-27"
-    headline: "10 New Pipeline Operations — AES-GCM Encryption, ROT-13/47, Slugify, Diff, CIDR Info & More"
-    summary: "AES-256-GCM encrypt/decrypt, ROT-13/47, Unicode-aware slugify, unified text diff, locale number formatting, CSV column statistics, CIDR network metadata, and datetime difference — all offline"
-    description: "Adds ten pipeline operations across crypto, encoding, text, data, and networking. AES-GCM Encrypt/Decrypt use the Web Crypto API with PBKDF2-SHA256 key derivation (100k iterations), a per-invocation random salt and IV, and an authenticated ciphertext layout — outputs are non-deterministic and tamper-evident. ROT-13 and ROT-47 are both self-inverse. Slugify handles Unicode transliteration via NFD decomposition plus an overrides table for ligatures (Æ → ae, ø → o, ß → ss). Text Diff produces a unified diff using a pure-JS LCS algorithm. CSV Stats reports count, min, max, mean, median, and top values per column. CIDR Info returns network, broadcast, masks, usable host range, and totals. Datetime Diff computes a signed difference in any unit from seconds to years."
+    headline: "16 New Pipeline Operations — AES-GCM, RIPEMD-160, Keccak-256, IPv6, Reading Time & More"
+    summary: "AES-256-GCM encrypt/decrypt, ROT-13/47, slugify, text diff, number formatting, CSV stats, CIDR info, datetime diff, RIPEMD-160, Keccak-256, IPv6 expand/compress, and reading time — all offline, zero dependencies"
+    description: "Adds sixteen pipeline operations across crypto, encoding, text, data, and networking. AES-GCM uses PBKDF2-SHA256 key derivation with a random salt and IV per invocation. RIPEMD-160 uses Node.js crypto where available with a pure-JS browser fallback. Keccak-256 is Ethereum's SHA3 variant (0x01 padding, not FIPS 0x06) implemented in pure JS. IPv6 Expand and Compress round-trip correctly and handle ::, zone IDs, and IPv4-mapped suffixes. Sort JSON Keys gains deep/shallow and pretty/minified parameters. Reading Time separates prose from fenced code blocks with configurable WPM rates."
     categories:
       - name: "✨ New Pipeline Operations"
         changes:
@@ -23,6 +23,12 @@ releases:
           - "**CSV Stats:** Per-column statistics with auto-detected delimiter — numeric columns get min/max/mean/median/distinct; text columns get distinct count and top-3 values"
           - "**CIDR Info:** Network address, broadcast, subnet mask, wildcard, first/last usable host, and host counts for any IPv4 CIDR — /31 and /32 handled as special cases"
           - "**Datetime Diff:** Signed difference between two ISO 8601 dates in seconds, minutes, hours, days, weeks, months, or years via date-fns; absolute-value option available"
+          - "**RIPEMD-160:** 160-bit digest; Node.js crypto with pure-JS browser fallback; hex or Base64 output"
+          - "**Keccak-256:** Ethereum's SHA3 variant (0x01 padding, not FIPS 0x06); pure-JS BigInt Keccak-f[1600] sponge; hex or Base64 output"
+          - "**IPv6 Expand:** Expand compressed IPv6 to full 8-group notation (`::1` → `0000:0000:…:0001`); handles `::`, zone IDs, and IPv4-mapped suffixes"
+          - "**IPv6 Compress:** Compress to shortest `::` form; longest zero-run gets `::` replacement; round-trips with IPv6 Expand"
+          - "**Sort JSON Keys — Deep/Shallow:** New `mode` param (deep recursive or shallow top-level), `output` (pretty/minified), and `indent` size; backward-compatible with no params"
+          - "**Reading Time:** Estimate reading time from word count; separate WPM rates for prose (default 200) and fenced code blocks (default 100)"
 
   - version: "1.31.0"
     type: "release"

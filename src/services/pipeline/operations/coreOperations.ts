@@ -1428,6 +1428,65 @@ const coreOperations: OperationDefinition[] = [
         source: "core",
     },
 
+    // === TEXT READING TIME ===
+    {
+        id: "text.reading-time",
+        name: "Reading Time",
+        description: "Estimate reading time from word count, with separate handling for fenced code blocks",
+        categories: ["text", "utilities"],
+        parameters: [
+            {
+                name: "wpm",
+                label: "Reading Speed (WPM)",
+                type: "number",
+                default: 200,
+                min: 50,
+                max: 1000,
+                description: "Words per minute for prose (typical: 200–250 WPM)",
+            },
+            {
+                name: "codeWpm",
+                label: "Code Reading Speed (WPM)",
+                type: "number",
+                default: 100,
+                min: 10,
+                max: 500,
+                description: "Effective WPM for fenced code blocks (slower due to comprehension overhead)",
+            },
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const wpm = Math.max(1, (params.wpm as number) ?? 200);
+            const codeWpm = Math.max(1, (params.codeWpm as number) ?? 100);
+
+            if (!input.trim()) return "0 min read\n0 words";
+
+            // Extract fenced code blocks (``` ... ```)
+            let codeWords = 0;
+            const prose = input.replace(/```[\s\S]*?```/g, (match) => {
+                const inner = match.slice(3, -3).trim();
+                codeWords += inner ? inner.split(/\s+/).length : 0;
+                return "";
+            });
+
+            const proseWords = prose.trim() ? prose.trim().split(/\s+/).length : 0;
+            const totalWords = proseWords + codeWords;
+
+            const totalMinutes = proseWords / wpm + codeWords / codeWpm;
+            const readTime = totalMinutes < 1 ? "< 1 min" : `${Math.round(totalMinutes)} min`;
+
+            const lines = [`Reading time:  ${readTime}`, `Total words:   ${totalWords.toLocaleString()}`];
+            if (codeWords > 0) {
+                lines.push(`Prose words:   ${proseWords.toLocaleString()}`);
+                lines.push(`Code words:    ${codeWords.toLocaleString()}`);
+            }
+            lines.push(`Reading speed: ${wpm} WPM${codeWords > 0 ? ` prose / ${codeWpm} WPM code` : ""}`);
+            return lines.join("\n");
+        },
+        keywords: ["reading", "time", "words", "wpm", "estimate", "duration", "content", "length"],
+        source: "core",
+    },
+
     // === TEXT DIFF ===
     {
         id: "text.diff",
