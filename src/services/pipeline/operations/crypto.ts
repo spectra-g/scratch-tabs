@@ -245,7 +245,7 @@ export const cryptoOperations: OperationDefinition[] = [
                 }
                 return Array.from(hashArray).map(b => b.toString(16).padStart(2, '0')).join('');
             } else {
-                const nodeCrypto = await import('crypto');
+                const nodeCrypto = await import(/* @vite-ignore */ 'crypto');
                 const algoMap: Record<string, string> = {
                     'SHA-1': 'sha1',
                     'SHA-256': 'sha256',
@@ -351,7 +351,7 @@ export const cryptoOperations: OperationDefinition[] = [
                     }
                 } else {
                     // Fallback to Node.js crypto (for test environments or old Node versions)
-                    const nodeCrypto = await import('crypto');
+                    const nodeCrypto = await import(/* @vite-ignore */ 'crypto');
 
                     // Map algorithm names to Node.js format
                     const algoMap: Record<string, string> = {
@@ -448,7 +448,7 @@ export const cryptoOperations: OperationDefinition[] = [
                 combined.set(iv, 16);
                 combined.set(ciphertextAndTag, 28);
             } else {
-                const nc = await import("crypto");
+                const nc = await import(/* @vite-ignore */ "crypto");
                 const salt = nc.randomBytes(16);
                 const iv = nc.randomBytes(12);
                 const key = nc.pbkdf2Sync(passphrase, salt, 100_000, 32, "sha256");
@@ -557,7 +557,7 @@ export const cryptoOperations: OperationDefinition[] = [
                     throw new Error("Decryption failed — wrong passphrase or corrupted ciphertext");
                 }
             } else {
-                const nc = await import("crypto");
+                const nc = await import(/* @vite-ignore */ "crypto");
                 const key = nc.pbkdf2Sync(passphrase, salt, 100_000, 32, "sha256");
                 const authTag = Buffer.from(ciphertextAndTag.slice(ciphertextAndTag.length - 16));
                 const ciphertext = Buffer.from(ciphertextAndTag.slice(0, ciphertextAndTag.length - 16));
@@ -599,7 +599,7 @@ export const cryptoOperations: OperationDefinition[] = [
             // RIPEMD-160 is not in WebCrypto — use Node.js crypto where available,
             // fall back to a pure JS implementation for browser environments.
             try {
-                const nodeCrypto = await import("crypto");
+                const nodeCrypto = await import(/* @vite-ignore */ "crypto");
                 if (typeof nodeCrypto.createHash === "function") {
                     const hash = nodeCrypto.createHash("ripemd160");
                     hash.update(input);
