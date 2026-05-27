@@ -3,6 +3,13 @@ import {
     formatDistanceToNow,
     formatRFC3339,
     formatRFC7231,
+    differenceInSeconds,
+    differenceInMinutes,
+    differenceInHours,
+    differenceInDays,
+    differenceInWeeks,
+    differenceInMonths,
+    differenceInYears,
 } from "date-fns";
 
 import { operationRegistry } from "../../services/pipeline/OperationRegistry";
@@ -202,6 +209,78 @@ const dateTimeOperations: OperationDefinition[] = [
             }
         },
         keywords: ["date", "time", "format", "convert", "reformat", "transform", "datetime", "parse"],
+        icon: "Calendar",
+        source: "tablet",
+    },
+    {
+        id: "datetime.diff",
+        name: "Date Difference",
+        description: "Compute the signed difference between two dates in a chosen unit",
+        categories: ["datetime"],
+        processingMode: "configurable",
+        parameters: [
+            {
+                name: "other",
+                label: "Compare To",
+                type: "string",
+                default: "",
+                placeholder: "2026-01-01T00:00:00Z",
+                description:
+                    "Second date to compare against. Leave empty to use the current time.",
+            },
+            {
+                name: "unit",
+                label: "Unit",
+                type: "select",
+                default: "days",
+                options: [
+                    { value: "seconds", label: "Seconds" },
+                    { value: "minutes", label: "Minutes" },
+                    { value: "hours", label: "Hours" },
+                    { value: "days", label: "Days" },
+                    { value: "weeks", label: "Weeks" },
+                    { value: "months", label: "Months" },
+                    { value: "years", label: "Years" },
+                ],
+            },
+            {
+                name: "absolute",
+                label: "Absolute Value",
+                type: "boolean",
+                default: false,
+                description: "Return a positive number regardless of which date is later.",
+            },
+        ],
+        execute: (input, params) => {
+            const unit = (params.unit as string) || "days";
+            const otherStr = ((params.other as string) ?? "").trim();
+            const absolute = (params.absolute as boolean) ?? false;
+
+            const parseDate = (s: string): Date => {
+                if (!s) return new Date();
+                const d = new Date(s);
+                if (isNaN(d.getTime())) throw new Error(`Cannot parse date: "${s}"`);
+                return d;
+            };
+
+            const dateA = parseDate(input.trim());
+            const dateB = parseDate(otherStr);
+
+            const diffFn: Record<string, (a: Date, b: Date) => number> = {
+                seconds: differenceInSeconds,
+                minutes: differenceInMinutes,
+                hours: differenceInHours,
+                days: differenceInDays,
+                weeks: differenceInWeeks,
+                months: differenceInMonths,
+                years: differenceInYears,
+            };
+
+            const fn = diffFn[unit] ?? differenceInDays;
+            const result = absolute ? Math.abs(fn(dateA, dateB)) : fn(dateA, dateB);
+            return `${result} ${unit}`;
+        },
+        keywords: ["date", "time", "diff", "difference", "between", "duration", "interval", "elapsed"],
         icon: "Calendar",
         source: "tablet",
     },

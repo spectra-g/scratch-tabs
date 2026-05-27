@@ -19,9 +19,32 @@ function getRedactedValue(type: string, value: string): string {
     return "[REDACTED]";
 }
 
+function slugify(text: string, sep: string): string {
+    // Characters that don't decompose cleanly via NFD (ligatures, stroked letters, etc.)
+    // Using explicit \u escapes for safety across all transpilers and runtime environments.
+    const overrides: Record<string, string> = {
+        "Æ": "AE", "æ": "ae",  // Æ æ
+        "Œ": "OE", "œ": "oe",  // Œ œ
+        "ß": "ss",                   // ß
+        "Ø": "o",  "ø": "o",   // Ø ø
+        "Þ": "th", "þ": "th",  // Þ þ
+        "Ð": "d",  "ð": "d",   // Ð ð
+    };
+    const result = Array.from(text)
+        .map((c) => overrides[c] ?? c)
+        .join("")
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, sep);
+    return sep === "-"
+        ? result.replace(/^-+|-+$/g, "")
+        : result.replace(/^_+|_+$/g, "");
+}
+
 /**
  * Core Pipeline Operations
- * 
+ *
  * Generic text transformations available to all formats and tablets.
  * These were formerly part of BatchTools.
  */
@@ -323,42 +346,6 @@ const coreOperations: OperationDefinition[] = [
     },
 
     // === TEXT TRANSFORMATIONS ===
-    {
-        id: "text.slugify",
-        name: "Slugify",
-        description: "Convert text to URL-friendly slug (lowercase, hyphens, no special chars)",
-        categories: ["text", "formatting"],
-        parameters: [
-            {
-                name: "separator",
-                label: "Separator",
-                type: "select",
-                default: "-",
-                options: [
-                    { value: "-", label: "Hyphen (-)" },
-                    { value: "_", label: "Underscore (_)" }
-                ]
-            }
-        ],
-        processingMode: "configurable",
-        execute: (input, params) => {
-            const separator = (params.separator as string) ?? "-";
-
-            return input
-                .toLowerCase()
-                // Replace accented characters with ASCII equivalents
-                .normalize('NFD')
-                .replace(/[\u0300-\u036f]/g, '')
-                // Replace spaces and non-alphanumeric with separator
-                .replace(/[^a-z0-9]+/g, separator)
-                // Remove leading/trailing separators
-                .replace(new RegExp(`^${separator}+|${separator}+$`, 'g'), '')
-                // Collapse multiple separators
-                .replace(new RegExp(`${separator}{2,}`, 'g'), separator);
-        },
-        keywords: ["slug", "url", "filename", "kebab", "normalize"],
-        source: "core",
-    },
     {
         id: "text.remove-diacritics",
         name: "Remove Diacritics",
@@ -1337,12 +1324,249 @@ const coreOperations: OperationDefinition[] = [
         keywords: ["entropy", "shannon", "information", "security", "analysis", "randomness"],
         source: "core",
     },
+
+    // === SLUGIFY ===
+    {
+        id: "text.slugify",
+        name: "Slugify",
+        description: "Convert text to a URL-safe slug with Unicode transliteration (e.g. Héllo Wörld! → hello-world)",
+        categories: ["text", "formatting"],
+        parameters: [
+            {
+                name: "separator",
+                label: "Separator",
+                type: "select",
+                default: "-",
+                options: [
+                    { value: "-", label: "Hyphen (hello-world)" },
+                    { value: "_", label: "Underscore (hello_world)" },
+                ],
+            },
+        ],
+        processingMode: "configurable",
+        execute: (input, params) => {
+            const sep = (params.separator as string) === "_" ? "_" : "-";
+            return slugify(input.trim(), sep);
+        },
+        keywords: ["slug", "url", "kebab", "permalink", "lowercase", "dashes", "web"],
+        source: "core",
+    },
+
+    // === NUMBER FORMAT ===
+    {
+        id: "text.number-format",
+        name: "Format Number",
+        description: "Format a number with locale-aware thousands separator, decimal places, and optional currency or percent style",
+        categories: ["text", "utilities"],
+        parameters: [
+            {
+                name: "locale",
+                label: "Locale",
+                type: "select",
+                default: "en-US",
+                options: [
+                    { value: "en-US", label: "English US (1,234.56)" },
+                    { value: "de-DE", label: "German (1.234,56)" },
+                    { value: "fr-FR", label: "French (1 234,56)" },
+                    { value: "ja-JP", label: "Japanese (1,234.56)" },
+                ],
+            },
+            {
+                name: "style",
+                label: "Style",
+                type: "select",
+                default: "decimal",
+                options: [
+                    { value: "decimal", label: "Decimal" },
+                    { value: "currency", label: "Currency" },
+                    { value: "percent", label: "Percent" },
+                ],
+            },
+            {
+                name: "currency",
+                label: "Currency",
+                type: "select",
+                default: "USD",
+                options: [
+                    { value: "USD", label: "USD ($)" },
+                    { value: "EUR", label: "EUR (€)" },
+                    { value: "GBP", label: "GBP (£)" },
+                    { value: "JPY", label: "JPY (¥)" },
+                ],
+                description: "Only used when Style is set to Currency.",
+            },
+            {
+                name: "decimals",
+                label: "Decimal Places",
+                type: "number",
+                default: 2,
+                min: 0,
+                max: 10,
+            },
+        ],
+        processingMode: "configurable",
+        execute: (input, params) => {
+            const locale = (params.locale as string) ?? "en-US";
+            const style = (params.style as string) ?? "decimal";
+            const currency = (params.currency as string) ?? "USD";
+            const decimals = (params.decimals as number) ?? 2;
+
+            const trimmed = input.trim().replace(/[,\s]/g, "");
+            const num = parseFloat(trimmed);
+            if (isNaN(num)) throw new Error(`Cannot parse as number: "${input.trim()}"`);
+
+            const options: Intl.NumberFormatOptions = {
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals,
+                style,
+            };
+            if (style === "currency") options.currency = currency;
+
+            return new Intl.NumberFormat(locale, options).format(num);
+        },
+        keywords: ["number", "format", "currency", "decimal", "thousands", "locale", "intl", "comma"],
+        source: "core",
+    },
+
+    // === TEXT DIFF ===
+    {
+        id: "text.diff",
+        name: "Text Diff",
+        description: "Produce a unified diff between the pipeline input (original) and a second text block (modified)",
+        categories: ["text"],
+        parameters: [
+            {
+                name: "modified",
+                label: "Modified Text",
+                type: "textarea",
+                default: "",
+                description: "The new / modified version of the text to compare against the pipeline input.",
+            },
+            {
+                name: "context",
+                label: "Context Lines",
+                type: "number",
+                default: 3,
+                min: 0,
+                max: 10,
+                description: "Number of unchanged lines to show around each change.",
+            },
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const modified = (params.modified as string) ?? "";
+            const context = Math.max(0, (params.context as number) ?? 3);
+            return unifiedDiff(input, modified, context);
+        },
+        keywords: ["diff", "compare", "patch", "unified", "changes", "delta"],
+        source: "core",
+    },
 ];
 
 // Self-register
 coreOperations.forEach((op) => operationRegistry.register(op));
 
 // === HELPERS ===
+
+function unifiedDiff(leftText: string, rightText: string, contextLines: number): string {
+    const left = leftText.split("\n");
+    const right = rightText.split("\n");
+    const m = left.length;
+    const n = right.length;
+
+    if (m * n > 10_000_000) {
+        throw new Error("Inputs too large to diff — limit is ~3000 lines per side");
+    }
+
+    // LCS dynamic programming table
+    const dp: Uint32Array[] = Array.from({ length: m + 1 }, () => new Uint32Array(n + 1));
+    for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+            dp[i][j] =
+                left[i - 1] === right[j - 1]
+                    ? dp[i - 1][j - 1] + 1
+                    : Math.max(dp[i - 1][j], dp[i][j - 1]);
+        }
+    }
+
+    // Backtrack to build edit list
+    type DiffOp = { op: " " | "-" | "+"; text: string };
+    const ops: DiffOp[] = [];
+    let i = m, j = n;
+    while (i > 0 || j > 0) {
+        if (i > 0 && j > 0 && left[i - 1] === right[j - 1]) {
+            ops.unshift({ op: " ", text: left[i - 1] });
+            i--; j--;
+        } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+            ops.unshift({ op: "+", text: right[j - 1] });
+            j--;
+        } else {
+            ops.unshift({ op: "-", text: left[i - 1] });
+            i--;
+        }
+    }
+
+    if (ops.every((o) => o.op === " ")) return "(no differences)";
+
+    // Compute left/right line numbers for every op position
+    const lLineNums: number[] = new Array(ops.length);
+    const rLineNums: number[] = new Array(ops.length);
+    let lNum = 1, rNum = 1;
+    for (let k = 0; k < ops.length; k++) {
+        lLineNums[k] = lNum;
+        rLineNums[k] = rNum;
+        if (ops[k].op !== "+") lNum++;
+        if (ops[k].op !== "-") rNum++;
+    }
+
+    // Collect ops that fall within `contextLines` of any change
+    const included = new Set<number>();
+    for (let k = 0; k < ops.length; k++) {
+        if (ops[k].op !== " ") {
+            for (
+                let c = Math.max(0, k - contextLines);
+                c <= Math.min(ops.length - 1, k + contextLines);
+                c++
+            ) {
+                included.add(c);
+            }
+        }
+    }
+
+    // Group included indices into contiguous hunks
+    const sortedInc = [...included].sort((a, b) => a - b);
+    const hunks: number[][] = [];
+    if (sortedInc.length > 0) {
+        let hunk = [sortedInc[0]];
+        for (let k = 1; k < sortedInc.length; k++) {
+            if (sortedInc[k] === sortedInc[k - 1] + 1) {
+                hunk.push(sortedInc[k]);
+            } else {
+                hunks.push(hunk);
+                hunk = [sortedInc[k]];
+            }
+        }
+        hunks.push(hunk);
+    }
+
+    const output: string[] = ["--- a", "+++ b"];
+    for (const hunk of hunks) {
+        const hunkOps = hunk.map((idx) => ({
+            op: ops[idx].op,
+            text: ops[idx].text,
+            l: lLineNums[idx],
+            r: rLineNums[idx],
+        }));
+        const lOps = hunkOps.filter((o) => o.op !== "+");
+        const rOps = hunkOps.filter((o) => o.op !== "-");
+        const lStart = lOps.length > 0 ? lOps[0].l : hunkOps[0].l;
+        const rStart = rOps.length > 0 ? rOps[0].r : hunkOps[0].r;
+        output.push(`@@ -${lStart},${lOps.length} +${rStart},${rOps.length} @@`);
+        for (const o of hunkOps) output.push(`${o.op}${o.text}`);
+    }
+
+    return output.join("\n");
+}
 
 function toRoman(num: number): string {
     const values = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];

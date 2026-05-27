@@ -140,6 +140,61 @@ export const networkOperations: OperationDefinition[] = [
         keywords: ["cidr", "ip", "network", "range", "expand", "subnet", "ipv4"],
         source: "core",
     },
+    {
+        id: "network.cidr-info",
+        name: "CIDR Info",
+        description:
+            "Show CIDR block metadata: network address, broadcast, subnet mask, wildcard mask, usable host range, and host count",
+        categories: ["networking"],
+        parameters: [],
+        processingMode: "entire",
+        execute: (input) => {
+            const trimmed = input.trim();
+            if (!trimmed) return "";
+
+            const parts = trimmed.split("/");
+            if (parts.length !== 2)
+                throw new Error(
+                    "Input must be in CIDR notation (e.g. 192.168.1.0/24)",
+                );
+
+            const prefix = parseInt(parts[1], 10);
+            if (isNaN(prefix) || prefix < 0 || prefix > 32)
+                throw new Error(
+                    `Invalid prefix length: ${parts[1]} (must be 0-32)`,
+                );
+
+            const mask = prefix === 0 ? 0 : (~0 << (32 - prefix)) >>> 0;
+            const wildcard = (~mask) >>> 0;
+            const networkAddr = (ipToInt(parts[0]) & mask) >>> 0;
+            const broadcastAddr = (networkAddr | wildcard) >>> 0;
+
+            // /31 and /32 are special — no dedicated network/broadcast
+            const totalAddresses = wildcard + 1;
+            const usableHosts =
+                prefix >= 31 ? totalAddresses : Math.max(0, totalAddresses - 2);
+            const firstHost =
+                prefix >= 31 ? networkAddr : networkAddr + 1;
+            const lastHost =
+                prefix >= 31 ? broadcastAddr : broadcastAddr - 1;
+
+            const pad = (s: string) => s.padEnd(18);
+            return [
+                `${pad("CIDR:")}${trimmed}`,
+                `${pad("Network address:")}${intToIp(networkAddr)}`,
+                `${pad("Broadcast address:")}${intToIp(broadcastAddr)}`,
+                `${pad("Subnet mask:")}${intToIp(mask)}`,
+                `${pad("Wildcard mask:")}${intToIp(wildcard)}`,
+                `${pad("First usable host:")}${intToIp(firstHost)}`,
+                `${pad("Last usable host:")}${intToIp(lastHost)}`,
+                `${pad("Total addresses:")}${totalAddresses.toLocaleString()}`,
+                `${pad("Usable hosts:")}${usableHosts.toLocaleString()}`,
+                `${pad("Prefix length:")}/${prefix}`,
+            ].join("\n");
+        },
+        keywords: ["cidr", "ip", "network", "subnet", "mask", "broadcast", "wildcard", "host", "ipv4", "info"],
+        source: "core",
+    },
 ];
 
 // Self-register all operations

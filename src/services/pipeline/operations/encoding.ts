@@ -1164,7 +1164,38 @@ export const encodingOperations: OperationDefinition[] = [
         },
         keywords: ["quoted", "printable", "mime", "email", "decode"],
         source: "core",
-    }
+    },
+
+    // === ROT CIPHERS ===
+    {
+        id: "encoding.rot13",
+        name: "ROT13",
+        description: "Apply ROT13 substitution to letters A-Z and a-z (self-inverse)",
+        categories: ["encoding"],
+        parameters: [],
+        processingMode: "configurable",
+        execute: (input) =>
+            input.replace(/[a-zA-Z]/g, (c) => {
+                const base = c >= "a" ? 97 : 65;
+                return String.fromCharCode(((c.charCodeAt(0) - base + 13) % 26) + base);
+            }),
+        keywords: ["rot13", "caesar", "cipher", "obfuscate", "ctf", "reddit", "spoiler"],
+        source: "core",
+    },
+    {
+        id: "encoding.rot47",
+        name: "ROT47",
+        description: "Apply ROT47 substitution to printable ASCII characters (! through ~, self-inverse)",
+        categories: ["encoding"],
+        parameters: [],
+        processingMode: "configurable",
+        execute: (input) =>
+            input.replace(/[!-~]/g, (c) =>
+                String.fromCharCode(33 + ((c.charCodeAt(0) - 33 + 47) % 94)),
+            ),
+        keywords: ["rot47", "caesar", "cipher", "ascii", "obfuscate", "ctf"],
+        source: "core",
+    },
 ];
 
 // Self-register all operations
