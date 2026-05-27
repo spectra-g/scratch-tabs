@@ -67,12 +67,64 @@ const jsonOperations: OperationDefinition[] = [
   {
     id: "json.sortKeys",
     name: "Sort JSON Keys",
-    description: "Alphabetically sort all object keys recursively",
+    description: "Alphabetically sort object keys — deep (recursive, default) or shallow (top-level only)",
     categories: ["json", "sorting"],
-    parameters: [],
+    parameters: [
+      {
+        name: "mode",
+        label: "Sort Mode",
+        type: "select",
+        default: "deep",
+        options: [
+          { value: "deep", label: "Deep (recursive)" },
+          { value: "shallow", label: "Shallow (top-level only)" },
+        ],
+      },
+      {
+        name: "output",
+        label: "Output",
+        type: "select",
+        default: "pretty",
+        options: [
+          { value: "pretty", label: "Pretty (indented)" },
+          { value: "minified", label: "Minified" },
+        ],
+      },
+      {
+        name: "indent",
+        label: "Indent Size",
+        type: "number",
+        default: 2,
+        min: 1,
+        max: 8,
+        description: "Spaces per level (pretty output only)",
+      },
+    ],
     processingMode: "entire",
-    execute: (input) => sortJsonKeys(input),
-    keywords: ["alphabetize", "order", "organize"],
+    execute: (input, params) => {
+      const deep = ((params.mode as string) ?? "deep") === "deep";
+      const output = (params.output as string) ?? "pretty";
+      const indent = (params.indent as number) ?? 2;
+
+      const parsed = JSON.parse(input);
+
+      const sortKeys = (value: unknown, recursive: boolean): unknown => {
+        if (value === null || typeof value !== "object") return value;
+        if (Array.isArray(value)) {
+          return recursive ? value.map((item) => sortKeys(item, recursive)) : value;
+        }
+        const obj = value as Record<string, unknown>;
+        const sorted: Record<string, unknown> = {};
+        for (const key of Object.keys(obj).sort()) {
+          sorted[key] = recursive ? sortKeys(obj[key], recursive) : obj[key];
+        }
+        return sorted;
+      };
+
+      const result = sortKeys(parsed, deep);
+      return JSON.stringify(result, null, output === "pretty" ? indent : undefined);
+    },
+    keywords: ["alphabetize", "order", "organize", "sort", "keys"],
     icon: "ArrowDownAZ",
     source: "format",
   },

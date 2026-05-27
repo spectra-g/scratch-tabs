@@ -116,4 +116,77 @@ describe("Network Pipeline Operations", () => {
             expect(refanged).toBe(original);
         });
     });
+
+    // ── network.ipv6-expand ──────────────────────────────────────────────────
+
+    describe("network.ipv6-expand", () => {
+        it("expands loopback ::1", async () => {
+            expect(await execute("network.ipv6-expand", "::1")).toBe("0000:0000:0000:0000:0000:0000:0000:0001");
+        });
+
+        it("expands :: (all zeros)", async () => {
+            expect(await execute("network.ipv6-expand", "::")).toBe("0000:0000:0000:0000:0000:0000:0000:0000");
+        });
+
+        it("expands 2001:db8::1", async () => {
+            expect(await execute("network.ipv6-expand", "2001:db8::1")).toBe("2001:0db8:0000:0000:0000:0000:0000:0001");
+        });
+
+        it("expands link-local fe80::1", async () => {
+            expect(await execute("network.ipv6-expand", "fe80::1")).toBe("fe80:0000:0000:0000:0000:0000:0000:0001");
+        });
+
+        it("pads each group to 4 hex digits", async () => {
+            const groups = (await execute("network.ipv6-expand", "2001:db8::1")).split(":");
+            expect(groups).toHaveLength(8);
+            groups.forEach(g => expect(g).toHaveLength(4));
+        });
+
+        it("handles already fully expanded address", async () => {
+            const full = "2001:0db8:0000:0000:0000:0000:0000:0001";
+            expect(await execute("network.ipv6-expand", full)).toBe(full);
+        });
+
+        it("normalises to lowercase", async () => {
+            expect(await execute("network.ipv6-expand", "2001:DB8::1")).toBe("2001:0db8:0000:0000:0000:0000:0000:0001");
+        });
+
+        it("throws on too many groups", async () => {
+            await expect(execute("network.ipv6-expand", "1:2:3:4:5:6:7:8:9")).rejects.toThrow();
+        });
+    });
+
+    // ── network.ipv6-compress ────────────────────────────────────────────────
+
+    describe("network.ipv6-compress", () => {
+        it("compresses loopback to ::1", async () => {
+            expect(await execute("network.ipv6-compress", "0000:0000:0000:0000:0000:0000:0000:0001")).toBe("::1");
+        });
+
+        it("compresses all-zeros to ::", async () => {
+            expect(await execute("network.ipv6-compress", "0000:0000:0000:0000:0000:0000:0000:0000")).toBe("::");
+        });
+
+        it("removes leading zeros from each group", async () => {
+            expect(await execute("network.ipv6-compress", "2001:0db8:0000:0000:0000:0000:0000:0001")).toBe("2001:db8::1");
+        });
+
+        it("chooses the longest run of zeros for ::", async () => {
+            expect(await execute("network.ipv6-compress", "2001:0000:0000:0000:0001:0000:0000:0001")).toBe("2001::1:0:0:1");
+        });
+
+        it("does not compress a single zero group", async () => {
+            const result = await execute("network.ipv6-compress", "2001:0db8:0000:0001:0002:0003:0004:0005");
+            expect(result).not.toContain("::");
+        });
+
+        it("round-trips with ipv6-expand", async () => {
+            const expanded = await execute("network.ipv6-expand", "::1");
+            expect(await execute("network.ipv6-compress", expanded)).toBe("::1");
+        });
+
+        it("handles already-compressed input", async () => {
+            expect(await execute("network.ipv6-compress", "::1")).toBe("::1");
+        });
+    });
 });

@@ -1247,6 +1247,139 @@ export const dataFormatOperations: OperationDefinition[] = [
         keywords: ["csv", "dedupe", "deduplicate", "unique", "rows", "distinct"],
         source: "core",
     },
+    {
+        id: "csv.stats",
+        name: "CSV Column Stats",
+        description:
+            "Per-column summary statistics: count, empty count, distinct values, and for numeric columns: min, max, mean, and median",
+        categories: ["filtering", "utilities"],
+        parameters: [
+            {
+                name: "delimiter",
+                label: "Delimiter",
+                type: "select",
+                default: "comma",
+                options: [
+                    { value: "comma", label: "Comma (,)" },
+                    { value: "tab", label: "Tab" },
+                    { value: "semicolon", label: "Semicolon (;)" },
+                ],
+            },
+            {
+                name: "header",
+                label: "First Row Is Header",
+                type: "boolean",
+                default: true,
+            },
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const delimChar =
+                (params.delimiter as string) === "tab"
+                    ? "\t"
+                    : (params.delimiter as string) === "semicolon"
+                      ? ";"
+                      : ",";
+            const hasHeader = (params.header as boolean) ?? true;
+
+            const parseCsvRow = (line: string): string[] => {
+                const fields: string[] = [];
+                let field = "";
+                let inQuotes = false;
+                for (let k = 0; k < line.length; k++) {
+                    const c = line[k];
+                    if (inQuotes) {
+                        if (c === '"') {
+                            if (k + 1 < line.length && line[k + 1] === '"') {
+                                field += '"';
+                                k++;
+                            } else {
+                                inQuotes = false;
+                            }
+                        } else {
+                            field += c;
+                        }
+                    } else if (c === '"') {
+                        inQuotes = true;
+                    } else if (c === delimChar) {
+                        fields.push(field);
+                        field = "";
+                    } else {
+                        field += c;
+                    }
+                }
+                fields.push(field);
+                return fields;
+            };
+
+            const rawInput = input.trim();
+            if (!rawInput) throw new Error("Empty input");
+            const lines = rawInput.split("\n");
+
+            const rows = lines.map(parseCsvRow);
+            const headers = hasHeader
+                ? rows[0]
+                : rows[0].map((_, idx) => `Column ${idx + 1}`);
+            const dataRows = hasHeader ? rows.slice(1) : rows;
+
+            if (dataRows.length === 0) throw new Error("No data rows found");
+
+            const numCols = headers.length;
+            const colValues: string[][] = Array.from({ length: numCols }, () => []);
+            for (const row of dataRows) {
+                for (let c = 0; c < numCols; c++) {
+                    colValues[c].push(row[c] ?? "");
+                }
+            }
+
+            const lines2: string[] = [
+                `CSV Stats — ${dataRows.length} row${dataRows.length !== 1 ? "s" : ""} × ${numCols} column${numCols !== 1 ? "s" : ""}`,
+                "",
+            ];
+
+            for (let c = 0; c < numCols; c++) {
+                const vals = colValues[c];
+                const nonEmpty = vals.filter((v) => v.trim() !== "");
+                const numericVals = nonEmpty.map(Number).filter((n) => !isNaN(n));
+                const isNumeric =
+                    numericVals.length > 0 && numericVals.length === nonEmpty.length;
+                const distinct = new Set(vals).size;
+
+                lines2.push(`${headers[c]}`);
+                lines2.push(
+                    `  count:    ${vals.length}  (empty: ${vals.length - nonEmpty.length}, distinct: ${distinct})`,
+                );
+
+                if (isNumeric) {
+                    const sorted = [...numericVals].sort((a, b) => a - b);
+                    const sum = sorted.reduce((a, b) => a + b, 0);
+                    const mean = sum / sorted.length;
+                    const mid = Math.floor(sorted.length / 2);
+                    const median =
+                        sorted.length % 2 === 0
+                            ? (sorted[mid - 1] + sorted[mid]) / 2
+                            : sorted[mid];
+                    lines2.push(`  min:      ${sorted[0]}`);
+                    lines2.push(`  max:      ${sorted[sorted.length - 1]}`);
+                    lines2.push(`  mean:     ${mean.toFixed(4)}`);
+                    lines2.push(`  median:   ${median}`);
+                } else {
+                    const freq: Record<string, number> = {};
+                    for (const v of vals) freq[v] = (freq[v] ?? 0) + 1;
+                    const top3 = Object.entries(freq)
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 3)
+                        .map(([v, n]) => `"${v}" (${n})`);
+                    lines2.push(`  top:      ${top3.join(", ")}`);
+                }
+                lines2.push("");
+            }
+
+            return lines2.join("\n").trimEnd();
+        },
+        keywords: ["csv", "statistics", "stats", "summary", "describe", "analyze", "profile", "column"],
+        source: "core",
+    },
 ];
 
 // Self-register all operations
