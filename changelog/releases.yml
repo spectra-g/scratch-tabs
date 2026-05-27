@@ -3,8 +3,29 @@ config:
   max_versions: 100  # Maximum number of versions to display
 
 releases:
-  - version: "1.31.0"
+  - version: "1.32.0"
     type: "latest"
+    draft: false
+    date: "2026-05-27"
+    headline: "10 New Pipeline Operations — AES-GCM Encryption, ROT-13/47, Slugify, Diff, CIDR Info & More"
+    summary: "AES-256-GCM encrypt/decrypt, ROT-13/47, Unicode-aware slugify, unified text diff, locale number formatting, CSV column statistics, CIDR network metadata, and datetime difference — all offline"
+    description: "Adds ten pipeline operations across crypto, encoding, text, data, and networking. AES-GCM Encrypt/Decrypt use the Web Crypto API with PBKDF2-SHA256 key derivation (100k iterations), a per-invocation random salt and IV, and an authenticated ciphertext layout — outputs are non-deterministic and tamper-evident. ROT-13 and ROT-47 are both self-inverse. Slugify handles Unicode transliteration via NFD decomposition plus an overrides table for ligatures (Æ → ae, ø → o, ß → ss). Text Diff produces a unified diff using a pure-JS LCS algorithm. CSV Stats reports count, min, max, mean, median, and top values per column. CIDR Info returns network, broadcast, masks, usable host range, and totals. Datetime Diff computes a signed difference in any unit from seconds to years."
+    categories:
+      - name: "✨ New Pipeline Operations"
+        changes:
+          - "**AES-GCM Encrypt:** Encrypt with AES-256-GCM — passphrase via PBKDF2-SHA256, random salt + IV per invocation, Base64 or hex output; Web Crypto API with Node.js fallback"
+          - "**AES-GCM Decrypt:** Decrypt and verify AES-GCM ciphertext — re-derives the key from the embedded salt and validates the auth tag; fails immediately on wrong passphrase or tampered data"
+          - "**ROT-13:** Letter substitution over A–Z/a–z; non-letters pass through unchanged; self-inverse"
+          - "**ROT-47:** Rotation over all 94 printable ASCII characters ('!' through '~'); self-inverse; whitespace preserved"
+          - "**Slugify:** URL-safe lowercase slug with configurable separator — NFD decomposition for accented chars, overrides table for ligatures (Æ → ae, ø → o, ß → ss, Þ → th); configurable per-line or full-text mode"
+          - "**Text Diff:** Unified diff between pipeline input and a second text parameter — configurable context lines, pure-JS LCS, no dependencies"
+          - "**Format Number:** Locale-aware formatting via Intl.NumberFormat — thousands separators, decimal places, currency, and percent style; strips commas from input before parsing"
+          - "**CSV Stats:** Per-column statistics with auto-detected delimiter — numeric columns get min/max/mean/median/distinct; text columns get distinct count and top-3 values"
+          - "**CIDR Info:** Network address, broadcast, subnet mask, wildcard, first/last usable host, and host counts for any IPv4 CIDR — /31 and /32 handled as special cases"
+          - "**Datetime Diff:** Signed difference between two ISO 8601 dates in seconds, minutes, hours, days, weeks, months, or years via date-fns; absolute-value option available"
+
+  - version: "1.31.0"
+    type: "release"
     draft: false
     date: "2026-05-26"
     headline: "CSV Smart View: Header Promotion & Delimiter Conversion"
