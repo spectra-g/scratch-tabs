@@ -1,7 +1,14 @@
 // @ts-nocheck
 import { describe, it, expect, beforeEach, jest } from "@jest/globals";
-import { useRootStore } from "../rootStore";
 import { Tab } from "../../types";
+
+const mockStorageProvider = {
+  deleteTab: jest.fn().mockResolvedValue(undefined),
+  updateTabAccessed: jest.fn().mockResolvedValue(undefined),
+  updateTabPinned: jest.fn().mockResolvedValue(undefined),
+  getTabsByWorkspace: jest.fn().mockResolvedValue([]),
+  getSplitViewByWorkspace: jest.fn().mockResolvedValue(null),
+};
 
 // Mock dependencies
 jest.mock("../tabsStore", () => ({
@@ -22,7 +29,14 @@ jest.mock("../workspaceStore", () => ({
   },
 }));
 
+jest.mock("../sidebarStore", () => ({
+  useSidebarStore: {
+    getState: jest.fn(),
+  },
+}));
+
 import { useWorkspaceStore } from "../workspaceStore";
+import { useSidebarStore } from "../sidebarStore";
 
 jest.mock("../editorStore", () => ({
   useEditorStore: {
@@ -32,16 +46,17 @@ jest.mock("../editorStore", () => ({
 
 jest.mock("../../db", () => ({
   incrementSetting: jest.fn().mockResolvedValue(undefined),
+  getSetting: jest.fn().mockResolvedValue(undefined),
+  setSetting: jest.fn().mockResolvedValue(undefined),
   StorageProviderFactory: {
-    getProvider: jest.fn().mockReturnValue({
-      deleteTab: jest.fn().mockResolvedValue(undefined),
-    }),
+    getProvider: jest.fn().mockReturnValue(mockStorageProvider),
   },
 }));
 
 jest.mock("../broadcastStore", () => ({
   broadcastManager: {
     broadcastWorkspaceState: jest.fn(),
+    broadcastWorkspaceTabsMetadata: jest.fn(),
   },
 }));
 
@@ -53,6 +68,7 @@ jest.mock("../../services/modelManager", () => ({
 
 import { useTabsStore } from "../tabsStore";
 import { useSplitViewStore } from "../splitViewStore";
+import { useRootStore } from "../rootStore";
 
 describe("RootStore - Pinned Tabs Protection", () => {
   let tabsStoreMock: any;
@@ -133,6 +149,8 @@ describe("RootStore - Pinned Tabs Protection", () => {
     tabsStoreMock = {
       tabs: mockTabs,
       removeTab: jest.fn(),
+      updateTabState: jest.fn(),
+      updateTabAccessed: jest.fn(),
     };
 
     splitViewStoreMock = {
@@ -148,6 +166,8 @@ describe("RootStore - Pinned Tabs Protection", () => {
       getTabsToLeft: jest.fn(),
       getTabsToRight: jest.fn(),
       setSplitView: jest.fn(),
+      setActiveLeftTab: jest.fn(),
+      setActiveRightTab: jest.fn(),
       removeTabFromSide: jest.fn(),
       closeAllExceptRespectingPins: jest.fn(),
       closeTabsToLeftRespectingPins: jest.fn(),
@@ -162,6 +182,17 @@ describe("RootStore - Pinned Tabs Protection", () => {
     (useTabsStore as any).getState.mockReturnValue(tabsStoreMock);
     (useSplitViewStore as any).getState.mockReturnValue(splitViewStoreMock);
     (useWorkspaceStore as any).getState.mockReturnValue(workspaceStoreMock);
+    (useSidebarStore as any).getState.mockReturnValue({
+      workspaceTabsMetadata: new Map(),
+      refreshWorkspaceMetadata: jest.fn().mockResolvedValue(undefined),
+    });
+    mockStorageProvider.deleteTab.mockClear();
+    mockStorageProvider.updateTabAccessed.mockClear();
+    mockStorageProvider.updateTabPinned.mockClear();
+    mockStorageProvider.getTabsByWorkspace.mockClear();
+    mockStorageProvider.getSplitViewByWorkspace.mockClear();
+    mockStorageProvider.getTabsByWorkspace.mockResolvedValue([]);
+    mockStorageProvider.getSplitViewByWorkspace.mockResolvedValue(null);
 
     // Get a fresh instance of the store
     rootStore = useRootStore.getState();
@@ -224,5 +255,59 @@ describe("RootStore - Pinned Tabs Protection", () => {
       false, 
       expect.any(Function)
     );
+  });
+
+  it("should persist pin state for tabs in inactive workspace metadata", async () => {
+    const refreshWorkspaceMetadata = jest.fn().mockResolvedValue(undefined);
+
+    tabsStoreMock.tabs = [];
+    (useSidebarStore as any).getState.mockReturnValue({
+      workspaceTabsMetadata: new Map([
+        [
+          "workspace2",
+          [
+            {
+              id: "inactive-tab",
+              title: "Inactive Tab",
+              language: "plaintext",
+              isPinned: false,
+              lastModified: 100,
+              workspaceId: "workspace2",
+            },
+          ],
+        ],
+      ]),
+      refreshWorkspaceMetadata,
+    });
+    mockStorageProvider.getTabsByWorkspace.mockResolvedValue([
+      {
+        id: "inactive-tab",
+        title: "Inactive Tab",
+        language: "plaintext",
+        isPinned: true,
+        lastModified: 100,
+        workspaceId: "workspace2",
+      },
+    ]);
+
+    rootStore.toggleTabPin("inactive-tab");
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(mockStorageProvider.updateTabPinned).toHaveBeenCalledWith("inactive-tab", true);
+    expect(refreshWorkspaceMetadata).toHaveBeenCalledWith("workspace2");
+  });
+
+  it("should update tab access time when setting the active tab", () => {
+    jest.spyOn(Date, "now").mockReturnValue(12345);
+
+    rootStore.setActiveTab("scratch2");
+
+    expect(splitViewStoreMock.setActiveLeftTab).toHaveBeenCalledWith("scratch2");
+    expect(tabsStoreMock.updateTabAccessed).toHaveBeenCalledWith("scratch2", 12345);
+    expect(mockStorageProvider.updateTabAccessed).toHaveBeenCalledWith("scratch2", 12345);
+
+    (Date.now as jest.Mock).mockRestore();
   });
 });

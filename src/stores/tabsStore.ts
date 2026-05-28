@@ -18,6 +18,7 @@ interface TabsStore {
   updateTabLanguage: (id: string, language: string, lock?: boolean) => void;
   updateTabTitle: (id: string, title: string) => void;
   updateTabState: (id: string, updates: Partial<Tab>) => void;
+  updateTabAccessed: (id: string, lastAccessed?: number) => void;
   duplicateTab: (tabId: string) => string;
 }
 
@@ -37,6 +38,7 @@ const initializeTab = (tab: Tab): Tab => {
     cursorPosition: tab.cursorPosition ?? { lineNumber: 1, column: 1 },
     dateCreated: tab.dateCreated ?? now,
     lastModified: tab.lastModified ?? now,
+    lastAccessed: tab.lastAccessed ?? tab.lastModified ?? now,
     isTablet: tab.isTablet ?? false,
     tabletState: tab.tabletState ?? "",
     workspaceId: tab.workspaceId ?? activeWorkspaceId ?? "default",
@@ -155,6 +157,13 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
       }
     }),
 
+  updateTabAccessed: (id, lastAccessed = Date.now()) =>
+    set((state) => ({
+      tabs: state.tabs.map((tab) =>
+        tab.id === id ? { ...tab, lastAccessed } : tab,
+      ),
+    })),
+
   duplicateTab: (tabId) => {
     const state = get();
     const tabToDuplicate = state.tabs.find((tab) => tab.id === tabId);
@@ -166,6 +175,7 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
       ...duplicateTabUtil(tabToDuplicate),
       dateCreated: now,
       lastModified: now,
+      lastAccessed: now,
     };
 
     set((state) => {

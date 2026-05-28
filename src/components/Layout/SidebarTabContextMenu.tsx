@@ -39,16 +39,21 @@ export const SidebarTabContextMenu: React.FC<SidebarTabContextMenuProps> = ({
     const isActiveWorkspace = workspaceId === activeWorkspaceId;
     const otherWorkspaces = workspaces.filter(w => w.id !== workspaceId);
 
+    const getTab = () => {
+        if (isActiveWorkspace) {
+            return activeTabs.find(t => t.id === tabId);
+        }
+
+        const metadata = workspaceTabsMetadata.get(workspaceId);
+        return metadata?.find(t => t.id === tabId);
+    };
+
+    const tab = getTab();
+    const isPinned = !!tab?.isPinned;
+
     // Get tab title from appropriate source
     const getTabTitle = () => {
-        if (isActiveWorkspace) {
-            const tab = activeTabs.find(t => t.id === tabId);
-            return tab?.title || "";
-        } else {
-            const metadata = workspaceTabsMetadata.get(workspaceId);
-            const tab = metadata?.find(t => t.id === tabId);
-            return tab?.title || "";
-        }
+        return tab?.title || "";
     };
 
     useClickOutside(menuRef, () => {
@@ -129,7 +134,7 @@ export const SidebarTabContextMenu: React.FC<SidebarTabContextMenuProps> = ({
         },
         {
             id: "pin",
-            label: "Pin",
+            label: isPinned ? "Unpin" : "Pin",
             icon: Pin,
             action: handlePin,
         },

@@ -23,7 +23,7 @@ export const RELEASES: Release[] = [
     "type": "latest",
     "date": "2026-05-28",
     "headline": "OpenAPI / Swagger Smart View",
-    "summary": "Offline OpenAPI viewer with syntax highlighting, endpoint explorer, schema resolution, response examples, and cURL / REST Client exports",
+    "summary": "Offline OpenAPI viewer with syntax highlighting, endpoint explorer, schema resolution, response examples, cURL / REST Client exports, plus quicker access to pinned and recently modified tabs",
     "categories": [
       {
         "name": "New Smart Views",
@@ -35,6 +35,21 @@ export const RELEASES: Release[] = [
           "**Resolved schemas & examples:** Nested schema references are resolved recursively so request and response examples show the full object shape, including referenced properties",
           "**cURL / REST Client export:** Generated requests preserve path and query parameters when opened in cURL or REST Client tabs",
           "**Copy feedback:** Copy actions in the OpenAPI viewer use the app's standard success affordance with a brief green tick confirmation"
+        ]
+      },
+      {
+        "name": "Workspace Navigation",
+        "changes": [
+          "**Pinned tabs quick panel:** A new Pinned button above Import / Export in the sidebar opens a compact panel of pinned tabs across known workspaces; clicking an entry activates it just like selecting the tab directly",
+          "**Recently modified quick panel:** A new Recent button opens a compact list of recently modified tabs so active scratch work can be recovered without scanning every workspace",
+          "**Tab access tracking:** Tabs now store `lastAccessed` alongside `lastModified`, laying the groundwork for future recently accessed and stale-tab decluttering views"
+        ]
+      },
+      {
+        "name": "Bug Fixes",
+        "changes": [
+          "**Sidebar pinning inactive tabs:** Right-clicking a tab in an inactive workspace and choosing Pin now persists the pin state and refreshes sidebar metadata correctly",
+          "**Sidebar Pin / Unpin label:** The sidebar tab context menu now shows Unpin for tabs that are already pinned, including tabs loaded from inactive workspace metadata"
         ]
       }
     ]

@@ -12,6 +12,7 @@ interface TabRecord {
   tabletState?: string;
   isRich?: boolean;
   lastModified: number;
+  lastAccessed?: number;
   dateCreated: number;
   workspaceId: string;
   cursorPosition?: { lineNumber: number; column: number };
@@ -96,6 +97,17 @@ export class ScratchTabsDB extends Dexie {
         pipelines: "id, name, lastUsedAt, lastModified, isFavorite",
       })
       .upgrade((tx) => this.upgradeToV5(tx));
+
+    // Version 6: Add lastAccessed to tabs for recency-based navigation.
+    this.version(6)
+      .stores({
+        tabs: "id, workspaceId, lastModified, lastAccessed",
+        splitView: "id, workspaceId, lastModified",
+        workspaces: "id, lastAccessed, displayOrder",
+        settings: "key",
+        pipelines: "id, name, lastUsedAt, lastModified, isFavorite",
+      })
+      .upgrade((tx) => this.upgradeToV6(tx));
   }
 
   private async upgradeToV2(tx: any): Promise<void> {
@@ -152,6 +164,18 @@ export class ScratchTabsDB extends Dexie {
     }
   }
 
+  private async upgradeToV6(tx: any): Promise<void> {
+    const tabs = await tx.table("tabs").toArray();
+
+    await Promise.all(
+      tabs.map((tab: TabRecord) =>
+        tx.table("tabs").update(tab.id, {
+          lastAccessed: tab.lastAccessed || tab.lastModified || tab.dateCreated || Date.now(),
+        })
+      )
+    );
+  }
+
   async reopenIfClosed(): Promise<void> {
     if (this.isOpen()) return;
 
@@ -171,6 +195,7 @@ const toTabRecord = (tab: Tab): TabRecord => ({
   content: tab.content || "",
   richContent: tab.richContent ? JSON.stringify(tab.richContent) : undefined,
   lastModified: tab.lastModified,
+  lastAccessed: tab.lastAccessed,
   dateCreated: tab.dateCreated,
   workspaceId: tab.workspaceId,
 });
@@ -194,6 +219,7 @@ const toTab = (record: TabRecord): Tab => {
     isRich: record.isRich || false,
     dateCreated: record.dateCreated || now,
     lastModified: record.lastModified || now,
+    lastAccessed: record.lastAccessed || record.lastModified || record.dateCreated || now,
     cursorPosition: cursor,
     workspaceId: record.workspaceId,
   };
@@ -219,6 +245,7 @@ const toTabMetadata = (record: TabRecord): Omit<Tab, "content"> => {
     isRich: metadata.isRich || false,
     dateCreated: record.dateCreated || now,
     lastModified: record.lastModified || now,
+    lastAccessed: record.lastAccessed || record.lastModified || record.dateCreated || now,
     cursorPosition: record.cursorPosition || { lineNumber: 1, column: 1 },
     workspaceId: record.workspaceId,
   };
@@ -244,6 +271,8 @@ export interface StorageProvider {
     workspaceId: string,
   ): Promise<Omit<Tab, "content">[]>;
   getTabContent(tabId: string): Promise<string | undefined>;
+  updateTabAccessed(tabId: string, lastAccessed: number): Promise<void>;
+  updateTabPinned(tabId: string, isPinned: boolean): Promise<void>;
   updateTabCursor(
     tabId: string,
     cursorPosition: { lineNumber: number; column: number },
@@ -458,6 +487,18 @@ export class IndexedDBStorage implements StorageProvider {
     return this.withRetry(async () => {
       const record = await db.tabs.get(tabId);
       return record?.content;
+    });
+  }
+
+  async updateTabAccessed(tabId: string, lastAccessed: number): Promise<void> {
+    await this.withRetry(async () => {
+      await db.tabs.update(tabId, { lastAccessed });
+    });
+  }
+
+  async updateTabPinned(tabId: string, isPinned: boolean): Promise<void> {
+    await this.withRetry(async () => {
+      await db.tabs.update(tabId, { isPinned });
     });
   }
 

@@ -141,7 +141,7 @@
           </div>
           <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">OPENAPI / SWAGGER SMART VIEW</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">Adds a first-class OpenAPI / Swagger Smart View for inspecting API specifications entirely offline. OpenAPI content now gets dedicated syntax highlighting in the editor, while the smart view renders a structured overview with endpoint, schema, security, and diagnostics panels instead of raw spec text. Descriptions are rendered as Markdown, long overviews can be expanded in-place, and the endpoint explorer surfaces request parameters, request bodies, and response variants with schema links and generated examples. Path and query parameters are preserved when exporting cURL or REST Client requests, and schema references are resolved recursively so nested objects can be inspected without leaving the viewer.</p>
+            <p class="mb-4">Adds a first-class OpenAPI / Swagger Smart View for inspecting API specifications entirely offline. OpenAPI content now gets dedicated syntax highlighting in the editor, while the smart view renders a structured overview with endpoint, schema, security, and diagnostics panels instead of raw spec text. Descriptions are rendered as Markdown, long overviews can be expanded in-place, and the endpoint explorer surfaces request parameters, request bodies, and response variants with schema links and generated examples. Path and query parameters are preserved when exporting cURL or REST Client requests, and schema references are resolved recursively so nested objects can be inspected without leaving the viewer. This release also improves workspace navigation with quick sidebar panels for pinned tabs and recently modified tabs, adds tab-level last-access tracking for future recency views, and fixes sidebar pin/unpin actions for tabs in inactive workspaces.</p>
 
             <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_smart_views</h4>
             <ul class="space-y-2 mb-6">
@@ -152,6 +152,19 @@
               <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Resolved schemas & examples:</strong> Nested schema references are resolved recursively so request and response examples show the full object shape, including referenced properties</span></li>
               <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>cURL / REST Client export:</strong> Generated requests preserve path and query parameters when opened in cURL or REST Client tabs</span></li>
               <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Copy feedback:</strong> Copy actions in the OpenAPI viewer use the app's standard success affordance with a brief green tick confirmation</span></li>
+            </ul>
+
+            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># workspace_navigation</h4>
+            <ul class="space-y-2 mb-6">
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Pinned tabs quick panel:</strong> A new Pinned button above Import / Export in the sidebar opens a compact panel of pinned tabs across known workspaces; clicking an entry activates it just like selecting the tab directly</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Recently modified quick panel:</strong> A new Recent button opens a compact list of recently modified tabs so active scratch work can be recovered without scanning every workspace</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Tab access tracking:</strong> Tabs now store `lastAccessed` alongside `lastModified`, laying the groundwork for future recently accessed and stale-tab decluttering views</span></li>
+            </ul>
+
+            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># bug_fixes</h4>
+            <ul class="space-y-2 mb-6">
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Sidebar pinning inactive tabs:</strong> Right-clicking a tab in an inactive workspace and choosing Pin now persists the pin state and refreshes sidebar metadata correctly</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Sidebar Pin / Unpin label:</strong> The sidebar tab context menu now shows Unpin for tabs that are already pinned, including tabs loaded from inactive workspace metadata</span></li>
             </ul>
           </div>
         </div>

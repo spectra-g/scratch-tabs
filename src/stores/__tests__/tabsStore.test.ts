@@ -721,3 +721,49 @@ describe('TabsStore - Font Size Support', () => {
     });
   });
 });
+
+describe('TabsStore - Last Accessed Support', () => {
+  beforeEach(() => {
+    useTabsStore.setState({
+      tabs: [],
+      activeTabId: null,
+    });
+  });
+
+  it('initializes lastAccessed from lastModified when not provided', () => {
+    useTabsStore.getState().addTab({
+      id: 'tab-1',
+      title: 'Test Tab',
+      content: 'test content',
+      language: 'plaintext',
+      languageLocked: false,
+      workspaceId: 'workspace-1',
+      dateCreated: 1000,
+      lastModified: 2000,
+      cursorPosition: { lineNumber: 1, column: 1 },
+    });
+
+    const tab = useTabsStore.getState().tabs.find(t => t.id === 'tab-1');
+    expect(tab?.lastAccessed).toBe(2000);
+  });
+
+  it('updates lastAccessed without changing lastModified', () => {
+    useTabsStore.getState().addTab({
+      id: 'tab-1',
+      title: 'Test Tab',
+      content: 'test content',
+      language: 'plaintext',
+      languageLocked: false,
+      workspaceId: 'workspace-1',
+      dateCreated: 1000,
+      lastModified: 2000,
+      cursorPosition: { lineNumber: 1, column: 1 },
+    });
+
+    useTabsStore.getState().updateTabAccessed('tab-1', 3000);
+
+    const tab = useTabsStore.getState().tabs.find(t => t.id === 'tab-1');
+    expect(tab?.lastAccessed).toBe(3000);
+    expect(tab?.lastModified).toBe(2000);
+  });
+});
