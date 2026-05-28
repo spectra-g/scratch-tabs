@@ -12,13 +12,35 @@ import { incrementSetting } from "../db";
 import { NEW_TAB_PREFIX } from "../constants";
 import { isTabEmpty, countEmptyTabs, groupTabsByLanguage } from "../utils";
 import { detectFormat, isAmbiguousFormat } from "../formats";
-import { StorageProviderFactory } from "../db";
+import { StorageProviderFactory, StorageProvider } from "../db";
 import { broadcastManager } from "./broadcastStore";
 import { modelManager } from "../services/modelManager";
 import { useQueryPanelStore } from "../formats/json/stores/useQueryPanelStore";
 import { contentProcessingService } from "../services/contentProcessing";
 import { navigationService } from "../services/navigationService";
 import { SidebarTabInfo } from "../types";
+
+const _updateStoredTabAccessed = (
+  storage: StorageProvider,
+  tabId: string,
+  lastAccessed: number,
+) => {
+  if (!storage.updateTabAccessed) return;
+
+  storage
+    .updateTabAccessed(tabId, lastAccessed)
+    .catch((err) => console.error("Failed to update tab access time:", err));
+};
+
+const _updateStoredTabPinned = (
+  storage: StorageProvider,
+  tabId: string,
+  isPinned: boolean,
+) => {
+  if (!storage.updateTabPinned) return Promise.resolve();
+
+  return storage.updateTabPinned(tabId, isPinned);
+};
 
 // The RootStore now primarily holds ACTIONS that coordinate other stores.
 // It does NOT hold mirrored state like `tabs` or `splitView`.
@@ -141,6 +163,7 @@ const _broadcastMetadataUpdate = async (workspaceId: string): Promise<void> => {
       isRich: t.isRich,
       isPinned: t.isPinned,
       lastModified: t.lastModified,
+      lastAccessed: t.lastAccessed,
       workspaceId: t.workspaceId,
     }));
 
@@ -219,6 +242,7 @@ export const useRootStore = create<RootStore>((set, get) => {
       workspaceId: workspaceId,
       dateCreated: partialInputTab.dateCreated || now,
       lastModified: now,
+      lastAccessed: partialInputTab.lastAccessed || now,
       cursorPosition: partialInputTab.cursorPosition || {
         lineNumber: 1,
         column: 1,
@@ -395,6 +419,7 @@ export const useRootStore = create<RootStore>((set, get) => {
     setActiveTab: (id) => {
       const { splitView } = useSplitViewStore.getState();
       const { activeWorkspaceId } = useWorkspaceStore.getState();
+      const lastAccessed = Date.now();
 
       if (splitView.leftTabs.includes(id)) {
         useSplitViewStore.getState().setActiveLeftTab(id);
@@ -403,6 +428,9 @@ export const useRootStore = create<RootStore>((set, get) => {
       } else {
         useSplitViewStore.getState().setActiveLeftTab(id);
       }
+
+      useTabsStore.getState().updateTabAccessed?.(id, lastAccessed);
+      _updateStoredTabAccessed(storage, id, lastAccessed);
 
       // Record navigation history (only if not currently navigating via back/forward)
       if (activeWorkspaceId && !navigationService.isCurrentlyNavigating()) {
@@ -423,9 +451,28 @@ export const useRootStore = create<RootStore>((set, get) => {
       const { tabs } = useTabsStore.getState();
       const { splitView } = useSplitViewStore.getState();
       const tab = tabs.find((t) => t.id === id);
-      if (!tab) return;
+      if (!tab) {
+        const sidebarState = useSidebarStore.getState();
+        let metadataTab: SidebarTabInfo | undefined;
+
+        for (const metadata of sidebarState.workspaceTabsMetadata.values()) {
+          metadataTab = metadata.find((t) => t.id === id);
+          if (metadataTab) break;
+        }
+
+        if (!metadataTab) return;
+
+        const isPinned = !metadataTab.isPinned;
+        _updateStoredTabPinned(storage, id, isPinned)
+          .then(() => sidebarState.refreshWorkspaceMetadata(metadataTab!.workspaceId))
+          .then(() => _broadcastMetadataUpdate(metadataTab!.workspaceId))
+          .catch((err) => console.error("Failed to toggle inactive tab pin:", err));
+        return;
+      }
       const isPinned = !tab.isPinned;
       useTabsStore.getState().updateTabState(id, { isPinned });
+      _updateStoredTabPinned(storage, id, isPinned)
+        .catch((err) => console.error("Failed to update tab pin state:", err));
       if (isPinned) {
         const side = splitView.leftTabs.includes(id) ? "left" : "right";
         let currentList =
@@ -487,9 +534,18 @@ export const useRootStore = create<RootStore>((set, get) => {
     moveTabToRight: (tabId) =>
       useSplitViewStore.getState().moveTabToRight(tabId),
     moveTabToLeft: (tabId) => useSplitViewStore.getState().moveTabToLeft(tabId),
-    setActiveLeftTab: (id) => useSplitViewStore.getState().setActiveLeftTab(id),
-    setActiveRightTab: (id) =>
-      useSplitViewStore.getState().setActiveRightTab(id),
+    setActiveLeftTab: (id) => {
+      const lastAccessed = Date.now();
+      useSplitViewStore.getState().setActiveLeftTab(id);
+      useTabsStore.getState().updateTabAccessed?.(id, lastAccessed);
+      _updateStoredTabAccessed(storage, id, lastAccessed);
+    },
+    setActiveRightTab: (id) => {
+      const lastAccessed = Date.now();
+      useSplitViewStore.getState().setActiveRightTab(id);
+      useTabsStore.getState().updateTabAccessed?.(id, lastAccessed);
+      _updateStoredTabAccessed(storage, id, lastAccessed);
+    },
     setActiveSide: (side) => useSplitViewStore.getState().setActiveSide(side),
     setSplitRatio: (ratio) => useSplitViewStore.getState().setSplitRatio(ratio),
 

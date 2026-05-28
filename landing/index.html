@@ -34,7 +34,7 @@
   <meta name="description"
     content="Your private, offline-first scratchpad for the data that doesn't belong in git. Auto detects formats, transforms data, unlimited tabs, workspaces and more. No accounts, free and open-source." />
   <meta name="keywords"
-    content="developer scratchpad, developer toolkit, transformation pipeline, json editor, offline dev tools, jwt decoder, regex tester, monaco editor, scratchpad, privacy-first tools, rest client, api testing" />
+    content="developer scratchpad, developer toolkit, transformation pipeline, json editor, openapi viewer, swagger viewer, offline dev tools, jwt decoder, regex tester, monaco editor, scratchpad, privacy-first tools, rest client, api testing" />
 
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://scratchtabs.com/" />
@@ -74,14 +74,14 @@
           "applicationCategory": "DeveloperApplication",
           "operatingSystem": "All (Web Browser)",
           "browserRequirements": "Requires modern web browser with JavaScript and IndexedDB.",
-          "keywords": "developer scratchpad, developer toolkit, transformation pipeline, json editor, offline dev tools, privacy-focused, smart views, jwt decoder, regex tester, rest client, api testing",
+          "keywords": "developer scratchpad, developer toolkit, transformation pipeline, json editor, openapi viewer, swagger viewer, offline dev tools, privacy-focused, smart views, jwt decoder, regex tester, rest client, api testing",
           "featureList": [
             "Transformation Pipelines: Chain operations like Unix pipes",
             "Persistent Workspaces & Split-View UI",
             "Client-Side AI: In-browser text summarization",
             "REST API Client with variable support",
             "JWT Decoder, Verifier, and Signer",
-            "JSON, CSV, and OpenMetrics Viewers with advanced tools",
+            "JSON, CSV, OpenAPI, and OpenMetrics Viewers with advanced tools",
             "Base64 & URL Encoder/Decoder",
             "Password & UUID Generator",
             "Live Markdown & HTML Preview",
@@ -166,7 +166,7 @@
     <div class="container mx-auto px-6">
       <div class="flex flex-col items-center text-center mb-12">
         <div class="inline-flex items-center space-x-2 px-2 py-1 border border-gray-800 bg-gray-900 mb-6">
-          <span class="text-emerald-500 font-mono text-xs">v1.32.0 // LATEST</span>
+          <span class="text-emerald-500 font-mono text-xs">v1.33.0 // LATEST</span>
         </div>
         <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight mb-6">
           The Missing Half of Your <span class="text-emerald-500">Dev Environment.</span>
@@ -267,6 +267,7 @@
       <div class="marquee-track">
         <span class="marquee-item format">JSON</span><span class="marquee-sep">//</span>
         <span class="marquee-item format">YAML</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">OpenAPI / Swagger</span><span class="marquee-sep">//</span>
         <span class="marquee-item format">TOML</span><span class="marquee-sep">//</span>
         <span class="marquee-item format">CSV</span><span class="marquee-sep">//</span>
         <span class="marquee-item format">Markdown</span><span class="marquee-sep">//</span>
@@ -300,6 +301,7 @@
         <!-- duplicate for seamless loop -->
         <span class="marquee-item format">JSON</span><span class="marquee-sep">//</span>
         <span class="marquee-item format">YAML</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">OpenAPI / Swagger</span><span class="marquee-sep">//</span>
         <span class="marquee-item format">TOML</span><span class="marquee-sep">//</span>
         <span class="marquee-item format">CSV</span><span class="marquee-sep">//</span>
         <span class="marquee-item format">Markdown</span><span class="marquee-sep">//</span>
@@ -389,7 +391,7 @@
         <div class="p-6 border border-gray-800 bg-[#0a0a0a] rounded hover:border-emerald-500/50 transition-colors">
           <div class="text-emerald-500 font-mono text-xs mb-3">02 // DETECT</div>
           <h3 class="text-white font-bold text-lg mb-3">Smart Views</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">Format detected automatically. JSON becomes a tree, CSV becomes a spreadsheet, Markdown becomes a live preview.</p>
+          <p class="text-gray-400 text-sm leading-relaxed">Format detected automatically. JSON becomes a tree, CSV becomes a spreadsheet, Markdown becomes a live preview, and OpenAPI becomes an endpoint explorer.</p>
         </div>
         <!-- Card 3 -->
         <div class="p-6 border border-gray-800 bg-[#0a0a0a] rounded hover:border-emerald-500/50 transition-colors">
@@ -585,7 +587,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.32.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.33.0</span>
         </div>
 
         <div class="flex space-x-8">

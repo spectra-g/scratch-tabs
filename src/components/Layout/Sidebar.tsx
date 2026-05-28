@@ -37,7 +37,8 @@ import {
     Type,
     X,
     Upload,
-    Download
+    Download,
+    Clock,
 } from "../Icons";
 import { ExportWorkspacesModal } from "../Workspace/ExportWorkspacesModal";
 import { ImportWorkspacesModal } from "../Workspace/ImportWorkspacesModal";
@@ -52,6 +53,7 @@ const ROW_HEIGHT = 28;
 const MIN_WIDTH = 120;
 const MAX_WIDTH = 600;
 const SNAP_THRESHOLD = 80;
+const QUICK_PANEL_LIMIT = 12;
 
 type TreeItem =
     | { type: 'workspace'; id: string; name: string; isExpanded: boolean; isActive: boolean; tabCount: number }
@@ -182,6 +184,7 @@ export const Sidebar: React.FC = () => {
 
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const { isImportModalActive, openImportModal, closeImportModal } = useModalStore();
+    const [quickPanel, setQuickPanel] = useState<"pinned" | "modified" | null>(null);
 
     // Drag and drop state
     const [draggedTab, setDraggedTab] = useState<SidebarTabInfo | null>(null);
@@ -380,6 +383,7 @@ export const Sidebar: React.FC = () => {
                             isRich: tab.isRich,
                             isPinned: tab.isPinned,
                             lastModified: tab.lastModified,
+                            lastAccessed: tab.lastAccessed,
                             workspaceId: tab.workspaceId,
                         } as SidebarTabInfo;
                     })
@@ -427,6 +431,67 @@ export const Sidebar: React.FC = () => {
 
         return items;
     }, [workspaces, activeWorkspaceId, activeTabs, workspaceTabsMetadata, expandedWorkspaceIds, activeTabId, searchQuery, splitView?.leftTabs, splitView?.rightTabs]);
+
+    const allKnownTabs = useMemo(() => {
+        const tabsById = new Map<string, SidebarTabInfo>();
+
+        activeTabs.forEach((tab) => {
+            tabsById.set(tab.id, {
+                id: tab.id,
+                title: tab.title,
+                language: tab.language,
+                isTablet: tab.isTablet,
+                isRich: tab.isRich,
+                isPinned: tab.isPinned,
+                lastModified: tab.lastModified,
+                lastAccessed: tab.lastAccessed,
+                workspaceId: tab.workspaceId,
+            });
+        });
+
+        workspaceTabsMetadata.forEach((metadata) => {
+            metadata.forEach((tab) => tabsById.set(tab.id, tab));
+        });
+
+        return Array.from(tabsById.values());
+    }, [activeTabs, workspaceTabsMetadata]);
+
+    const pinnedQuickTabs = useMemo(
+        () => allKnownTabs.filter((tab) => tab.isPinned).slice(0, QUICK_PANEL_LIMIT),
+        [allKnownTabs],
+    );
+
+    const recentlyModifiedQuickTabs = useMemo(
+        () =>
+            [...allKnownTabs]
+                .sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0))
+                .slice(0, QUICK_PANEL_LIMIT),
+        [allKnownTabs],
+    );
+
+    const quickPanelTabs = quickPanel === "pinned" ? pinnedQuickTabs : recentlyModifiedQuickTabs;
+    const quickPanelTitle = quickPanel === "pinned" ? "Pinned Tabs" : "Recently Modified";
+
+    const formatQuickPanelTime = (timestamp?: number) => {
+        if (!timestamp) return "";
+
+        const formatter = new Intl.DateTimeFormat(undefined, {
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+
+        return formatter.format(new Date(timestamp));
+    };
+
+    const getWorkspaceName = (workspaceId: string) =>
+        workspaces.find((workspace) => workspace.id === workspaceId)?.name || "Workspace";
+
+    const handleQuickPanelTabClick = async (tab: SidebarTabInfo) => {
+        await handleTabClick(tab.id, tab.workspaceId);
+        setQuickPanel(null);
+    };
 
     const handleWorkspaceClick = async (wsId: string, isExpanded: boolean, tabCount: number) => {
         const isEmpty = tabCount === 0;
@@ -583,6 +648,7 @@ export const Sidebar: React.FC = () => {
                             isRich: t.isRich,
                             isPinned: t.isPinned,
                             lastModified: t.lastModified,
+                            lastAccessed: t.lastAccessed,
                             workspaceId: t.workspaceId,
                         }));
                 } else {
@@ -864,6 +930,83 @@ export const Sidebar: React.FC = () => {
                                 {searchQuery ? "No matches found" : "No workspaces"}
                             </div>
                         )}
+                    </div>
+
+                    <div className="relative px-2 h-[29px] border-t border-base flex items-center justify-between gap-1 flex-shrink-0">
+                        {quickPanel && (
+                            <div
+                                className="absolute left-2 right-2 bottom-[34px] z-30 bg-surface border border-base rounded shadow-lg overflow-hidden"
+                                data-testid={`sidebar-quick-panel-${quickPanel}`}
+                            >
+                                <div className="px-2 py-1.5 border-b border-base flex items-center justify-between">
+                                    <span className="text-[11px] font-semibold text-secondary uppercase tracking-wider">
+                                        {quickPanelTitle}
+                                    </span>
+                                    <button
+                                        onClick={() => setQuickPanel(null)}
+                                        className="p-0.5 rounded text-secondary hover:text-main hover:bg-element-hover"
+                                        aria-label="Close quick tabs panel"
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                </div>
+                                <div className="max-h-72 overflow-y-auto custom-scrollbar py-1">
+                                    {quickPanelTabs.length > 0 ? (
+                                        quickPanelTabs.map((tab) => (
+                                            <button
+                                                key={tab.id}
+                                                onClick={() => handleQuickPanelTabClick(tab)}
+                                                className="w-full px-2 py-1.5 flex items-center gap-2 text-left hover:bg-element-hover text-main"
+                                                data-testid={`sidebar-quick-panel-tab-${tab.id}`}
+                                            >
+                                                <span className="text-secondary flex-shrink-0">
+                                                    <TabIcon language={tab.language} isTablet={tab.isTablet} />
+                                                </span>
+                                                <span className="min-w-0 flex-1">
+                                                    <span className="block text-[12px] truncate">{tab.title}</span>
+                                                    <span className="block text-[10px] text-secondary truncate">
+                                                        {getWorkspaceName(tab.workspaceId)}
+                                                        {quickPanel === "modified" && ` · ${formatQuickPanelTime(tab.lastModified)}`}
+                                                    </span>
+                                                </span>
+                                                {tab.isPinned && <Pin size={11} className="text-secondary flex-shrink-0" />}
+                                            </button>
+                                        ))
+                                    ) : (
+                                        <div className="px-3 py-4 text-center text-[12px] text-secondary">
+                                            No tabs to show
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                        <button
+                            onClick={() => setQuickPanel((current) => current === "pinned" ? null : "pinned")}
+                            className={clsx(
+                                "flex-1 flex items-center justify-center gap-1.5 px-2 h-full text-[12px] hover:bg-element-hover rounded transition-colors",
+                                quickPanel === "pinned" ? "text-main bg-element-hover" : "text-secondary hover:text-main",
+                            )}
+                            title="Pinned Tabs"
+                            aria-label="Pinned Tabs"
+                            data-testid="sidebar-pinned-tabs-button"
+                        >
+                            <Pin size={12} />
+                            <span className="truncate">Pinned</span>
+                        </button>
+                        <div className="w-px h-3 bg-base self-center" />
+                        <button
+                            onClick={() => setQuickPanel((current) => current === "modified" ? null : "modified")}
+                            className={clsx(
+                                "flex-1 flex items-center justify-center gap-1.5 px-2 h-full text-[12px] hover:bg-element-hover rounded transition-colors",
+                                quickPanel === "modified" ? "text-main bg-element-hover" : "text-secondary hover:text-main",
+                            )}
+                            title="Recently Modified"
+                            aria-label="Recently Modified"
+                            data-testid="sidebar-recent-tabs-button"
+                        >
+                            <Clock size={12} />
+                            <span className="truncate">Recent</span>
+                        </button>
                     </div>
 
                     {/* Sidebar Footer with Import/Export - h-[29px] to align with status bar */}

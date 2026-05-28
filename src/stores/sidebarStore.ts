@@ -201,6 +201,7 @@ export const useSidebarStore = create<SidebarState>((set, get) => {
                     isRich: t.isRich,
                     isPinned: t.isPinned,
                     lastModified: t.lastModified,
+                    lastAccessed: t.lastAccessed,
                     workspaceId: t.workspaceId,
                 }));
 

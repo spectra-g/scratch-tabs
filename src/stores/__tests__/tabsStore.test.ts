@@ -405,6 +405,24 @@ describe("TabsStore", () => {
       expect(duplicateTab?.workspaceId).toBe(mockTab.workspaceId);
     });
 
+    it("should insert the duplicate immediately after the source tab", () => {
+      const tabA = { ...mockTab, id: "a", title: "A" };
+      const tabB = { ...mockTab, id: "b", title: "B" };
+      const tabC = { ...mockTab, id: "c", title: "C" };
+      useTabsStore.getState().addTab(tabA);
+      useTabsStore.getState().addTab(tabB);
+      useTabsStore.getState().addTab(tabC);
+
+      const duplicateId = useTabsStore.getState().duplicateTab("b");
+
+      const tabs = useTabsStore.getState().tabs;
+      expect(tabs).toHaveLength(4);
+      expect(tabs[0].id).toBe("a");
+      expect(tabs[1].id).toBe("b");
+      expect(tabs[2].id).toBe(duplicateId);
+      expect(tabs[3].id).toBe("c");
+    });
+
     it("should return empty string if original tab is not found", () => {
       const duplicateId = useTabsStore
         .getState()
@@ -701,5 +719,51 @@ describe('TabsStore - Font Size Support', () => {
       // Font size can still be stored but won't be used by the UI
       expect(addedTab?.fontSize).toBe(16);
     });
+  });
+});
+
+describe('TabsStore - Last Accessed Support', () => {
+  beforeEach(() => {
+    useTabsStore.setState({
+      tabs: [],
+      activeTabId: null,
+    });
+  });
+
+  it('initializes lastAccessed from lastModified when not provided', () => {
+    useTabsStore.getState().addTab({
+      id: 'tab-1',
+      title: 'Test Tab',
+      content: 'test content',
+      language: 'plaintext',
+      languageLocked: false,
+      workspaceId: 'workspace-1',
+      dateCreated: 1000,
+      lastModified: 2000,
+      cursorPosition: { lineNumber: 1, column: 1 },
+    });
+
+    const tab = useTabsStore.getState().tabs.find(t => t.id === 'tab-1');
+    expect(tab?.lastAccessed).toBe(2000);
+  });
+
+  it('updates lastAccessed without changing lastModified', () => {
+    useTabsStore.getState().addTab({
+      id: 'tab-1',
+      title: 'Test Tab',
+      content: 'test content',
+      language: 'plaintext',
+      languageLocked: false,
+      workspaceId: 'workspace-1',
+      dateCreated: 1000,
+      lastModified: 2000,
+      cursorPosition: { lineNumber: 1, column: 1 },
+    });
+
+    useTabsStore.getState().updateTabAccessed('tab-1', 3000);
+
+    const tab = useTabsStore.getState().tabs.find(t => t.id === 'tab-1');
+    expect(tab?.lastAccessed).toBe(3000);
+    expect(tab?.lastModified).toBe(2000);
   });
 });

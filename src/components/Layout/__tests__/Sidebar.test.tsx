@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import { Sidebar } from "../Sidebar";
 import { useWorkspaceStore } from "../../../stores/workspaceStore";
 import { useTabsStore } from "../../../stores/tabsStore";
@@ -109,6 +109,118 @@ describe("Sidebar Component", () => {
     it("renders a search input", () => {
         render(<Sidebar />);
         expect(screen.getByPlaceholderText("Filter tabs...")).toBeInTheDocument();
+    });
+
+    it("shows pinned tabs in the Pinned quick panel and activates them", async () => {
+        const setActiveTab = jest.fn();
+        const mockTabsWithContent = [
+            {
+                id: "tab-pinned",
+                title: "Pinned Note",
+                language: "plaintext",
+                isPinned: true,
+                lastModified: 100,
+                lastAccessed: 100,
+                workspaceId: "ws-1",
+                dateCreated: 0,
+                content: "",
+                languageLocked: false,
+                cursorPosition: { lineNumber: 1, column: 1 },
+            },
+            {
+                id: "tab-regular",
+                title: "Regular Note",
+                language: "plaintext",
+                isPinned: false,
+                lastModified: 200,
+                lastAccessed: 200,
+                workspaceId: "ws-1",
+                dateCreated: 0,
+                content: "",
+                languageLocked: false,
+                cursorPosition: { lineNumber: 1, column: 1 },
+            },
+        ];
+
+        mockStore(useTabsStore, {
+            tabs: mockTabsWithContent,
+        });
+        mockStore(useRootStore, {
+            setActiveTab,
+        });
+        mockStore(useSplitViewStore, {
+            splitView: {
+                activeSide: "left",
+                activeLeftTabId: "tab-regular",
+                leftTabs: ["tab-pinned", "tab-regular"],
+                rightTabs: [],
+            },
+        });
+
+        render(<Sidebar />);
+        fireEvent.click(screen.getByTestId("sidebar-pinned-tabs-button"));
+
+        const panel = screen.getByTestId("sidebar-quick-panel-pinned");
+        expect(within(panel).getByText("Pinned Note")).toBeInTheDocument();
+        expect(within(panel).queryByText("Regular Note")).not.toBeInTheDocument();
+
+        fireEvent.click(within(panel).getByRole("button", { name: /Pinned Note/ }));
+
+        await waitFor(() => {
+            expect(setActiveTab).toHaveBeenCalledWith("tab-pinned");
+        });
+    });
+
+    it("shows recently modified tabs sorted by lastModified in the Recent quick panel", () => {
+        const mockTabsWithContent = [
+            {
+                id: "tab-old",
+                title: "Older Note",
+                language: "plaintext",
+                isPinned: false,
+                lastModified: 100,
+                lastAccessed: 300,
+                workspaceId: "ws-1",
+                dateCreated: 0,
+                content: "",
+                languageLocked: false,
+                cursorPosition: { lineNumber: 1, column: 1 },
+            },
+            {
+                id: "tab-new",
+                title: "Newest Note",
+                language: "plaintext",
+                isPinned: false,
+                lastModified: 500,
+                lastAccessed: 100,
+                workspaceId: "ws-1",
+                dateCreated: 0,
+                content: "",
+                languageLocked: false,
+                cursorPosition: { lineNumber: 1, column: 1 },
+            },
+        ];
+
+        mockStore(useTabsStore, {
+            tabs: mockTabsWithContent,
+        });
+        mockStore(useSplitViewStore, {
+            splitView: {
+                activeSide: "left",
+                activeLeftTabId: "tab-old",
+                leftTabs: ["tab-old", "tab-new"],
+                rightTabs: [],
+            },
+        });
+
+        render(<Sidebar />);
+        fireEvent.click(screen.getByTestId("sidebar-recent-tabs-button"));
+
+        const panel = screen.getByTestId("sidebar-quick-panel-modified");
+        const entries = within(panel).getAllByRole("button", { name: /Note/ });
+
+        expect(entries[0]).toHaveTextContent("Newest Note");
+        expect(entries[1]).toHaveTextContent("Older Note");
     });
 
     it("renders workspace name", () => {

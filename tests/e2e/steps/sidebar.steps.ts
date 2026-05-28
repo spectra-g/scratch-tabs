@@ -31,6 +31,14 @@ When('I right-click on workspace {string} in the sidebar', async function (works
   await this.sidebar.rightClickWorkspace(workspaceName);
 });
 
+When('I open the {string} quick tabs panel', async function (panelName: 'Pinned' | 'Recent') {
+  await this.sidebar.openQuickPanel(panelName);
+});
+
+When('I click tab {string} in the {string} quick tabs panel', async function (tabTitle: string, panelName: 'Pinned' | 'Recent') {
+  await this.sidebar.clickTabInQuickPanel(panelName, tabTitle);
+});
+
 When('I type {string} in the workspace rename input', async function (text: string) {
   await this.sidebar.typeInWorkspaceRenameInput(text);
 });
@@ -91,4 +99,8 @@ Then('I should see workspace icons in the icon rail', async function () {
 
 Then('the {string} workspace should be visible', async function (workspaceName: string) {
   await this.sidebar.waitForWorkspaceToBeVisible(workspaceName);
+});
+
+Then('the {string} quick tabs panel should contain tab {string}', async function (panelName: 'Pinned' | 'Recent', tabTitle: string) {
+  await this.sidebar.expectQuickPanelContains(panelName, tabTitle);
 });

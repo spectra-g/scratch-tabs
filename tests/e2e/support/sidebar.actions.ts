@@ -221,6 +221,38 @@ export class SidebarActions {
     await tab.click({ button: 'right' });
   }
 
+  async openQuickPanel(panelName: 'Pinned' | 'Recent') {
+    const testId = panelName === 'Pinned'
+      ? 'sidebar-pinned-tabs-button'
+      : 'sidebar-recent-tabs-button';
+    const panelId = panelName === 'Pinned'
+      ? 'sidebar-quick-panel-pinned'
+      : 'sidebar-quick-panel-modified';
+
+    await this.page.getByTestId(testId).click();
+    await expect(this.page.getByTestId(panelId)).toBeVisible();
+  }
+
+  async expectQuickPanelContains(panelName: 'Pinned' | 'Recent', tabTitle: string) {
+    const panelId = panelName === 'Pinned'
+      ? 'sidebar-quick-panel-pinned'
+      : 'sidebar-quick-panel-modified';
+    const panel = this.page.getByTestId(panelId);
+
+    await expect(panel).toBeVisible();
+    await expect(panel.getByRole('button', { name: new RegExp(tabTitle) })).toBeVisible();
+  }
+
+  async clickTabInQuickPanel(panelName: 'Pinned' | 'Recent', tabTitle: string) {
+    const panelId = panelName === 'Pinned'
+      ? 'sidebar-quick-panel-pinned'
+      : 'sidebar-quick-panel-modified';
+    const panel = this.page.getByTestId(panelId);
+
+    await expect(panel).toBeVisible();
+    await panel.getByRole('button', { name: new RegExp(tabTitle) }).click();
+  }
+
   /**
    * Click on a workspace icon in the icon rail
    * @param workspaceName - The name of the workspace (or index if using icon position)

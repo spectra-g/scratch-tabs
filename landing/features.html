@@ -32,16 +32,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>The Intelligent Workbench | Scratch Tabs</title>
   <meta name="description"
-    content="An editor that understands your data. Features Smart Views for JSON/CSV, live Markdown previews, split-screen diffing, and persistent workspace management." />
+    content="An editor that understands your data. Features Smart Views for JSON/CSV/OpenAPI, live Markdown previews, split-screen diffing, and persistent workspace management." />
   <meta name="keywords"
-    content="features, monaco editor, smart views, split view, diff tool, workspaces, json editor, csv editor, markdown preview, developer tools, scratch tabs" />
+    content="features, monaco editor, smart views, split view, diff tool, workspaces, json editor, csv editor, openapi viewer, swagger viewer, markdown preview, developer tools, scratch tabs" />
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://scratchtabs.com/features.html" />
   <meta property="og:title" content="The Intelligent Workbench | Scratch Tabs" />
   <meta property="og:description"
-    content="An editor that understands your data. Smart Views for JSON/CSV, live Markdown previews, split-screen diffing, and workspace management." />
+    content="An editor that understands your data. Smart Views for JSON/CSV/OpenAPI, live Markdown previews, split-screen diffing, and workspace management." />
   <meta property="og:image" content="https://scratchtabs.b-cdn.net/og-image.png" />
 
   <!-- Twitter -->
@@ -49,7 +49,7 @@
   <meta property="twitter:url" content="https://scratchtabs.com/features.html" />
   <meta property="twitter:title" content="The Intelligent Workbench | Scratch Tabs" />
   <meta property="twitter:description"
-    content="An editor that understands your data. Smart Views for JSON/CSV, live Markdown previews, split-screen diffing, and workspace management." />
+    content="An editor that understands your data. Smart Views for JSON/CSV/OpenAPI, live Markdown previews, split-screen diffing, and workspace management." />
   <meta property="twitter:image" content="https://scratchtabs.b-cdn.net/og-image.png" />
 
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
@@ -115,7 +115,7 @@
         Your Data Understands <span class="text-emerald-500">Itself.</span>
       </h1>
       <p class="text-lg md:text-xl text-gray-400 mb-8 max-w-3xl mx-auto leading-relaxed">
-        Paste JSON, CSV, or Markdown and watch the editor transform into a specialized tool. Not just syntax highlighting - structural intelligence that adapts to your content.
+        Paste JSON, CSV, Markdown, or OpenAPI and watch the editor transform into a specialized tool. Not just syntax highlighting - structural intelligence that adapts to your content.
       </p>
     </div>
   </section>
@@ -273,7 +273,11 @@
       </div>
 
       <!-- Additional Smart Views -->
-      <div class="grid md:grid-cols-4 gap-4">
+      <div class="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="card-sharp p-4">
+          <h4 class="text-white font-mono text-xs mb-2">OpenAPI / Swagger</h4>
+          <p class="text-gray-500 text-xs">Endpoint, schema, security, diagnostics, cURL, and REST Client views</p>
+        </div>
         <div class="card-sharp p-4">
           <h4 class="text-white font-mono text-xs mb-2">Diff/Patch</h4>
           <p class="text-gray-500 text-xs">Side-by-side comparison with line-by-line navigation</p>
@@ -407,7 +411,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.32.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.33.0</span>
         </div>
 
         <div class="flex space-x-8">

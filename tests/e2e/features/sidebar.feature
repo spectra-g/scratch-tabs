@@ -71,6 +71,26 @@ Feature: Workspace Sidebar
     And tab "Default Tab" should be active in the tab bar
     And workspace "Default Workspace" should be marked as active in sidebar
 
+  Scenario: Quick panels open pinned and recently modified tabs
+    When I click the icon for "New tab"
+    And I double-click on the active tab
+    And I type "Pinned Note" in the rename input
+    And I press Enter to confirm rename
+    And I pin the "Pinned Note" tab
+    And I click the icon for "New tab"
+    And I double-click on the active tab
+    And I type "Recent Note" in the rename input
+    And I press Enter to confirm rename
+    And I type "fresh edit" into the editor
+    When I open the "Pinned" quick tabs panel
+    Then the "Pinned" quick tabs panel should contain tab "Pinned Note"
+    When I click tab "Pinned Note" in the "Pinned" quick tabs panel
+    Then tab "Pinned Note" should be active in the tab bar
+    When I open the "Recent" quick tabs panel
+    Then the "Recent" quick tabs panel should contain tab "Recent Note"
+    When I click tab "Recent Note" in the "Recent" quick tabs panel
+    Then tab "Recent Note" should be active in the tab bar
+
   Scenario: Create new workspace from sidebar
     When I click the icon for "New tab"
     Then the sidebar should be visible

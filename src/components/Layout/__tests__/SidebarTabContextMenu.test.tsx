@@ -168,6 +168,47 @@ describe("SidebarTabContextMenu", () => {
             expect(mockToggleTabPin).toHaveBeenCalledWith(mockTab.id);
             expect(mockOnClose).toHaveBeenCalled();
         });
+
+        it("should show Unpin for a pinned active workspace tab", () => {
+            mockUseTabsStore.mockReturnValue({
+                tabs: [{ ...mockTab, isPinned: true }],
+            } as any);
+
+            render(
+                <SidebarTabContextMenu
+                    tabId={mockTab.id}
+                    workspaceId="ws-1"
+                    position={{ x: 100, y: 100 }}
+                    onClose={mockOnClose}
+                />
+            );
+
+            expect(screen.getByText("Unpin")).toBeInTheDocument();
+            expect(screen.queryByText("Pin")).not.toBeInTheDocument();
+        });
+
+        it("should show Unpin for a pinned inactive workspace tab from metadata", () => {
+            const metadata = new Map([
+                ["ws-2", [{ id: "tab-2", title: "Pinned Inactive", language: "javascript", isPinned: true, lastModified: Date.now(), workspaceId: "ws-2" }]]
+            ]);
+
+            mockUseSidebarStore.mockReturnValue({
+                workspaceTabsMetadata: metadata,
+                setEditingId: mockSetEditingId,
+            } as any);
+
+            render(
+                <SidebarTabContextMenu
+                    tabId="tab-2"
+                    workspaceId="ws-2"
+                    position={{ x: 100, y: 100 }}
+                    onClose={mockOnClose}
+                />
+            );
+
+            expect(screen.getByText("Unpin")).toBeInTheDocument();
+            expect(screen.queryByText("Pin")).not.toBeInTheDocument();
+        });
     });
 
     describe("Move to Workspace", () => {

@@ -130,38 +130,56 @@
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
 
-        <!-- Version 1.32.0 -->
+        <!-- Version 1.33.0 -->
         <div class="changelog-entry latest">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-white">V1.32.0</h2>
+              <h2 class="text-2xl font-bold text-white">V1.33.0</h2>
               <span class="badge latest">LATEST</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">05/28/2026</span>
+          </div>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">OPENAPI / SWAGGER SMART VIEW</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p class="mb-4">Adds a first-class OpenAPI / Swagger Smart View for inspecting API specifications entirely offline. OpenAPI content now gets dedicated syntax highlighting in the editor, while the smart view renders a structured overview with endpoint, schema, security, and diagnostics panels instead of raw spec text. Descriptions are rendered as Markdown, long overviews can be expanded in-place, and the endpoint explorer surfaces request parameters, request bodies, and response variants with schema links and generated examples. Path and query parameters are preserved when exporting cURL or REST Client requests, and schema references are resolved recursively so nested objects can be inspected without leaving the viewer. This release also improves workspace navigation with quick sidebar panels for pinned tabs and recently modified tabs, adds tab-level last-access tracking for future recency views, and fixes sidebar pin/unpin actions for tabs in inactive workspaces.</p>
+
+            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_smart_views</h4>
+            <ul class="space-y-2 mb-6">
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>OpenAPI / Swagger viewer:</strong> Dedicated offline smart view for OpenAPI 2.0 and 3.x specs — inspect endpoints, schemas, security requirements, and diagnostics without leaving the app</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>OpenAPI syntax highlighting:</strong> Specs detected in the editor now use a custom OpenAPI language mode for readable syntax highlighting</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Markdown descriptions:</strong> API descriptions render as Markdown so headings, lists, emphasis, and links display correctly in the overview panel</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Endpoint explorer:</strong> Browse operations by tag or path, inspect path/query parameters, view request bodies, and switch between response status codes</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Resolved schemas & examples:</strong> Nested schema references are resolved recursively so request and response examples show the full object shape, including referenced properties</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>cURL / REST Client export:</strong> Generated requests preserve path and query parameters when opened in cURL or REST Client tabs</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Copy feedback:</strong> Copy actions in the OpenAPI viewer use the app's standard success affordance with a brief green tick confirmation</span></li>
+            </ul>
+
+            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># workspace_navigation</h4>
+            <ul class="space-y-2 mb-6">
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Pinned tabs quick panel:</strong> A new Pinned button above Import / Export in the sidebar opens a compact panel of pinned tabs across known workspaces; clicking an entry activates it just like selecting the tab directly</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Recently modified quick panel:</strong> A new Recent button opens a compact list of recently modified tabs so active scratch work can be recovered without scanning every workspace</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Tab access tracking:</strong> Tabs now store `lastAccessed` alongside `lastModified`, laying the groundwork for future recently accessed and stale-tab decluttering views</span></li>
+            </ul>
+
+            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># bug_fixes</h4>
+            <ul class="space-y-2 mb-6">
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Sidebar pinning inactive tabs:</strong> Right-clicking a tab in an inactive workspace and choosing Pin now persists the pin state and refreshes sidebar metadata correctly</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Sidebar Pin / Unpin label:</strong> The sidebar tab context menu now shows Unpin for tabs that are already pinned, including tabs loaded from inactive workspace metadata</span></li>
+            </ul>
+          </div>
+        </div>
+        <!-- Version 1.32.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.32.0</h2>
+              <span class="badge release">RELEASE</span>
             </div>
             <span class="text-gray-500 text-xs font-mono">05/27/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">16 NEW PIPELINE OPERATIONS — AES-GCM, RIPEMD-160, KECCAK-256, IPV6, READING TIME & MORE</h3>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">16 NEW PIPELINE OPERATIONS — AES-GCM, RIPEMD-160, KECCAK-256, IPV6, READING TIME & MORE</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">Adds sixteen pipeline operations across crypto, encoding, text, data, and networking. AES-GCM uses PBKDF2-SHA256 key derivation with a random salt and IV per invocation. RIPEMD-160 uses Node.js crypto where available with a pure-JS browser fallback. Keccak-256 is Ethereum's SHA3 variant (0x01 padding, not FIPS 0x06) implemented in pure JS. IPv6 Expand and Compress round-trip correctly and handle ::, zone IDs, and IPv4-mapped suffixes. Sort JSON Keys gains deep/shallow and pretty/minified parameters. Reading Time separates prose from fenced code blocks with configurable WPM rates.</p>
-
-            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_pipeline_operations</h4>
-            <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>AES-GCM Encrypt:</strong> Encrypt with AES-256-GCM — passphrase via PBKDF2-SHA256, random salt + IV per invocation, Base64 or hex output; Web Crypto API with Node.js fallback</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>AES-GCM Decrypt:</strong> Decrypt and verify AES-GCM ciphertext — re-derives the key from the embedded salt and validates the auth tag; fails immediately on wrong passphrase or tampered data</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>ROT-13:</strong> Letter substitution over A–Z/a–z; non-letters pass through unchanged; self-inverse</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>ROT-47:</strong> Rotation over all 94 printable ASCII characters ('!' through '~'); self-inverse; whitespace preserved</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Slugify:</strong> URL-safe lowercase slug with configurable separator — NFD decomposition for accented chars, overrides table for ligatures (Æ → ae, ø → o, ß → ss, Þ → th); configurable per-line or full-text mode</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Text Diff:</strong> Unified diff between pipeline input and a second text parameter — configurable context lines, pure-JS LCS, no dependencies</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Format Number:</strong> Locale-aware formatting via Intl.NumberFormat — thousands separators, decimal places, currency, and percent style; strips commas from input before parsing</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>CSV Stats:</strong> Per-column statistics with auto-detected delimiter — numeric columns get min/max/mean/median/distinct; text columns get distinct count and top-3 values</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>CIDR Info:</strong> Network address, broadcast, subnet mask, wildcard, first/last usable host, and host counts for any IPv4 CIDR — /31 and /32 handled as special cases</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Datetime Diff:</strong> Signed difference between two ISO 8601 dates in seconds, minutes, hours, days, weeks, months, or years via date-fns; absolute-value option available</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>RIPEMD-160:</strong> 160-bit digest; Node.js crypto with pure-JS browser fallback; hex or Base64 output</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Keccak-256:</strong> Ethereum's SHA3 variant (0x01 padding, not FIPS 0x06); pure-JS BigInt Keccak-f[1600] sponge; hex or Base64 output</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>IPv6 Expand:</strong> Expand compressed IPv6 to full 8-group notation (`::1` → `0000:0000:…:0001`); handles `::`, zone IDs, and IPv4-mapped suffixes</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>IPv6 Compress:</strong> Compress to shortest `::` form; longest zero-run gets `::` replacement; round-trips with IPv6 Expand</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Sort JSON Keys — Deep/Shallow:</strong> New `mode` param (deep recursive or shallow top-level), `output` (pretty/minified), and `indent` size; backward-compatible with no params</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Reading Time:</strong> Estimate reading time from word count; separate WPM rates for prose (default 200) and fenced code blocks (default 100)</span></li>
-            </ul>
+            <p>AES-256-GCM encrypt/decrypt, ROT-13/47, slugify, text diff, number formatting, CSV stats, CIDR info, datetime diff, RIPEMD-160, Keccak-256, IPv6 expand/compress, and reading time — all offline, zero dependencies</p>
           </div>
         </div>
         <!-- Version 1.31.0 -->
@@ -765,7 +783,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.32.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.33.0</span>
         </div>
 
         <div class="flex space-x-8">
