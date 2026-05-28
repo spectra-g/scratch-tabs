@@ -405,6 +405,24 @@ describe("TabsStore", () => {
       expect(duplicateTab?.workspaceId).toBe(mockTab.workspaceId);
     });
 
+    it("should insert the duplicate immediately after the source tab", () => {
+      const tabA = { ...mockTab, id: "a", title: "A" };
+      const tabB = { ...mockTab, id: "b", title: "B" };
+      const tabC = { ...mockTab, id: "c", title: "C" };
+      useTabsStore.getState().addTab(tabA);
+      useTabsStore.getState().addTab(tabB);
+      useTabsStore.getState().addTab(tabC);
+
+      const duplicateId = useTabsStore.getState().duplicateTab("b");
+
+      const tabs = useTabsStore.getState().tabs;
+      expect(tabs).toHaveLength(4);
+      expect(tabs[0].id).toBe("a");
+      expect(tabs[1].id).toBe("b");
+      expect(tabs[2].id).toBe(duplicateId);
+      expect(tabs[3].id).toBe("c");
+    });
+
     it("should return empty string if original tab is not found", () => {
       const duplicateId = useTabsStore
         .getState()

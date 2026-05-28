@@ -168,10 +168,13 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
       lastModified: now,
     };
 
-    set((state) => ({
-      tabs: [...state.tabs, newTab],
-      activeTabId: newTab.id,
-    }));
+    set((state) => {
+      const sourceIndex = state.tabs.findIndex((t) => t.id === tabId);
+      const insertAt = sourceIndex === -1 ? state.tabs.length : sourceIndex + 1;
+      const tabs = [...state.tabs];
+      tabs.splice(insertAt, 0, newTab);
+      return { tabs, activeTabId: newTab.id };
+    });
 
     // Increment the total tabs created counter
     incrementSetting("tabs.created.total").catch((err) =>
