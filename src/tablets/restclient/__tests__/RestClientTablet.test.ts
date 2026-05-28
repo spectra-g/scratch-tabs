@@ -117,6 +117,22 @@ describe('RestClientTablet', () => {
       expect(state.data.request.headers).toHaveLength(1);
     });
 
+    it('should parse imported URL query parameters into the Query Params tab state', () => {
+      const curlRequest: CurlRequestImport = {
+        method: 'GET',
+        url: 'https://api.acme.test/v1/orders?status=<status>&limit=25',
+        headers: []
+      };
+
+      const state = RestClientTablet.createInitialState(curlRequest);
+
+      expect(state.data.request.url).toBe('https://api.acme.test/v1/orders');
+      expect(state.data.request.params).toEqual([
+        { key: 'status', value: '<status>', enabled: true },
+        { key: 'limit', value: '25', enabled: true },
+      ]);
+    });
+
     it('should handle curl request with multipart/form-data', () => {
       const curlRequest: CurlRequestImport = {
         method: 'POST',

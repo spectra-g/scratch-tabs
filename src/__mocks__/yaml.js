@@ -51,6 +51,47 @@ const YAML = {
         createMockDocument({ kind: 'ConfigMap' }, 0),
         createMockDocument({ kind: 'Deployment' }, 100)
       ];
+    } else if (content.includes('openapi:')) {
+      return [createMockDocument({
+        openapi: '3.1.0',
+        info: { title: 'Test API', version: '1.0.0' },
+        servers: [{ url: 'https://api.example.test' }],
+        paths: {
+          '/users': {
+            get: {
+              operationId: 'listUsers',
+              tags: ['users'],
+              responses: {
+                '200': {
+                  description: 'OK',
+                  content: {
+                    'application/json': {
+                      schema: {
+                        type: 'array',
+                        items: { $ref: '#/components/schemas/User' }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        components: {
+          securitySchemes: {
+            bearerAuth: { type: 'http', scheme: 'bearer' }
+          },
+          schemas: {
+            User: {
+              type: 'object',
+              required: ['id'],
+              properties: {
+                id: { type: 'string' }
+              }
+            }
+          }
+        }
+      })];
     } else if (content.includes('apiVersion')) {
       // Simple Kubernetes-like YAML
       return [createMockDocument({

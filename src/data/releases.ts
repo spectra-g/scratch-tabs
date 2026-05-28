@@ -15,12 +15,33 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.32.0';
+export const APP_VERSION = '1.33.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.32.0",
+    "version": "1.33.0",
     "type": "latest",
+    "date": "2026-05-28",
+    "headline": "OpenAPI / Swagger Smart View",
+    "summary": "Offline OpenAPI viewer with syntax highlighting, endpoint explorer, schema resolution, response examples, and cURL / REST Client exports",
+    "categories": [
+      {
+        "name": "New Smart Views",
+        "changes": [
+          "**OpenAPI / Swagger viewer:** Dedicated offline smart view for OpenAPI 2.0 and 3.x specs — inspect endpoints, schemas, security requirements, and diagnostics without leaving the app",
+          "**OpenAPI syntax highlighting:** Specs detected in the editor now use a custom OpenAPI language mode for readable syntax highlighting",
+          "**Markdown descriptions:** API descriptions render as Markdown so headings, lists, emphasis, and links display correctly in the overview panel",
+          "**Endpoint explorer:** Browse operations by tag or path, inspect path/query parameters, view request bodies, and switch between response status codes",
+          "**Resolved schemas & examples:** Nested schema references are resolved recursively so request and response examples show the full object shape, including referenced properties",
+          "**cURL / REST Client export:** Generated requests preserve path and query parameters when opened in cURL or REST Client tabs",
+          "**Copy feedback:** Copy actions in the OpenAPI viewer use the app's standard success affordance with a brief green tick confirmation"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.32.0",
+    "type": "release",
     "date": "2026-05-27",
     "headline": "16 New Pipeline Operations — AES-GCM, RIPEMD-160, Keccak-256, IPv6, Reading Time & More",
     "summary": "AES-256-GCM encrypt/decrypt, ROT-13/47, slugify, text diff, number formatting, CSV stats, CIDR info, datetime diff, RIPEMD-160, Keccak-256, IPv6 expand/compress, and reading time — all offline, zero dependencies",

@@ -49,6 +49,7 @@ import "./dotenv";
 import "./dotenv/index";
 import "./pem";
 import "./pem/index";
+import "./openapi/index";
 
 // Export the registry for use in the application
 export { formatRegistry };

@@ -18,7 +18,7 @@ import {
   ResponseComparison,
   CurlRequestImport,
 } from "./types";
-import { executeRequest } from "./utils/requestUtils";
+import { executeRequest, parseUrl } from "./utils/requestUtils";
 import { SensitiveDataManager } from "../../utils/sensitiveDataManager";
 import { ParameterSyncManager } from "./utils/paramSync";
 import { compareResponses, createComparisonItem, createCurrentComparisonItem } from "./utils/comparisonUtils";
@@ -66,6 +66,7 @@ export const RestClientTablet: Tablet = {
     // Handle cURL request import from Smart View
     if (payload && typeof payload === 'object' && 'method' in payload && 'url' in payload) {
       const curlRequest = payload as CurlRequestImport;
+      const parsedUrl = parseUrl(curlRequest.url || "");
 
       // Convert headers to KeyValuePair format
       const headers = (curlRequest.headers || []).map(header => ({
@@ -139,13 +140,13 @@ export const RestClientTablet: Tablet = {
         data: {
           request: {
             method: (curlRequest.method?.toUpperCase() as any) || "GET",
-            url: curlRequest.url || "",
+            url: parsedUrl.baseUrl,
             headers,
             auth: {
               type: "none",
               params: {},
             },
-            params: [],
+            params: parsedUrl.params,
             body: {
               type: bodyType,
               content: bodyContent,
