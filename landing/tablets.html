@@ -32,16 +32,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>The Utility Belt | 40+ Standalone Developer Tools</title>
   <meta name="description"
-    content="A comprehensive arsenal of offline developer tools: JWT Toolkit, Regex Tester, Password Generator, UUID Creator, and more. No context-switching required." />
+    content="A comprehensive arsenal of offline developer tools: JWT, Regex, REST, GraphQL, OpenMetrics, SSH keys, TOTP, Hex Viewer, Clipboard, Passwords, UUIDs, and more. No context-switching required." />
   <meta name="keywords"
-    content="developer tools, jwt toolkit, rest client, regex tester, password generator, uuid generator, base64 converter, cron builder, scratch tabs, offline tools" />
+    content="developer tools, jwt toolkit, rest client, graphql client, openmetrics viewer, ssh key generator, totp generator, hex viewer, clipboard manager, regex tester, password generator, uuid generator, base64 converter, cron builder, scratch tabs, offline tools" />
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://scratchtabs.com/tablets.html" />
-  <meta property="og:title" content="The Utility Belt | 40+ Standalone Developer Tools" />
+  <meta property="og:title" content="The Utility Belt | 30+ Standalone Developer Tools" />
   <meta property="og:description"
-    content="A comprehensive arsenal of offline developer tools: JWT Toolkit, Regex Tester, Password Generator, and more. No context-switching required." />
+    content="A comprehensive arsenal of offline developer tools: JWT, REST, GraphQL, OpenMetrics, SSH keys, TOTP, Hex Viewer, Clipboard, Passwords, UUIDs, and more. No context-switching required." />
   <meta property="og:image" content="https://scratchtabs.b-cdn.net/og-image.png" />
 
   <!-- Twitter -->
@@ -49,7 +49,7 @@
   <meta property="twitter:url" content="https://scratchtabs.com/tablets.html" />
   <meta property="twitter:title" content="The Utility Belt | 40+ Standalone Developer Tools" />
   <meta property="twitter:description"
-    content="A comprehensive arsenal of offline developer tools: JWT Toolkit, Regex Tester, Password Generator, and more. No context-switching required." />
+    content="A comprehensive arsenal of offline developer tools: JWT, REST, GraphQL, OpenMetrics, SSH keys, TOTP, Hex Viewer, Clipboard, Passwords, UUIDs, and more. No context-switching required." />
   <meta property="twitter:image" content="https://scratchtabs.b-cdn.net/og-image.png" />
 
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
@@ -115,10 +115,10 @@
         Standalone Tools. <span class="text-emerald-500">Zero Context-Switching.</span>
       </h1>
       <p class="text-lg md:text-xl text-gray-400 mb-4 max-w-3xl mx-auto leading-relaxed">
-        Purpose-built utilities for generating, calculating, and testing. No data intake required - just open and use.
+        Purpose-built utilities for generating, inspecting, calculating, testing, and managing developer data. Open the tool you need, use it locally, and keep moving.
       </p>
       <p class="text-base text-gray-500 max-w-2xl mx-auto">
-        JWT decode here, regex test there, password generate somewhere else? Not anymore.
+        JWT decode here, GraphQL explore there, SSH keygen somewhere else, clipboard snippets in another app? Not anymore.
       </p>
     </div>
   </section>
@@ -134,12 +134,13 @@
         <div class="grid md:grid-cols-2 gap-6">
           <div class="card-sharp p-6 border-emerald-500/30">
             <h3 class="text-emerald-500 font-mono text-sm mb-3">// Tablets (This Page)</h3>
-            <p class="text-gray-400 text-sm mb-4">Standalone tools for <strong class="text-white">generating, calculating, or testing</strong>. No content required - just open and use.</p>
+            <p class="text-gray-400 text-sm mb-4">Standalone tools for <strong class="text-white">generating, inspecting, calculating, testing, or managing</strong>. Open directly or launch from relevant editor content.</p>
             <ul class="text-gray-500 text-xs space-y-1">
               <li>-> Generate a UUID</li>
               <li>-> Test a regex pattern</li>
               <li>-> Decode a JWT</li>
-              <li>-> Build a cron expression</li>
+              <li>-> Generate SSH keys or TOTP codes</li>
+              <li>-> Inspect metrics, bytes, URLs, and commands</li>
             </ul>
           </div>
           <div class="card-sharp p-6">
@@ -255,6 +256,201 @@
               <p class="text-gray-600 text-xs">Deconstruct any URL</p>
             </div>
             <span class="text-emerald-500 text-xs">-></span>
+          </div>
+          <div class="card-sharp p-4 flex items-center justify-between">
+            <div>
+              <span class="text-white text-sm font-mono">SSH Keygen</span>
+              <p class="text-gray-600 text-xs">Ed25519, RSA, ECDSA</p>
+            </div>
+            <span class="text-emerald-500 text-xs">-></span>
+          </div>
+          <div class="card-sharp p-4 flex items-center justify-between">
+            <div>
+              <span class="text-white text-sm font-mono">TOTP 2FA</span>
+              <p class="text-gray-600 text-xs">Offline authenticator</p>
+            </div>
+            <span class="text-emerald-500 text-xs">-></span>
+          </div>
+          <div class="card-sharp p-4 flex items-center justify-between">
+            <div>
+              <span class="text-white text-sm font-mono">Hex Viewer</span>
+              <p class="text-gray-600 text-xs">Binary inspector</p>
+            </div>
+            <span class="text-emerald-500 text-xs">-></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CATEGORY: Security & Inspection -->
+      <div class="mb-16">
+        <div class="section-tag mb-6">
+          <span>[CATEGORY] // SECURITY_AND_INSPECTION</span>
+        </div>
+        <p class="text-gray-400 max-w-4xl mb-8 text-lg">Inspect tokens, keys, bytes, secrets, and integrity checks without sending sensitive material anywhere.</p>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">SSH Key Generator<span class="new-badge">New</span></h3>
+            <p class="text-gray-400 text-sm mb-4">Generate Ed25519, RSA, and ECDSA key pairs, inspect fingerprints, derive public keys, and validate matching pairs offline.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">ssh</span>
+              <span class="keyword-badge">ed25519</span>
+              <span class="keyword-badge">fingerprint</span>
+            </div>
+          </div>
+          <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">TOTP 2FA Generator<span class="new-badge">New</span></h3>
+            <p class="text-gray-400 text-sm mb-4">Create and verify time-based one-time passwords with otpauth URI import and SHA1/256/512 support.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">totp</span>
+              <span class="keyword-badge">2fa</span>
+              <span class="keyword-badge">offline</span>
+            </div>
+          </div>
+          <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">Hex Viewer / Binary Inspector</h3>
+            <p class="text-gray-400 text-sm mb-4">Inspect raw bytes with decoded text, entropy analysis, byte distribution stats, and binary-friendly navigation.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">hex</span>
+              <span class="keyword-badge">binary</span>
+              <span class="keyword-badge">entropy</span>
+            </div>
+          </div>
+          <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">Command Vault</h3>
+            <p class="text-gray-400 text-sm mb-4">Keep frequently used shell commands, scripts, snippets, and operational notes in a searchable local vault.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">commands</span>
+              <span class="keyword-badge">snippets</span>
+              <span class="keyword-badge">vault</span>
+            </div>
+          </div>
+          <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">Clipboard</h3>
+            <p class="text-gray-400 text-sm mb-4">Manage clipboard history, save reusable snippets, and organize temporary text assets inside the workspace.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">clipboard</span>
+              <span class="keyword-badge">history</span>
+              <span class="keyword-badge">snippets</span>
+            </div>
+          </div>
+          <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">QR Code Generator</h3>
+            <p class="text-gray-400 text-sm mb-4">Generate and decode QR codes for URLs, WiFi credentials, contacts, and other structured payloads locally.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">qr</span>
+              <span class="keyword-badge">wifi</span>
+              <span class="keyword-badge">decode</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CATEGORY: APIs & Observability -->
+      <div class="mb-16">
+        <div class="section-tag mb-6">
+          <span>[CATEGORY] // APIS_AND_OBSERVABILITY</span>
+        </div>
+        <p class="text-gray-400 max-w-4xl mb-8 text-lg">Explore APIs, queries, metrics, and network-adjacent data without leaving the browser workspace.</p>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">GraphQL Client</h3>
+            <p class="text-gray-400 text-sm mb-4">Explore schemas and execute GraphQL queries, mutations, and subscriptions from a focused playground.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">graphql</span>
+              <span class="keyword-badge">schema</span>
+              <span class="keyword-badge">query</span>
+            </div>
+          </div>
+          <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">OpenMetrics Viewer</h3>
+            <p class="text-gray-400 text-sm mb-4">Visualize and analyze OpenMetrics or Prometheus exposition data with metric browsing and query-focused inspection.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">prometheus</span>
+              <span class="keyword-badge">metrics</span>
+              <span class="keyword-badge">monitoring</span>
+            </div>
+          </div>
+          <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">IP Details</h3>
+            <p class="text-gray-400 text-sm mb-4">Look up IP address details, network metadata, geolocation, and ISP information from a dedicated utility.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">ip</span>
+              <span class="keyword-badge">network</span>
+              <span class="keyword-badge">geo</span>
+            </div>
+          </div>
+          <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">Temp Email</h3>
+            <p class="text-gray-400 text-sm mb-4">Generate disposable email addresses for testing sign-up flows, verification codes, and privacy-sensitive workflows.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">email</span>
+              <span class="keyword-badge">temporary</span>
+              <span class="keyword-badge">inbox</span>
+            </div>
+          </div>
+          <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">Converter</h3>
+            <p class="text-gray-400 text-sm mb-4">Convert numbers, encodings, cases, colors, dates, text, and hashes from one compact utility surface.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">convert</span>
+              <span class="keyword-badge">encode</span>
+              <span class="keyword-badge">transform</span>
+            </div>
+          </div>
+          <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">User Generator</h3>
+            <p class="text-gray-400 text-sm mb-4">Create synthetic user profiles with names, addresses, emails, bios, and test-friendly identity data.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">mock data</span>
+              <span class="keyword-badge">profiles</span>
+              <span class="keyword-badge">testing</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CATEGORY: Visual & Focus Tools -->
+      <div class="mb-16">
+        <div class="section-tag mb-6">
+          <span>[CATEGORY] // VISUAL_AND_FOCUS_TOOLS</span>
+        </div>
+        <p class="text-gray-400 max-w-4xl mb-8 text-lg">Quick visual, writing, and productivity tools that usually end up scattered across separate browser tabs.</p>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">Diagram Editor</h3>
+            <p class="text-gray-400 text-sm mb-4">Edit Mermaid diagrams with live preview and quick templates for flowcharts, sequences, timelines, and more.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">mermaid</span>
+              <span class="keyword-badge">diagram</span>
+              <span class="keyword-badge">preview</span>
+            </div>
+          </div>
+          <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">Shape Snap</h3>
+            <p class="text-gray-400 text-sm mb-4">Create fast sketches, whiteboard diagrams, and shape-based notes without switching to a design tool.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">draw</span>
+              <span class="keyword-badge">whiteboard</span>
+              <span class="keyword-badge">flowchart</span>
+            </div>
+          </div>
+          <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">Emoji as Data</h3>
+            <p class="text-gray-400 text-sm mb-4">Search emojis and inspect Unicode, HTML, hex, and symbol metadata for copy, UI, and encoding work.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">emoji</span>
+              <span class="keyword-badge">unicode</span>
+              <span class="keyword-badge">html</span>
+            </div>
+          </div>
+          <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">Pomodoro Timer</h3>
+            <p class="text-gray-400 text-sm mb-4">Keep focused work and break sessions beside your scratch workspace instead of opening another timer app.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">timer</span>
+              <span class="keyword-badge">focus</span>
+              <span class="keyword-badge">breaks</span>
+            </div>
           </div>
         </div>
       </div>
@@ -406,7 +602,7 @@
             <h3 class="text-emerald-500 font-mono text-sm">// THE_WORKBENCH</h3>
           </div>
           <h4 class="text-white font-bold text-xl mb-2">The Intelligent Workbench</h4>
-          <p class="text-gray-400 text-sm">Monaco editor, Smart Views for JSON/CSV/OpenAPI/Markdown, Split View, Diff Engine, and workspace management.</p>
+          <p class="text-gray-400 text-sm">Monaco editor, Smart Views for JSON, CSV, OpenAPI, HAR, PEM, dotenv, YAML, TOML, SVG, logs, Split View, Diff Engine, and workspace management.</p>
         </a>
         <a href="changelog.html" class="card-sharp p-8 block group">
           <div class="flex justify-between items-start mb-4">

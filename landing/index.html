@@ -70,7 +70,7 @@
             "@type": "WebPage",
             "@id": "https://scratchtabs.com"
           },
-          "description": "Your private, offline-first developer scratchpad. Scratch Tabs is a browser-based toolkit with 40+ tools for JSON editing, Transformation Pipelines, REST client requests, JWT decoding, and more. All tools work offline with zero data egress.",
+          "description": "Your private, offline-first developer scratchpad. Scratch Tabs is a browser-based toolkit with 40+ standalone tools, Smart Views, Transformation Pipelines, REST client requests, JWT decoding, and more. All tools work offline with zero data egress.",
           "applicationCategory": "DeveloperApplication",
           "operatingSystem": "All (Web Browser)",
           "browserRequirements": "Requires modern web browser with JavaScript and IndexedDB.",
@@ -81,12 +81,14 @@
             "Client-Side AI: In-browser text summarization",
             "REST API Client with variable support",
             "JWT Decoder, Verifier, and Signer",
-            "JSON, CSV, OpenAPI, and OpenMetrics Viewers with advanced tools",
+            "Smart Views for JSON, CSV, OpenAPI, HAR, PEM, dotenv, YAML, TOML, SVG, and more",
             "Base64 & URL Encoder/Decoder",
-            "Password & UUID Generator",
+            "Password, UUID, QR Code, SSH Key, and TOTP Generators",
+            "OpenMetrics, GraphQL, and REST API tools",
             "Live Markdown & HTML Preview",
+            "Clipboard, Command Vault, and Hex Viewer tablets",
             "Batch text transformation engine",
-            "Diagramming Tool (Shape Snap)",
+            "Diagramming tools: Shape Snap and Mermaid Diagram Editor",
             "Works 100% Offline"
           ],
           "isAccessibleForFree": true,
@@ -206,13 +208,16 @@
         <span class="marquee-item tool">JWT Decoder</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">Regex Tester</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">REST Client</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">GraphQL Client</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">OpenMetrics Viewer</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">UUID Generator</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">Base64 Encoder</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">Diff Tool</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Converter</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Clipboard Manager</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">QR Code</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">TOTP Authenticator</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">SSH Keygen</span><span class="marquee-sep">//</span>
-        <span class="marquee-item tool">GraphQL Explorer</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">Hex Viewer</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">JSON Mapper</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">URL Parser</span><span class="marquee-sep">//</span>
@@ -228,6 +233,7 @@
         <span class="marquee-item tool">Temp Email</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">User Generator</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">Vault</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Diagram Editor</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">Checksum</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">DateTime Converter</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">IP Details</span><span class="marquee-sep">//</span>
@@ -235,13 +241,16 @@
         <span class="marquee-item tool">JWT Decoder</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">Regex Tester</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">REST Client</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">GraphQL Client</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">OpenMetrics Viewer</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">UUID Generator</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">Base64 Encoder</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">Diff Tool</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Converter</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Clipboard Manager</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">QR Code</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">TOTP Authenticator</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">SSH Keygen</span><span class="marquee-sep">//</span>
-        <span class="marquee-item tool">GraphQL Explorer</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">Hex Viewer</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">JSON Mapper</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">URL Parser</span><span class="marquee-sep">//</span>
@@ -257,6 +266,7 @@
         <span class="marquee-item tool">Temp Email</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">User Generator</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">Vault</span><span class="marquee-sep">//</span>
+        <span class="marquee-item tool">Diagram Editor</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">Checksum</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">DateTime Converter</span><span class="marquee-sep">//</span>
         <span class="marquee-item tool">IP Details</span><span class="marquee-sep">//</span>
@@ -293,6 +303,7 @@
         <span class="marquee-item format">Stack Trace</span><span class="marquee-sep">//</span>
         <span class="marquee-item format">SVG</span><span class="marquee-sep">//</span>
         <span class="marquee-item format">INI</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Properties</span><span class="marquee-sep">//</span>
         <span class="marquee-item format">Java</span><span class="marquee-sep">//</span>
         <span class="marquee-item format">Ruby</span><span class="marquee-sep">//</span>
         <span class="marquee-item format">PHP</span><span class="marquee-sep">//</span>
@@ -327,6 +338,7 @@
         <span class="marquee-item format">Stack Trace</span><span class="marquee-sep">//</span>
         <span class="marquee-item format">SVG</span><span class="marquee-sep">//</span>
         <span class="marquee-item format">INI</span><span class="marquee-sep">//</span>
+        <span class="marquee-item format">Properties</span><span class="marquee-sep">//</span>
         <span class="marquee-item format">Java</span><span class="marquee-sep">//</span>
         <span class="marquee-item format">Ruby</span><span class="marquee-sep">//</span>
         <span class="marquee-item format">PHP</span><span class="marquee-sep">//</span>
@@ -391,7 +403,7 @@
         <div class="p-6 border border-gray-800 bg-[#0a0a0a] rounded hover:border-emerald-500/50 transition-colors">
           <div class="text-emerald-500 font-mono text-xs mb-3">02 // DETECT</div>
           <h3 class="text-white font-bold text-lg mb-3">Smart Views</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">Format detected automatically. JSON becomes a tree, CSV becomes a spreadsheet, Markdown becomes a live preview, and OpenAPI becomes an endpoint explorer.</p>
+          <p class="text-gray-400 text-sm leading-relaxed">Format detected automatically. JSON, CSV, Markdown, OpenAPI, HAR, PEM, dotenv, YAML, TOML, SVG, and logs get purpose-built views.</p>
         </div>
         <!-- Card 3 -->
         <div class="p-6 border border-gray-800 bg-[#0a0a0a] rounded hover:border-emerald-500/50 transition-colors">
@@ -403,7 +415,7 @@
         <div class="p-6 border border-gray-800 bg-[#0a0a0a] rounded hover:border-emerald-500/50 transition-colors">
           <div class="text-emerald-500 font-mono text-xs mb-3">04 // USE_TOOLS</div>
           <h3 class="text-white font-bold text-lg mb-3">Dev Tool Arsenal</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">Dozens of built-in tools - JWT Decoder, Regex Tester, REST Client, and more. Everything in one place.</p>
+          <p class="text-gray-400 text-sm leading-relaxed">Dozens of built-in tools - JWT, REST, GraphQL, OpenMetrics, SSH keys, TOTP, Hex Viewer, Clipboard, and more.</p>
         </div>
       </div>
     </div>
