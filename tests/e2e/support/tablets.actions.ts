@@ -644,6 +644,41 @@ export class TabletsActions {
   }
 
   // ============================================================================
+  // Secret Scanner Tablet
+  // ============================================================================
+
+  async expectSecretScannerInterfaceVisible() {
+    const container = this.page.locator('[data-testid="secret-scanner-tablet"]');
+    await expect(container).toBeVisible();
+    const scanBtn = this.page.getByRole('button', { name: /^Scan$/i });
+    await expect(scanBtn).toBeVisible();
+  }
+
+  async typeIntoSecretScannerInput(text: string) {
+    const input = this.page.locator('[data-testid="secret-scanner-input"]');
+    await expect(input).toBeVisible();
+    await input.fill(text);
+  }
+
+  async clickScanButton() {
+    const scanBtn = this.page.getByRole('button', { name: /^Scan$/i });
+    await expect(scanBtn).toBeVisible();
+    await scanBtn.click();
+  }
+
+  async expectAtLeastOneSecretFinding() {
+    // FindingsTable rows have a severity badge; wait for at least one to appear
+    const severityBadge = this.page.locator('table tbody tr td span').first();
+    await expect(severityBadge).toBeVisible();
+  }
+
+  async expectRedactionPreviewContains(text: string) {
+    const preview = this.page.locator('[data-testid="secret-scanner-redacted"]');
+    await expect(preview).toBeVisible();
+    await expect(preview).toContainText(text);
+  }
+
+  // ============================================================================
   // Emoji as Data Tablet
   // ============================================================================
 

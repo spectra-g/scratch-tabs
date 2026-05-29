@@ -1,5 +1,5 @@
 import { TabletActionContext, TabletAction } from "./types";
-import { FileText, Type, Shield, Network, Palette, QrCode, Binary } from "../components/Icons";
+import { FileText, Type, Shield, Network, Palette, QrCode, Binary, ShieldAlert } from "../components/Icons";
 import { tabletActionService } from "../services/tabletActionService";
 
 export interface TabletMetadata {
@@ -400,6 +400,50 @@ export const tabletMetadata: TabletMetadata[] = [
       'fingerprint', 'public key', 'private key', 'authorized_keys',
       'passphrase', 'generate', 'security', 'cryptography', 'openssh',
     ],
+  },
+  {
+    id: "secretscanner",
+    label: "Secret Scanner",
+    description: "Scan text, diffs, logs, configs, and credentials for secrets entirely offline.",
+    keywords: [
+      "secret",
+      "scanner",
+      "security",
+      "token",
+      "credential",
+      "api key",
+      "private key",
+      "redact",
+      "offline",
+    ],
+    getActionsForContext: (context) => {
+      if (context.source !== "editor-tab" || !context.content?.trim()) {
+        return [];
+      }
+
+      return [
+        {
+          id: "secretscanner.scan",
+          label: "Scan for Secrets",
+          icon: ShieldAlert,
+          action: () => {
+            tabletActionService.handleAction({
+              targetTablet: "secretscanner",
+              action: "new-tab",
+              payload: {
+                content: context.content || "",
+                title: context.tab?.title,
+              },
+              source: {
+                tabId: context.tab?.id,
+                titleHint: "Secret Scanner",
+                side: context.side,
+              },
+            });
+          },
+        },
+      ];
+    },
   },
   {
     id: 'totp',

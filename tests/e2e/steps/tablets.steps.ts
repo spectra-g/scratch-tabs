@@ -281,6 +281,30 @@ Then('I should see hex bytes in the hex grid', async function () {
 });
 
 // ============================================================================
+// Secret Scanner Tablet Steps
+// ============================================================================
+
+Then('I should see the secret scanner interface', async function () {
+  await this.tablets.expectSecretScannerInterfaceVisible();
+});
+
+When('I type {string} into the secret scanner input', async function (text: string) {
+  await this.tablets.typeIntoSecretScannerInput(text);
+});
+
+When('I click the scan button', async function () {
+  await this.tablets.clickScanButton();
+});
+
+Then('I should see at least one secret finding', async function () {
+  await this.tablets.expectAtLeastOneSecretFinding();
+});
+
+Then('the redaction preview should contain {string}', async function (text: string) {
+  await this.tablets.expectRedactionPreviewContains(text);
+});
+
+// ============================================================================
 // Emoji as Data Tablet Steps
 // ============================================================================
 

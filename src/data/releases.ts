@@ -15,12 +15,47 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.33.0';
+export const APP_VERSION = '1.34.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.33.0",
+    "version": "1.34.0",
     "type": "latest",
+    "date": "2026-05-29",
+    "headline": "Secret Scanner",
+    "summary": "Fully offline secret scanner — detects API keys, tokens, private keys, credentials, and high-entropy strings across logs, diffs, configs, and PEM bundles; redacts findings and generates safe shareable reports without sending a single byte off-device",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Secret Scanner tablet:** Fully offline secret detection — paste logs, diffs, .env files, JSON, YAML, PEM blocks, or HTTP snippets and scan without any data leaving the browser",
+          "**60+ detection rules:** Provider-specific patterns for AWS, GitHub, GitLab, OpenAI, Anthropic, Google Cloud, Slack, Stripe, Discord, npm, Cloudflare, SendGrid, Sentry, HTTP auth headers, and database connection URLs; generic patterns for secret-like assignments, credential pairs, and private key blocks",
+          "**AWS secret access key rule:** Dedicated rule for the 40-character AWS secret key (in addition to the existing AKIA/ASIA access key ID rule), reported at critical severity",
+          "**Discord bot token rule:** Detects the three-segment Discord bot and user token format distinct from webhook URL detection",
+          "**Kubernetes Secret decoder:** Locally base64-decodes all entries in `data:` and `stringData:` blocks and reports the decoded credential material with a safe preview",
+          "**JWT detection with local metadata:** Decodes header and payload locally to surface algorithm, issuer, subject, expiry timestamp, and an explicit warning when `alg: none` is used",
+          "**Shannon entropy analysis:** Flags opaque high-entropy strings as medium-confidence findings independently of variable name — URL values are excluded to prevent false positives on webhook and API paths",
+          "**Google Cloud service account priority:** Provider-specific rules outrank the generic private-key-block fallback at the same position so GCP service account keys are attributed to Google Cloud, not the generic 'Private Key' provider",
+          "**Context scoring:** Documentation context (example, sample, readme, mock) downgrades severity and confidence; diff added-line findings receive an upward severity nudge; placeholder values (dummy, changeme, all-same-character) are collapsed to info",
+          "**Credential-pair detection:** Detects prose-style `username / password` patterns in documentation and comments; URL path segments are excluded to prevent API routes from being misread as passwords",
+          "**Deterministic redaction:** Each unique secret value receives a stable numbered token (`[REDACTED_GITHUB_3]`) so redacted output is consistent across multiple scans of the same content",
+          "**Summary bar:** At-a-glance counts for total findings, critical/high findings, distinct providers, diff added-line findings, and private key blocks",
+          "**Findings table:** Sortable by severity with columns for provider, redacted preview, line:column location, and confidence",
+          "**Finding detail panel:** Explanation of why the finding was raised, remediation checklist, surrounding context with the secret value redacted, and a false-positive toggle to suppress a finding",
+          "**Filter bar:** Filter findings by severity, provider, and status (open / false positive); hide low-confidence results with a single toggle",
+          "**Copy Safe Report:** Copies a plain-text summary of all findings with values redacted — safe to paste into tickets or incident reports",
+          "**Download Redacted:** Downloads the full scanned input with all secret values replaced by their redaction tokens",
+          "**Redaction preview:** Live preview panel showing the redacted version of the input as findings are produced",
+          "**Auto-scan mode:** Optional checkbox debounces a re-scan 350 ms after each keystroke so findings update as you type",
+          "**Zero persistence of secrets:** Raw secret values are stripped from the tablet state before it is written to IndexedDB — only redacted tokens and metadata are stored",
+          "**Context action:** Tabs gain an 'Scan for Secrets' option in the right-click menu, sending the tab's content directly to a new Secret Scanner tab"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.33.0",
+    "type": "release",
     "date": "2026-05-28",
     "headline": "OpenAPI / Swagger Smart View",
     "summary": "Offline OpenAPI viewer with syntax highlighting, endpoint explorer, schema resolution, response examples, cURL / REST Client exports, plus quicker access to pinned and recently modified tabs",
