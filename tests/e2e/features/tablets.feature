@@ -160,6 +160,18 @@ Feature: Tablets Smoke Tests
     When I type "Hello" into the hex viewer raw input
     Then I should see hex bytes in the hex grid
 
+  Scenario: Secret Scanner tablet detects and redacts a GitHub token
+    When I click the icon for "New tab"
+    And I click the icon for "New tablet"
+    And I select "Secret Scanner" from the tablet selector
+    And I wait for the tablet to be ready
+    Then the "Secret Scanner" tab should exist on the page
+    And I should see the secret scanner interface
+    When I type "GITHUB_TOKEN=ghp_abcdefghijklmnopqrstuvwxyz1234567890" into the secret scanner input
+    And I click the scan button
+    Then I should see at least one secret finding
+    And the redaction preview should contain "[REDACTED_"
+
   Scenario: Emoji as Data tablet loads and displays emojis
     When I click the icon for "New tab"
     And I click the icon for "New tablet"

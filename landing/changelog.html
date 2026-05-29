@@ -130,42 +130,57 @@
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
 
-        <!-- Version 1.33.0 -->
+        <!-- Version 1.34.0 -->
         <div class="changelog-entry latest">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-white">V1.33.0</h2>
+              <h2 class="text-2xl font-bold text-white">V1.34.0</h2>
               <span class="badge latest">LATEST</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">05/29/2026</span>
+          </div>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">SECRET SCANNER</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p class="mb-4">Adds a new Secret Scanner tablet that runs entirely in the browser with zero outbound requests. The scanner uses a three-pass engine: a regex pass against 60+ provider-specific and contextual rules, a Kubernetes Secret decoder that base64-decodes data and stringData block values locally, and a Shannon entropy pass that flags opaque high-entropy strings regardless of variable name. Provider rules cover AWS (access key ID and the 40-character secret key), GitHub, GitLab, OpenAI, Anthropic, Google (API key and OAuth access token), Google Cloud service account JSON private keys, Slack (tokens and incoming webhooks), Stripe, Discord (webhook URLs and bot tokens), npm, Cloudflare, SendGrid, Sentry, HTTP Bearer and Basic auth headers, and database connection URLs for PostgreSQL, MySQL, MongoDB, Redis, and Elasticsearch. Private key blocks are detected by PEM armoring for RSA, EC, OPENSSH, DSA, PGP, and encrypted keys; Google Cloud service account JSON keys are identified separately and take priority over the generic PEM rule so findings carry the correct provider. JWT tokens are detected and decoded locally — the detail panel shows algorithm, issuer, subject, expiry, and an alg:none warning for unsigned tokens. Context scoring adjusts findings before they surface: documentation context (example, sample, readme) downgrades severity and confidence by one level; diff added-line findings get an upward severity nudge to surface freshly introduced secrets; and values that match placeholder patterns (example, dummy, changeme, all-same-character strings) are immediately downgraded to info with a 'likely placeholder' label. False positive reduction also filters URL paths from the entropy pass and prevents URL API routes from being misread as username/password pairs by the credential-pair detector. Redaction is deterministic — the same secret value always receives the same numbered token (e.g. [REDACTED_GITHUB_3]) so redacted output can be shared or diffed without leaking the original. Serialized tab state never stores raw secret values; the value field is cleared on save so secrets do not persist in IndexedDB. The UI is a two-panel split: a textarea input on the left with optional auto-scan and a manual Scan button; and a results panel on the right with a summary bar, filterable findings table, finding detail panel with explanation and remediation steps, false-positive toggle, export controls, and a live redaction preview. Filters cover severity, provider, status (open / false positive), and a hide-low-confidence toggle.</p>
+
+            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
+            <ul class="space-y-2 mb-6">
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Secret Scanner tablet:</strong> Fully offline secret detection — paste logs, diffs, .env files, JSON, YAML, PEM blocks, or HTTP snippets and scan without any data leaving the browser</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>60+ detection rules:</strong> Provider-specific patterns for AWS, GitHub, GitLab, OpenAI, Anthropic, Google Cloud, Slack, Stripe, Discord, npm, Cloudflare, SendGrid, Sentry, HTTP auth headers, and database connection URLs; generic patterns for secret-like assignments, credential pairs, and private key blocks</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>AWS secret access key rule:</strong> Dedicated rule for the 40-character AWS secret key (in addition to the existing AKIA/ASIA access key ID rule), reported at critical severity</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Discord bot token rule:</strong> Detects the three-segment Discord bot and user token format distinct from webhook URL detection</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Kubernetes Secret decoder:</strong> Locally base64-decodes all entries in `data:` and `stringData:` blocks and reports the decoded credential material with a safe preview</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>JWT detection with local metadata:</strong> Decodes header and payload locally to surface algorithm, issuer, subject, expiry timestamp, and an explicit warning when `alg: none` is used</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Shannon entropy analysis:</strong> Flags opaque high-entropy strings as medium-confidence findings independently of variable name — URL values are excluded to prevent false positives on webhook and API paths</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Google Cloud service account priority:</strong> Provider-specific rules outrank the generic private-key-block fallback at the same position so GCP service account keys are attributed to Google Cloud, not the generic 'Private Key' provider</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Context scoring:</strong> Documentation context (example, sample, readme, mock) downgrades severity and confidence; diff added-line findings receive an upward severity nudge; placeholder values (dummy, changeme, all-same-character) are collapsed to info</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Credential-pair detection:</strong> Detects prose-style `username / password` patterns in documentation and comments; URL path segments are excluded to prevent API routes from being misread as passwords</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Deterministic redaction:</strong> Each unique secret value receives a stable numbered token (`[REDACTED_GITHUB_3]`) so redacted output is consistent across multiple scans of the same content</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Summary bar:</strong> At-a-glance counts for total findings, critical/high findings, distinct providers, diff added-line findings, and private key blocks</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Findings table:</strong> Sortable by severity with columns for provider, redacted preview, line:column location, and confidence</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Finding detail panel:</strong> Explanation of why the finding was raised, remediation checklist, surrounding context with the secret value redacted, and a false-positive toggle to suppress a finding</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Filter bar:</strong> Filter findings by severity, provider, and status (open / false positive); hide low-confidence results with a single toggle</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Copy Safe Report:</strong> Copies a plain-text summary of all findings with values redacted — safe to paste into tickets or incident reports</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Download Redacted:</strong> Downloads the full scanned input with all secret values replaced by their redaction tokens</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Redaction preview:</strong> Live preview panel showing the redacted version of the input as findings are produced</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Auto-scan mode:</strong> Optional checkbox debounces a re-scan 350 ms after each keystroke so findings update as you type</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Zero persistence of secrets:</strong> Raw secret values are stripped from the tablet state before it is written to IndexedDB — only redacted tokens and metadata are stored</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Context action:</strong> Tabs gain an 'Scan for Secrets' option in the right-click menu, sending the tab's content directly to a new Secret Scanner tab</span></li>
+            </ul>
+          </div>
+        </div>
+        <!-- Version 1.33.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.33.0</h2>
+              <span class="badge release">RELEASE</span>
             </div>
             <span class="text-gray-500 text-xs font-mono">05/28/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">OPENAPI / SWAGGER SMART VIEW</h3>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">OPENAPI / SWAGGER SMART VIEW</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">Adds a first-class OpenAPI / Swagger Smart View for inspecting API specifications entirely offline. OpenAPI content now gets dedicated syntax highlighting in the editor, while the smart view renders a structured overview with endpoint, schema, security, and diagnostics panels instead of raw spec text. Descriptions are rendered as Markdown, long overviews can be expanded in-place, and the endpoint explorer surfaces request parameters, request bodies, and response variants with schema links and generated examples. Path and query parameters are preserved when exporting cURL or REST Client requests, and schema references are resolved recursively so nested objects can be inspected without leaving the viewer. This release also improves workspace navigation with quick sidebar panels for pinned tabs and recently modified tabs, adds tab-level last-access tracking for future recency views, and fixes sidebar pin/unpin actions for tabs in inactive workspaces.</p>
-
-            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_smart_views</h4>
-            <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>OpenAPI / Swagger viewer:</strong> Dedicated offline smart view for OpenAPI 2.0 and 3.x specs — inspect endpoints, schemas, security requirements, and diagnostics without leaving the app</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>OpenAPI syntax highlighting:</strong> Specs detected in the editor now use a custom OpenAPI language mode for readable syntax highlighting</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Markdown descriptions:</strong> API descriptions render as Markdown so headings, lists, emphasis, and links display correctly in the overview panel</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Endpoint explorer:</strong> Browse operations by tag or path, inspect path/query parameters, view request bodies, and switch between response status codes</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Resolved schemas & examples:</strong> Nested schema references are resolved recursively so request and response examples show the full object shape, including referenced properties</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>cURL / REST Client export:</strong> Generated requests preserve path and query parameters when opened in cURL or REST Client tabs</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Copy feedback:</strong> Copy actions in the OpenAPI viewer use the app's standard success affordance with a brief green tick confirmation</span></li>
-            </ul>
-
-            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># workspace_navigation</h4>
-            <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Pinned tabs quick panel:</strong> A new Pinned button above Import / Export in the sidebar opens a compact panel of pinned tabs across known workspaces; clicking an entry activates it just like selecting the tab directly</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Recently modified quick panel:</strong> A new Recent button opens a compact list of recently modified tabs so active scratch work can be recovered without scanning every workspace</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Tab access tracking:</strong> Tabs now store `lastAccessed` alongside `lastModified`, laying the groundwork for future recently accessed and stale-tab decluttering views</span></li>
-            </ul>
-
-            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># bug_fixes</h4>
-            <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Sidebar pinning inactive tabs:</strong> Right-clicking a tab in an inactive workspace and choosing Pin now persists the pin state and refreshes sidebar metadata correctly</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Sidebar Pin / Unpin label:</strong> The sidebar tab context menu now shows Unpin for tabs that are already pinned, including tabs loaded from inactive workspace metadata</span></li>
-            </ul>
+            <p>Offline OpenAPI viewer with syntax highlighting, endpoint explorer, schema resolution, response examples, cURL / REST Client exports, plus quicker access to pinned and recently modified tabs</p>
           </div>
         </div>
         <!-- Version 1.32.0 -->
@@ -783,7 +798,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.33.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.34.0</span>
         </div>
 
         <div class="flex space-x-8">
