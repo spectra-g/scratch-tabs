@@ -1,6 +1,7 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
 import { DetectionResult, FormatModule } from "./types";
+import * as monaco from "monaco-editor";
 
 export class HarFormatDetector extends BaseFormatDetector implements FormatModule {
   id = "har";
@@ -88,15 +89,30 @@ export class HarFormatDetector extends BaseFormatDetector implements FormatModul
     const hasEntries = /"entries"\s*:/.test(content);
     if (!hasLog || !hasEntries) return this.noMatch();
 
+    const hasHarVersion = /"version"\s*:\s*"1\.[12]"/.test(content);
+    const hasCreator = /"creator"\s*:/.test(content);
+    const hasRequest = /"request"\s*:/.test(content);
+    const hasPages = /"pages"\s*:/.test(content);
+    const hasStartedDateTime = /"startedDateTime"\s*:/.test(content);
+    const hasResponse = /"response"\s*:/.test(content);
+    const hasTimings = /"timings"\s*:/.test(content);
+
+    // Editor/status-bar detection uses a short prefix of the content. Large
+    // HAR files are often invalid JSON after truncation, so recognize the HAR
+    // envelope before requiring a full parse.
+    if (
+      hasHarVersion &&
+      hasCreator &&
+      (hasRequest || hasPages || hasStartedDateTime || hasResponse || hasTimings)
+    ) {
+      return { match: true, confidence: 0.99, matchedDefinitive: true };
+    }
+
     try {
       // Only parse if content is under 2MB to avoid blocking
       if (content.length > 2_000_000) {
         // For large files rely on structural heuristics
-        const hasVersion = /"version"\s*:\s*"1\.[12]"/.test(content);
-        const hasTimings = /"timings"\s*:/.test(content);
-        const hasRequest = /"request"\s*:/.test(content);
-        const hasResponse = /"response"\s*:/.test(content);
-        const score = [hasVersion, hasTimings, hasRequest, hasResponse].filter(Boolean).length;
+        const score = [hasHarVersion, hasTimings, hasRequest, hasResponse].filter(Boolean).length;
         if (score >= 3) {
           return { match: true, confidence: 0.9, matchedDefinitive: true };
         }
@@ -111,6 +127,7 @@ export class HarFormatDetector extends BaseFormatDetector implements FormatModul
       if (!Array.isArray(log.entries)) return this.noMatch();
 
       let confidence = 0.7;
+      let matchedDefinitive = false;
 
       // version field
       if (typeof log.version === "string") confidence += 0.05;
@@ -130,10 +147,19 @@ export class HarFormatDetector extends BaseFormatDetector implements FormatModul
         if (hasEntryFields) confidence += 0.15;
       }
 
+      if (
+        typeof log.version === "string" &&
+        log.creator &&
+        typeof log.creator.name === "string"
+      ) {
+        confidence = Math.max(confidence, 0.99);
+        matchedDefinitive = true;
+      }
+
       return {
         match: confidence >= 0.7,
         confidence: Math.min(1.0, confidence),
-        matchedDefinitive: confidence >= 0.9,
+        matchedDefinitive: matchedDefinitive || confidence >= 0.9,
       };
     } catch {
       return this.noMatch();
@@ -144,11 +170,11 @@ export class HarFormatDetector extends BaseFormatDetector implements FormatModul
     return "har";
   }
 
-  registerProvider(monaco: any): void {
+  registerProvider(monacoInstance: typeof monaco): void {
     // HAR is JSON — reuse Monaco's built-in JSON language
-    monaco.languages.register({ id: "har" });
+    monacoInstance.languages.register({ id: "har" });
 
-    monaco.languages.setLanguageConfiguration("har", {
+    monacoInstance.languages.setLanguageConfiguration("har", {
       brackets: [
         ["{", "}"],
         ["[", "]"],
@@ -160,7 +186,7 @@ export class HarFormatDetector extends BaseFormatDetector implements FormatModul
       ],
     });
 
-    monaco.languages.setMonarchTokensProvider("har", {
+    monacoInstance.languages.setMonarchTokensProvider("har", {
       defaultToken: "",
       tokenPostfix: ".har",
       keywords: ["true", "false", "null"],
@@ -179,7 +205,7 @@ export class HarFormatDetector extends BaseFormatDetector implements FormatModul
       },
     });
 
-    monaco.editor.defineTheme("har-dark", {
+    monacoInstance.editor.defineTheme("har-dark", {
       base: "vs-dark",
       inherit: true,
       rules: [
@@ -200,6 +226,6 @@ export class HarFormatDetector extends BaseFormatDetector implements FormatModul
 const harDetector = new HarFormatDetector();
 formatRegistry.register(harDetector);
 
-export const registerHarProvider = (monaco: any) => {
-  harDetector.registerProvider(monaco);
+export const registerHarProvider = (monacoInstance: typeof monaco) => {
+  harDetector.registerProvider(monacoInstance);
 };
