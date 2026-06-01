@@ -15,12 +15,31 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.34.0';
+export const APP_VERSION = '1.35.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.34.0",
+    "version": "1.35.0",
     "type": "latest",
+    "date": "2026-06-01",
+    "headline": "Webhook HMAC Verifier",
+    "summary": "New offline Webhook HMAC Verifier tablet for validating provider signatures, inspecting canonical payloads, and debugging replay or raw-body issues locally",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Webhook HMAC Verifier tablet:** Validate GitHub, Stripe, Slack, Twilio, Shopify, Standard Webhooks / Svix, and custom HMAC signatures locally",
+          "**Canonical payload inspector:** Shows exactly what was signed, including byte counts, newline style, trailing newline status, and optional invisible-character rendering",
+          "**Replay diagnostics:** Flags missing, stale, or future timestamps with configurable tolerance for providers that sign timestamps",
+          "**Request import modes:** Paste structured fields, raw HTTP requests, or common cURL commands and preserve the raw body for verification",
+          "**Safe reports:** Open a redacted markdown verification report in a background tab without including secrets or raw payloads"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.34.0",
+    "type": "release",
     "date": "2026-05-29",
     "headline": "Secret Scanner",
     "summary": "Fully offline secret scanner — detects API keys, tokens, private keys, credentials, and high-entropy strings across logs, diffs, configs, and PEM bundles; redacts findings and generates safe shareable reports without sending a single byte off-device",
