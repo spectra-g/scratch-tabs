@@ -139,9 +139,9 @@
             </div>
             <span class="text-gray-500 text-xs font-mono">06/01/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">WEBHOOK HMAC VERIFIER</h3>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">WEBHOOK HMAC VERIFIER & HAR SMART VIEW EDITING</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">Adds a Webhook HMAC Verifier tablet for inspecting and validating webhook signatures entirely in the browser. It supports GitHub, Stripe, Slack, Twilio, Shopify, Standard Webhooks / Svix, and custom HMAC recipes, with raw HTTP and cURL import, sample fixtures, timestamp replay checks, canonical string inspection, body byte diagnostics, provider detection, and safe markdown reports opened in background tabs.</p>
+            <p class="mb-4">Adds a Webhook HMAC Verifier tablet for inspecting and validating webhook signatures entirely in the browser. It supports GitHub, Stripe, Slack, Twilio, Shopify, Standard Webhooks / Svix, and custom HMAC recipes, with raw HTTP and cURL import, sample fixtures, timestamp replay checks, canonical string inspection, body byte diagnostics, provider detection, and safe markdown reports opened in background tabs. This release also upgrades the HAR Smart View from read-only inspection to lightweight capture editing: select individual requests in the waterfall or table, delete selected entries from the underlying HAR, compare exactly two requests in a modal with same/different field rows and a differences-only toggle, and paste another HAR file's JSON to merge its entries into the current capture.</p>
 
             <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
             <ul class="space-y-2 mb-6">
@@ -150,6 +150,15 @@
               <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Replay diagnostics:</strong> Flags missing, stale, or future timestamps with configurable tolerance for providers that sign timestamps</span></li>
               <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Request import modes:</strong> Paste structured fields, raw HTTP requests, or common cURL commands and preserve the raw body for verification</span></li>
               <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Safe reports:</strong> Open a redacted markdown verification report in a background tab without including secrets or raw payloads</span></li>
+            </ul>
+
+            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># smart_view_improvements</h4>
+            <ul class="space-y-2 mb-6">
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>HAR request selection:</strong> Select individual requests directly from the HAR waterfall or sortable table, with select-all-visible support for filtered result sets</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Delete selected HAR entries:</strong> Remove selected requests from the underlying HAR content in one action, making it easy to trim noisy captures before exporting or sharing</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Compare two HAR requests:</strong> Select exactly two requests and open a comparison modal that lists fields that match and fields that differ across request, response, timing, cookies, and HAR metadata</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Differences-only comparison:</strong> Toggle the compare modal to hide matching fields and focus only on changed values</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Paste-to-merge HAR content:</strong> Paste another HAR file's JSON into a merge dialog to append its entries into the current capture while preserving existing content</span></li>
             </ul>
           </div>
         </div>

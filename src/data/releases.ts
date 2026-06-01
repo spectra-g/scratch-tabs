@@ -22,8 +22,8 @@ export const RELEASES: Release[] = [
     "version": "1.35.0",
     "type": "latest",
     "date": "2026-06-01",
-    "headline": "Webhook HMAC Verifier",
-    "summary": "New offline Webhook HMAC Verifier tablet for validating provider signatures, inspecting canonical payloads, and debugging replay or raw-body issues locally",
+    "headline": "Webhook HMAC Verifier & HAR Smart View Editing",
+    "summary": "New offline Webhook HMAC Verifier tablet for validating provider signatures, plus HAR Smart View editing with request deletion, two-request comparison, and paste-to-merge",
     "categories": [
       {
         "name": "New Features",
@@ -33,6 +33,16 @@ export const RELEASES: Release[] = [
           "**Replay diagnostics:** Flags missing, stale, or future timestamps with configurable tolerance for providers that sign timestamps",
           "**Request import modes:** Paste structured fields, raw HTTP requests, or common cURL commands and preserve the raw body for verification",
           "**Safe reports:** Open a redacted markdown verification report in a background tab without including secrets or raw payloads"
+        ]
+      },
+      {
+        "name": "Smart View Improvements",
+        "changes": [
+          "**HAR request selection:** Select individual requests directly from the HAR waterfall or sortable table, with select-all-visible support for filtered result sets",
+          "**Delete selected HAR entries:** Remove selected requests from the underlying HAR content in one action, making it easy to trim noisy captures before exporting or sharing",
+          "**Compare two HAR requests:** Select exactly two requests and open a comparison modal that lists fields that match and fields that differ across request, response, timing, cookies, and HAR metadata",
+          "**Differences-only comparison:** Toggle the compare modal to hide matching fields and focus only on changed values",
+          "**Paste-to-merge HAR content:** Paste another HAR file's JSON into a merge dialog to append its entries into the current capture while preserving existing content"
         ]
       }
     ]

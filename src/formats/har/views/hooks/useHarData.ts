@@ -10,6 +10,7 @@ import {
   ResourceType,
   TimingSegment,
 } from "../types";
+import { parseHarContent } from "../utils/harEntryOperations";
 
 // ─── Timing colours (DevTools-style) ──────────────────────────────────────
 
@@ -106,18 +107,6 @@ function categorizeStatus(status: number): StatusCategory {
   return "unknown";
 }
 
-// ─── Parse HAR ─────────────────────────────────────────────────────────────
-
-function parseHar(content: string): { file: HarFile | null; error: string | null } {
-  try {
-    const parsed = JSON.parse(content) as HarFile;
-    if (!parsed?.log?.entries) return { file: null, error: "Invalid HAR: missing log.entries" };
-    return { file: parsed, error: null };
-  } catch (e) {
-    return { file: null, error: `JSON parse error: ${(e as Error).message}` };
-  }
-}
-
 // ─── Process entries ───────────────────────────────────────────────────────
 
 function processEntries(entries: HarEntry[]): ProcessedEntry[] {
@@ -188,7 +177,6 @@ function buildSummary(processed: ProcessedEntry[], file: HarFile): HarSummary {
   const resourceTypeCounts: Record<string, number> = {};
   let totalTransferred = 0;
   let totalContentSize = 0;
-  let totalTime = 0;
   let hasSensitiveData = false;
   const sensitiveDataTypes = new Set<string>();
 
@@ -198,7 +186,6 @@ function buildSummary(processed: ProcessedEntry[], file: HarFile): HarSummary {
     resourceTypeCounts[p.resourceType] = (resourceTypeCounts[p.resourceType] ?? 0) + 1;
     totalTransferred += p.transferSize;
     totalContentSize += p.contentSize;
-    totalTime += p.totalTime;
 
     if (p.hasSensitiveData) {
       hasSensitiveData = true;
@@ -273,7 +260,7 @@ export interface UseHarDataReturn {
 export function useHarData(content: string): UseHarDataReturn {
   const [filter, setFilterState] = useState<HarFilter>(DEFAULT_FILTER);
 
-  const { file, error } = useMemo(() => parseHar(content), [content]);
+  const { file, error } = useMemo(() => parseHarContent(content), [content]);
 
   const entries = useMemo<ProcessedEntry[]>(() => {
     if (!file) return [];
@@ -281,7 +268,7 @@ export function useHarData(content: string): UseHarDataReturn {
   }, [file]);
 
   const summary = useMemo<HarSummary | null>(() => {
-    if (!file || entries.length === 0) return null;
+    if (!file) return null;
     return buildSummary(entries, file);
   }, [file, entries]);
 

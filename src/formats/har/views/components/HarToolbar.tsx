@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { Search, X, Download, ChevronDown, AlertTriangle } from "lucide-react";
+import { Search, X, Download, ChevronDown, AlertTriangle, Trash2, GitCompare, ClipboardPaste } from "lucide-react";
 import { HarFilter, HarPage, HarSummary, MainTab, StatusCategory } from "../types";
 import { useRootStore } from "../../../../stores/rootStore";
 import { createTab } from "../../../../utils/tabUtils";
@@ -14,6 +14,11 @@ interface HarToolbarProps {
   exportFilteredHar: () => string;
   exportAsCsv: () => string;
   pages?: HarPage[];
+  selectedCount: number;
+  canCompareSelected: boolean;
+  onDeleteSelected: () => void;
+  onCompareSelected: () => void;
+  onOpenMerge: () => void;
 }
 
 const ALL_STATUS_CATS: StatusCategory[] = ["2xx", "3xx", "4xx", "5xx", "1xx"];
@@ -37,6 +42,11 @@ export const HarToolbar: React.FC<HarToolbarProps> = ({
   exportFilteredHar,
   exportAsCsv,
   pages,
+  selectedCount,
+  canCompareSelected,
+  onDeleteSelected,
+  onCompareSelected,
+  onOpenMerge,
 }) => {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showMethodMenu, setShowMethodMenu] = useState(false);
@@ -224,8 +234,39 @@ export const HarToolbar: React.FC<HarToolbarProps> = ({
           </button>
         )}
 
-        {/* Export */}
-        <div className="relative ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          {selectedCount > 0 && (
+            <span className="text-xs text-secondary">{selectedCount} selected</span>
+          )}
+          <button
+            onClick={onDeleteSelected}
+            disabled={selectedCount === 0}
+            className="flex items-center gap-1.5 rounded border border-base bg-element px-2.5 py-1.5 text-xs text-secondary transition-colors hover:bg-element-hover hover:text-main disabled:cursor-not-allowed disabled:opacity-50"
+            title="Delete selected requests"
+          >
+            <Trash2 size={12} />
+            Delete
+          </button>
+          <button
+            onClick={onCompareSelected}
+            disabled={!canCompareSelected}
+            className="flex items-center gap-1.5 rounded border border-base bg-element px-2.5 py-1.5 text-xs text-secondary transition-colors hover:bg-element-hover hover:text-main disabled:cursor-not-allowed disabled:opacity-50"
+            title="Compare two selected requests"
+          >
+            <GitCompare size={12} />
+            Compare
+          </button>
+          <button
+            onClick={onOpenMerge}
+            className="flex items-center gap-1.5 rounded border border-base bg-element px-2.5 py-1.5 text-xs text-secondary transition-colors hover:bg-element-hover hover:text-main"
+            title="Paste HAR content to merge"
+          >
+            <ClipboardPaste size={12} />
+            Merge
+          </button>
+
+          {/* Export */}
+          <div className="relative">
           <button
             onClick={() => setShowExportMenu((v) => !v)}
             className="flex items-center gap-1.5 px-2.5 py-1.5 bg-element hover:bg-element-hover border border-base rounded text-xs transition-colors"
@@ -253,6 +294,7 @@ export const HarToolbar: React.FC<HarToolbarProps> = ({
               </div>
             </>
           )}
+          </div>
         </div>
       </div>
     </div>

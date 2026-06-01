@@ -94,7 +94,7 @@ describe("useHarData", () => {
     it("handles empty entries array", () => {
       const { result } = renderHook(() => useHarData(makeHar([])));
       expect(result.current.entries).toHaveLength(0);
-      expect(result.current.summary).toBeNull();
+      expect(result.current.summary?.totalRequests).toBe(0);
     });
   });
 
