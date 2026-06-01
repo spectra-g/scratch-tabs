@@ -305,6 +305,26 @@ Then('the redaction preview should contain {string}', async function (text: stri
 });
 
 // ============================================================================
+// Webhook HMAC Verifier Tablet Steps
+// ============================================================================
+
+Then('I should see the webhook HMAC verifier interface', async function () {
+  await this.tablets.expectWebhookHmacInterfaceVisible();
+});
+
+When('I fill the webhook HMAC verifier with a valid GitHub sample', async function () {
+  await this.tablets.fillWebhookHmacGithubSample();
+});
+
+When('I click the webhook HMAC verify button', async function () {
+  await this.tablets.clickWebhookHmacVerifyButton();
+});
+
+Then('the webhook HMAC verification should pass', async function () {
+  await this.tablets.expectWebhookHmacVerificationPass();
+});
+
+// ============================================================================
 // Emoji as Data Tablet Steps
 // ============================================================================
 

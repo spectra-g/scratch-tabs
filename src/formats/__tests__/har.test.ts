@@ -1,4 +1,6 @@
 import { HarFormatDetector } from "../har";
+import { detectFormat, getPotentialFormatMatches } from "../index";
+import { getContentForLanguageDetection } from "../../utils/formatDetectionUtils";
 
 describe("HarFormatDetector", () => {
   let detector: HarFormatDetector;
@@ -83,6 +85,27 @@ describe("HarFormatDetector", () => {
       });
       const result = detector.detect(har);
       expect(result.match).toBe(true);
+    });
+
+    it("wins over generic JSON detection for pasted HAR content", () => {
+      const har = JSON.stringify({
+        log: {
+          version: "1.2",
+          creator: { name: "Chrome", version: "120" },
+          entries: [],
+        },
+      });
+
+      expect(detectFormat(har)).toBe("har");
+      expect(getPotentialFormatMatches(har, 2)[0].id).toBe("har");
+    });
+
+    it("wins when editor detection receives only the first 1000 characters", () => {
+      const detectionPrefix = getContentForLanguageDetection(detector.sampleContent());
+
+      expect(detectionPrefix.length).toBe(1000);
+      expect(detector.detect(detectionPrefix).match).toBe(true);
+      expect(getPotentialFormatMatches(detectionPrefix, 2)[0].id).toBe("har");
     });
 
     it("detects HAR with full entry (definitive match)", () => {

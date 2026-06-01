@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { SmartViewProps } from "../../../../views/registry";
 import { useHarData } from "../hooks/useHarData";
@@ -9,13 +9,24 @@ import { HarToolbar } from "./HarToolbar";
 import { HarWaterfall } from "./HarWaterfall";
 import { HarTable } from "./HarTable";
 import { HarRequestDetail } from "./HarRequestDetail";
+import { HarCompareModal } from "./HarCompareModal";
+import { HarMergeModal } from "./HarMergeModal";
+import {
+  deleteHarEntries,
+  mergeHarContent,
+  serializeHar,
+} from "../utils/harEntryOperations";
 
-export const HarViewer: React.FC<SmartViewProps> = ({ content }) => {
+export const HarViewer: React.FC<SmartViewProps> = ({ content, onContentChange }) => {
   const [activeTab, setActiveTab] = useState<MainTab>("waterfall");
   const [selectedEntry, setSelectedEntry] = useState<ProcessedEntry | null>(null);
+  const [selectedEntryIndexes, setSelectedEntryIndexes] = useState<Set<number>>(new Set());
+  const [showCompareModal, setShowCompareModal] = useState(false);
+  const [showMergeModal, setShowMergeModal] = useState(false);
 
   const {
     file,
+    entries,
     filteredEntries,
     summary,
     error,
@@ -34,6 +45,65 @@ export const HarViewer: React.FC<SmartViewProps> = ({ content }) => {
   const handleCloseDetail = useCallback(() => {
     setSelectedEntry(null);
   }, []);
+
+  useEffect(() => {
+    setSelectedEntry(null);
+    setSelectedEntryIndexes(new Set());
+    setShowCompareModal(false);
+  }, [content]);
+
+  const allVisibleSelected = useMemo(
+    () =>
+      filteredEntries.length > 0 &&
+      filteredEntries.every((entry) => selectedEntryIndexes.has(entry.index)),
+    [filteredEntries, selectedEntryIndexes],
+  );
+
+  const selectedEntries = useMemo(
+    () => entries.filter((entry) => selectedEntryIndexes.has(entry.index)),
+    [entries, selectedEntryIndexes],
+  );
+
+  const handleToggleEntrySelection = useCallback((index: number) => {
+    setSelectedEntryIndexes((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  }, []);
+
+  const handleToggleAllVisible = useCallback(() => {
+    setSelectedEntryIndexes((prev) => {
+      const next = new Set(prev);
+      if (filteredEntries.length > 0 && filteredEntries.every((entry) => next.has(entry.index))) {
+        filteredEntries.forEach((entry) => next.delete(entry.index));
+      } else {
+        filteredEntries.forEach((entry) => next.add(entry.index));
+      }
+      return next;
+    });
+  }, [filteredEntries]);
+
+  const handleDeleteSelected = useCallback(() => {
+    if (!file || selectedEntryIndexes.size === 0) return;
+    const nextFile = deleteHarEntries(file, selectedEntryIndexes);
+    onContentChange(serializeHar(nextFile));
+  }, [file, onContentChange, selectedEntryIndexes]);
+
+  const handleCompareSelected = useCallback(() => {
+    if (selectedEntries.length === 2) setShowCompareModal(true);
+  }, [selectedEntries]);
+
+  const handleMerge = useCallback(
+    (incomingContent: string): string | null => {
+      const result = mergeHarContent(content, incomingContent);
+      if (!result.file) return result.error ?? "Unable to merge HAR content";
+      onContentChange(serializeHar(result.file));
+      return null;
+    },
+    [content, onContentChange],
+  );
 
   if (error) {
     return (
@@ -75,6 +145,11 @@ export const HarViewer: React.FC<SmartViewProps> = ({ content }) => {
         exportFilteredHar={exportFilteredHar}
         exportAsCsv={exportAsCsv}
         pages={file.log.pages}
+        selectedCount={selectedEntryIndexes.size}
+        canCompareSelected={selectedEntries.length === 2}
+        onDeleteSelected={handleDeleteSelected}
+        onCompareSelected={handleCompareSelected}
+        onOpenMerge={() => setShowMergeModal(true)}
       />
 
       {/* Main content area */}
@@ -85,15 +160,22 @@ export const HarViewer: React.FC<SmartViewProps> = ({ content }) => {
               {activeTab === "waterfall" ? (
                 <HarWaterfall
                   entries={filteredEntries}
-                  summary={summary}
                   selectedId={selectedEntry?.id ?? null}
                   onSelectEntry={handleSelectEntry}
+                  selectedEntryIndexes={selectedEntryIndexes}
+                  onToggleEntrySelection={handleToggleEntrySelection}
+                  onToggleAllVisible={handleToggleAllVisible}
+                  allVisibleSelected={allVisibleSelected}
                 />
               ) : (
                 <HarTable
                   entries={filteredEntries}
                   selectedId={selectedEntry?.id ?? null}
                   onSelectEntry={handleSelectEntry}
+                  selectedEntryIndexes={selectedEntryIndexes}
+                  onToggleEntrySelection={handleToggleEntrySelection}
+                  onToggleAllVisible={handleToggleAllVisible}
+                  allVisibleSelected={allVisibleSelected}
                 />
               )}
             </Panel>
@@ -113,20 +195,40 @@ export const HarViewer: React.FC<SmartViewProps> = ({ content }) => {
             {activeTab === "waterfall" ? (
               <HarWaterfall
                 entries={filteredEntries}
-                summary={summary}
                 selectedId={null}
                 onSelectEntry={handleSelectEntry}
+                selectedEntryIndexes={selectedEntryIndexes}
+                onToggleEntrySelection={handleToggleEntrySelection}
+                onToggleAllVisible={handleToggleAllVisible}
+                allVisibleSelected={allVisibleSelected}
               />
             ) : (
               <HarTable
                 entries={filteredEntries}
                 selectedId={null}
                 onSelectEntry={handleSelectEntry}
+                selectedEntryIndexes={selectedEntryIndexes}
+                onToggleEntrySelection={handleToggleEntrySelection}
+                onToggleAllVisible={handleToggleAllVisible}
+                allVisibleSelected={allVisibleSelected}
               />
             )}
           </div>
         )}
       </div>
+
+      {showCompareModal && selectedEntries.length === 2 && (
+        <HarCompareModal
+          entries={[selectedEntries[0], selectedEntries[1]]}
+          onClose={() => setShowCompareModal(false)}
+        />
+      )}
+      {showMergeModal && (
+        <HarMergeModal
+          onMerge={handleMerge}
+          onClose={() => setShowMergeModal(false)}
+        />
+      )}
     </div>
   );
 };

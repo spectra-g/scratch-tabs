@@ -50,16 +50,52 @@ interface HarTableProps {
   entries: ProcessedEntry[];
   selectedId: string | null;
   onSelectEntry: (entry: ProcessedEntry | null) => void;
+  selectedEntryIndexes: Set<number>;
+  onToggleEntrySelection: (index: number) => void;
+  onToggleAllVisible: () => void;
+  allVisibleSelected: boolean;
 }
 
 const columnHelper = createColumnHelper<ProcessedEntry>();
 
-export const HarTable: React.FC<HarTableProps> = ({ entries, selectedId, onSelectEntry }) => {
+export const HarTable: React.FC<HarTableProps> = ({
+  entries,
+  selectedId,
+  onSelectEntry,
+  selectedEntryIndexes,
+  onToggleEntrySelection,
+  onToggleAllVisible,
+  allVisibleSelected,
+}) => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const columns = useMemo<ColumnDef<ProcessedEntry, any>[]>(
+  const columns = useMemo<ColumnDef<ProcessedEntry, unknown>[]>(
     () => [
+      columnHelper.display({
+        id: "select",
+        header: () => (
+          <input
+            type="checkbox"
+            checked={allVisibleSelected}
+            onChange={onToggleAllVisible}
+            onClick={(event) => event.stopPropagation()}
+            className="rounded border-base bg-element"
+            aria-label="Select all visible HAR requests"
+          />
+        ),
+        size: 44,
+        cell: ({ row }) => (
+          <input
+            type="checkbox"
+            checked={selectedEntryIndexes.has(row.original.index)}
+            onChange={() => onToggleEntrySelection(row.original.index)}
+            onClick={(event) => event.stopPropagation()}
+            className="rounded border-base bg-element"
+            aria-label={`Select HAR request ${row.original.index + 1}`}
+          />
+        ),
+      }),
       columnHelper.display({
         id: "index",
         header: "#",
@@ -90,7 +126,7 @@ export const HarTable: React.FC<HarTableProps> = ({ entries, selectedId, onSelec
       columnHelper.accessor((row) => row.entry.request.url, {
         id: "url",
         header: "URL",
-        cell: ({ row, getValue }) => (
+        cell: ({ row }) => (
           <div className="flex items-center gap-1 min-w-0">
             <span className="text-xs text-secondary flex-shrink-0">{row.original.hostname}</span>
             <span className="text-xs text-main truncate">{row.original.pathname}</span>
@@ -143,7 +179,7 @@ export const HarTable: React.FC<HarTableProps> = ({ entries, selectedId, onSelec
         ),
       }),
     ],
-    [],
+    [allVisibleSelected, onToggleAllVisible, onToggleEntrySelection, selectedEntryIndexes],
   );
 
   const table = useReactTable({

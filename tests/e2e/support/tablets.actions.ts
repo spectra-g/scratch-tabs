@@ -673,9 +673,49 @@ export class TabletsActions {
   }
 
   async expectRedactionPreviewContains(text: string) {
+    const redactedTab = this.page.getByRole('button', { name: /^Redacted$/i });
+    await expect(redactedTab).toBeEnabled();
+    await redactedTab.click();
+
     const preview = this.page.locator('[data-testid="secret-scanner-redacted"]');
     await expect(preview).toBeVisible();
     await expect(preview).toContainText(text);
+  }
+
+  // ============================================================================
+  // Webhook HMAC Verifier Tablet
+  // ============================================================================
+
+  async expectWebhookHmacInterfaceVisible() {
+    await expect(this.page.locator('[data-testid="webhook-hmac-tablet"]')).toBeVisible();
+    await expect(this.page.locator('[data-testid="webhook-provider-select"]')).toBeVisible();
+    await expect(this.page.locator('[data-testid="webhook-secret-input"]')).toBeVisible();
+    await expect(this.page.locator('[data-testid="webhook-headers-input"]')).toBeVisible();
+    await expect(this.page.locator('[data-testid="webhook-body-input"]')).toBeVisible();
+  }
+
+  async fillWebhookHmacGithubSample() {
+    await this.page.locator('[data-testid="webhook-provider-select"]').selectOption('github');
+    await this.page.locator('[data-testid="webhook-secret-input"]').fill('github_sample_secret');
+    await this.page.locator('[data-testid="webhook-headers-input"]').fill([
+      'X-GitHub-Event: ping',
+      'X-Hub-Signature-256: sha256=b143bbdd7e1c889ac9231cbd1bde5d39e5c5e7bd62a6fdd013baeffe4717c7d4',
+      'Content-Type: application/json',
+    ].join('\n'));
+    await this.page.locator('[data-testid="webhook-body-input"]').fill('{"zen":"Keep it logically awesome."}');
+  }
+
+  async clickWebhookHmacVerifyButton() {
+    const verifyButton = this.page.locator('[data-testid="webhook-verify-button"]');
+    await expect(verifyButton).toBeVisible();
+    await verifyButton.click();
+  }
+
+  async expectWebhookHmacVerificationPass() {
+    const status = this.page.locator('[data-testid="webhook-verification-status"]');
+    await expect(status).toContainText('Signature verified');
+    await expect(this.page.locator('[data-testid="webhook-computed-signature"]')).not.toContainText('No signature computed');
+    await expect(this.page.locator('[data-testid="webhook-received-signature"]')).not.toContainText('No signature parsed');
   }
 
   // ============================================================================

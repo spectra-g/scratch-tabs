@@ -191,6 +191,59 @@ export const tabletMetadata: TabletMetadata[] = [
     ],
   },
   {
+    id: "webhookhmac",
+    label: "Webhook HMAC Verifier",
+    description:
+      "Inspect webhook requests, validate provider HMAC signatures, and debug canonicalization issues locally.",
+    keywords: [
+      "webhook",
+      "hmac",
+      "signature",
+      "stripe",
+      "github",
+      "slack",
+      "twilio",
+      "shopify",
+      "svix",
+      "standard webhooks",
+      "verify",
+      "security",
+    ],
+    getActionsForContext: (context) => {
+      const content = context.content ?? "";
+      const looksLikeWebhook =
+        /x-hub-signature|stripe-signature|x-slack-signature|x-twilio-signature|x-shopify-hmac-sha256|webhook-signature/i.test(content) ||
+        /^POST\s+\S+\s+HTTP\/\d(?:\.\d)?/im.test(content);
+
+      if (!looksLikeWebhook || !context.tab) return [];
+
+      return [
+        {
+          id: "webhookhmac.new-tab-from-content",
+          label: "Verify Webhook Signature",
+          icon: ShieldAlert,
+          action: () => {
+            if (!context.tab) return;
+            tabletActionService.handleAction({
+              targetTablet: "webhookhmac",
+              action: "new-tab",
+              payload: {
+                inputMode: "raw-http",
+                bodyText: content,
+                headersText: "",
+              },
+              source: {
+                tabId: context.tab.id,
+                titleHint: `${context.tab.title} (Webhook HMAC)`,
+                side: context.side,
+              },
+            });
+          },
+        },
+      ];
+    },
+  },
+  {
     id: "wordcount",
     label: "Word Count",
     description: "Detailed text analysis with word/character counts, readability scores, and keyword density.",

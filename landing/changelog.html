@@ -130,43 +130,50 @@
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
 
-        <!-- Version 1.34.0 -->
+        <!-- Version 1.35.0 -->
         <div class="changelog-entry latest">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-white">V1.34.0</h2>
+              <h2 class="text-2xl font-bold text-white">V1.35.0</h2>
               <span class="badge latest">LATEST</span>
             </div>
-            <span class="text-gray-500 text-xs font-mono">05/29/2026</span>
+            <span class="text-gray-500 text-xs font-mono">06/01/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">SECRET SCANNER</h3>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">WEBHOOK HMAC VERIFIER & HAR SMART VIEW EDITING</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">Adds a new Secret Scanner tablet that runs entirely in the browser with zero outbound requests. The scanner uses a three-pass engine: a regex pass against 60+ provider-specific and contextual rules, a Kubernetes Secret decoder that base64-decodes data and stringData block values locally, and a Shannon entropy pass that flags opaque high-entropy strings regardless of variable name. Provider rules cover AWS (access key ID and the 40-character secret key), GitHub, GitLab, OpenAI, Anthropic, Google (API key and OAuth access token), Google Cloud service account JSON private keys, Slack (tokens and incoming webhooks), Stripe, Discord (webhook URLs and bot tokens), npm, Cloudflare, SendGrid, Sentry, HTTP Bearer and Basic auth headers, and database connection URLs for PostgreSQL, MySQL, MongoDB, Redis, and Elasticsearch. Private key blocks are detected by PEM armoring for RSA, EC, OPENSSH, DSA, PGP, and encrypted keys; Google Cloud service account JSON keys are identified separately and take priority over the generic PEM rule so findings carry the correct provider. JWT tokens are detected and decoded locally — the detail panel shows algorithm, issuer, subject, expiry, and an alg:none warning for unsigned tokens. Context scoring adjusts findings before they surface: documentation context (example, sample, readme) downgrades severity and confidence by one level; diff added-line findings get an upward severity nudge to surface freshly introduced secrets; and values that match placeholder patterns (example, dummy, changeme, all-same-character strings) are immediately downgraded to info with a 'likely placeholder' label. False positive reduction also filters URL paths from the entropy pass and prevents URL API routes from being misread as username/password pairs by the credential-pair detector. Redaction is deterministic — the same secret value always receives the same numbered token (e.g. [REDACTED_GITHUB_3]) so redacted output can be shared or diffed without leaking the original. Serialized tab state never stores raw secret values; the value field is cleared on save so secrets do not persist in IndexedDB. The UI is a two-panel split: a textarea input on the left with optional auto-scan and a manual Scan button; and a results panel on the right with a summary bar, filterable findings table, finding detail panel with explanation and remediation steps, false-positive toggle, export controls, and a live redaction preview. Filters cover severity, provider, status (open / false positive), and a hide-low-confidence toggle.</p>
+            <p class="mb-4">Adds a Webhook HMAC Verifier tablet for inspecting and validating webhook signatures entirely in the browser. It supports GitHub, Stripe, Slack, Twilio, Shopify, Standard Webhooks / Svix, and custom HMAC recipes, with raw HTTP and cURL import, sample fixtures, timestamp replay checks, canonical string inspection, body byte diagnostics, provider detection, and safe markdown reports opened in background tabs. This release also upgrades the HAR Smart View from read-only inspection to lightweight capture editing: select individual requests in the waterfall or table, delete selected entries from the underlying HAR, compare exactly two requests in a modal with same/different field rows and a differences-only toggle, and paste another HAR file's JSON to merge its entries into the current capture.</p>
 
             <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
             <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Secret Scanner tablet:</strong> Fully offline secret detection — paste logs, diffs, .env files, JSON, YAML, PEM blocks, or HTTP snippets and scan without any data leaving the browser</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>60+ detection rules:</strong> Provider-specific patterns for AWS, GitHub, GitLab, OpenAI, Anthropic, Google Cloud, Slack, Stripe, Discord, npm, Cloudflare, SendGrid, Sentry, HTTP auth headers, and database connection URLs; generic patterns for secret-like assignments, credential pairs, and private key blocks</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>AWS secret access key rule:</strong> Dedicated rule for the 40-character AWS secret key (in addition to the existing AKIA/ASIA access key ID rule), reported at critical severity</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Discord bot token rule:</strong> Detects the three-segment Discord bot and user token format distinct from webhook URL detection</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Kubernetes Secret decoder:</strong> Locally base64-decodes all entries in `data:` and `stringData:` blocks and reports the decoded credential material with a safe preview</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>JWT detection with local metadata:</strong> Decodes header and payload locally to surface algorithm, issuer, subject, expiry timestamp, and an explicit warning when `alg: none` is used</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Shannon entropy analysis:</strong> Flags opaque high-entropy strings as medium-confidence findings independently of variable name — URL values are excluded to prevent false positives on webhook and API paths</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Google Cloud service account priority:</strong> Provider-specific rules outrank the generic private-key-block fallback at the same position so GCP service account keys are attributed to Google Cloud, not the generic 'Private Key' provider</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Context scoring:</strong> Documentation context (example, sample, readme, mock) downgrades severity and confidence; diff added-line findings receive an upward severity nudge; placeholder values (dummy, changeme, all-same-character) are collapsed to info</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Credential-pair detection:</strong> Detects prose-style `username / password` patterns in documentation and comments; URL path segments are excluded to prevent API routes from being misread as passwords</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Deterministic redaction:</strong> Each unique secret value receives a stable numbered token (`[REDACTED_GITHUB_3]`) so redacted output is consistent across multiple scans of the same content</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Summary bar:</strong> At-a-glance counts for total findings, critical/high findings, distinct providers, diff added-line findings, and private key blocks</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Findings table:</strong> Sortable by severity with columns for provider, redacted preview, line:column location, and confidence</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Finding detail panel:</strong> Explanation of why the finding was raised, remediation checklist, surrounding context with the secret value redacted, and a false-positive toggle to suppress a finding</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Filter bar:</strong> Filter findings by severity, provider, and status (open / false positive); hide low-confidence results with a single toggle</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Copy Safe Report:</strong> Copies a plain-text summary of all findings with values redacted — safe to paste into tickets or incident reports</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Download Redacted:</strong> Downloads the full scanned input with all secret values replaced by their redaction tokens</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Redaction preview:</strong> Live preview panel showing the redacted version of the input as findings are produced</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Auto-scan mode:</strong> Optional checkbox debounces a re-scan 350 ms after each keystroke so findings update as you type</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Zero persistence of secrets:</strong> Raw secret values are stripped from the tablet state before it is written to IndexedDB — only redacted tokens and metadata are stored</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Context action:</strong> Tabs gain an 'Scan for Secrets' option in the right-click menu, sending the tab's content directly to a new Secret Scanner tab</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Webhook HMAC Verifier tablet:</strong> Validate GitHub, Stripe, Slack, Twilio, Shopify, Standard Webhooks / Svix, and custom HMAC signatures locally</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Canonical payload inspector:</strong> Shows exactly what was signed, including byte counts, newline style, trailing newline status, and optional invisible-character rendering</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Replay diagnostics:</strong> Flags missing, stale, or future timestamps with configurable tolerance for providers that sign timestamps</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Request import modes:</strong> Paste structured fields, raw HTTP requests, or common cURL commands and preserve the raw body for verification</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Safe reports:</strong> Open a redacted markdown verification report in a background tab without including secrets or raw payloads</span></li>
             </ul>
+
+            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># smart_view_improvements</h4>
+            <ul class="space-y-2 mb-6">
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>HAR request selection:</strong> Select individual requests directly from the HAR waterfall or sortable table, with select-all-visible support for filtered result sets</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Delete selected HAR entries:</strong> Remove selected requests from the underlying HAR content in one action, making it easy to trim noisy captures before exporting or sharing</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Compare two HAR requests:</strong> Select exactly two requests and open a comparison modal that lists fields that match and fields that differ across request, response, timing, cookies, and HAR metadata</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Differences-only comparison:</strong> Toggle the compare modal to hide matching fields and focus only on changed values</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Paste-to-merge HAR content:</strong> Paste another HAR file's JSON into a merge dialog to append its entries into the current capture while preserving existing content</span></li>
+            </ul>
+          </div>
+        </div>
+        <!-- Version 1.34.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.34.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">05/29/2026</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">SECRET SCANNER</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p>Fully offline secret scanner — detects API keys, tokens, private keys, credentials, and high-entropy strings across logs, diffs, configs, and PEM bundles; redacts findings and generates safe shareable reports without sending a single byte off-device</p>
           </div>
         </div>
         <!-- Version 1.33.0 -->
@@ -798,7 +805,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.34.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.35.0</span>
         </div>
 
         <div class="flex space-x-8">

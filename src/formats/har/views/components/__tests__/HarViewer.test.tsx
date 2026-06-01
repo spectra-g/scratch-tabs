@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { HarViewer } from "../HarViewer";
+import { HarFile } from "../../types";
 
 // Mock react-resizable-panels
 jest.mock("react-resizable-panels", () => ({
@@ -12,9 +13,14 @@ jest.mock("react-resizable-panels", () => ({
 
 // Stub virtualizer to avoid layout mocks
 jest.mock("@tanstack/react-virtual", () => ({
-  useVirtualizer: () => ({
-    getVirtualItems: () => [],
-    getTotalSize: () => 0,
+  useVirtualizer: ({ count }: { count: number }) => ({
+    getVirtualItems: () =>
+      Array.from({ length: count }, (_, index) => ({
+        index,
+        key: index,
+        start: index * 36,
+      })),
+    getTotalSize: () => count * 36,
     scrollToIndex: jest.fn(),
   }),
 }));
@@ -83,6 +89,25 @@ const commonProps = {
   side: "left" as const,
 };
 
+function makeHarFromEntries(entries: Array<{ method?: string; url?: string; status?: number }>) {
+  const parsed = JSON.parse(makeHarContent());
+  parsed.log.entries = entries.map((entry, index) => ({
+    ...parsed.log.entries[0],
+    startedDateTime: `2023-06-01T10:00:0${index}.000Z`,
+    request: {
+      ...parsed.log.entries[0].request,
+      method: entry.method ?? "GET",
+      url: entry.url ?? `https://api.example.com/item-${index}`,
+    },
+    response: {
+      ...parsed.log.entries[0].response,
+      status: entry.status ?? 200,
+      statusText: (entry.status ?? 200) === 200 ? "OK" : "Error",
+    },
+  }));
+  return JSON.stringify(parsed);
+}
+
 // ─── Tests ─────────────────────────────────────────────────────────────────
 
 describe("HarViewer", () => {
@@ -137,5 +162,72 @@ describe("HarViewer", () => {
   it("renders search input in toolbar", () => {
     render(<HarViewer content={makeHarContent()} {...commonProps} />);
     expect(screen.getByPlaceholderText(/filter by url/i)).toBeInTheDocument();
+  });
+
+  it("deletes selected HAR requests from the underlying content", () => {
+    render(
+      <HarViewer
+        content={makeHarFromEntries([
+          { url: "https://api.example.com/delete-me" },
+          { url: "https://api.example.com/keep-me" },
+        ])}
+        {...commonProps}
+      />,
+    );
+
+    fireEvent.click(screen.getByLabelText("Select HAR request 1"));
+    fireEvent.click(screen.getByRole("button", { name: /delete/i }));
+
+    expect(commonProps.onContentChange).toHaveBeenCalledTimes(1);
+    const next = JSON.parse(commonProps.onContentChange.mock.calls[0][0]);
+    expect(next.log.entries).toHaveLength(1);
+    expect(next.log.entries[0].request.url).toBe("https://api.example.com/keep-me");
+  });
+
+  it("compares two selected HAR requests and can show differences only", () => {
+    render(
+      <HarViewer
+        content={makeHarFromEntries([
+          { method: "GET", url: "https://api.example.com/same", status: 200 },
+          { method: "POST", url: "https://api.example.com/same", status: 404 },
+        ])}
+        {...commonProps}
+      />,
+    );
+
+    fireEvent.click(screen.getByLabelText("Select HAR request 1"));
+    fireEvent.click(screen.getByLabelText("Select HAR request 2"));
+    fireEvent.click(screen.getByRole("button", { name: /compare/i }));
+
+    expect(screen.getByText("Compare HAR Requests")).toBeInTheDocument();
+    expect(screen.getByText("request.method")).toBeInTheDocument();
+    expect(screen.getByText("request.url")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText("Differences only"));
+    expect(screen.getByText("request.method")).toBeInTheDocument();
+    expect(screen.queryByText("request.url")).not.toBeInTheDocument();
+  });
+
+  it("merges pasted HAR content into the current HAR", () => {
+    const incoming = makeHarFromEntries([{ url: "https://api.example.com/merged" }]);
+    render(
+      <HarViewer
+        content={makeHarFromEntries([{ url: "https://api.example.com/current" }])}
+        {...commonProps}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /merge/i }));
+    fireEvent.change(screen.getByTestId("har-merge-textarea"), {
+      target: { value: incoming },
+    });
+    fireEvent.click(screen.getAllByRole("button", { name: /^merge$/i }).at(-1)!);
+
+    expect(commonProps.onContentChange).toHaveBeenCalledTimes(1);
+    const next = JSON.parse(commonProps.onContentChange.mock.calls[0][0]) as HarFile;
+    expect(next.log.entries.map((entry) => entry.request.url)).toEqual([
+      "https://api.example.com/current",
+      "https://api.example.com/merged",
+    ]);
   });
 });

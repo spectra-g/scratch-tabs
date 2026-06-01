@@ -172,6 +172,17 @@ Feature: Tablets Smoke Tests
     Then I should see at least one secret finding
     And the redaction preview should contain "[REDACTED_"
 
+  Scenario: Webhook HMAC Verifier tablet validates a GitHub signature
+    When I click the icon for "New tab"
+    And I click the icon for "New tablet"
+    And I select "Webhook HMAC Verifier" from the tablet selector
+    And I wait for the tablet to be ready
+    Then the "Webhook HMAC Verifier" tab should exist on the page
+    And I should see the webhook HMAC verifier interface
+    When I fill the webhook HMAC verifier with a valid GitHub sample
+    And I click the webhook HMAC verify button
+    Then the webhook HMAC verification should pass
+
   Scenario: Emoji as Data tablet loads and displays emojis
     When I click the icon for "New tab"
     And I click the icon for "New tablet"
