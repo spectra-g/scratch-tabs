@@ -270,6 +270,65 @@ const jsonOperations: OperationDefinition[] = [
     icon: "Filter",
     source: "format",
   },
+  {
+    id: "json.merge",
+    name: "Merge JSON",
+    description: "Deep merge a second JSON object into the input — nested objects are merged recursively; the second document wins on key conflicts",
+    categories: ["json", "data"],
+    parameters: [
+      {
+        name: "patch",
+        label: "Second Document",
+        type: "textarea",
+        default: "{}",
+        required: true,
+        description: "JSON object to merge into the input",
+        placeholder: '{"key": "value"}',
+      },
+      {
+        name: "indent",
+        label: "Indent Size",
+        type: "number",
+        default: 2,
+        min: 1,
+        max: 8,
+      },
+    ],
+    processingMode: "entire",
+    execute: (input, params) => {
+      const base = JSON.parse(input);
+      const patch = JSON.parse((params.patch as string) || "{}");
+      const indent = (params.indent as number) ?? 2;
+
+      function deepMerge(target: unknown, source: unknown): unknown {
+        if (
+          source === null ||
+          typeof source !== "object" ||
+          Array.isArray(source)
+        ) return source;
+        if (
+          target === null ||
+          typeof target !== "object" ||
+          Array.isArray(target)
+        ) return source;
+        const result: Record<string, unknown> = {
+          ...(target as Record<string, unknown>),
+        };
+        for (const key of Object.keys(source as Record<string, unknown>)) {
+          result[key] = deepMerge(
+            (target as Record<string, unknown>)[key],
+            (source as Record<string, unknown>)[key]
+          );
+        }
+        return result;
+      }
+
+      return JSON.stringify(deepMerge(base, patch), null, indent);
+    },
+    keywords: ["merge", "combine", "deep", "patch", "extend", "assign", "defaults", "mixin"],
+    icon: "GitMerge",
+    source: "format",
+  },
 ];
 
 // Self-register all operations

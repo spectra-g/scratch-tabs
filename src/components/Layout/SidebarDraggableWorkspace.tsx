@@ -119,8 +119,8 @@ export const SidebarDraggableWorkspace: React.FC<SidebarDraggableWorkspaceProps>
       {...(!isEditing ? attributes : {})}
       {...(!isEditing ? listeners : {})}
       className={clsx(
-        "flex items-center px-2 py-0.5 cursor-pointer hover:bg-element-hover group select-none",
-        isActive ? "text-main font-semibold border-l-2 border-primary" : "text-secondary",
+        "flex items-center px-2 py-0.5 cursor-pointer hover:bg-element-hover group select-none border-l-[3px]",
+        isActive ? "text-main font-semibold border-primary bg-primary/10" : "text-secondary border-transparent",
         isSwitching && "bg-primary-subtle animate-pulse",
         isOver && !isDragging && "ring-1 ring-inset ring-blue-400 bg-primary/5",
         isDragging && "scale-105 shadow-md bg-surface-highlight"

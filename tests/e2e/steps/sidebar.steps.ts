@@ -31,6 +31,10 @@ When('I right-click on workspace {string} in the sidebar', async function (works
   await this.sidebar.rightClickWorkspace(workspaceName);
 });
 
+When('I right-click on tab {string} in the sidebar', async function (tabTitle: string) {
+  await this.sidebar.rightClickTabInSidebar(tabTitle);
+});
+
 When('I open the {string} quick tabs panel', async function (panelName: 'Pinned' | 'Recent') {
   await this.sidebar.openQuickPanel(panelName);
 });

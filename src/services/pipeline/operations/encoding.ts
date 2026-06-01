@@ -106,6 +106,56 @@ function decodeBase58(input: string): string {
     return Array.from(allBytes).map(b => String.fromCharCode(b)).join('');
 }
 
+// === Base62 helpers (0–9A–Za–z alphabet) ===
+const BASE62_ALPHABET = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+
+function encodeBase62(input: string): string {
+    const bytes = typeof TextEncoder !== 'undefined'
+        ? Array.from(new TextEncoder().encode(input))
+        : Array.from(input).map(c => c.charCodeAt(0) & 0xff);
+
+    let leadingZeros = 0;
+    while (leadingZeros < bytes.length && bytes[leadingZeros] === 0) leadingZeros++;
+
+    let num = BigInt(0);
+    for (const byte of bytes) num = (num << BigInt(8)) + BigInt(byte);
+
+    const result: string[] = [];
+    while (num > BigInt(0)) {
+        result.unshift(BASE62_ALPHABET[Number(num % BigInt(62))]);
+        num = num / BigInt(62);
+    }
+
+    return '0'.repeat(leadingZeros) + result.join('');
+}
+
+function decodeBase62(input: string): string {
+    const clean = input.replace(/\s/g, '');
+
+    let leadingZeros = 0;
+    while (leadingZeros < clean.length && clean[leadingZeros] === '0') leadingZeros++;
+
+    let num = BigInt(0);
+    for (const char of clean) {
+        const idx = BASE62_ALPHABET.indexOf(char);
+        if (idx === -1) throw new Error(`Invalid Base62 character: ${char}`);
+        num = num * BigInt(62) + BigInt(idx);
+    }
+
+    const bytes: number[] = [];
+    while (num > BigInt(0)) {
+        bytes.unshift(Number(num & BigInt(0xff)));
+        num >>= BigInt(8);
+    }
+
+    const allBytes = new Uint8Array([...new Array(leadingZeros).fill(0), ...bytes]);
+
+    if (typeof TextDecoder !== 'undefined') {
+        return new TextDecoder().decode(allBytes);
+    }
+    return Array.from(allBytes).map(b => String.fromCharCode(b)).join('');
+}
+
 // === Ascii85 (Base85 / Adobe) helpers ===
 
 function encodeBase85(input: string): string {
@@ -880,6 +930,28 @@ export const encodingOperations: OperationDefinition[] = [
             return decodeBase58(input);
         },
         keywords: ["base58", "decode", "bitcoin", "ipfs", "wallet"],
+        source: "core",
+    },
+    {
+        id: "encoding.base62-encode",
+        name: "Base62 Encode",
+        description: "Encode text to Base62 (0–9A–Za–z alphabet) — used in URL shorteners, YouTube video IDs, and MongoDB ObjectIDs",
+        categories: ["encoding"],
+        parameters: [],
+        processingMode: "entire",
+        execute: (input) => encodeBase62(input),
+        keywords: ["base62", "encode", "url", "shortener", "youtube", "id", "compact"],
+        source: "core",
+    },
+    {
+        id: "encoding.base62-decode",
+        name: "Base62 Decode",
+        description: "Decode Base62 (0–9A–Za–z) back to text",
+        categories: ["encoding"],
+        parameters: [],
+        processingMode: "entire",
+        execute: (input) => decodeBase62(input),
+        keywords: ["base62", "decode", "url", "shortener", "youtube", "id"],
         source: "core",
     },
 

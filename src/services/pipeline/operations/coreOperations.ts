@@ -1520,6 +1520,24 @@ const coreOperations: OperationDefinition[] = [
         keywords: ["diff", "compare", "patch", "unified", "changes", "delta"],
         source: "core",
     },
+
+    // === STRIP ANSI ===
+    {
+        id: "text.strip-ansi",
+        name: "Strip ANSI Codes",
+        description: "Remove ANSI/VT100 colour and control escape sequences from terminal output",
+        categories: ["text"],
+        parameters: [],
+        processingMode: "configurable",
+        execute: (input) => {
+            // Matches CSI sequences (ESC[...) and OSC sequences (ESC]...BEL)
+            // eslint-disable-next-line no-control-regex
+            const ANSI_RE = /\x1b(?:\][^\x07]*\x07|\[[0-?]*[ -/]*[@-~]|[@-Z\\-_])/g;
+            return input.replace(ANSI_RE, "");
+        },
+        keywords: ["ansi", "color", "colour", "terminal", "escape", "vt100", "clean", "strip", "console", "log"],
+        source: "core",
+    },
 ];
 
 // Self-register

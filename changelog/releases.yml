@@ -3,8 +3,29 @@ config:
   max_versions: 100  # Maximum number of versions to display
 
 releases:
-  - version: "1.35.0"
+  - version: "1.36.0"
     type: "latest"
+    draft: false
+    date: "2026-06-01"
+    headline: "3 New Pipeline Operations, Move to Workspace Fix & Active Workspace Highlight"
+    summary: "Base62 encode/decode, deep JSON merge, Strip ANSI — three pure-JS pipeline operations — plus the Move to Workspace context menu fix and a clearer active workspace indicator in the sidebar"
+    description: "Adds three new pipeline operations. Base62 Encode/Decode uses the full 0–9A–Za–z alphabet and follows the same BigInt byte-array approach as the existing Base58 operations; it correctly preserves leading null bytes using the '0' sentinel and handles round-trips for arbitrary UTF-8 text. JSON Merge performs a recursive deep merge of a second JSON document into the pipeline input — nested objects are merged level by level while the patch document wins on scalar conflicts, and arrays are replaced rather than merged to match Object.assign semantics. Strip ANSI Codes removes ANSI/VT100 escape sequences from terminal output using a single compact regex covering SGR colour/style codes, CSI cursor and screen control sequences, and OSC window title sequences. Also fixes the Move to Workspace sidebar context menu action, which was a TODO stub since the feature first shipped, and improves active workspace discoverability with a 3px left accent stripe and subtle background tint on the active workspace row."
+    categories:
+      - name: "✨ New Pipeline Operations"
+        changes:
+          - "**Base62 Encode:** Encode text to Base62 using the 0–9A–Za–z alphabet — used in URL shorteners, YouTube video IDs, and MongoDB ObjectIDs; preserves leading null bytes using the '0' sentinel consistent with the Base58 implementation"
+          - "**Base62 Decode:** Decode Base62 back to text; strips surrounding and internal whitespace before decoding; throws a descriptive error on any character outside the alphabet"
+          - "**JSON Merge:** Deep merge a second JSON object (textarea parameter) into the pipeline input — nested objects are merged recursively, the patch document wins on key conflicts, arrays are replaced not merged, and null/false/zero patch values correctly overwrite non-null base values"
+          - "**Strip ANSI Codes:** Remove ANSI/VT100 colour and control escape sequences from terminal output — covers SGR colour and style codes, 256-colour params, cursor movement, clear screen, hide/show cursor, and OSC window title sequences; runs per-line or over the full block"
+      - name: "🐛 Bug Fixes"
+        changes:
+          - "**Move to Workspace:** The sidebar tab context menu's Move to Workspace submenu now correctly moves the tab — it was a TODO stub that did nothing since the feature shipped; the action handles tabs in both active and inactive source workspaces and both active and inactive target workspaces"
+      - name: "🔧 Improvements"
+        changes:
+          - "**Active workspace highlight:** The active workspace row in the sidebar now shows a 3px primary-colour left accent stripe and a subtle background tint, making it immediately scannable without reading the workspace name — all workspace rows carry the border slot (transparent when inactive) so content alignment never shifts"
+
+  - version: "1.35.0"
+    type: "release"
     draft: false
     date: "2026-06-01"
     headline: "Webhook HMAC Verifier & HAR Smart View Editing"
