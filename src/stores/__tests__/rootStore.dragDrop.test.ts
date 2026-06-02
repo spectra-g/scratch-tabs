@@ -285,6 +285,8 @@ describe("RootStore - Drag and Drop", () => {
                 expect.objectContaining({
                     workspaceId: "inactive-ws",
                     leftTabs: ["existing-tab", "tab1"], // Tab added to leftTabs
+                    activeLeftTabId: "tab1",
+                    activeSide: "left",
                 })
             );
 
@@ -382,6 +384,8 @@ describe("RootStore - Drag and Drop", () => {
                 expect.objectContaining({
                     workspaceId: "inactive-ws-2",
                     leftTabs: ["tab3", "tab1"], // tab1 added
+                    activeLeftTabId: "tab1",
+                    activeSide: "left",
                 })
             );
 
