@@ -111,6 +111,15 @@ export const SidebarDraggableWorkspace: React.FC<SidebarDraggableWorkspaceProps>
     ...transformStyle,
     opacity: isDragging ? 0.5 : 1,
   };
+  const backgroundClass = isDragging
+    ? "bg-surface-highlight"
+    : isOver && !isDragging
+      ? "bg-primary/5"
+      : isSwitching
+        ? "bg-primary-subtle"
+        : isActive
+          ? "bg-primary/10"
+          : undefined;
 
   return (
     <div
@@ -120,10 +129,11 @@ export const SidebarDraggableWorkspace: React.FC<SidebarDraggableWorkspaceProps>
       {...(!isEditing ? listeners : {})}
       className={clsx(
         "flex items-center px-2 py-0.5 cursor-pointer hover:bg-element-hover group select-none border-l-[3px]",
-        isActive ? "text-main font-semibold border-primary bg-primary/10" : "text-secondary border-transparent",
-        isSwitching && "bg-primary-subtle animate-pulse",
-        isOver && !isDragging && "ring-1 ring-inset ring-blue-400 bg-primary/5",
-        isDragging && "scale-105 shadow-md bg-surface-highlight"
+        isActive ? "text-main font-semibold border-primary" : "text-secondary border-transparent",
+        backgroundClass,
+        isSwitching && "animate-pulse",
+        isOver && !isDragging && "ring-1 ring-inset ring-blue-400",
+        isDragging && "scale-105 shadow-md"
       )}
       onClick={!isEditing ? onClick : undefined}
       onDoubleClick={!isEditing ? onDoubleClick : undefined}

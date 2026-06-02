@@ -123,6 +123,32 @@ describe("json.merge pipeline operation", () => {
         expect(result).toEqual({ a: 1 });
     });
 
+    // ── Prototype pollution safeguards ───────────────────────────────────────
+
+    it("ignores unsafe keys from the patch document", async () => {
+        const prototype = Object.prototype as Record<string, unknown>;
+        delete prototype.polluted;
+
+        const result = JSON.parse(await execute('{"a":1}', {
+            patch: '{"__proto__":{"polluted":"yes"},"constructor":{"polluted":"yes"},"prototype":{"polluted":"yes"},"b":2}',
+        }));
+
+        expect(result).toEqual({ a: 1, b: 2 });
+        expect(prototype.polluted).toBeUndefined();
+    });
+
+    it("does not preserve unsafe keys from the base document", async () => {
+        const prototype = Object.prototype as Record<string, unknown>;
+        delete prototype.polluted;
+
+        const result = JSON.parse(await execute('{"__proto__":{"polluted":"yes"},"a":{"safe":1,"__proto__":{"polluted":"nested"}}}', {
+            patch: '{}',
+        }));
+
+        expect(result).toEqual({ a: { safe: 1 } });
+        expect(prototype.polluted).toBeUndefined();
+    });
+
     // ── Error cases ──────────────────────────────────────────────────────────
 
     it("throws on invalid base JSON", async () => {

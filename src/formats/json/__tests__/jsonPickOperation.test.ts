@@ -61,4 +61,17 @@ describe("json.pick pipeline operation", () => {
   it("throws on invalid JSON input", async () => {
     await expect(execute("{invalid}", { paths: "a" })).rejects.toThrow();
   });
+
+  it("does not write unsafe prototype paths", async () => {
+    const prototype = Object.prototype as Record<string, unknown>;
+    delete prototype.polluted;
+
+    const result = await execute('{"safe":true}', {
+      paths: "__proto__.polluted,constructor.polluted,prototype.polluted",
+      includeMissing: true,
+    });
+
+    expect(JSON.parse(result)).toEqual({});
+    expect(prototype.polluted).toBeUndefined();
+  });
 });

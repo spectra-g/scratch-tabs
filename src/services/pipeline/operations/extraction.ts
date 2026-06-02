@@ -3,52 +3,77 @@ import { OperationDefinition } from "../types";
 function findJsonValues(input: string): unknown[] {
     const values: unknown[] = [];
     const openToClose: Record<string, string> = { "{": "}", "[": "]" };
+    const closingChars = new Set(Object.values(openToClose));
+    const maxCandidateLength = 1_000_000;
 
-    for (let start = 0; start < input.length; start++) {
-        const expectedClosing = openToClose[input[start]];
-        if (!expectedClosing) continue;
+    let start = -1;
+    let stack: string[] = [];
+    let inString = false;
+    let escaped = false;
 
-        const stack: string[] = [expectedClosing];
-        let inString = false;
-        let escaped = false;
+    for (let i = 0; i < input.length; i++) {
+        const char = input[i];
 
-        for (let i = start + 1; i < input.length; i++) {
-            const char = input[i];
+        if (start === -1) {
+            const expectedClosing = openToClose[char];
+            if (!expectedClosing) continue;
 
-            if (inString) {
-                if (escaped) {
-                    escaped = false;
-                } else if (char === "\\") {
-                    escaped = true;
-                } else if (char === "\"") {
-                    inString = false;
-                }
-                continue;
+            start = i;
+            stack = [expectedClosing];
+            inString = false;
+            escaped = false;
+            continue;
+        }
+
+        if (i - start > maxCandidateLength) {
+            start = -1;
+            stack = [];
+            inString = false;
+            escaped = false;
+            continue;
+        }
+
+        if (inString) {
+            if (escaped) {
+                escaped = false;
+            } else if (char === "\\") {
+                escaped = true;
+            } else if (char === "\"") {
+                inString = false;
+            }
+            continue;
+        }
+
+        if (char === "\"") {
+            inString = true;
+            continue;
+        }
+
+        if (openToClose[char]) {
+            stack.push(openToClose[char]);
+            continue;
+        }
+
+        if (char === stack[stack.length - 1]) {
+            stack.pop();
+            if (stack.length !== 0) continue;
+
+            const candidate = input.slice(start, i + 1);
+            try {
+                values.push(JSON.parse(candidate));
+            } catch {
+                // Continue scanning after bracket-shaped text that is not valid JSON.
             }
 
-            if (char === "\"") {
-                inString = true;
-                continue;
-            }
-
-            if (openToClose[char]) {
-                stack.push(openToClose[char]);
-                continue;
-            }
-
-            if (char === stack[stack.length - 1]) {
-                stack.pop();
-                if (stack.length === 0) {
-                    const candidate = input.slice(start, i + 1);
-                    try {
-                        values.push(JSON.parse(candidate));
-                        start = i;
-                    } catch {
-                        // Continue scanning after bracket-shaped text that is not valid JSON.
-                    }
-                    break;
-                }
-            }
+            start = -1;
+            stack = [];
+            inString = false;
+            escaped = false;
+        } else if (closingChars.has(char)) {
+            start = -1;
+            stack = [];
+            inString = false;
+            escaped = false;
         }
     }
 

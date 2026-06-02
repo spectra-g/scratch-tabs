@@ -22,6 +22,10 @@ import {
 } from "./actions/jsonOperations";
 import { JSONPath } from "jsonpath-plus";
 
+const unsafeJsonObjectKeys = new Set(["__proto__", "constructor", "prototype"]);
+
+const isSafeJsonObjectKey = (key: string): boolean => !unsafeJsonObjectKeys.has(key);
+
 /**
  * JSON operations for the pipeline
  */
@@ -321,6 +325,10 @@ const jsonOperations: OperationDefinition[] = [
         let current = value;
 
         for (const part of parts) {
+          if (!isSafeJsonObjectKey(part)) {
+            return { found: false, value: undefined };
+          }
+
           if (Array.isArray(current) && /^\d+$/.test(part)) {
             const index = Number(part);
             if (index >= current.length) return { found: false, value: undefined };
@@ -328,7 +336,11 @@ const jsonOperations: OperationDefinition[] = [
             continue;
           }
 
-          if (current === null || typeof current !== "object" || !(part in current)) {
+          if (
+            current === null ||
+            typeof current !== "object" ||
+            !Object.prototype.hasOwnProperty.call(current, part)
+          ) {
             return { found: false, value: undefined };
           }
           current = (current as Record<string, unknown>)[part];
@@ -339,6 +351,10 @@ const jsonOperations: OperationDefinition[] = [
 
       const writePath = (target: Record<string, unknown>, path: string, value: unknown): void => {
         const parts = path.split(".").filter(Boolean);
+        if (parts.some((part) => !isSafeJsonObjectKey(part))) {
+          return;
+        }
+
         let current = target;
 
         parts.forEach((part, index) => {
@@ -398,24 +414,53 @@ const jsonOperations: OperationDefinition[] = [
       const patch = JSON.parse((params.patch as string) || "{}");
       const indent = (params.indent as number) ?? 2;
 
+      function sanitizeJsonValue(value: unknown): unknown {
+        if (
+          value === null ||
+          typeof value !== "object"
+        ) return value;
+        if (Array.isArray(value)) {
+          return value.map(sanitizeJsonValue);
+        }
+
+        const result: Record<string, unknown> = {};
+        for (const key of Object.keys(value as Record<string, unknown>)) {
+          if (isSafeJsonObjectKey(key)) {
+            result[key] = sanitizeJsonValue((value as Record<string, unknown>)[key]);
+          }
+        }
+        return result;
+      }
+
       function deepMerge(target: unknown, source: unknown): unknown {
         if (
           source === null ||
           typeof source !== "object" ||
           Array.isArray(source)
-        ) return source;
-        if (
-          target === null ||
-          typeof target !== "object" ||
-          Array.isArray(target)
-        ) return source;
-        const result: Record<string, unknown> = {
-          ...(target as Record<string, unknown>),
-        };
-        for (const key of Object.keys(source as Record<string, unknown>)) {
+        ) return sanitizeJsonValue(source);
+
+        const targetObject =
+          target !== null && typeof target === "object" && !Array.isArray(target)
+            ? (target as Record<string, unknown>)
+            : {};
+        const sourceObject = source as Record<string, unknown>;
+        const result: Record<string, unknown> = {};
+
+        for (const key of Object.keys(targetObject)) {
+          if (isSafeJsonObjectKey(key)) {
+            result[key] = sanitizeJsonValue(targetObject[key]);
+          }
+        }
+
+        for (const key of Object.keys(sourceObject)) {
+          if (!isSafeJsonObjectKey(key)) {
+            continue;
+          }
           result[key] = deepMerge(
-            (target as Record<string, unknown>)[key],
-            (source as Record<string, unknown>)[key]
+            Object.prototype.hasOwnProperty.call(targetObject, key)
+              ? targetObject[key]
+              : undefined,
+            sourceObject[key]
           );
         }
         return result;

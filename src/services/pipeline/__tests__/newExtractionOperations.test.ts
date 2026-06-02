@@ -160,6 +160,11 @@ describe("New Extraction Pipeline Operations", () => {
             expect(JSON.parse(result)).toEqual({ ok: true });
         });
 
+        it("should recover after mismatched bracket-shaped text", async () => {
+            const result = await execute("text.extract-json", "bad [ nope } good {\"ok\":true}");
+            expect(JSON.parse(result)).toEqual({ ok: true });
+        });
+
         it("should preserve braces inside JSON strings", async () => {
             const result = await execute("text.extract-json", 'log {"message":"literal } brace","ok":true}');
             expect(JSON.parse(result)).toEqual({ message: "literal } brace", ok: true });
