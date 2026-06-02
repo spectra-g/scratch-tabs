@@ -30,7 +30,7 @@ export const SidebarTabContextMenu: React.FC<SidebarTabContextMenuProps> = ({
     onClose
 }) => {
     const menuRef = useRef<HTMLDivElement>(null);
-    const { removeTab, toggleTabPin, duplicateTab } = useRootStore();
+    const { removeTab, toggleTabPin, duplicateTab, moveTabBetweenWorkspaces } = useRootStore();
     const { activeWorkspaceId, workspaces } = useWorkspaceStore();
     const { tabs: activeTabs } = useTabsStore();
     const { workspaceTabsMetadata, setEditingId } = useSidebarStore();
@@ -94,9 +94,8 @@ export const SidebarTabContextMenu: React.FC<SidebarTabContextMenuProps> = ({
         onClose();
     };
 
-    const handleMoveToWorkspace = (targetWorkspaceId: string) => {
-        // TODO: Implement move to workspace functionality
-        console.log("Move tab", tabId, "to workspace", targetWorkspaceId);
+    const handleMoveToWorkspace = async (targetWorkspaceId: string) => {
+        await moveTabBetweenWorkspaces(tabId, workspaceId, targetWorkspaceId);
         onClose();
     };
 

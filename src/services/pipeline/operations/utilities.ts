@@ -111,6 +111,58 @@ export const utilityOperations: OperationDefinition[] = [
         source: "core",
     },
     {
+        id: "validate.luhn",
+        name: "Validate Luhn",
+        description: "Check whether a number passes the Luhn checksum used by payment cards, IMEI, and other identifiers",
+        categories: ["validation", "utilities"],
+        parameters: [
+            {
+                name: "outputFormat",
+                label: "Output Format",
+                type: "select",
+                default: "summary",
+                options: [
+                    { value: "summary", label: "Summary" },
+                    { value: "boolean", label: "Boolean" },
+                    { value: "json", label: "JSON" },
+                ],
+            },
+        ],
+        processingMode: "configurable",
+        execute: (input, params) => {
+            const outputFormat = (params.outputFormat as string) ?? "summary";
+            const digits = input.replace(/[\s-]/g, "");
+
+            if (!/^\d+$/.test(digits)) {
+                throw new Error("Input must contain only digits, spaces, or hyphens");
+            }
+            if (digits.length < 2) {
+                throw new Error("Input must contain at least two digits");
+            }
+
+            let sum = 0;
+            let shouldDouble = false;
+            for (let i = digits.length - 1; i >= 0; i--) {
+                let digit = Number(digits[i]);
+                if (shouldDouble) {
+                    digit *= 2;
+                    if (digit > 9) digit -= 9;
+                }
+                sum += digit;
+                shouldDouble = !shouldDouble;
+            }
+
+            const valid = sum % 10 === 0;
+            if (outputFormat === "boolean") return String(valid);
+            if (outputFormat === "json") {
+                return JSON.stringify({ valid, checksum: sum, digits: digits.length }, null, 2);
+            }
+            return valid ? "Valid Luhn checksum" : "Invalid Luhn checksum";
+        },
+        keywords: ["luhn", "checksum", "validate", "credit card", "imei", "check digit"],
+        source: "core",
+    },
+    {
         id: "utilities.random-string",
         name: "Generate Random String",
         description: "Generate random strings for passwords, tokens, etc.",

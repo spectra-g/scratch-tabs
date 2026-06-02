@@ -106,6 +106,56 @@ function decodeBase58(input: string): string {
     return Array.from(allBytes).map(b => String.fromCharCode(b)).join('');
 }
 
+// === Base62 helpers (0–9A–Za–z alphabet) ===
+const BASE62_ALPHABET = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+
+function encodeBase62(input: string): string {
+    const bytes = typeof TextEncoder !== 'undefined'
+        ? Array.from(new TextEncoder().encode(input))
+        : Array.from(input).map(c => c.charCodeAt(0) & 0xff);
+
+    let leadingZeros = 0;
+    while (leadingZeros < bytes.length && bytes[leadingZeros] === 0) leadingZeros++;
+
+    let num = BigInt(0);
+    for (const byte of bytes) num = (num << BigInt(8)) + BigInt(byte);
+
+    const result: string[] = [];
+    while (num > BigInt(0)) {
+        result.unshift(BASE62_ALPHABET[Number(num % BigInt(62))]);
+        num = num / BigInt(62);
+    }
+
+    return '0'.repeat(leadingZeros) + result.join('');
+}
+
+function decodeBase62(input: string): string {
+    const clean = input.replace(/\s/g, '');
+
+    let leadingZeros = 0;
+    while (leadingZeros < clean.length && clean[leadingZeros] === '0') leadingZeros++;
+
+    let num = BigInt(0);
+    for (const char of clean) {
+        const idx = BASE62_ALPHABET.indexOf(char);
+        if (idx === -1) throw new Error(`Invalid Base62 character: ${char}`);
+        num = num * BigInt(62) + BigInt(idx);
+    }
+
+    const bytes: number[] = [];
+    while (num > BigInt(0)) {
+        bytes.unshift(Number(num & BigInt(0xff)));
+        num >>= BigInt(8);
+    }
+
+    const allBytes = new Uint8Array([...new Array(leadingZeros).fill(0), ...bytes]);
+
+    if (typeof TextDecoder !== 'undefined') {
+        return new TextDecoder().decode(allBytes);
+    }
+    return Array.from(allBytes).map(b => String.fromCharCode(b)).join('');
+}
+
 // === Ascii85 (Base85 / Adobe) helpers ===
 
 function encodeBase85(input: string): string {
@@ -207,6 +257,29 @@ const NATO_PHONETIC_MAP: Record<string, string> = {
     "5": "Five", "6": "Six", "7": "Seven", "8": "Eight", "9": "Nine",
     " ": "(space)",
 };
+
+function encodeUtf8Base64(input: string): string {
+    if (typeof Buffer !== "undefined") {
+        return Buffer.from(input, "utf8").toString("base64");
+    }
+
+    const bytes = new TextEncoder().encode(input);
+    let binary = "";
+    bytes.forEach((byte) => {
+        binary += String.fromCharCode(byte);
+    });
+    return btoa(binary);
+}
+
+function decodeUtf8Base64(input: string): string {
+    if (typeof Buffer !== "undefined") {
+        return Buffer.from(input, "base64").toString("utf8");
+    }
+
+    const binary = atob(input);
+    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+}
 
 /**
  * Encoding Pipeline Operations
@@ -414,6 +487,88 @@ export const encodingOperations: OperationDefinition[] = [
                 .join('');
         },
         keywords: ["charcode", "decimal", "ascii", "convert"],
+        source: "core",
+    },
+
+    // === HTTP AUTH ===
+    {
+        id: "encoding.basic-auth-encode",
+        name: "Basic Auth Encode",
+        description: "Encode username and password as an HTTP Basic Authorization header value",
+        categories: ["encoding", "web"],
+        parameters: [
+            {
+                name: "username",
+                label: "Username",
+                type: "string",
+                default: "",
+                required: true,
+                placeholder: "username",
+            },
+            {
+                name: "password",
+                label: "Password",
+                type: "string",
+                default: "",
+                placeholder: "password",
+            },
+            {
+                name: "includePrefix",
+                label: "Include Basic Prefix",
+                type: "boolean",
+                default: true,
+                description: "Return 'Basic <token>' instead of only the Base64 token",
+            },
+        ],
+        processingMode: "entire",
+        execute: (_input, params) => {
+            const username = (params.username as string) ?? "";
+            const password = (params.password as string) ?? "";
+            const includePrefix = params.includePrefix ?? true;
+            const token = encodeUtf8Base64(`${username}:${password}`);
+            return includePrefix ? `Basic ${token}` : token;
+        },
+        keywords: ["basic", "auth", "authorization", "header", "base64", "http"],
+        source: "core",
+    },
+    {
+        id: "encoding.basic-auth-decode",
+        name: "Basic Auth Decode",
+        description: "Decode an HTTP Basic Authorization header value into username and password",
+        categories: ["encoding", "web"],
+        parameters: [
+            {
+                name: "outputFormat",
+                label: "Output Format",
+                type: "select",
+                default: "json",
+                options: [
+                    { value: "json", label: "JSON" },
+                    { value: "colon", label: "username:password" },
+                    { value: "lines", label: "Username and password lines" },
+                ],
+            },
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const outputFormat = (params.outputFormat as string) ?? "json";
+            const token = input.trim().replace(/^Basic\s+/i, "");
+            if (!token) throw new Error("Basic auth token is required");
+
+            const decoded = decodeUtf8Base64(token);
+            const separatorIndex = decoded.indexOf(":");
+            if (separatorIndex === -1) {
+                throw new Error("Decoded Basic auth value must contain ':'");
+            }
+
+            const username = decoded.slice(0, separatorIndex);
+            const password = decoded.slice(separatorIndex + 1);
+
+            if (outputFormat === "colon") return `${username}:${password}`;
+            if (outputFormat === "lines") return `username: ${username}\npassword: ${password}`;
+            return JSON.stringify({ username, password }, null, 2);
+        },
+        keywords: ["basic", "auth", "authorization", "header", "base64", "http", "decode"],
         source: "core",
     },
 
@@ -880,6 +1035,28 @@ export const encodingOperations: OperationDefinition[] = [
             return decodeBase58(input);
         },
         keywords: ["base58", "decode", "bitcoin", "ipfs", "wallet"],
+        source: "core",
+    },
+    {
+        id: "encoding.base62-encode",
+        name: "Base62 Encode",
+        description: "Encode text to Base62 (0–9A–Za–z alphabet) — used in URL shorteners, YouTube video IDs, and MongoDB ObjectIDs",
+        categories: ["encoding"],
+        parameters: [],
+        processingMode: "entire",
+        execute: (input) => encodeBase62(input),
+        keywords: ["base62", "encode", "url", "shortener", "youtube", "id", "compact"],
+        source: "core",
+    },
+    {
+        id: "encoding.base62-decode",
+        name: "Base62 Decode",
+        description: "Decode Base62 (0–9A–Za–z) back to text",
+        categories: ["encoding"],
+        parameters: [],
+        processingMode: "entire",
+        execute: (input) => decodeBase62(input),
+        keywords: ["base62", "decode", "url", "shortener", "youtube", "id"],
         source: "core",
     },
 

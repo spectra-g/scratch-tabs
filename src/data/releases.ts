@@ -15,12 +15,50 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.35.0';
+export const APP_VERSION = '1.36.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.35.0",
+    "version": "1.36.0",
     "type": "latest",
+    "date": "2026-06-01",
+    "headline": "12 New Pipeline Operations, Move to Workspace Fix & Active Workspace Highlight",
+    "summary": "Base62, Base64URL, Basic Auth, JSON Merge/Pick, Extract JSON, Text Obfuscate, Luhn validation, and Strip ANSI pipeline operations — plus the Move to Workspace context menu fix and a clearer active workspace indicator in the sidebar",
+    "categories": [
+      {
+        "name": "New Pipeline Operations",
+        "changes": [
+          "**Base62 Encode:** Encode text to Base62 using the 0–9A–Za–z alphabet — used in URL shorteners, YouTube video IDs, and MongoDB ObjectIDs; preserves leading null bytes using the '0' sentinel consistent with the Base58 implementation",
+          "**Base62 Decode:** Decode Base62 back to text; strips surrounding and internal whitespace before decoding; throws a descriptive error on any character outside the alphabet",
+          "**Base64URL Encode:** Encode text as URL-safe Base64 without padding — useful for JWT, OAuth, PKCE, WebAuthn, and other token formats that avoid `+`, `/`, and `=` characters",
+          "**Base64URL Decode:** Decode URL-safe Base64 back to UTF-8 text; accepts padded or unpadded input and restores missing padding automatically",
+          "**Basic Auth Encode:** Build an HTTP Basic Authorization header value from username and password parameters; supports emitting either the full `Basic ...` header value or the raw Base64 token",
+          "**Basic Auth Decode:** Decode a Basic Auth header or raw token into username/password fields, with JSON or `username:password` output modes for pipeline chaining",
+          "**JSON Merge:** Deep merge a second JSON object (textarea parameter) into the pipeline input — nested objects are merged recursively, the patch document wins on key conflicts, arrays are replaced not merged, and null/false/zero patch values correctly overwrite non-null base values",
+          "**JSON Pick:** Extract one or more values from JSON by dot/bracket paths such as `user.profile.email` or `items[0].id`; can return values directly or preserve the selected object shape",
+          "**Extract JSON:** Pull valid JSON object or array fragments out of logs, stack traces, and prose; supports first-match or all-matches modes and pretty, minified, or JSON-array output",
+          "**Text Obfuscate:** Mask sensitive values with configurable visible prefix/suffix lengths and mask character; works per-line or over the full input for safe sharing",
+          "**Luhn Validate:** Validate card-like identifiers and other Luhn check-digit values; ignores spaces and dashes and can return plain text, boolean, or structured JSON",
+          "**Strip ANSI Codes:** Remove ANSI/VT100 colour and control escape sequences from terminal output — covers SGR colour and style codes, 256-colour params, cursor movement, clear screen, hide/show cursor, and OSC window title sequences; runs per-line or over the full block"
+        ]
+      },
+      {
+        "name": "Bug Fixes",
+        "changes": [
+          "**Move to Workspace:** The sidebar tab context menu's Move to Workspace submenu now correctly moves the tab — it was a TODO stub that did nothing since the feature shipped; the action handles tabs in both active and inactive source workspaces and both active and inactive target workspaces"
+        ]
+      },
+      {
+        "name": "Improvements",
+        "changes": [
+          "**Active workspace highlight:** The active workspace row in the sidebar now shows a 3px primary-colour left accent stripe and a subtle background tint, making it immediately scannable without reading the workspace name — all workspace rows carry the border slot (transparent when inactive) so content alignment never shifts"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.35.0",
+    "type": "release",
     "date": "2026-06-01",
     "headline": "Webhook HMAC Verifier & HAR Smart View Editing",
     "summary": "New offline Webhook HMAC Verifier tablet for validating provider signatures, plus HAR Smart View editing with request deletion, two-request comparison, and paste-to-merge",

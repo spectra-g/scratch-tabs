@@ -39,7 +39,9 @@ describe("SidebarDraggableWorkspace", () => {
         const workspaceElement = container.firstChild as HTMLElement;
         expect(workspaceElement.className).toContain("text-main");
         expect(workspaceElement.className).toContain("font-semibold");
-        expect(workspaceElement.className).toContain("border-l-2");
+        expect(workspaceElement.className).toContain("border-l-[3px]");
+        expect(workspaceElement.className).toContain("border-primary");
+        expect(workspaceElement.className).toContain("bg-primary/10");
     });
 
     it("should show switching state", () => {

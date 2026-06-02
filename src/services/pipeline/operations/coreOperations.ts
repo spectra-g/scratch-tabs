@@ -1248,6 +1248,63 @@ const coreOperations: OperationDefinition[] = [
         source: "core",
     },
     {
+        id: "text.obfuscate",
+        name: "Obfuscate Text",
+        description: "Hide the middle of a sensitive value while preserving configurable characters at the start and end",
+        categories: ["text", "redaction", "privacy"],
+        parameters: [
+            {
+                name: "revealStart",
+                label: "Reveal Start",
+                type: "number",
+                default: 4,
+                min: 0,
+                max: 100,
+                description: "Characters to keep visible at the beginning",
+            },
+            {
+                name: "revealEnd",
+                label: "Reveal End",
+                type: "number",
+                default: 4,
+                min: 0,
+                max: 100,
+                description: "Characters to keep visible at the end",
+            },
+            {
+                name: "mask",
+                label: "Mask",
+                type: "string",
+                default: "***",
+                description: "Replacement shown for the hidden middle",
+            },
+            {
+                name: "perLine",
+                label: "Obfuscate Each Line",
+                type: "boolean",
+                default: false,
+            },
+        ],
+        execute: (input, params) => {
+            const revealStart = Math.max(0, (params.revealStart as number) ?? 4);
+            const revealEnd = Math.max(0, (params.revealEnd as number) ?? 4);
+            const mask = (params.mask as string) ?? "***";
+            const perLine = params.perLine ?? false;
+
+            const obfuscate = (value: string): string => {
+                if (!value) return value;
+                if (revealStart + revealEnd >= value.length) return mask;
+                return `${value.slice(0, revealStart)}${mask}${value.slice(value.length - revealEnd)}`;
+            };
+
+            return perLine
+                ? input.split("\n").map(obfuscate).join("\n")
+                : obfuscate(input);
+        },
+        keywords: ["obfuscate", "mask", "token", "secret", "privacy", "redact"],
+        source: "core",
+    },
+    {
         id: "text.javascript-snippet",
         name: "JavaScript Snippet",
         description: "Run custom JavaScript to transform text",
@@ -1518,6 +1575,24 @@ const coreOperations: OperationDefinition[] = [
             return unifiedDiff(input, modified, context);
         },
         keywords: ["diff", "compare", "patch", "unified", "changes", "delta"],
+        source: "core",
+    },
+
+    // === STRIP ANSI ===
+    {
+        id: "text.strip-ansi",
+        name: "Strip ANSI Codes",
+        description: "Remove ANSI/VT100 colour and control escape sequences from terminal output",
+        categories: ["text"],
+        parameters: [],
+        processingMode: "configurable",
+        execute: (input) => {
+            // Matches CSI sequences (ESC[...) and OSC sequences (ESC]...BEL)
+            // eslint-disable-next-line no-control-regex
+            const ANSI_RE = /\x1b(?:\][^\x07]*\x07|\[[0-?]*[ -/]*[@-~]|[@-Z\\-_])/g;
+            return input.replace(ANSI_RE, "");
+        },
+        keywords: ["ansi", "color", "colour", "terminal", "escape", "vt100", "clean", "strip", "console", "log"],
         source: "core",
     },
 ];

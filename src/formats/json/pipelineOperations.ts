@@ -22,6 +22,10 @@ import {
 } from "./actions/jsonOperations";
 import { JSONPath } from "jsonpath-plus";
 
+const unsafeJsonObjectKeys = new Set(["__proto__", "constructor", "prototype"]);
+
+const isSafeJsonObjectKey = (key: string): boolean => !unsafeJsonObjectKeys.has(key);
+
 /**
  * JSON operations for the pipeline
  */
@@ -268,6 +272,204 @@ const jsonOperations: OperationDefinition[] = [
     },
     keywords: ["jsonpath", "query", "filter", "extract", "jq", "select", "search"],
     icon: "Filter",
+    source: "format",
+  },
+  {
+    id: "json.pick",
+    name: "Pick JSON Paths",
+    description: "Extract a subset of a JSON object using comma-separated dot-notation paths",
+    categories: ["json", "filtering", "privacy"],
+    parameters: [
+      {
+        name: "paths",
+        label: "Paths",
+        type: "string",
+        default: "",
+        required: true,
+        description: "Comma-separated paths such as user.name,user.email,meta.id",
+        placeholder: "user.name,user.email,meta.id",
+      },
+      {
+        name: "includeMissing",
+        label: "Include Missing as Null",
+        type: "boolean",
+        default: false,
+      },
+      {
+        name: "indent",
+        label: "Indent Size",
+        type: "number",
+        default: 2,
+        min: 0,
+        max: 8,
+      },
+    ],
+    processingMode: "entire",
+    execute: (input, params) => {
+      const paths = ((params.paths as string) ?? "")
+        .split(",")
+        .map((path) => path.trim())
+        .filter(Boolean);
+      const includeMissing = params.includeMissing ?? false;
+      const indent = (params.indent as number) ?? 2;
+
+      if (paths.length === 0) {
+        throw new Error("At least one path is required");
+      }
+
+      const source = JSON.parse(input);
+      const output: Record<string, unknown> = {};
+
+      const readPath = (value: unknown, path: string): { found: boolean; value: unknown } => {
+        const parts = path.split(".").filter(Boolean);
+        let current = value;
+
+        for (const part of parts) {
+          if (!isSafeJsonObjectKey(part)) {
+            return { found: false, value: undefined };
+          }
+
+          if (Array.isArray(current) && /^\d+$/.test(part)) {
+            const index = Number(part);
+            if (index >= current.length) return { found: false, value: undefined };
+            current = current[index];
+            continue;
+          }
+
+          if (
+            current === null ||
+            typeof current !== "object" ||
+            !Object.prototype.hasOwnProperty.call(current, part)
+          ) {
+            return { found: false, value: undefined };
+          }
+          current = (current as Record<string, unknown>)[part];
+        }
+
+        return { found: true, value: current };
+      };
+
+      const writePath = (target: Record<string, unknown>, path: string, value: unknown): void => {
+        const parts = path.split(".").filter(Boolean);
+        if (parts.some((part) => !isSafeJsonObjectKey(part))) {
+          return;
+        }
+
+        let current = target;
+
+        parts.forEach((part, index) => {
+          if (index === parts.length - 1) {
+            current[part] = value;
+            return;
+          }
+          if (current[part] === null || typeof current[part] !== "object" || Array.isArray(current[part])) {
+            current[part] = {};
+          }
+          current = current[part] as Record<string, unknown>;
+        });
+      };
+
+      paths.forEach((path) => {
+        const result = readPath(source, path);
+        if (result.found) {
+          writePath(output, path, result.value);
+        } else if (includeMissing) {
+          writePath(output, path, null);
+        }
+      });
+
+      return JSON.stringify(output, null, indent === 0 ? undefined : indent);
+    },
+    keywords: ["pick", "select", "paths", "dot notation", "extract", "privacy", "scrub"],
+    icon: "MousePointerClick",
+    source: "format",
+  },
+  {
+    id: "json.merge",
+    name: "Merge JSON",
+    description: "Deep merge a second JSON object into the input — nested objects are merged recursively; the second document wins on key conflicts",
+    categories: ["json", "data"],
+    parameters: [
+      {
+        name: "patch",
+        label: "Second Document",
+        type: "textarea",
+        default: "{}",
+        required: true,
+        description: "JSON object to merge into the input",
+        placeholder: '{"key": "value"}',
+      },
+      {
+        name: "indent",
+        label: "Indent Size",
+        type: "number",
+        default: 2,
+        min: 1,
+        max: 8,
+      },
+    ],
+    processingMode: "entire",
+    execute: (input, params) => {
+      const base = JSON.parse(input);
+      const patch = JSON.parse((params.patch as string) || "{}");
+      const indent = (params.indent as number) ?? 2;
+
+      function sanitizeJsonValue(value: unknown): unknown {
+        if (
+          value === null ||
+          typeof value !== "object"
+        ) return value;
+        if (Array.isArray(value)) {
+          return value.map(sanitizeJsonValue);
+        }
+
+        const result: Record<string, unknown> = {};
+        for (const key of Object.keys(value as Record<string, unknown>)) {
+          if (isSafeJsonObjectKey(key)) {
+            result[key] = sanitizeJsonValue((value as Record<string, unknown>)[key]);
+          }
+        }
+        return result;
+      }
+
+      function deepMerge(target: unknown, source: unknown): unknown {
+        if (
+          source === null ||
+          typeof source !== "object" ||
+          Array.isArray(source)
+        ) return sanitizeJsonValue(source);
+
+        const targetObject =
+          target !== null && typeof target === "object" && !Array.isArray(target)
+            ? (target as Record<string, unknown>)
+            : {};
+        const sourceObject = source as Record<string, unknown>;
+        const result: Record<string, unknown> = {};
+
+        for (const key of Object.keys(targetObject)) {
+          if (isSafeJsonObjectKey(key)) {
+            result[key] = sanitizeJsonValue(targetObject[key]);
+          }
+        }
+
+        for (const key of Object.keys(sourceObject)) {
+          if (!isSafeJsonObjectKey(key)) {
+            continue;
+          }
+          result[key] = deepMerge(
+            Object.prototype.hasOwnProperty.call(targetObject, key)
+              ? targetObject[key]
+              : undefined,
+            sourceObject[key]
+          );
+        }
+        return result;
+      }
+
+      return JSON.stringify(deepMerge(base, patch), null, indent);
+    },
+    keywords: ["merge", "combine", "deep", "patch", "extend", "assign", "defaults", "mixin"],
+    icon: "GitMerge",
     source: "format",
   },
 ];

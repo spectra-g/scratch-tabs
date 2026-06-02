@@ -773,7 +773,20 @@ export const useRootStore = create<RootStore>((set, get) => {
           const targetSplitView = await storage.getSplitViewByWorkspace(targetWorkspaceId);
           if (targetSplitView) {
             // Add tab to left side (default)
-            targetSplitView.leftTabs = [...targetSplitView.leftTabs, updatedTab.id];
+            targetSplitView.leftTabs = [
+              ...targetSplitView.leftTabs.filter(id => id !== updatedTab.id),
+              updatedTab.id,
+            ];
+            targetSplitView.rightTabs = targetSplitView.rightTabs.filter(id => id !== updatedTab.id);
+            targetSplitView.activeLeftTabId = updatedTab.id;
+            targetSplitView.activeSide = "left";
+            targetSplitView.leftTabHistory = [
+              ...(targetSplitView.leftTabHistory || []).filter(id => id !== updatedTab.id),
+              updatedTab.id,
+            ];
+            targetSplitView.rightTabHistory = (targetSplitView.rightTabHistory || []).filter(
+              id => id !== updatedTab.id
+            );
             targetSplitView.lastModified = Date.now();
             await storage.saveSplitViewNow(targetSplitView);
           }

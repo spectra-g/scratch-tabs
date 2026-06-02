@@ -100,6 +100,54 @@ const base64Operations: OperationDefinition[] = [
     icon: "FileText",
     source: "tablet",
   },
+  {
+    id: "encoding.base64url-encode",
+    name: "Base64URL Encode",
+    description: "Encode text using URL-safe Base64 without padding, as used by JWT, OAuth PKCE, and signed URLs",
+    categories: ["encoding"],
+    parameters: [
+      {
+        name: "encoding",
+        label: "Text Encoding",
+        type: "select",
+        default: "utf8",
+        options: encodingOptions,
+        description: "Character encoding of the input text",
+      },
+    ],
+    processingMode: "configurable",
+    execute: (input, params) => {
+      const encoding = (params.encoding as string) ?? "utf8";
+      return encodeBase64(input, "url-safe", encoding);
+    },
+    keywords: ["base64url", "base64", "url safe", "jwt", "oauth", "pkce", "webauthn"],
+    icon: "Link",
+    source: "tablet",
+  },
+  {
+    id: "encoding.base64url-decode",
+    name: "Base64URL Decode",
+    description: "Decode URL-safe Base64 with or without padding back to text",
+    categories: ["encoding"],
+    parameters: [
+      {
+        name: "encoding",
+        label: "Text Encoding",
+        type: "select",
+        default: "utf8",
+        options: encodingOptions,
+        description: "Character encoding for the output text",
+      },
+    ],
+    processingMode: "configurable",
+    execute: (input, params) => {
+      const encoding = (params.encoding as string) ?? "utf8";
+      return decodeBase64(input.trim(), "url-safe", encoding);
+    },
+    keywords: ["base64url", "base64", "url safe", "jwt", "oauth", "pkce", "webauthn"],
+    icon: "Unlink",
+    source: "tablet",
+  },
 ];
 
 // Self-register all operations

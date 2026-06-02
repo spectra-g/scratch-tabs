@@ -125,6 +125,29 @@ Feature: Workspace Sidebar
     When I click on workspace icon for "Default Workspace" in icon rail
     Then the "Default Tab" tab should exist on the page
 
+  Scenario: Move tab to another workspace via context menu
+    When I click the icon for "New tab"
+    And I double-click on the active tab
+    And I type "Movable Tab" in the rename input
+    And I press Enter to confirm rename
+    Then the "Movable Tab" tab should exist on the page
+    When I click the create workspace button in sidebar
+    Then workspace "New Workspace" should be expanded in the sidebar
+    When I right-click on workspace "New Workspace" in the sidebar
+    And I select "Rename Workspace" from the context menu
+    And I type "Destination" in the workspace rename input
+    And I press Enter to confirm rename
+    Then the "Destination" workspace should be visible
+    When I click on tab "Movable Tab" in the sidebar
+    Then tab "Movable Tab" should be active in the tab bar
+    And workspace "Default Workspace" should be marked as active in sidebar
+    When I right-click on tab "Movable Tab" in the sidebar
+    And I select "Destination" from the "Move to Workspace" submenu
+    Then the "Movable Tab" tab should not exist on the page
+    When I click on tab "Movable Tab" in the sidebar
+    Then tab "Movable Tab" should be active in the tab bar
+    And workspace "Destination" should be marked as active in sidebar
+
   Scenario: Icon rail mode persists on page refresh
     When I click the icon for "New tab"
     Then the sidebar should be visible
