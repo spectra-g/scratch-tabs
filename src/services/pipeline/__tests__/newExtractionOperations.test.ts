@@ -143,4 +143,44 @@ describe("New Extraction Pipeline Operations", () => {
             expect(result).toBe("");
         });
     });
+
+    describe("text.extract-json", () => {
+        it("should extract the first JSON object from mixed log text", async () => {
+            const result = await execute("text.extract-json", '2024-01-01 ERROR {"code":500,"msg":"failed"} tail');
+            expect(JSON.parse(result)).toEqual({ code: 500, msg: "failed" });
+        });
+
+        it("should extract JSON arrays", async () => {
+            const result = await execute("text.extract-json", "payload=[1,2,{\"ok\":true}]", { outputFormat: "minified" });
+            expect(result).toBe('[1,2,{"ok":true}]');
+        });
+
+        it("should ignore invalid bracket-shaped text and continue scanning", async () => {
+            const result = await execute("text.extract-json", "bad { nope } good {\"ok\":true}");
+            expect(JSON.parse(result)).toEqual({ ok: true });
+        });
+
+        it("should preserve braces inside JSON strings", async () => {
+            const result = await execute("text.extract-json", 'log {"message":"literal } brace","ok":true}');
+            expect(JSON.parse(result)).toEqual({ message: "literal } brace", ok: true });
+        });
+
+        it("should return all JSON values as an array by default", async () => {
+            const result = await execute("text.extract-json", 'a {"one":1} b [2,3]', { mode: "all" });
+            expect(JSON.parse(result)).toEqual([{ one: 1 }, [2, 3]]);
+        });
+
+        it("should return all JSON values as minified lines", async () => {
+            const result = await execute("text.extract-json", 'a {"one":1} b [2,3]', {
+                mode: "all",
+                outputFormat: "lines",
+            });
+            expect(result).toBe('{"one":1}\n[2,3]');
+        });
+
+        it("should return empty output when no JSON is found", async () => {
+            const result = await execute("text.extract-json", "plain text only");
+            expect(result).toBe("");
+        });
+    });
 });

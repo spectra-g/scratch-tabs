@@ -6,6 +6,7 @@
 
 import { executeSingleOperation } from "../pipelineExecutor";
 import "../operations/encoding";
+import "../../../tablets/base64/pipelineOperations";
 
 describe("New Encoding Pipeline Operations", () => {
     const execute = async (
@@ -132,6 +133,65 @@ describe("New Encoding Pipeline Operations", () => {
         it("should handle empty input", async () => {
             const result = await execute("encoding.to-html-entity", "");
             expect(result).toBe("");
+        });
+    });
+
+    describe("encoding.base64url-encode / encoding.base64url-decode", () => {
+        it("should encode text as URL-safe Base64 without padding", async () => {
+            const result = await execute("encoding.base64url-encode", "hello?");
+            expect(result).toBe("aGVsbG8_");
+            expect(result).not.toContain("=");
+            expect(result).not.toContain("+");
+            expect(result).not.toContain("/");
+        });
+
+        it("should decode URL-safe Base64 with no padding", async () => {
+            const result = await execute("encoding.base64url-decode", "aGVsbG8_");
+            expect(result).toBe("hello?");
+        });
+
+        it("should round-trip Unicode text", async () => {
+            const encoded = await execute("encoding.base64url-encode", "Cafe 🚀");
+            const decoded = await execute("encoding.base64url-decode", encoded);
+            expect(decoded).toBe("Cafe 🚀");
+        });
+    });
+
+    describe("encoding.basic-auth-encode / encoding.basic-auth-decode", () => {
+        it("should encode username and password with Basic prefix by default", async () => {
+            const result = await execute("encoding.basic-auth-encode", "", {
+                username: "alice",
+                password: "s3cret",
+            });
+            expect(result).toBe("Basic YWxpY2U6czNjcmV0");
+        });
+
+        it("should encode username and password without prefix", async () => {
+            const result = await execute("encoding.basic-auth-encode", "", {
+                username: "alice",
+                password: "s3cret",
+                includePrefix: false,
+            });
+            expect(result).toBe("YWxpY2U6czNjcmV0");
+        });
+
+        it("should decode a Basic header to JSON", async () => {
+            const result = await execute("encoding.basic-auth-decode", "Basic YWxpY2U6czNjcmV0");
+            expect(JSON.parse(result)).toEqual({ username: "alice", password: "s3cret" });
+        });
+
+        it("should decode passwords containing colons", async () => {
+            const token = await execute("encoding.basic-auth-encode", "", {
+                username: "alice",
+                password: "one:two",
+                includePrefix: false,
+            });
+            const result = await execute("encoding.basic-auth-decode", token, { outputFormat: "colon" });
+            expect(result).toBe("alice:one:two");
+        });
+
+        it("should throw when decoded value has no separator", async () => {
+            await expect(execute("encoding.basic-auth-decode", "bm9zZXBhcmF0b3I=")).rejects.toThrow(":");
         });
     });
 });

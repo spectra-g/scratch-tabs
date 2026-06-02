@@ -1,5 +1,60 @@
 import { OperationDefinition } from "../types";
 
+function findJsonValues(input: string): unknown[] {
+    const values: unknown[] = [];
+    const openToClose: Record<string, string> = { "{": "}", "[": "]" };
+
+    for (let start = 0; start < input.length; start++) {
+        const expectedClosing = openToClose[input[start]];
+        if (!expectedClosing) continue;
+
+        const stack: string[] = [expectedClosing];
+        let inString = false;
+        let escaped = false;
+
+        for (let i = start + 1; i < input.length; i++) {
+            const char = input[i];
+
+            if (inString) {
+                if (escaped) {
+                    escaped = false;
+                } else if (char === "\\") {
+                    escaped = true;
+                } else if (char === "\"") {
+                    inString = false;
+                }
+                continue;
+            }
+
+            if (char === "\"") {
+                inString = true;
+                continue;
+            }
+
+            if (openToClose[char]) {
+                stack.push(openToClose[char]);
+                continue;
+            }
+
+            if (char === stack[stack.length - 1]) {
+                stack.pop();
+                if (stack.length === 0) {
+                    const candidate = input.slice(start, i + 1);
+                    try {
+                        values.push(JSON.parse(candidate));
+                        start = i;
+                    } catch {
+                        // Continue scanning after bracket-shaped text that is not valid JSON.
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    return values;
+}
+
 /**
  * Extraction Pipeline Operations
  * 
@@ -315,6 +370,66 @@ export const extractionOperations: OperationDefinition[] = [
             return result.join('\n');
         },
         keywords: ["date", "time", "extract", "datetime", "calendar"],
+        source: "core",
+    },
+    {
+        id: "text.extract-json",
+        name: "Extract JSON",
+        description: "Extract valid JSON objects or arrays embedded in mixed text such as logs, errors, or terminal output",
+        categories: ["text", "extraction", "json"],
+        parameters: [
+            {
+                name: "mode",
+                label: "Mode",
+                type: "select",
+                default: "first",
+                options: [
+                    { value: "first", label: "First JSON value" },
+                    { value: "all", label: "All JSON values" },
+                ],
+            },
+            {
+                name: "outputFormat",
+                label: "Output Format",
+                type: "select",
+                default: "pretty",
+                options: [
+                    { value: "pretty", label: "Pretty JSON" },
+                    { value: "minified", label: "Minified JSON" },
+                    { value: "lines", label: "One minified JSON value per line" },
+                ],
+            },
+            {
+                name: "indent",
+                label: "Indent Size",
+                type: "number",
+                default: 2,
+                min: 0,
+                max: 8,
+            },
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const mode = (params.mode as string) ?? "first";
+            const outputFormat = (params.outputFormat as string) ?? "pretty";
+            const indent = (params.indent as number) ?? 2;
+            const values = findJsonValues(input);
+
+            if (values.length === 0) return "";
+
+            const selected = mode === "all" ? values : values[0];
+            if (outputFormat === "lines") {
+                const lineValues = mode === "all" ? values : [selected];
+                return lineValues.map((value) => JSON.stringify(value)).join("\n");
+            }
+
+            return JSON.stringify(
+                selected,
+                null,
+                outputFormat === "pretty" ? indent : undefined,
+            );
+        },
+        keywords: ["json", "extract", "logs", "mixed", "object", "array", "structured"],
         source: "core",
     },
     {

@@ -271,6 +271,104 @@ const jsonOperations: OperationDefinition[] = [
     source: "format",
   },
   {
+    id: "json.pick",
+    name: "Pick JSON Paths",
+    description: "Extract a subset of a JSON object using comma-separated dot-notation paths",
+    categories: ["json", "filtering", "privacy"],
+    parameters: [
+      {
+        name: "paths",
+        label: "Paths",
+        type: "string",
+        default: "",
+        required: true,
+        description: "Comma-separated paths such as user.name,user.email,meta.id",
+        placeholder: "user.name,user.email,meta.id",
+      },
+      {
+        name: "includeMissing",
+        label: "Include Missing as Null",
+        type: "boolean",
+        default: false,
+      },
+      {
+        name: "indent",
+        label: "Indent Size",
+        type: "number",
+        default: 2,
+        min: 0,
+        max: 8,
+      },
+    ],
+    processingMode: "entire",
+    execute: (input, params) => {
+      const paths = ((params.paths as string) ?? "")
+        .split(",")
+        .map((path) => path.trim())
+        .filter(Boolean);
+      const includeMissing = params.includeMissing ?? false;
+      const indent = (params.indent as number) ?? 2;
+
+      if (paths.length === 0) {
+        throw new Error("At least one path is required");
+      }
+
+      const source = JSON.parse(input);
+      const output: Record<string, unknown> = {};
+
+      const readPath = (value: unknown, path: string): { found: boolean; value: unknown } => {
+        const parts = path.split(".").filter(Boolean);
+        let current = value;
+
+        for (const part of parts) {
+          if (Array.isArray(current) && /^\d+$/.test(part)) {
+            const index = Number(part);
+            if (index >= current.length) return { found: false, value: undefined };
+            current = current[index];
+            continue;
+          }
+
+          if (current === null || typeof current !== "object" || !(part in current)) {
+            return { found: false, value: undefined };
+          }
+          current = (current as Record<string, unknown>)[part];
+        }
+
+        return { found: true, value: current };
+      };
+
+      const writePath = (target: Record<string, unknown>, path: string, value: unknown): void => {
+        const parts = path.split(".").filter(Boolean);
+        let current = target;
+
+        parts.forEach((part, index) => {
+          if (index === parts.length - 1) {
+            current[part] = value;
+            return;
+          }
+          if (current[part] === null || typeof current[part] !== "object" || Array.isArray(current[part])) {
+            current[part] = {};
+          }
+          current = current[part] as Record<string, unknown>;
+        });
+      };
+
+      paths.forEach((path) => {
+        const result = readPath(source, path);
+        if (result.found) {
+          writePath(output, path, result.value);
+        } else if (includeMissing) {
+          writePath(output, path, null);
+        }
+      });
+
+      return JSON.stringify(output, null, indent === 0 ? undefined : indent);
+    },
+    keywords: ["pick", "select", "paths", "dot notation", "extract", "privacy", "scrub"],
+    icon: "MousePointerClick",
+    source: "format",
+  },
+  {
     id: "json.merge",
     name: "Merge JSON",
     description: "Deep merge a second JSON object into the input — nested objects are merged recursively; the second document wins on key conflicts",

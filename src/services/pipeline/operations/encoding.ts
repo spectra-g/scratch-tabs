@@ -258,6 +258,29 @@ const NATO_PHONETIC_MAP: Record<string, string> = {
     " ": "(space)",
 };
 
+function encodeUtf8Base64(input: string): string {
+    if (typeof Buffer !== "undefined") {
+        return Buffer.from(input, "utf8").toString("base64");
+    }
+
+    const bytes = new TextEncoder().encode(input);
+    let binary = "";
+    bytes.forEach((byte) => {
+        binary += String.fromCharCode(byte);
+    });
+    return btoa(binary);
+}
+
+function decodeUtf8Base64(input: string): string {
+    if (typeof Buffer !== "undefined") {
+        return Buffer.from(input, "base64").toString("utf8");
+    }
+
+    const binary = atob(input);
+    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+}
+
 /**
  * Encoding Pipeline Operations
  *
@@ -464,6 +487,88 @@ export const encodingOperations: OperationDefinition[] = [
                 .join('');
         },
         keywords: ["charcode", "decimal", "ascii", "convert"],
+        source: "core",
+    },
+
+    // === HTTP AUTH ===
+    {
+        id: "encoding.basic-auth-encode",
+        name: "Basic Auth Encode",
+        description: "Encode username and password as an HTTP Basic Authorization header value",
+        categories: ["encoding", "web"],
+        parameters: [
+            {
+                name: "username",
+                label: "Username",
+                type: "string",
+                default: "",
+                required: true,
+                placeholder: "username",
+            },
+            {
+                name: "password",
+                label: "Password",
+                type: "string",
+                default: "",
+                placeholder: "password",
+            },
+            {
+                name: "includePrefix",
+                label: "Include Basic Prefix",
+                type: "boolean",
+                default: true,
+                description: "Return 'Basic <token>' instead of only the Base64 token",
+            },
+        ],
+        processingMode: "entire",
+        execute: (_input, params) => {
+            const username = (params.username as string) ?? "";
+            const password = (params.password as string) ?? "";
+            const includePrefix = params.includePrefix ?? true;
+            const token = encodeUtf8Base64(`${username}:${password}`);
+            return includePrefix ? `Basic ${token}` : token;
+        },
+        keywords: ["basic", "auth", "authorization", "header", "base64", "http"],
+        source: "core",
+    },
+    {
+        id: "encoding.basic-auth-decode",
+        name: "Basic Auth Decode",
+        description: "Decode an HTTP Basic Authorization header value into username and password",
+        categories: ["encoding", "web"],
+        parameters: [
+            {
+                name: "outputFormat",
+                label: "Output Format",
+                type: "select",
+                default: "json",
+                options: [
+                    { value: "json", label: "JSON" },
+                    { value: "colon", label: "username:password" },
+                    { value: "lines", label: "Username and password lines" },
+                ],
+            },
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const outputFormat = (params.outputFormat as string) ?? "json";
+            const token = input.trim().replace(/^Basic\s+/i, "");
+            if (!token) throw new Error("Basic auth token is required");
+
+            const decoded = decodeUtf8Base64(token);
+            const separatorIndex = decoded.indexOf(":");
+            if (separatorIndex === -1) {
+                throw new Error("Decoded Basic auth value must contain ':'");
+            }
+
+            const username = decoded.slice(0, separatorIndex);
+            const password = decoded.slice(separatorIndex + 1);
+
+            if (outputFormat === "colon") return `${username}:${password}`;
+            if (outputFormat === "lines") return `username: ${username}\npassword: ${password}`;
+            return JSON.stringify({ username, password }, null, 2);
+        },
+        keywords: ["basic", "auth", "authorization", "header", "base64", "http", "decode"],
         source: "core",
     },
 

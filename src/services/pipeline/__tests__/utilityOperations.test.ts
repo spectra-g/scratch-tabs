@@ -5,6 +5,7 @@
  */
 
 import { executeSingleOperation } from "../pipelineExecutor";
+import "../operations/coreOperations";
 import "../operations/utilities";
 
 describe("Utility Pipeline Operations", () => {
@@ -53,6 +54,68 @@ describe("Utility Pipeline Operations", () => {
             const result = await execute("utilities.uuid", "", { count: 200 });
             const lines = result.split("\n");
             expect(lines.length).toBe(100);
+        });
+    });
+
+    describe("validate.luhn", () => {
+        it("should validate a known valid Luhn number", async () => {
+            const result = await execute("validate.luhn", "79927398713");
+            expect(result).toBe("Valid Luhn checksum");
+        });
+
+        it("should reject an invalid Luhn number", async () => {
+            const result = await execute("validate.luhn", "79927398714");
+            expect(result).toBe("Invalid Luhn checksum");
+        });
+
+        it("should ignore spaces and hyphens", async () => {
+            const result = await execute("validate.luhn", "4539-1488 0343-6467", { outputFormat: "boolean" });
+            expect(result).toBe("true");
+        });
+
+        it("should return JSON details", async () => {
+            const result = await execute("validate.luhn", "79927398713", { outputFormat: "json" });
+            expect(JSON.parse(result)).toEqual({ valid: true, checksum: 70, digits: 11 });
+        });
+
+        it("should throw for non-numeric input", async () => {
+            await expect(execute("validate.luhn", "abc123")).rejects.toThrow("digits");
+        });
+    });
+
+    describe("text.obfuscate", () => {
+        it("should hide the middle of a sensitive value", async () => {
+            const result = await execute("text.obfuscate", "sk_live_1234567890", {
+                revealStart: 7,
+                revealEnd: 4,
+            });
+            expect(result).toBe("sk_live***7890");
+        });
+
+        it("should support custom masks and hidden edges", async () => {
+            const result = await execute("text.obfuscate", "secret", {
+                revealStart: 0,
+                revealEnd: 2,
+                mask: "[hidden]",
+            });
+            expect(result).toBe("[hidden]et");
+        });
+
+        it("should replace the whole value when reveal lengths cover the input", async () => {
+            const result = await execute("text.obfuscate", "short", {
+                revealStart: 3,
+                revealEnd: 3,
+            });
+            expect(result).toBe("***");
+        });
+
+        it("should obfuscate each line when requested", async () => {
+            const result = await execute("text.obfuscate", "alpha123\nbeta456", {
+                revealStart: 2,
+                revealEnd: 3,
+                perLine: true,
+            });
+            expect(result).toBe("al***123\nbe***456");
         });
     });
 
