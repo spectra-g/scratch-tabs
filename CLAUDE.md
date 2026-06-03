@@ -123,6 +123,12 @@ await waitForCursorIndicator(page);
 
 See [E2E README](tests/e2e/README.md) for full action-class architecture and troubleshooting.
 
+## Changelog Style (`changelog/releases.yml`)
+
+- No em dashes — use plain hyphens
+- `description` field: 2-3 sentences max; no walls of prose — the individual `changes` entries carry the detail
+- `summary` field: one sentence
+
 ## Docs Policy
 
 - Keep top-level docs minimal:
