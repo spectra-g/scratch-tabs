@@ -115,7 +115,7 @@
         Your Data Understands <span class="text-emerald-500">Itself.</span>
       </h1>
       <p class="text-lg md:text-xl text-gray-400 mb-8 max-w-3xl mx-auto leading-relaxed">
-        Paste API specs, network captures, certificates, environment files, logs, config, diagrams, JSON, CSV, or Markdown and watch the editor transform into a specialized tool. Not just syntax highlighting - structural intelligence that adapts to your content.
+        Paste JSON, OpenAPI specs, HAR captures, PEM certificates, dotenv files, or Markdown and the editor becomes a purpose-built tool for that format. Not just syntax highlighting - structural intelligence.
       </p>
     </div>
   </section>
@@ -224,14 +224,6 @@
             <span class="text-emerald-500 font-mono text-xs">SMART_VIEW</span>
           </div>
           <p class="text-gray-400 text-sm mb-4">Paste JSON and get an interactive tree explorer with path queries, validation, and structural navigation.</p>
-          <div class="border-t border-gray-800 pt-4">
-            <ul class="text-gray-500 text-xs space-y-1">
-              <li>-> Collapsible tree view</li>
-              <li>-> JSONPath queries</li>
-              <li>-> Schema validation</li>
-              <li>-> Copy node paths</li>
-            </ul>
-          </div>
           <img src="https://scratchtabs.b-cdn.net/layer-02-json.png" alt="JSON Tree view" class="w-full h-auto border border-gray-800 mt-4 cursor-pointer hover:border-emerald-500 transition-colors" onclick="openModal(this.src)">
         </div>
 
@@ -242,14 +234,6 @@
             <span class="text-emerald-500 font-mono text-xs">SMART_VIEW</span>
           </div>
           <p class="text-gray-400 text-sm mb-4">Paste CSV and get a full spreadsheet interface with sorting, filtering, and column operations.</p>
-          <div class="border-t border-gray-800 pt-4">
-            <ul class="text-gray-500 text-xs space-y-1">
-              <li>-> Sortable columns</li>
-              <li>-> Filter by value</li>
-              <li>-> Column statistics</li>
-              <li>-> Export to formats</li>
-            </ul>
-          </div>
           <img src="https://scratchtabs.b-cdn.net/layer-02-csv.png" alt="CSV live preview" class="w-full h-auto border border-gray-800 mt-4 cursor-pointer hover:border-emerald-500 transition-colors" onclick="openModal(this.src)">
         </div>
 
@@ -260,14 +244,6 @@
             <span class="text-emerald-500 font-mono text-xs">SMART_VIEW</span>
           </div>
           <p class="text-gray-400 text-sm mb-4">Paste Markdown and get live preview with scroll-sync, rendered in real-time as you type.</p>
-          <div class="border-t border-gray-800 pt-4">
-            <ul class="text-gray-500 text-xs space-y-1">
-              <li>-> Live preview pane</li>
-              <li>-> Scroll synchronization</li>
-              <li>-> Syntax highlighting</li>
-              <li>-> Export to HTML</li>
-            </ul>
-          </div>
           <img src="https://scratchtabs.b-cdn.net/layer-02-markdown.png" alt="Markdown live preview" class="w-full h-auto border border-gray-800 mt-4 cursor-pointer hover:border-emerald-500 transition-colors" onclick="openModal(this.src)">
         </div>
       </div>
@@ -296,7 +272,7 @@
         </div>
         <div class="card-sharp p-4">
           <h4 class="text-white font-mono text-xs mb-2">HAR</h4>
-          <p class="text-gray-500 text-xs">Waterfall timing, request detail, privacy hints, and cURL export</p>
+          <p class="text-gray-500 text-xs">Waterfall timing, request details, delete selected entries, two-request comparison, paste-to-merge captures, and cURL export</p>
         </div>
         <div class="card-sharp p-4">
           <h4 class="text-white font-mono text-xs mb-2">PEM / X.509</h4>
