@@ -221,6 +221,23 @@
             <img src="https://scratchtabs.b-cdn.net/layer-02-rest.png" alt="REST Client interface" class="w-full h-auto max-h-48 border border-gray-800 cursor-pointer hover:border-emerald-500 transition-colors object-cover mt-auto" onclick="openModal(this.src)">
           </div>
 
+          <!-- SQL Sandbox - Large Card -->
+          <div class="card-sharp p-5 lg:col-span-2 flex flex-col">
+            <div class="flex justify-between items-start mb-3">
+              <h3 class="text-emerald-500 font-mono text-xs">// Data Exploration</h3>
+              <span class="text-gray-700 font-mono text-xs">sql_sandbox<span class="new-badge">New</span></span>
+            </div>
+            <h4 class="text-white font-bold text-xl mb-2">SQL Sandbox</h4>
+            <p class="text-gray-400 text-sm mb-4">Query local CSV, TSV, JSON, NDJSON, and Parquet files with DuckDB WASM - entirely in the browser. Import files or paste data, run SQL with JOINs and aggregations, inspect schemas, and export results as CSV or JSON.</p>
+            <div class="flex flex-wrap gap-2 mt-auto">
+              <span class="keyword-badge">duckdb</span>
+              <span class="keyword-badge">sql</span>
+              <span class="keyword-badge">csv</span>
+              <span class="keyword-badge">parquet</span>
+              <span class="keyword-badge">offline</span>
+            </div>
+          </div>
+
           <!-- Quick Access Cards -->
           <div class="card-sharp p-4 flex items-center justify-between">
             <div>
@@ -481,6 +498,15 @@
         <p class="text-gray-400 max-w-4xl mb-8 text-lg">Convert, verify, and transform data between formats.</p>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div class="card-sharp p-6 flex flex-col">
+            <h3 class="text-xl font-bold text-white mb-2">SQL Sandbox<span class="new-badge">New</span></h3>
+            <p class="text-gray-400 text-sm mb-4">Query CSV, TSV, JSON, NDJSON, and Parquet data with DuckDB WASM. Import multiple sources as named tables, write SQL with JOINs and window functions, and export results - all offline.</p>
+            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+              <span class="keyword-badge">sql</span>
+              <span class="keyword-badge">duckdb</span>
+              <span class="keyword-badge">parquet</span>
+            </div>
+          </div>
+          <div class="card-sharp p-6 flex flex-col">
             <h3 class="text-xl font-bold text-white mb-2">JSON Mapper</h3>
             <p class="text-gray-400 text-sm mb-4">Visually transform complex JSON structures. Define mapping rules between schemas with an intuitive drag-and-drop interface.</p>
             <div class="mt-auto pt-4 flex flex-wrap gap-2">
@@ -652,7 +678,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.36.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.37.0</span>
         </div>
 
         <div class="flex space-x-8">

@@ -14,6 +14,13 @@ jest.mock("../../../stores/workspaceStore", () => ({
   },
 }));
 
+const mockTabsStoreState = { tabs: [] as any[] };
+jest.mock("../../../stores/tabsStore", () => ({
+  useTabsStore: {
+    getState: () => mockTabsStoreState,
+  },
+}));
+
 // Mock crypto.randomUUID
 Object.defineProperty(globalThis, "crypto", {
   value: {
@@ -34,6 +41,9 @@ describe("TabletBridge Implementation", () => {
 
     // Reset the module-level workspace store state used by getState()
     mockWorkspaceStoreState.activeWorkspaceId = "workspace-123";
+
+    // Reset tabs store state
+    mockTabsStoreState.tabs = [];
 
     // Create mock stores
     mockRootStore = {
@@ -579,6 +589,82 @@ describe("TabletBridge Implementation", () => {
       expect(mockModalStore.setGlobalDragDropSuppressed).toHaveBeenCalledWith(
         false,
       );
+    });
+  });
+
+  describe("getTabsInWorkspace", () => {
+    beforeEach(() => {
+      tabletBridge.initialize(mockRootStore, mockWorkspaceStore, mockSplitViewStore, mockModalStore, false);
+    });
+
+    it("returns non-tablet tabs in the active workspace", () => {
+      mockTabsStoreState.tabs = [
+        { id: "t1", title: "data.csv", language: "csv", workspaceId: "workspace-123", isTablet: false },
+        { id: "t2", title: "notes.md", language: "markdown", workspaceId: "workspace-123", isTablet: false },
+        { id: "t3", title: "sql-tool", language: "plaintext", workspaceId: "workspace-123", isTablet: true },
+        { id: "t4", title: "other.csv", language: "csv", workspaceId: "other-workspace", isTablet: false },
+      ];
+
+      const tabs = tabletBridge.getTabsInWorkspace();
+
+      expect(tabs).toHaveLength(2);
+      expect(tabs.map((t) => t.id)).toEqual(["t1", "t2"]);
+    });
+
+    it("returns empty array when no non-tablet tabs exist in workspace", () => {
+      mockTabsStoreState.tabs = [
+        { id: "t1", title: "sql-tool", language: "plaintext", workspaceId: "workspace-123", isTablet: true },
+      ];
+
+      expect(tabletBridge.getTabsInWorkspace()).toEqual([]);
+    });
+
+    it("returns only id, title, and language fields", () => {
+      mockTabsStoreState.tabs = [
+        { id: "t1", title: "data.csv", language: "csv", workspaceId: "workspace-123", isTablet: false, content: "secret" },
+      ];
+
+      const [tab] = tabletBridge.getTabsInWorkspace();
+
+      expect(tab).toEqual({ id: "t1", title: "data.csv", language: "csv" });
+      expect(tab).not.toHaveProperty("content");
+    });
+
+    it("returns empty array when no active workspace", () => {
+      mockWorkspaceStoreState.activeWorkspaceId = null;
+      mockTabsStoreState.tabs = [
+        { id: "t1", title: "data.csv", language: "csv", workspaceId: "workspace-123", isTablet: false },
+      ];
+
+      expect(tabletBridge.getTabsInWorkspace()).toEqual([]);
+    });
+  });
+
+  describe("getTabContent", () => {
+    beforeEach(() => {
+      tabletBridge.initialize(mockRootStore, mockWorkspaceStore, mockSplitViewStore, mockModalStore, false);
+    });
+
+    it("returns content for a known tab id", () => {
+      mockTabsStoreState.tabs = [
+        { id: "t1", title: "data.csv", language: "csv", workspaceId: "workspace-123", isTablet: false, content: "a,b\n1,2" },
+      ];
+
+      expect(tabletBridge.getTabContent("t1")).toBe("a,b\n1,2");
+    });
+
+    it("returns null for an unknown tab id", () => {
+      mockTabsStoreState.tabs = [];
+
+      expect(tabletBridge.getTabContent("not-a-real-id")).toBeNull();
+    });
+
+    it("returns null when tab has no content", () => {
+      mockTabsStoreState.tabs = [
+        { id: "t1", title: "empty.csv", language: "csv", workspaceId: "workspace-123", isTablet: false },
+      ];
+
+      expect(tabletBridge.getTabContent("t1")).toBeNull();
     });
   });
 

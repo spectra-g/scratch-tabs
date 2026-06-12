@@ -5,6 +5,7 @@
 
 import { useRootStore } from '../../stores';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
+import { useTabsStore } from '../../stores/tabsStore';
 import { useSplitViewStore } from '../../stores/splitViewStore';
 import { useModalStore } from '../../stores/modalStore';
 import { useIsMobile } from '../../hooks/useIsMobile';
@@ -16,7 +17,8 @@ import type {
   DeviceInfo,
   LanguageDetectionResult,
   SplitViewOperations,
-  ModalOperations
+  ModalOperations,
+  WorkspaceTab,
 } from './types';
 
 // Define store interfaces to avoid unknown types
@@ -199,6 +201,25 @@ class TabletBridgeImpl implements TabletBridge {
    */
   getCurrentWorkspaceId(): string | null {
     return useWorkspaceStore.getState().activeWorkspaceId;
+  }
+
+  /**
+   * List non-tablet tabs in the active workspace
+   */
+  getTabsInWorkspace(): WorkspaceTab[] {
+    const { tabs } = useTabsStore.getState();
+    const workspaceId = useWorkspaceStore.getState().activeWorkspaceId;
+    return tabs
+      .filter((tab) => tab.workspaceId === workspaceId && !tab.isTablet)
+      .map((tab) => ({ id: tab.id, title: tab.title, language: tab.language }));
+  }
+
+  /**
+   * Return the in-store content for a tab (last-saved state; live enough for import)
+   */
+  getTabContent(tabId: string): string | null {
+    const tab = useTabsStore.getState().tabs.find((t) => t.id === tabId);
+    return tab?.content ?? null;
   }
 }
 

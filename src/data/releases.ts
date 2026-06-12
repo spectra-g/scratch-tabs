@@ -15,12 +15,41 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.36.0';
+export const APP_VERSION = '1.37.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.36.0",
+    "version": "1.37.0",
     "type": "latest",
+    "date": "2026-06-12",
+    "headline": "SQL Sandbox - Query Your Data with DuckDB in the Browser",
+    "summary": "Run SQL against local CSV, TSV, JSON, NDJSON, and Parquet files using DuckDB WASM - no server, no install, no upload. Import files or paste data, write queries in a Monaco editor, inspect schemas, and export results.",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**SQL Sandbox tablet:** Full offline SQL environment powered by DuckDB WASM - import CSV, TSV, JSON, NDJSON, or Parquet data sources, query them with standard SQL, and export results without any data leaving the browser",
+          "**DuckDB WASM engine:** Uses DuckDB's WebAssembly build with automatic browser capability detection - supports JOINs, aggregations, window functions, GROUP BY, CTEs, and all standard DuckDB SQL syntax",
+          "**Multi-source sessions:** Register multiple files or pasted text payloads as named tables in the same session - each source becomes a DuckDB view queryable by the table name derived from the file name",
+          "**Format auto-detection:** CSV, TSV, JSON arrays, NDJSON, and Parquet files are identified automatically; CSV and TSV use read_csv_auto with header detection; JSON uses read_json_auto; NDJSON uses read_ndjson_auto; Parquet files are loaded natively",
+          "**Monaco SQL editor:** Full Monaco editor with SQL language mode and syntax highlighting; run the full query with the Run button or select a SQL fragment and execute only that portion with the Selected button",
+          "**Schema sidebar:** Collapsible sidebar listing all tables and views in the current session with column names and inferred types, updated automatically after each source import",
+          "**Query history:** Every executed statement is recorded with timestamp, execution time, and row count; the History panel lets you browse past queries and load any entry back into the editor",
+          "**Named snapshots:** Save the current query as a named snapshot (auto-named by time if no name is given); up to 20 snapshots are stored per session with restore and delete actions",
+          "**Results table:** Query output displays in a responsive table with column headers; result sets are capped at 5,000 display rows with a truncation notice when the engine returns more",
+          "**CSV and JSON export:** Export the current result set as a CSV or JSON file opened in a new background tab with the language pre-set",
+          "**Destructive statement guard:** Queries containing DROP, DELETE, UPDATE, ALTER, or TRUNCATE trigger a confirmation prompt before execution",
+          "**Session persistence:** Text-based sources (CSV, TSV, JSON, NDJSON) are serialized into tab state and restored on reload so data survives page refreshes without re-uploading",
+          "**Engine lifecycle:** The DuckDB runtime is lazily initialized on first use and disposed after five minutes of inactivity to free WebAssembly memory; reopening the tablet re-initializes and reloads persisted sources automatically",
+          "**Sample data:** A built-in sample CSV loads instantly so you can explore the interface before importing your own data",
+          "**Context action:** Editor tabs containing CSV or JSON content gain an 'Open in SQL Sandbox' option in the right-click menu, creating a new SQL Sandbox tab with that content pre-loaded as a queryable table"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.36.0",
+    "type": "release",
     "date": "2026-06-01",
     "headline": "12 New Pipeline Operations, Move to Workspace Fix & Active Workspace Highlight",
     "summary": "Base62, Base64URL, Basic Auth, JSON Merge/Pick, Extract JSON, Text Obfuscate, Luhn validation, and Strip ANSI pipeline operations - plus the Move to Workspace context menu fix and a clearer active workspace indicator in the sidebar",

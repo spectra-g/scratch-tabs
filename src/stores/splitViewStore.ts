@@ -24,6 +24,7 @@ interface SplitViewStore {
     tabId: string,
     toRightSide: boolean,
     activeTabId?: string,
+    insertAfterId?: string,
   ) => void;
   removeTabFromSide: (tabId: string) => void;
   closeTabsToLeft: (tabId: string, isRightSide: boolean) => void;
@@ -285,14 +286,24 @@ export const useSplitViewStore = create<SplitViewStore>((set, get) => ({
       splitView: { ...state.splitView, rightScrollPosition: position },
     })),
 
-  addTabToSide: (tabId, toRightSide, activeTabIdFromCaller) =>
+  addTabToSide: (tabId, toRightSide, activeTabIdFromCaller, insertAfterId) =>
     set((state) => {
-      const targetActiveTabId = activeTabIdFromCaller || tabId; // Use provided active ID or default to new tab
+      const targetActiveTabId = activeTabIdFromCaller || tabId;
+
+      const insertAfter = (list: string[], newId: string, afterId?: string): string[] => {
+        if (!afterId) return [...list, newId];
+        const idx = list.indexOf(afterId);
+        if (idx === -1) return [...list, newId];
+        const result = [...list];
+        result.splice(idx + 1, 0, newId);
+        return result;
+      };
+
       if (toRightSide) {
         return {
           splitView: {
             ...state.splitView,
-            rightTabs: [...(state.splitView.rightTabs || []), tabId],
+            rightTabs: insertAfter(state.splitView.rightTabs || [], tabId, insertAfterId),
             activeRightTabId: targetActiveTabId,
             activeSide: "right",
             rightTabHistory: updateTabHistory(
@@ -305,7 +316,7 @@ export const useSplitViewStore = create<SplitViewStore>((set, get) => ({
         return {
           splitView: {
             ...state.splitView,
-            leftTabs: [...(state.splitView.leftTabs || []), tabId],
+            leftTabs: insertAfter(state.splitView.leftTabs || [], tabId, insertAfterId),
             activeLeftTabId: targetActiveTabId,
             activeSide: "left",
             leftTabHistory: updateTabHistory(

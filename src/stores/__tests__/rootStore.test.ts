@@ -311,3 +311,72 @@ describe("RootStore - Pinned Tabs Protection", () => {
     (Date.now as jest.Mock).mockRestore();
   });
 });
+
+describe("RootStore - duplicateTab insertion position", () => {
+  let tabsStoreMock: any;
+  let splitViewStoreMock: any;
+  let rootStore: any;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    tabsStoreMock = {
+      tabs: [],
+      duplicateTab: jest.fn().mockReturnValue("new-tab-id"),
+    };
+
+    splitViewStoreMock = {
+      splitView: {
+        leftTabs: ["tab-a", "tab-b", "tab-c"],
+        rightTabs: [],
+        activeLeftTabId: "tab-a",
+        activeRightTabId: null,
+        leftTabHistory: [],
+        rightTabHistory: [],
+        workspaceId: "workspace1",
+      },
+      addTabToSide: jest.fn(),
+      setActiveLeftTab: jest.fn(),
+      setActiveRightTab: jest.fn(),
+    };
+
+    (useTabsStore as any).getState.mockReturnValue(tabsStoreMock);
+    (useSplitViewStore as any).getState.mockReturnValue(splitViewStoreMock);
+
+    rootStore = useRootStore.getState();
+  });
+
+  it("calls addTabToSide with source tab as insertAfterId", () => {
+    rootStore.duplicateTab("tab-b", false);
+
+    expect(splitViewStoreMock.addTabToSide).toHaveBeenCalledWith(
+      "new-tab-id",
+      false,
+      undefined,
+      "tab-b",
+    );
+  });
+
+  it("passes isRightSide=true to addTabToSide when duplicating on right", () => {
+    rootStore.duplicateTab("tab-b", true);
+
+    expect(splitViewStoreMock.addTabToSide).toHaveBeenCalledWith(
+      "new-tab-id",
+      true,
+      undefined,
+      "tab-b",
+    );
+  });
+
+  it("activates the new tab after duplication", () => {
+    rootStore.duplicateTab("tab-b", false);
+    expect(splitViewStoreMock.setActiveLeftTab).toHaveBeenCalledWith("new-tab-id");
+  });
+
+  it("returns empty string when source tab does not exist", () => {
+    tabsStoreMock.duplicateTab.mockReturnValue("");
+    const result = rootStore.duplicateTab("nonexistent", false);
+    expect(result).toBe("");
+    expect(splitViewStoreMock.addTabToSide).not.toHaveBeenCalled();
+  });
+});

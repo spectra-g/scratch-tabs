@@ -587,7 +587,7 @@ export const useRootStore = create<RootStore>((set, get) => {
       // Default to left if side not specified
       const newTabId = useTabsStore.getState().duplicateTab(tabId);
       if (!newTabId) return "";
-      useSplitViewStore.getState().addTabToSide(newTabId, isRightSide, tabId); // Add next to original
+      useSplitViewStore.getState().addTabToSide(newTabId, isRightSide, undefined, tabId);
       // Activate the new tab
       const { setActiveLeftTab, setActiveRightTab } =
         useSplitViewStore.getState();

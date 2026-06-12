@@ -620,7 +620,6 @@ export const TabBar: React.FC<TabBarProps> = ({
         className="flex bg-surface-tab-bar text-main w-full h-8 overflow-hidden relative"
         onMouseEnter={handleTabBarMouseEnter}
         onMouseLeave={handleTabBarMouseLeave}
-        key={tabsKey}
       >
         <div className="flex-1 relative min-w-0">
           <div
