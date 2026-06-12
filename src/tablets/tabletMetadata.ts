@@ -130,6 +130,25 @@ export const tabletMetadata: TabletMetadata[] = [
     keywords: ["rest", "api", "http", "client", "request", "curl"],
   },
   {
+    id: "sqlsandbox",
+    label: "SQL Sandbox",
+    description:
+      "Query local CSV, TSV, JSON, NDJSON, and Parquet files with DuckDB entirely in your browser.",
+    keywords: [
+      "sql",
+      "duckdb",
+      "database",
+      "csv",
+      "tsv",
+      "json",
+      "ndjson",
+      "parquet",
+      "query",
+      "offline",
+      "data",
+    ],
+  },
+  {
     id: "graphql",
     label: "GraphQL Client",
     description: "Interactive GraphQL playground for exploring schemas and executing queries and mutations.",

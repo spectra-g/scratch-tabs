@@ -50,6 +50,15 @@ export interface ModalOperations {
 }
 
 /**
+ * A tab in the current workspace, exposed to tablets for cross-tab import
+ */
+export interface WorkspaceTab {
+  id: string;
+  title: string;
+  language: string;
+}
+
+/**
  * Main bridge interface that tablets should use
  * This is the single point of contact for all external dependencies
  */
@@ -71,4 +80,8 @@ export interface TabletBridge {
 
   // Workspace management
   getCurrentWorkspaceId: () => string | null;
+
+  // Cross-tab data access
+  getTabsInWorkspace: () => WorkspaceTab[];
+  getTabContent: (tabId: string) => string | null;
 }
