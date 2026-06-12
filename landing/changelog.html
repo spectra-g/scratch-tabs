@@ -130,44 +130,51 @@
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
 
-        <!-- Version 1.36.0 -->
+        <!-- Version 1.37.0 -->
         <div class="changelog-entry latest">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-white">V1.36.0</h2>
+              <h2 class="text-2xl font-bold text-white">V1.37.0</h2>
               <span class="badge latest">LATEST</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">06/12/2026</span>
+          </div>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">SQL SANDBOX - QUERY YOUR DATA WITH DUCKDB IN THE BROWSER</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p class="mb-4">Adds the SQL Sandbox tablet, a full offline SQL environment powered by DuckDB WASM. Load one or more data sources by dropping files or pasting text, then write and execute SQL in a Monaco editor with syntax highlighting. DuckDB's auto-detection handles CSV, TSV, JSON, NDJSON, and Parquet files - each source is registered as a named table you can immediately query with standard SQL including JOINs, aggregations, window functions, and CTEs. The schema sidebar shows all registered tables and views with column names and types. Run the full query or select a fragment and run only the selection. Results display in a paginated table (up to 5,000 rows) with a truncation notice for larger result sets. Query history is recorded per session so you can revisit and re-run past statements. Named snapshots let you save and restore important queries without leaving the session. Results can be exported to CSV or JSON, opening the output in a new background tab. A destructive statement warning fires before DROP, DELETE, UPDATE, ALTER, or TRUNCATE statements. The engine session is shared while the tablet is open and gracefully disposed after five minutes of inactivity to free memory. Persisted sources survive session restores for text-based formats so your data is available on reload without re-uploading. A built-in sample dataset lets you explore the interface before importing your own files. Editor tabs containing CSV or JSON content gain a context action to send their content directly to a new SQL Sandbox tab.</p>
+
+            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
+            <ul class="space-y-2 mb-6">
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>SQL Sandbox tablet:</strong> Full offline SQL environment powered by DuckDB WASM - import CSV, TSV, JSON, NDJSON, or Parquet data sources, query them with standard SQL, and export results without any data leaving the browser</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>DuckDB WASM engine:</strong> Uses DuckDB's WebAssembly build with automatic browser capability detection - supports JOINs, aggregations, window functions, GROUP BY, CTEs, and all standard DuckDB SQL syntax</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Multi-source sessions:</strong> Register multiple files or pasted text payloads as named tables in the same session - each source becomes a DuckDB view queryable by the table name derived from the file name</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Format auto-detection:</strong> CSV, TSV, JSON arrays, NDJSON, and Parquet files are identified automatically; CSV and TSV use read_csv_auto with header detection; JSON uses read_json_auto; NDJSON uses read_ndjson_auto; Parquet files are loaded natively</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Monaco SQL editor:</strong> Full Monaco editor with SQL language mode and syntax highlighting; run the full query with the Run button or select a SQL fragment and execute only that portion with the Selected button</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Schema sidebar:</strong> Collapsible sidebar listing all tables and views in the current session with column names and inferred types, updated automatically after each source import</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Query history:</strong> Every executed statement is recorded with timestamp, execution time, and row count; the History panel lets you browse past queries and load any entry back into the editor</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Named snapshots:</strong> Save the current query as a named snapshot (auto-named by time if no name is given); up to 20 snapshots are stored per session with restore and delete actions</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Results table:</strong> Query output displays in a responsive table with column headers; result sets are capped at 5,000 display rows with a truncation notice when the engine returns more</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>CSV and JSON export:</strong> Export the current result set as a CSV or JSON file opened in a new background tab with the language pre-set</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Destructive statement guard:</strong> Queries containing DROP, DELETE, UPDATE, ALTER, or TRUNCATE trigger a confirmation prompt before execution</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Session persistence:</strong> Text-based sources (CSV, TSV, JSON, NDJSON) are serialized into tab state and restored on reload so data survives page refreshes without re-uploading</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Engine lifecycle:</strong> The DuckDB runtime is lazily initialized on first use and disposed after five minutes of inactivity to free WebAssembly memory; reopening the tablet re-initializes and reloads persisted sources automatically</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Sample data:</strong> A built-in sample CSV loads instantly so you can explore the interface before importing your own data</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Context action:</strong> Editor tabs containing CSV or JSON content gain an 'Open in SQL Sandbox' option in the right-click menu, creating a new SQL Sandbox tab with that content pre-loaded as a queryable table</span></li>
+            </ul>
+          </div>
+        </div>
+        <!-- Version 1.36.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.36.0</h2>
+              <span class="badge release">RELEASE</span>
             </div>
             <span class="text-gray-500 text-xs font-mono">06/01/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">12 NEW PIPELINE OPERATIONS, MOVE TO WORKSPACE FIX & ACTIVE WORKSPACE HIGHLIGHT</h3>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">12 NEW PIPELINE OPERATIONS, MOVE TO WORKSPACE FIX & ACTIVE WORKSPACE HIGHLIGHT</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">Twelve new pipeline operations: Base62 and Base64URL encode/decode, Basic Auth encode/decode, JSON Merge (deep recursive merge), JSON Pick (extract by dot/bracket paths), Extract JSON (pull fragments from logs or prose), Text Obfuscate (mask sensitive values with configurable prefix/suffix), Luhn Validate, and Strip ANSI Codes. Also fixes the Move to Workspace context menu action (was a no-op since launch) and adds a left accent stripe to the active workspace row in the sidebar.</p>
-
-            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_pipeline_operations</h4>
-            <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Base62 Encode:</strong> Encode text to Base62 using the 0-9A-Za-z alphabet - used in URL shorteners, YouTube video IDs, and MongoDB ObjectIDs; preserves leading null bytes using the '0' sentinel consistent with the Base58 implementation</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Base62 Decode:</strong> Decode Base62 back to text; strips surrounding and internal whitespace before decoding; throws a descriptive error on any character outside the alphabet</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Base64URL Encode:</strong> Encode text as URL-safe Base64 without padding - useful for JWT, OAuth, PKCE, WebAuthn, and other token formats that avoid `+`, `/`, and `=` characters</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Base64URL Decode:</strong> Decode URL-safe Base64 back to UTF-8 text; accepts padded or unpadded input and restores missing padding automatically</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Basic Auth Encode:</strong> Build an HTTP Basic Authorization header value from username and password parameters; supports emitting either the full `Basic ...` header value or the raw Base64 token</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Basic Auth Decode:</strong> Decode a Basic Auth header or raw token into username/password fields, with JSON or `username:password` output modes for pipeline chaining</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>JSON Merge:</strong> Deep merge a second JSON object (textarea parameter) into the pipeline input - nested objects are merged recursively, the patch document wins on key conflicts, arrays are replaced not merged, and null/false/zero patch values correctly overwrite non-null base values</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>JSON Pick:</strong> Extract one or more values from JSON by dot/bracket paths such as `user.profile.email` or `items[0].id`; can return values directly or preserve the selected object shape</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Extract JSON:</strong> Pull valid JSON object or array fragments out of logs, stack traces, and prose; supports first-match or all-matches modes and pretty, minified, or JSON-array output</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Text Obfuscate:</strong> Mask sensitive values with configurable visible prefix/suffix lengths and mask character; works per-line or over the full input for safe sharing</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Luhn Validate:</strong> Validate card-like identifiers and other Luhn check-digit values; ignores spaces and dashes and can return plain text, boolean, or structured JSON</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Strip ANSI Codes:</strong> Remove ANSI/VT100 colour and control escape sequences from terminal output - covers SGR colour and style codes, 256-colour params, cursor movement, clear screen, hide/show cursor, and OSC window title sequences; runs per-line or over the full block</span></li>
-            </ul>
-
-            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># bug_fixes</h4>
-            <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Move to Workspace:</strong> The sidebar tab context menu's Move to Workspace submenu now correctly moves the tab - it was a TODO stub that did nothing since the feature shipped; the action handles tabs in both active and inactive source workspaces and both active and inactive target workspaces</span></li>
-            </ul>
-
-            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># improvements</h4>
-            <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Active workspace highlight:</strong> The active workspace row in the sidebar now shows a 3px primary-colour left accent stripe and a subtle background tint, making it immediately scannable without reading the workspace name - all workspace rows carry the border slot (transparent when inactive) so content alignment never shifts</span></li>
-            </ul>
+            <p>Base62, Base64URL, Basic Auth, JSON Merge/Pick, Extract JSON, Text Obfuscate, Luhn validation, and Strip ANSI pipeline operations - plus the Move to Workspace context menu fix and a clearer active workspace indicator in the sidebar</p>
           </div>
         </div>
         <!-- Version 1.35.0 -->
@@ -827,7 +834,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.36.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.37.0</span>
         </div>
 
         <div class="flex space-x-8">
