@@ -130,37 +130,40 @@
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
 
-        <!-- Version 1.37.0 -->
+        <!-- Version 1.38.0 -->
         <div class="changelog-entry latest">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-white">V1.37.0</h2>
+              <h2 class="text-2xl font-bold text-white">V1.38.0</h2>
               <span class="badge latest">LATEST</span>
             </div>
-            <span class="text-gray-500 text-xs font-mono">06/12/2026</span>
+            <span class="text-gray-500 text-xs font-mono">06/15/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">SQL SANDBOX - QUERY YOUR DATA WITH DUCKDB IN THE BROWSER</h3>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">QUICK TRANSFORM - APPLY PIPELINE OPERATIONS FROM THE EDITOR</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">Adds the SQL Sandbox tablet, a full offline SQL environment powered by DuckDB WASM. Load one or more data sources by dropping files or pasting text, then write and execute SQL in a Monaco editor with syntax highlighting. DuckDB's auto-detection handles CSV, TSV, JSON, NDJSON, and Parquet files - each source is registered as a named table you can immediately query with standard SQL including JOINs, aggregations, window functions, and CTEs. The schema sidebar shows all registered tables and views with column names and types. Run the full query or select a fragment and run only the selection. Results display in a paginated table (up to 5,000 rows) with a truncation notice for larger result sets. Query history is recorded per session so you can revisit and re-run past statements. Named snapshots let you save and restore important queries without leaving the session. Results can be exported to CSV or JSON, opening the output in a new background tab. A destructive statement warning fires before DROP, DELETE, UPDATE, ALTER, or TRUNCATE statements. The engine session is shared while the tablet is open and gracefully disposed after five minutes of inactivity to free memory. Persisted sources survive session restores for text-based formats so your data is available on reload without re-uploading. A built-in sample dataset lets you explore the interface before importing your own files. Editor tabs containing CSV or JSON content gain a context action to send their content directly to a new SQL Sandbox tab.</p>
+            <p class="mb-4">Quick Transform adds a context menu action to Monaco editor tabs that opens a compact floating modal anchored near the cursor. Search across all pipeline operations and saved pipelines, preview the result, and apply the transformation to the selection or full tab content in one step. Recent transforms surface at the top of results, and operations with required parameters show an inline form before applying.</p>
 
             <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
             <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>SQL Sandbox tablet:</strong> Full offline SQL environment powered by DuckDB WASM - import CSV, TSV, JSON, NDJSON, or Parquet data sources, query them with standard SQL, and export results without any data leaving the browser</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>DuckDB WASM engine:</strong> Uses DuckDB's WebAssembly build with automatic browser capability detection - supports JOINs, aggregations, window functions, GROUP BY, CTEs, and all standard DuckDB SQL syntax</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Multi-source sessions:</strong> Register multiple files or pasted text payloads as named tables in the same session - each source becomes a DuckDB view queryable by the table name derived from the file name</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Format auto-detection:</strong> CSV, TSV, JSON arrays, NDJSON, and Parquet files are identified automatically; CSV and TSV use read_csv_auto with header detection; JSON uses read_json_auto; NDJSON uses read_ndjson_auto; Parquet files are loaded natively</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Monaco SQL editor:</strong> Full Monaco editor with SQL language mode and syntax highlighting; run the full query with the Run button or select a SQL fragment and execute only that portion with the Selected button</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Schema sidebar:</strong> Collapsible sidebar listing all tables and views in the current session with column names and inferred types, updated automatically after each source import</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Query history:</strong> Every executed statement is recorded with timestamp, execution time, and row count; the History panel lets you browse past queries and load any entry back into the editor</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Named snapshots:</strong> Save the current query as a named snapshot (auto-named by time if no name is given); up to 20 snapshots are stored per session with restore and delete actions</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Results table:</strong> Query output displays in a responsive table with column headers; result sets are capped at 5,000 display rows with a truncation notice when the engine returns more</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>CSV and JSON export:</strong> Export the current result set as a CSV or JSON file opened in a new background tab with the language pre-set</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Destructive statement guard:</strong> Queries containing DROP, DELETE, UPDATE, ALTER, or TRUNCATE trigger a confirmation prompt before execution</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Session persistence:</strong> Text-based sources (CSV, TSV, JSON, NDJSON) are serialized into tab state and restored on reload so data survives page refreshes without re-uploading</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Engine lifecycle:</strong> The DuckDB runtime is lazily initialized on first use and disposed after five minutes of inactivity to free WebAssembly memory; reopening the tablet re-initializes and reloads persisted sources automatically</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Sample data:</strong> A built-in sample CSV loads instantly so you can explore the interface before importing your own data</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Context action:</strong> Editor tabs containing CSV or JSON content gain an 'Open in SQL Sandbox' option in the right-click menu, creating a new SQL Sandbox tab with that content pre-loaded as a queryable table</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Quick Transform:</strong> Right-click in any editor tab to open a floating search modal - find any pipeline operation or saved pipeline by name and apply it to the selected text or full tab content</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Selection-aware:</strong> When text is selected the transform runs against the selection only and writes the result back in-place; without a selection the full tab content is used</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Recents:</strong> Recently used transforms surface at the top of search results so repeated operations require no typing</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Inline params:</strong> Operations that require parameters show a compact form in the modal before applying, with a per-line mode toggle for applicable operations</span></li>
             </ul>
+          </div>
+        </div>
+        <!-- Version 1.37.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.37.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">06/12/2026</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">SQL SANDBOX - QUERY YOUR DATA WITH DUCKDB IN THE BROWSER</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p>Run SQL against local CSV, TSV, JSON, NDJSON, and Parquet files using DuckDB WASM - no server, no install, no upload. Import files or paste data, write queries in a Monaco editor, inspect schemas, and export results.</p>
           </div>
         </div>
         <!-- Version 1.36.0 -->
@@ -834,7 +837,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.37.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.38.0</span>
         </div>
 
         <div class="flex space-x-8">

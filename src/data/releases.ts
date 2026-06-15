@@ -15,12 +15,30 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.37.0';
+export const APP_VERSION = '1.38.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.37.0",
+    "version": "1.38.0",
     "type": "latest",
+    "date": "2026-06-15",
+    "headline": "Quick Transform - Apply Pipeline Operations from the Editor",
+    "summary": "Right-click any text in a Monaco editor tab to instantly search and apply pipeline operations or saved pipelines without opening the full pipeline editor.",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Quick Transform:** Right-click in any editor tab to open a floating search modal - find any pipeline operation or saved pipeline by name and apply it to the selected text or full tab content",
+          "**Selection-aware:** When text is selected the transform runs against the selection only and writes the result back in-place; without a selection the full tab content is used",
+          "**Recents:** Recently used transforms surface at the top of search results so repeated operations require no typing",
+          "**Inline params:** Operations that require parameters show a compact form in the modal before applying, with a per-line mode toggle for applicable operations"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.37.0",
+    "type": "release",
     "date": "2026-06-12",
     "headline": "SQL Sandbox - Query Your Data with DuckDB in the Browser",
     "summary": "Run SQL against local CSV, TSV, JSON, NDJSON, and Parquet files using DuckDB WASM - no server, no install, no upload. Import files or paste data, write queries in a Monaco editor, inspect schemas, and export results.",

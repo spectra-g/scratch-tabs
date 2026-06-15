@@ -3,13 +3,28 @@ config:
   max_versions: 100  # Maximum number of versions to display
 
 releases:
-  - version: "1.37.0"
+  - version: "1.38.0"
     type: "latest"
+    draft: false
+    date: "2026-06-15"
+    headline: "Quick Transform - Apply Pipeline Operations from the Editor"
+    summary: "Right-click any text in a Monaco editor tab to instantly search and apply pipeline operations or saved pipelines without opening the full pipeline editor."
+    description: "Quick Transform adds a context menu action to Monaco editor tabs that opens a compact floating modal anchored near the cursor. Search across all pipeline operations and saved pipelines, preview the result, and apply the transformation to the selection or full tab content in one step. Recent transforms surface at the top of results, and operations with required parameters show an inline form before applying."
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**Quick Transform:** Right-click in any editor tab to open a floating search modal - find any pipeline operation or saved pipeline by name and apply it to the selected text or full tab content"
+          - "**Selection-aware:** When text is selected the transform runs against the selection only and writes the result back in-place; without a selection the full tab content is used"
+          - "**Recents:** Recently used transforms surface at the top of search results so repeated operations require no typing"
+          - "**Inline params:** Operations that require parameters show a compact form in the modal before applying, with a per-line mode toggle for applicable operations"
+
+  - version: "1.37.0"
+    type: "release"
     draft: false
     date: "2026-06-12"
     headline: "SQL Sandbox - Query Your Data with DuckDB in the Browser"
     summary: "Run SQL against local CSV, TSV, JSON, NDJSON, and Parquet files using DuckDB WASM - no server, no install, no upload. Import files or paste data, write queries in a Monaco editor, inspect schemas, and export results."
-    description: "Adds the SQL Sandbox tablet, a full offline SQL environment powered by DuckDB WASM. Load one or more data sources by dropping files or pasting text, then write and execute SQL in a Monaco editor with syntax highlighting. DuckDB's auto-detection handles CSV, TSV, JSON, NDJSON, and Parquet files - each source is registered as a named table you can immediately query with standard SQL including JOINs, aggregations, window functions, and CTEs. The schema sidebar shows all registered tables and views with column names and types. Run the full query or select a fragment and run only the selection. Results display in a paginated table (up to 5,000 rows) with a truncation notice for larger result sets. Query history is recorded per session so you can revisit and re-run past statements. Named snapshots let you save and restore important queries without leaving the session. Results can be exported to CSV or JSON, opening the output in a new background tab. A destructive statement warning fires before DROP, DELETE, UPDATE, ALTER, or TRUNCATE statements. The engine session is shared while the tablet is open and gracefully disposed after five minutes of inactivity to free memory. Persisted sources survive session restores for text-based formats so your data is available on reload without re-uploading. A built-in sample dataset lets you explore the interface before importing your own files. Editor tabs containing CSV or JSON content gain a context action to send their content directly to a new SQL Sandbox tab."
+    description: "SQL Sandbox is a full offline SQL environment powered by DuckDB WASM. Drop or paste CSV, TSV, JSON, NDJSON, or Parquet files to register them as named tables, then query with standard SQL - JOINs, aggregations, window functions, and CTEs - in a Monaco editor with syntax highlighting. Sessions persist text-based sources across page reloads, query history and named snapshots are recorded per session, and results export to CSV or JSON in a new background tab."
     categories:
       - name: "✨ New Features"
         changes:
