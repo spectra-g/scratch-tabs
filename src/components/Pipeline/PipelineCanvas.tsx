@@ -17,6 +17,7 @@ import {
 } from "../Icons";
 import { PipelineStep, StepResult } from "../../services/pipeline/types";
 import { operationRegistry } from "../../services/pipeline";
+import { OperationParamField } from "./OperationParamField";
 
 interface PipelineCanvasProps {
   steps: PipelineStep[];
@@ -245,135 +246,21 @@ export const PipelineCanvas: React.FC<PipelineCanvasProps> = ({
                 )}
 
                 {operation.parameters.map((param) => (
-                  <div key={param.name}>
-                    <label className="block text-xs text-muted mb-1">
-                      {param.label}
-                      {param.required && (
-                        <span className="text-danger ml-1">*</span>
-                      )}
-                    </label>
-
-                    {param.type === "boolean" ? (
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={
-                            (step.params[param.name] as boolean) ??
-                            param.default ??
-                            false
-                          }
-                          onChange={(e) =>
-                            onUpdateStep(step.id, {
-                              params: {
-                                ...step.params,
-                                [param.name]: e.target.checked,
-                              },
-                            })
-                          }
-                          onDragStart={(e) => e.stopPropagation()}
-                          draggable="false"
-                          className="rounded border-base"
-                        />
-                        <span className="text-sm text-main">
-                          {param.description}
-                        </span>
-                      </label>
-                    ) : param.type === "select" ? (
-                      <select
-                        value={
-                          (step.params[param.name] as string) ??
-                          param.default ??
-                          ""
-                        }
-                        onChange={(e) =>
-                          onUpdateStep(step.id, {
-                            params: {
-                              ...step.params,
-                              [param.name]: e.target.value,
-                            },
-                          })
-                        }
-                        onDragStart={(e) => e.stopPropagation()}
-                        draggable="false"
-                        className="w-full px-2 py-1 text-sm bg-element border border-base rounded focus:outline-none focus:border-focus text-main"
-                      >
-                        {param.options?.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                    ) : param.type === "number" ? (
-                      <input
-                        type="number"
-                        value={
-                          (step.params[param.name] as number) ??
-                          param.default ??
-                          0
-                        }
-                        min={param.min}
-                        max={param.max}
-                        onChange={(e) =>
-                          onUpdateStep(step.id, {
-                            params: {
-                              ...step.params,
-                              [param.name]: Number(e.target.value),
-                            },
-                          })
-                        }
-                        onDragStart={(e) => e.stopPropagation()}
-                        draggable="false"
-                        className="w-full px-2 py-1 text-sm bg-element border border-base rounded focus:outline-none focus:border-focus text-main"
-                      />
-                    ) : param.type === "textarea" ? (
-                      <textarea
-                        value={
-                          (step.params[param.name] as string) ??
-                          param.default ??
-                          ""
-                        }
-                        placeholder={param.placeholder}
-                        onChange={(e) =>
-                          onUpdateStep(step.id, {
-                            params: {
-                              ...step.params,
-                              [param.name]: e.target.value,
-                            },
-                          })
-                        }
-                        onDragStart={(e) => e.stopPropagation()}
-                        draggable="false"
-                        className="w-full px-2 py-1 text-sm bg-element border border-base rounded focus:outline-none focus:border-focus text-main font-mono"
-                        rows={6}
-                      />
-                    ) : (
-                      <input
-                        type="text"
-                        value={
-                          (step.params[param.name] as string) ??
-                          param.default ??
-                          ""
-                        }
-                        placeholder={param.placeholder}
-                        onChange={(e) =>
-                          onUpdateStep(step.id, {
-                            params: {
-                              ...step.params,
-                              [param.name]: e.target.value,
-                            },
-                          })
-                        }
-                        onDragStart={(e) => e.stopPropagation()}
-                        draggable="false"
-                        className="w-full px-2 py-1 text-sm bg-element border border-base rounded focus:outline-none focus:border-focus text-main"
-                      />
-                    )}
-
-                    {param.description && param.type !== "boolean" && (
-                      <p className="text-xs text-muted mt-0.5">
-                        {param.description}
-                      </p>
-                    )}
+                  // Drag-stop wrapper keeps drag-and-drop from firing inside inputs
+                  <div
+                    key={param.name}
+                    onDragStart={(e) => e.stopPropagation()}
+                    draggable="false"
+                  >
+                    <OperationParamField
+                      param={param}
+                      value={step.params[param.name]}
+                      onChange={(value) =>
+                        onUpdateStep(step.id, {
+                          params: { ...step.params, [param.name]: value },
+                        })
+                      }
+                    />
                   </div>
                 ))}
               </div>
