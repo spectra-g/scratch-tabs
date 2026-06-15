@@ -78,14 +78,14 @@ export const EmptyStateActionCard: React.FC<EmptyStateActionCardProps> = ({
         group flex flex-col items-center justify-center p-4
         ${colors.bg} ${colors.hoverBg}
         border border-base ${colors.border}
-        rounded-xl transition-all duration-200
-        hover:-translate-y-1 hover:shadow-md
+        rounded-sm transition-all duration-200
+        hover:-translate-y-0.5 hover:shadow-lg
       `}
     >
       <div
         className={`
           p-2 ${colors.iconBg} ${colors.iconHoverBg}
-          rounded-lg mb-3 transition-colors
+          rounded-sm mb-3 transition-colors
         `}
       >
         <IconComponent size={20} className={colors.iconColor} />

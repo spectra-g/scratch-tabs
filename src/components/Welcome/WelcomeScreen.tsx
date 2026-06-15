@@ -62,10 +62,10 @@ const HeroActionCard: React.FC<HeroActionCardProps> = ({
   return (
     <button
       onClick={onClick}
-      className={`group p-6 bg-surface ${colors.border} ${colors.hoverBorder} border rounded-xl
-        transition-all duration-200 hover:-translate-y-1 hover:shadow-md text-left w-full`}
+      className={`group p-6 bg-surface ${colors.border} ${colors.hoverBorder} border rounded-sm
+        transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg text-left w-full`}
     >
-      <div className={`p-3 ${colors.iconBg} ${colors.iconHoverBg} rounded-lg inline-block mb-4 transition-colors`}>
+      <div className={`p-3 ${colors.iconBg} ${colors.iconHoverBg} rounded-sm inline-block mb-4 transition-colors`}>
         <Icon size={24} className={colors.iconColor} />
       </div>
       <h3 className="text-main font-semibold text-base mb-2">{title}</h3>
@@ -303,7 +303,8 @@ export const WelcomeScreen: React.FC = () => {
       >
         {/* TIER 1: Hero Section - Orientation */}
         <div className="text-center mb-12 w-full max-w-3xl">
-          <div className="bg-element border border-base rounded-lg p-8">
+          <div className="bg-element border border-base rounded-sm p-8">
+
             {/* Logo + Title */}
             <div className="flex items-center justify-center mb-4">
               <img
@@ -313,7 +314,7 @@ export const WelcomeScreen: React.FC = () => {
               />
               <h1 className="text-3xl font-mono font-medium text-main">SCRATCH_TABS</h1>
             </div>
-            <p className="text-muted text-sm font-mono mb-6">// v1.37.0</p>
+            <p className="text-muted text-sm font-mono mb-6">// v1.38.0</p>
 
             {/* Value Proposition */}
             <h2 className="text-2xl font-semibold text-main mb-4">
@@ -326,15 +327,15 @@ export const WelcomeScreen: React.FC = () => {
             {/* Trust Badges */}
             <div className="flex justify-center gap-6 text-xs text-muted">
               <div className="flex items-center gap-2">
-                <Lock size={14} className="text-muted/70" />
+                <Lock size={14} className="text-success/60" />
                 <span>Offline & Private</span>
               </div>
               <div className="flex items-center gap-2">
-                <Database size={14} className="text-muted/70" />
+                <Database size={14} className="text-success/60" />
                 <span>Persisted Locally</span>
               </div>
               <div className="flex items-center gap-2">
-                <Globe size={14} className="text-muted/70" />
+                <Globe size={14} className="text-success/60" />
                 <span>No Server Calls</span>
               </div>
             </div>
@@ -343,8 +344,8 @@ export const WelcomeScreen: React.FC = () => {
 
         {/* TIER 2: Primary Actions - Common Tasks */}
         <section className="w-full max-w-4xl mb-8">
-          <h3 className="text-sm font-medium uppercase tracking-wide text-muted mb-4 text-center">
-            Get Started
+          <h3 className="text-xs font-mono text-muted/50 mb-4 text-center tracking-[0.2em] uppercase">
+            <span className="text-success/60">// </span>get_started
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {primaryActions.map((action, index) => (
@@ -355,8 +356,8 @@ export const WelcomeScreen: React.FC = () => {
 
         {/* TIER 3: Secondary Actions - Other Options */}
         <section className="w-full max-w-4xl mb-8">
-          <h4 className="text-sm font-medium uppercase tracking-wide text-muted mb-3 text-center">
-            Other Options
+          <h4 className="text-xs font-mono text-muted/50 mb-3 text-center tracking-[0.2em] uppercase">
+            <span className="text-success/60">// </span>other_options
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {secondaryActions.map((action, index) => (
@@ -364,11 +365,11 @@ export const WelcomeScreen: React.FC = () => {
                 key={index}
                 onClick={action.onClick}
                 className="group p-4 bg-surface hover:bg-surface-highlight
-                  rounded-lg border border-base hover:border-primary/30
+                  rounded-sm border border-base hover:border-primary/30
                   transition-all duration-200 text-left"
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 bg-element rounded-md">
+                  <div className="p-2 bg-element rounded-sm">
                     <action.icon size={18} className="text-secondary" />
                   </div>
                   <div className="text-main font-medium text-sm">{action.title}</div>

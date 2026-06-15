@@ -114,7 +114,7 @@ export const WorkspaceEmptyState: React.FC = () => {
         tabIndex={-1}
       >
       {/* Icon Graphic */}
-      <div className="mb-6 p-6 bg-surface-secondary/50 rounded-full">
+      <div className="mb-6 p-6 bg-surface-secondary/50 rounded-sm">
         <FolderOpen size={48} className="text-muted/50" />
       </div>
 

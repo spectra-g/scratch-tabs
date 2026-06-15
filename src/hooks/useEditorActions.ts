@@ -2,6 +2,7 @@ import { useRef, useEffect } from "react";
 import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { useAIStore } from "../stores/aiStore";
 import { usePipelineStore } from "../stores/pipelineStore";
+import { useQuickTransformStore } from "../stores/quickTransformStore";
 
 interface UseEditorActionsProps {
   editor: Monaco.editor.IStandaloneCodeEditor | null;
@@ -23,12 +24,15 @@ export const useEditorActions = ({
   isCodegenGenerating,
 }: UseEditorActionsProps) => {
   const transformationsDisposableRef = useRef<Monaco.IDisposable | null>(null);
+  const quickTransformDisposableRef = useRef<Monaco.IDisposable | null>(null);
+  const quickTransformContextMenuRef = useRef<Monaco.IDisposable | null>(null);
   const aiSummarizeDisposableRef = useRef<Monaco.IDisposable | null>(null);
   const aiCodegenDisposableRef = useRef<Monaco.IDisposable | null>(null);
   const aiReadyContextKeyRef =
     useRef<Monaco.editor.IContextKey<boolean> | null>(null);
   const codegenReadyContextKeyRef =
     useRef<Monaco.editor.IContextKey<boolean> | null>(null);
+  const mousePositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const { openModal: openPipelineModal } = usePipelineStore();
   const { summarizeTextWithModal, runCodegen } = useAIStore();
@@ -41,12 +45,60 @@ export const useEditorActions = ({
     if (transformationsDisposableRef.current) {
       transformationsDisposableRef.current.dispose();
     }
+    if (quickTransformDisposableRef.current) {
+      quickTransformDisposableRef.current.dispose();
+    }
+    if (quickTransformContextMenuRef.current) {
+      quickTransformContextMenuRef.current.dispose();
+    }
     if (aiSummarizeDisposableRef.current) {
       aiSummarizeDisposableRef.current.dispose();
     }
     if (aiCodegenDisposableRef.current) {
       aiCodegenDisposableRef.current.dispose();
     }
+
+    // Track mouse position when context menu opens so the Quick Transform
+    // modal can be anchored near the right-click point
+    quickTransformContextMenuRef.current = editor.onContextMenu((e) => {
+      mousePositionRef.current = {
+        x: e.event.browserEvent.clientX,
+        y: e.event.browserEvent.clientY,
+      };
+    });
+
+    // Add Quick Transform context menu action
+    quickTransformDisposableRef.current = editor.addAction({
+      id: "quick-transform",
+      label: "Quick Transform",
+      contextMenuGroupId: "navigation",
+      contextMenuOrder: 2.0,
+      run: (ed) => {
+        try {
+          const model = ed.getModel();
+          if (!model || model.isDisposed()) return;
+
+          const selection = ed.getSelection();
+          const isSelection = !!selection && !selection.isEmpty();
+          const text = isSelection
+            ? model.getValueInRange(selection!)
+            : model.getValue();
+          const activeTabId = latestActiveTabRef.current?.id ?? "";
+
+          useQuickTransformStore.getState().openModal(mousePositionRef.current, {
+            text,
+            isSelection,
+            selectionRange: isSelection ? selection : null,
+            activeTabId,
+          });
+        } catch (error) {
+          console.warn(
+            "[useEditorActions] Failed to open Quick Transform:",
+            error,
+          );
+        }
+      },
+    });
 
     // Add Transformations context menu action
     transformationsDisposableRef.current = editor.addAction({
@@ -185,6 +237,14 @@ export const useEditorActions = ({
       if (transformationsDisposableRef.current) {
         transformationsDisposableRef.current.dispose();
         transformationsDisposableRef.current = null;
+      }
+      if (quickTransformDisposableRef.current) {
+        quickTransformDisposableRef.current.dispose();
+        quickTransformDisposableRef.current = null;
+      }
+      if (quickTransformContextMenuRef.current) {
+        quickTransformContextMenuRef.current.dispose();
+        quickTransformContextMenuRef.current = null;
       }
       if (aiSummarizeDisposableRef.current) {
         aiSummarizeDisposableRef.current.dispose();

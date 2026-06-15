@@ -20,6 +20,7 @@ import { EditorRange } from "../../types";
 import { FloatingMacroToolbar } from "../Macro/FloatingMacroToolbar";
 import { useMacroEngine } from "../Macro/useMacroEngine";
 import { useMacroStore } from "../../stores/macroStore";
+import { QuickTransformModalWrapper } from "../QuickTransform/QuickTransformModalWrapper";
 
 interface EditorPaneWrapperProps {
   side: "left" | "right";
@@ -284,6 +285,12 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
 
       {/* PipelineEditorModal - New pipeline-based transformations */}
       <PipelineModalWrapper onApply={handlePipelineApply} />
+
+      {/* Quick Transform floating modal */}
+      <QuickTransformModalWrapper
+        activeTabId={activeTabId}
+        onApply={handlePipelineApply}
+      />
 
       {/* Floating Macro Toolbar - Shows when recording/playing for the correct tab/side */}
       {!activeTab?.isTablet && !activeTab?.isRich && forceShowToolbar && targetTabId === activeTabId && targetSide === side && (
