@@ -15,12 +15,35 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.38.0';
+export const APP_VERSION = '1.39.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.38.0",
+    "version": "1.39.0",
     "type": "latest",
+    "date": "2026-06-16",
+    "headline": "Installable Offline App",
+    "summary": "Scratch Tabs is now installable as a Progressive Web App with offline app-shell caching, so the workspace can launch from the desktop or home screen after the first visit.",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Progressive Web App support:** Scratch Tabs can now be installed from supported browsers and launched in a standalone app window",
+          "**Offline app shell:** A generated service worker precaches the built application assets so the workspace can open without a network connection after the first successful load",
+          "**Install assets:** Added manifest metadata and dedicated 192px, 512px, and maskable icons for browser install surfaces"
+        ]
+      },
+      {
+        "name": "Improvements",
+        "changes": [
+          "**FAQ update:** Clarified that browser app installation is paired with explicit PWA metadata and service-worker-backed app-shell caching"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.38.0",
+    "type": "release",
     "date": "2026-06-15",
     "headline": "Quick Transform - Apply Pipeline Operations from the Editor",
     "summary": "Right-click any text in a Monaco editor tab to instantly search and apply pipeline operations or saved pipelines without opening the full pipeline editor.",

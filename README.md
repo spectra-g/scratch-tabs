@@ -7,6 +7,7 @@ Website: https://scratchtabs.com
 ## Highlights
 
 - Local-first persistence with IndexedDB (no server required for core workflows)
+- Installable Progressive Web App with offline app-shell caching
 - Monaco-powered editor with many format/tool integrations
 - Smart Views for structured content (JSON, CSV, and more)
 - Transformation Pipeline system for repeatable data operations

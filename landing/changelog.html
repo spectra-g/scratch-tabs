@@ -130,26 +130,44 @@
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
 
-        <!-- Version 1.38.0 -->
+        <!-- Version 1.39.0 -->
         <div class="changelog-entry latest">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-white">V1.38.0</h2>
+              <h2 class="text-2xl font-bold text-white">V1.39.0</h2>
               <span class="badge latest">LATEST</span>
             </div>
-            <span class="text-gray-500 text-xs font-mono">06/15/2026</span>
+            <span class="text-gray-500 text-xs font-mono">06/16/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">QUICK TRANSFORM - APPLY PIPELINE OPERATIONS FROM THE EDITOR</h3>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">INSTALLABLE OFFLINE APP</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">Quick Transform adds a context menu action to Monaco editor tabs that opens a compact floating modal anchored near the cursor. Search across all pipeline operations and saved pipelines, preview the result, and apply the transformation to the selection or full tab content in one step. Recent transforms surface at the top of results, and operations with required parameters show an inline form before applying.</p>
+            <p class="mb-4">Scratch Tabs now ships as an installable Progressive Web App. Browser install prompts can add it to the desktop, dock, taskbar, or home screen, while the generated service worker caches the app shell and static assets for offline launch after the first visit.</p>
 
             <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
             <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Quick Transform:</strong> Right-click in any editor tab to open a floating search modal - find any pipeline operation or saved pipeline by name and apply it to the selected text or full tab content</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Selection-aware:</strong> When text is selected the transform runs against the selection only and writes the result back in-place; without a selection the full tab content is used</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Recents:</strong> Recently used transforms surface at the top of search results so repeated operations require no typing</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Inline params:</strong> Operations that require parameters show a compact form in the modal before applying, with a per-line mode toggle for applicable operations</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Progressive Web App support:</strong> Scratch Tabs can now be installed from supported browsers and launched in a standalone app window</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Offline app shell:</strong> A generated service worker precaches the built application assets so the workspace can open without a network connection after the first successful load</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Install assets:</strong> Added manifest metadata and dedicated 192px, 512px, and maskable icons for browser install surfaces</span></li>
             </ul>
+
+            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># improvements</h4>
+            <ul class="space-y-2 mb-6">
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>FAQ update:</strong> Clarified that browser app installation is paired with explicit PWA metadata and service-worker-backed app-shell caching</span></li>
+            </ul>
+          </div>
+        </div>
+        <!-- Version 1.38.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.38.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">06/15/2026</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">QUICK TRANSFORM - APPLY PIPELINE OPERATIONS FROM THE EDITOR</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p>Right-click any text in a Monaco editor tab to instantly search and apply pipeline operations or saved pipelines without opening the full pipeline editor.</p>
           </div>
         </div>
         <!-- Version 1.37.0 -->
@@ -837,7 +855,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.38.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.39.0</span>
         </div>
 
         <div class="flex space-x-8">
