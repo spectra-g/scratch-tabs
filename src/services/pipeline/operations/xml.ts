@@ -330,6 +330,129 @@ export const xmlOperations: OperationDefinition[] = [
         source: "core",
     },
     {
+        id: "xml.xpath",
+        name: "XPath Query",
+        description: "Evaluate an XPath 1.0 expression on XML input and return matching results",
+        categories: ["xml", "query"],
+        parameters: [
+            {
+                name: "query",
+                label: "XPath Expression",
+                type: "string",
+                default: "//*",
+                placeholder: "//element/@attribute",
+                description: "XPath 1.0 expression to evaluate",
+            },
+            {
+                name: "resultType",
+                label: "Result Type",
+                type: "select",
+                default: "any",
+                options: [
+                    { value: "any", label: "Auto-detect" },
+                    { value: "nodes", label: "Node Set" },
+                    { value: "string", label: "String" },
+                    { value: "number", label: "Number" },
+                    { value: "boolean", label: "Boolean" },
+                ],
+            },
+            {
+                name: "nodeFormat",
+                label: "Node Output Format",
+                type: "select",
+                default: "text",
+                options: [
+                    { value: "text", label: "Text Content" },
+                    { value: "xml", label: "XML Serialization" },
+                ],
+            },
+            {
+                name: "separator",
+                label: "Result Separator",
+                type: "string",
+                default: "\\n",
+                description: "String separating multiple node results (use \\n for newline)",
+            },
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const query = (params.query as string) ?? "//*";
+            const resultTypeParam = (params.resultType as string) ?? "any";
+            const nodeFormat = (params.nodeFormat as string) ?? "text";
+            // Allow literal \n in the UI separator field to mean an actual newline
+            const rawSep = (params.separator as string) ?? "\\n";
+            const separator = rawSep.replace(/\\n/g, "\n").replace(/\\t/g, "\t");
+
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(input, "application/xml");
+
+            const parseError = doc.querySelector("parsererror");
+            if (parseError) {
+                throw new Error(`XML parse error: ${parseError.textContent?.trim()}`);
+            }
+
+            // XPathResult type constants (avoid relying on global XPathResult in workers)
+            const XPATH_TYPES: Record<string, number> = {
+                any: 0,    // ANY_TYPE
+                nodes: 5,  // ORDERED_NODE_ITERATOR_TYPE
+                string: 2, // STRING_TYPE
+                number: 1, // NUMBER_TYPE
+                boolean: 3, // BOOLEAN_TYPE
+            };
+
+            const xpathType = XPATH_TYPES[resultTypeParam] ?? 0;
+
+            let xpathResult: XPathResult;
+            try {
+                xpathResult = doc.evaluate(query, doc, null, xpathType, null);
+            } catch (e: any) {
+                throw new Error(`XPath evaluation failed: ${e.message}`);
+            }
+
+            const serializeNode = (node: Node): string => {
+                if (nodeFormat === "xml") {
+                    return new XMLSerializer().serializeToString(node);
+                }
+                return node.textContent ?? "";
+            };
+
+            switch (xpathResult.resultType) {
+                case 1: // NUMBER_TYPE
+                    return String(xpathResult.numberValue);
+                case 2: // STRING_TYPE
+                    return xpathResult.stringValue;
+                case 3: // BOOLEAN_TYPE
+                    return String(xpathResult.booleanValue);
+                case 6: // UNORDERED_NODE_SNAPSHOT_TYPE
+                case 7: { // ORDERED_NODE_SNAPSHOT_TYPE
+                    const results: string[] = [];
+                    for (let i = 0; i < xpathResult.snapshotLength; i++) {
+                        const node = xpathResult.snapshotItem(i);
+                        if (node) results.push(serializeNode(node));
+                    }
+                    return results.join(separator);
+                }
+                case 8: // ANY_UNORDERED_NODE_TYPE
+                case 9: { // FIRST_ORDERED_NODE_TYPE
+                    const node = xpathResult.singleNodeValue;
+                    return node ? serializeNode(node) : "";
+                }
+                default: {
+                    // Iterator types (4=UNORDERED, 5=ORDERED) and fallback for ANY_TYPE
+                    const results: string[] = [];
+                    let node = xpathResult.iterateNext();
+                    while (node) {
+                        results.push(serializeNode(node));
+                        node = xpathResult.iterateNext();
+                    }
+                    return results.join(separator);
+                }
+            }
+        },
+        keywords: ["xml", "xpath", "query", "extract", "select", "path"],
+        source: "core",
+    },
+    {
         id: "json.to-xml",
         name: "JSON to XML",
         description: "Convert JSON to XML format",
