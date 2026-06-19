@@ -15,12 +15,43 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.39.0';
+export const APP_VERSION = '1.40.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.39.0",
+    "version": "1.40.0",
     "type": "latest",
+    "date": "2026-06-19",
+    "headline": "XML Smart View + Five New Pipeline Operations",
+    "summary": "A dedicated smart view for XML tabs with a live structure tree, node inspector, diagnostics panel, and XPath workbench - plus five new pipeline operations including xml.xpath, jwt.sign, and docker run-to-compose conversion.",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**XML Structure tree:** Collapsible element tree synced bidirectionally with the editor - clicking a tree node selects and reveals it in the editor; moving the cursor in the editor highlights the deepest node at that position",
+          "**Node inspector:** Right-hand panel shows element kind, path, line/column, namespace, attribute list, and one-click copy buttons for node XML, inner XML, text content, XPath, Clark notation, and CSS path",
+          "**Diagnostics panel:** Reports parse errors with jump-to-line links, security warnings (XXE entities, external DTDs, large base64 payloads), and payload size stats",
+          "**XPath workbench:** Live XPath 1.0 evaluator with 300ms debounce, result table showing type/name/value/path, and export to CSV, JSON, or XML in a background tab; hints when a default namespace requires a generated prefix",
+          "**Format and Minify:** Toolbar buttons to pretty-print (2-space indent, comment-preserving, xml:space aware) or minify the XML in place, with full undo stack support",
+          "**JSON conversion:** Converts XML to a structured JSON object (attributes under `@attributes`, text under `#text`) and opens it in a background tab",
+          "**xml.xpath pipeline operation:** Evaluate an XPath 1.0 expression on XML input and return matching nodes, strings, numbers, or booleans - the natural companion to json.jsonpath",
+          "**jwt.sign pipeline operation:** Sign a JSON payload as a JWT using HS256, HS384, or HS512 via Web Crypto - closes the encode/decode symmetry gap left by jwt.decode",
+          "**docker.run-to-compose pipeline operation:** Convert a `docker run` command into an equivalent docker-compose.yml service definition; handles ports, volumes, env vars, restart policy, resource limits, and more",
+          "**text.remove-line-numbers pipeline operation:** Strip leading numbering from each line (complement of the existing text.add-line-numbers)",
+          "**text.column-align pipeline operation:** Align whitespace- or tab-separated columns to uniform widths, equivalent to `column -t`"
+        ]
+      },
+      {
+        "name": "Improvements",
+        "changes": [
+          "**Tab state persistence:** Expanded tree nodes, selected node, active bottom tab, XPath expression, tree scroll position, and editor scroll/cursor/fold state are all saved and restored when switching between tabs"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.39.0",
+    "type": "release",
     "date": "2026-06-16",
     "headline": "Installable Offline App",
     "summary": "Scratch Tabs is now installable as a Progressive Web App with offline app-shell caching, so the workspace can launch from the desktop or home screen after the first visit.",

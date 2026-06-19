@@ -1060,7 +1060,7 @@ const coreOperations: OperationDefinition[] = [
                 placeholder: "Enter prefix text...",
             },
         ],
-        processingMode: "configurable",
+        processingMode: "line",
         execute: (input, params) => {
             const prefix = (params.prefix as string) ?? "";
             return prefix + input;
@@ -1083,7 +1083,7 @@ const coreOperations: OperationDefinition[] = [
                 placeholder: "Enter suffix text...",
             },
         ],
-        processingMode: "configurable",
+        processingMode: "line",
         execute: (input, params) => {
             const suffix = (params.suffix as string) ?? "";
             return input + suffix;
@@ -1593,6 +1593,84 @@ const coreOperations: OperationDefinition[] = [
             return input.replace(ANSI_RE, "");
         },
         keywords: ["ansi", "color", "colour", "terminal", "escape", "vt100", "clean", "strip", "console", "log"],
+        source: "core",
+    },
+
+    // === REMOVE LINE NUMBERS ===
+    {
+        id: "text.remove-line-numbers",
+        name: "Remove Line Numbers",
+        description: "Strip leading line numbers from each line (complement of Add Line Numbers)",
+        categories: ["text", "formatting"],
+        parameters: [],
+        processingMode: "line",
+        execute: (input) => {
+            // Matches: optional leading whitespace, then a number or single letter or roman numeral,
+            // then a separator (. ) :), then at least one space/tab.
+            // Requires whitespace after separator to avoid stripping things like "v1.2" or "http://".
+            return input.replace(/^\s*(?:\d+|[IVXLCDM]+|[ivxlcdm]+|[A-Za-z])[.):][ \t]+/, "");
+        },
+        keywords: ["line", "number", "remove", "strip", "unnumber"],
+        source: "core",
+    },
+
+    // === COLUMN ALIGN ===
+    {
+        id: "text.column-align",
+        name: "Align Columns",
+        description: "Align whitespace- or tab-separated columns to uniform widths (like `column -t`)",
+        categories: ["text", "formatting"],
+        parameters: [
+            {
+                name: "delimiter",
+                label: "Column Delimiter",
+                type: "select",
+                default: "whitespace",
+                options: [
+                    { value: "whitespace", label: "Whitespace (any spaces/tabs)" },
+                    { value: "tab", label: "Tab only" },
+                ],
+            },
+            {
+                name: "padding",
+                label: "Column Padding",
+                type: "number",
+                default: 2,
+                min: 1,
+                max: 16,
+                description: "Spaces between columns",
+            },
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const delimiter = (params.delimiter as string) ?? "whitespace";
+            const padding = Math.max(1, (params.padding as number) ?? 2);
+
+            const lines = input.split("\n");
+
+            const rows: string[][] = lines.map(line => {
+                if (delimiter === "tab") {
+                    return line.split("\t");
+                }
+                // Split on runs of whitespace; preserve empty lines as single empty column
+                const trimmed = line.trim();
+                return trimmed === "" ? [""] : trimmed.split(/\s+/);
+            });
+
+            const maxCols = Math.max(...rows.map(r => r.length));
+            const colWidths: number[] = [];
+            for (let c = 0; c < maxCols; c++) {
+                colWidths[c] = Math.max(...rows.map(r => (r[c] ?? "").length));
+            }
+
+            const sep = " ".repeat(padding);
+            return rows.map(cols =>
+                cols.map((col, i) =>
+                    i === cols.length - 1 ? col : col.padEnd(colWidths[i])
+                ).join(sep)
+            ).join("\n");
+        },
+        keywords: ["column", "align", "pad", "table", "tabulate", "format", "column -t"],
         source: "core",
     },
 ];

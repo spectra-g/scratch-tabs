@@ -3,8 +3,33 @@ config:
   max_versions: 100  # Maximum number of versions to display
 
 releases:
-  - version: "1.39.0"
+  - version: "1.40.0"
     type: "latest"
+    draft: false
+    date: "2026-06-19"
+    headline: "XML Smart View + Five New Pipeline Operations"
+    summary: "A dedicated smart view for XML tabs with a live structure tree, node inspector, diagnostics panel, and XPath workbench - plus five new pipeline operations including xml.xpath, jwt.sign, and docker run-to-compose conversion."
+    description: "The XML Smart View replaces the plain editor for XML tabs with a three-panel layout: a live structure tree on the left, the Monaco editor in the center, and a node detail panel on the right. A bottom panel switches between diagnostics (parse errors, security warnings, large-payload flags) and an XPath workbench with live evaluation and CSV/JSON/XML export. Clicking anywhere in the editor selects the corresponding tree node and updates the detail panel. All UI state - expanded nodes, selected node, XPath expression, scroll positions - is preserved when switching tabs. This release also adds five pipeline operations: xml.xpath for querying XML without leaving the pipeline, jwt.sign to close the encode/decode symmetry gap, docker.run-to-compose for offline container config conversion, and two text utilities - remove-line-numbers and column-align."
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**XML Structure tree:** Collapsible element tree synced bidirectionally with the editor - clicking a tree node selects and reveals it in the editor; moving the cursor in the editor highlights the deepest node at that position"
+          - "**Node inspector:** Right-hand panel shows element kind, path, line/column, namespace, attribute list, and one-click copy buttons for node XML, inner XML, text content, XPath, Clark notation, and CSS path"
+          - "**Diagnostics panel:** Reports parse errors with jump-to-line links, security warnings (XXE entities, external DTDs, large base64 payloads), and payload size stats"
+          - "**XPath workbench:** Live XPath 1.0 evaluator with 300ms debounce, result table showing type/name/value/path, and export to CSV, JSON, or XML in a background tab; hints when a default namespace requires a generated prefix"
+          - "**Format and Minify:** Toolbar buttons to pretty-print (2-space indent, comment-preserving, xml:space aware) or minify the XML in place, with full undo stack support"
+          - "**JSON conversion:** Converts XML to a structured JSON object (attributes under `@attributes`, text under `#text`) and opens it in a background tab"
+          - "**xml.xpath pipeline operation:** Evaluate an XPath 1.0 expression on XML input and return matching nodes, strings, numbers, or booleans - the natural companion to json.jsonpath"
+          - "**jwt.sign pipeline operation:** Sign a JSON payload as a JWT using HS256, HS384, or HS512 via Web Crypto - closes the encode/decode symmetry gap left by jwt.decode"
+          - "**docker.run-to-compose pipeline operation:** Convert a `docker run` command into an equivalent docker-compose.yml service definition; handles ports, volumes, env vars, restart policy, resource limits, and more"
+          - "**text.remove-line-numbers pipeline operation:** Strip leading numbering from each line (complement of the existing text.add-line-numbers)"
+          - "**text.column-align pipeline operation:** Align whitespace- or tab-separated columns to uniform widths, equivalent to `column -t`"
+      - name: "🔧 Improvements"
+        changes:
+          - "**Tab state persistence:** Expanded tree nodes, selected node, active bottom tab, XPath expression, tree scroll position, and editor scroll/cursor/fold state are all saved and restored when switching between tabs"
+
+  - version: "1.39.0"
+    type: "release"
     draft: false
     date: "2026-06-16"
     headline: "Installable Offline App"

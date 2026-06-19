@@ -28,6 +28,7 @@ import "./operations/crypto";
 import "./operations/utilities";
 import "./operations/xml";
 import "./operations/network";
+import "./operations/docker";
 
 // Auto-discovery for formats/tablets is now handled in `./operations/discovery.ts`
 // which should be imported in the main application entry point (main.tsx)

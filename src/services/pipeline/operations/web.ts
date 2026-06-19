@@ -146,7 +146,114 @@ export const webOperations: OperationDefinition[] = [
         },
         keywords: ["jwt", "token", "decode", "json", "auth", "bearer"],
         source: "core",
-    }
+    },
+    {
+        id: "jwt.sign",
+        name: "Sign JWT",
+        description: "Sign a JSON payload as a JWT using HMAC (HS256/HS384/HS512) via Web Crypto",
+        categories: ["encoding", "utilities"],
+        parameters: [
+            {
+                name: "secret",
+                label: "Secret Key",
+                type: "string",
+                default: "",
+                placeholder: "your-secret-key",
+                description: "HMAC secret for signing",
+                required: true,
+            },
+            {
+                name: "algorithm",
+                label: "Algorithm",
+                type: "select",
+                default: "HS256",
+                options: [
+                    { value: "HS256", label: "HS256 (SHA-256)" },
+                    { value: "HS384", label: "HS384 (SHA-384)" },
+                    { value: "HS512", label: "HS512 (SHA-512)" },
+                ],
+            },
+            {
+                name: "expiresIn",
+                label: "Expires In (seconds)",
+                type: "number",
+                default: 0,
+                min: 0,
+                description: "Add exp claim (0 = do not add)",
+            },
+            {
+                name: "addIat",
+                label: "Add iat claim",
+                type: "boolean",
+                default: true,
+                description: "Automatically add issued-at timestamp",
+            },
+        ],
+        processingMode: "entire",
+        execute: async (input, params) => {
+            const secret = (params.secret as string) ?? "";
+            const algorithm = (params.algorithm as string) ?? "HS256";
+            const expiresIn = (params.expiresIn as number) ?? 0;
+            const addIat = (params.addIat as boolean) ?? true;
+
+            if (!secret) {
+                throw new Error("Secret key is required");
+            }
+
+            let payload: Record<string, unknown>;
+            try {
+                const parsed = JSON.parse(input.trim());
+                if (typeof parsed !== "object" || Array.isArray(parsed) || parsed === null) {
+                    throw new Error("must be a JSON object");
+                }
+                payload = parsed as Record<string, unknown>;
+            } catch (e: any) {
+                throw new Error(`Input must be a valid JSON object: ${e.message}`);
+            }
+
+            const now = Math.floor(Date.now() / 1000);
+            if (addIat && payload.iat === undefined) {
+                payload = { ...payload, iat: now };
+            }
+            if (expiresIn > 0) {
+                payload = { ...payload, exp: now + expiresIn };
+            }
+
+            const header = { alg: algorithm, typ: "JWT" };
+
+            const base64url = (value: string): string =>
+                btoa(value).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+
+            const encodedHeader = base64url(JSON.stringify(header));
+            const encodedPayload = base64url(JSON.stringify(payload));
+            const signingInput = `${encodedHeader}.${encodedPayload}`;
+
+            const hashName = algorithm === "HS256" ? "SHA-256"
+                : algorithm === "HS384" ? "SHA-384"
+                : "SHA-512";
+
+            const keyData = new TextEncoder().encode(secret);
+            const msgData = new TextEncoder().encode(signingInput);
+
+            const cryptoKey = await crypto.subtle.importKey(
+                "raw",
+                keyData,
+                { name: "HMAC", hash: hashName },
+                false,
+                ["sign"],
+            );
+
+            const sigBuffer = await crypto.subtle.sign("HMAC", cryptoKey, msgData);
+            const sigBytes = new Uint8Array(sigBuffer);
+            // Convert bytes to binary string then base64url-encode
+            const binary = Array.from(sigBytes).map(b => String.fromCharCode(b)).join("");
+            const sigB64url = btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+
+            return `${signingInput}.${sigB64url}`;
+        },
+        keywords: ["jwt", "sign", "token", "hmac", "auth", "bearer", "encode"],
+        source: "core",
+    },
 ];
 
 // Self-register all operations

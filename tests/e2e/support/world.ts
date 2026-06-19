@@ -18,6 +18,7 @@ import { PipelineActions } from './pipeline.actions';
 import { SidebarActions } from './sidebar.actions';
 import { TabletsActions } from './tablets.actions';
 import { QuickTransformActions } from './quickTransform.actions';
+import { XmlSmartViewActions } from './xmlSmartView.actions';
 
 /**
  * E2E World Class - Lightweight Orchestrator & Dependency Injection Container
@@ -51,6 +52,7 @@ export class E2EWorld extends World {
   sidebar!: SidebarActions;
   tablets!: TabletsActions;
   quickTransform!: QuickTransformActions;
+  xmlSmartView!: XmlSmartViewActions;
 
   constructor(options: IWorldOptions) {
     super(options);
@@ -81,6 +83,7 @@ export class E2EWorld extends World {
     this.sidebar = new SidebarActions(this.page);
     this.tablets = new TabletsActions(this.page);
     this.quickTransform = new QuickTransformActions(this.page);
+    this.xmlSmartView = new XmlSmartViewActions(this.page);
   }
 }
 

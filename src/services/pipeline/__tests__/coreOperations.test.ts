@@ -336,6 +336,152 @@ describe("Core Pipeline Operations", () => {
                 expect(result).toBe("This is a\nlong line\nthat\nshould be\nwrapped.");
             });
         });
+
+        describe("text.remove-line-numbers", () => {
+            it("should remove numeric dot-separated line numbers (add-line-numbers complement)", async () => {
+                const input = "1. line1\n2. line2\n3. line3";
+                const result = await execute("text.remove-line-numbers", input);
+                expect(result).toBe("line1\nline2\nline3");
+            });
+
+            it("should remove roman numeral line numbers", async () => {
+                const input = "I. line1\nII. line2\nIII. line3";
+                const result = await execute("text.remove-line-numbers", input);
+                expect(result).toBe("line1\nline2\nline3");
+            });
+
+            it("should remove single-letter line numbers", async () => {
+                const input = "A. line1\nB. line2\nC. line3";
+                const result = await execute("text.remove-line-numbers", input);
+                expect(result).toBe("line1\nline2\nline3");
+            });
+
+            it("should remove parenthesis-style numbering", async () => {
+                const input = "1) first\n2) second\n3) third";
+                const result = await execute("text.remove-line-numbers", input);
+                expect(result).toBe("first\nsecond\nthird");
+            });
+
+            it("should remove colon-style numbering", async () => {
+                const input = "1: first\n2: second";
+                const result = await execute("text.remove-line-numbers", input);
+                expect(result).toBe("first\nsecond");
+            });
+
+            it("should remove zero-padded line numbers", async () => {
+                const input = "01. first\n02. second\n10. tenth";
+                const result = await execute("text.remove-line-numbers", input);
+                expect(result).toBe("first\nsecond\ntenth");
+            });
+
+            it("should not modify lines without numbering", async () => {
+                const input = "plain line\nanother line";
+                const result = await execute("text.remove-line-numbers", input);
+                expect(result).toBe("plain line\nanother line");
+            });
+
+            it("should not strip version-like strings (v1.2)", async () => {
+                const input = "v1.2 release notes";
+                const result = await execute("text.remove-line-numbers", input);
+                expect(result).toBe("v1.2 release notes");
+            });
+
+            it("should not strip URLs (http://)", async () => {
+                const input = "http://example.com";
+                const result = await execute("text.remove-line-numbers", input);
+                expect(result).toBe("http://example.com");
+            });
+
+            it("should handle empty input", async () => {
+                const result = await execute("text.remove-line-numbers", "");
+                expect(result).toBe("");
+            });
+
+            it("should roundtrip with add-line-numbers (numeric)", async () => {
+                const original = "alpha\nbeta\ngamma";
+                const numbered = await execute("text.add-line-numbers", original, { style: "numeric" });
+                const restored = await execute("text.remove-line-numbers", numbered);
+                expect(restored).toBe(original);
+            });
+
+            it("should roundtrip with add-line-numbers (roman)", async () => {
+                const original = "alpha\nbeta\ngamma";
+                const numbered = await execute("text.add-line-numbers", original, { style: "roman" });
+                const restored = await execute("text.remove-line-numbers", numbered);
+                expect(restored).toBe(original);
+            });
+
+            it("should roundtrip with add-line-numbers (alpha)", async () => {
+                const original = "alpha\nbeta\ngamma";
+                const numbered = await execute("text.add-line-numbers", original, { style: "alpha" });
+                const restored = await execute("text.remove-line-numbers", numbered);
+                expect(restored).toBe(original);
+            });
+        });
+
+        describe("text.column-align", () => {
+            it("should align whitespace-separated columns", async () => {
+                const input = "foo bar baz\nlonger shorter x";
+                const result = await execute("text.column-align", input, { delimiter: "whitespace", padding: 2 });
+                const lines = result.split("\n");
+                expect(lines).toHaveLength(2);
+                // Both lines should have the same total length up to the last column
+                const cols0 = lines[0].split(/  +/);
+                const cols1 = lines[1].split(/  +/);
+                expect(cols0).toHaveLength(3);
+                expect(cols1).toHaveLength(3);
+            });
+
+            it("should pad columns to the width of the widest value", async () => {
+                const input = "a b\nlonger short\nc d";
+                const result = await execute("text.column-align", input, { delimiter: "whitespace", padding: 2 });
+                const lines = result.split("\n");
+                // "longer" is widest col-0, so "a" and "c" should be padded to 6 chars
+                expect(lines[0]).toMatch(/^a\s{5,}/);
+                expect(lines[2]).toMatch(/^c\s{5,}/);
+            });
+
+            it("should split on tab delimiter", async () => {
+                const input = "col1\tcol2\tcol3\nlong\ts\tx";
+                const result = await execute("text.column-align", input, { delimiter: "tab", padding: 2 });
+                const lines = result.split("\n");
+                expect(lines).toHaveLength(2);
+                // First column: "col1" (4) vs "long" (4) — equal widths
+                expect(lines[0]).toMatch(/^col1/);
+                expect(lines[1]).toMatch(/^long/);
+            });
+
+            it("should respect custom padding", async () => {
+                const input = "a b\nc d";
+                const result1 = await execute("text.column-align", input, { delimiter: "whitespace", padding: 1 });
+                const result4 = await execute("text.column-align", input, { delimiter: "whitespace", padding: 4 });
+                // padding=4 should produce a wider separator
+                expect(result4.length).toBeGreaterThan(result1.length);
+            });
+
+            it("should handle single-column input unchanged", async () => {
+                const input = "one\ntwo\nthree";
+                const result = await execute("text.column-align", input);
+                expect(result).toBe("one\ntwo\nthree");
+            });
+
+            it("should handle empty lines", async () => {
+                const input = "a b\n\nc d";
+                const result = await execute("text.column-align", input, { delimiter: "whitespace", padding: 2 });
+                const lines = result.split("\n");
+                expect(lines).toHaveLength(3);
+                expect(lines[1]).toBe("");
+            });
+
+            it("should leave the last column unpadded", async () => {
+                const input = "a short\nb longer-value";
+                const result = await execute("text.column-align", input, { delimiter: "whitespace", padding: 2 });
+                const lines = result.split("\n");
+                // Last column should not have trailing spaces
+                expect(lines[0]).toMatch(/short$/);
+                expect(lines[1]).toMatch(/longer-value$/);
+            });
+        });
     });
 
     describe("Prefix/Suffix Operations", () => {
@@ -344,7 +490,7 @@ describe("Core Pipeline Operations", () => {
                 const input = "line1\nline2\nline3";
                 const result = await execute("text.add-prefix", input, {
                     prefix: ">> ",
-                }, true);
+                });
                 expect(result).toBe(">> line1\n>> line2\n>> line3");
             });
 
@@ -360,7 +506,7 @@ describe("Core Pipeline Operations", () => {
                 const input = "line1\nline2\nline3";
                 const result = await execute("text.add-suffix", input, {
                     suffix: " <<",
-                }, true);
+                });
                 expect(result).toBe("line1 <<\nline2 <<\nline3 <<");
             });
 
@@ -575,7 +721,6 @@ describe("Core Pipeline Operations", () => {
             );
 
             const step = createStep("text.add-prefix", { prefix: ">> " });
-            step.applyPerLine = true;
             const pipeline = createPipeline();
             pipeline.steps.push(step);
 
@@ -591,7 +736,6 @@ describe("Core Pipeline Operations", () => {
             );
 
             const step = createStep("text.add-suffix", { suffix: " <<" });
-            step.applyPerLine = true;
             const pipeline = createPipeline();
             pipeline.steps.push(step);
 
@@ -629,7 +773,6 @@ describe("Core Pipeline Operations", () => {
             pipeline.steps.push(createStep("text.trim"));
             pipeline.steps.push(createStep("text.uppercase"));
             const prefixStep = createStep("text.add-prefix", { prefix: "> " });
-            prefixStep.applyPerLine = true;
             pipeline.steps.push(prefixStep);
 
             const result = await runPipeline("  hello world  ", pipeline);

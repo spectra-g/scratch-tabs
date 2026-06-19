@@ -119,6 +119,118 @@ describe("XML Pipeline Operations", () => {
         });
     });
 
+    describe("xml.xpath", () => {
+        const bookXml = `<library>
+  <book category="fiction">
+    <title>Great Expectations</title>
+    <author>Dickens</author>
+    <price>12.99</price>
+  </book>
+  <book category="non-fiction">
+    <title>Sapiens</title>
+    <author>Harari</author>
+    <price>15.50</price>
+  </book>
+</library>`;
+
+        it("should select all title text nodes", async () => {
+            const result = await execute("xml.xpath", bookXml, { query: "//title" });
+            expect(result).toContain("Great Expectations");
+            expect(result).toContain("Sapiens");
+        });
+
+        it("should return results separated by newline by default", async () => {
+            const result = await execute("xml.xpath", bookXml, { query: "//title" });
+            const lines = result.split("\n");
+            expect(lines).toHaveLength(2);
+        });
+
+        it("should return a single attribute value", async () => {
+            const result = await execute("xml.xpath", bookXml, {
+                query: "//book[@category='fiction']/title",
+            });
+            expect(result).toBe("Great Expectations");
+        });
+
+        it("should extract attribute with @", async () => {
+            const result = await execute("xml.xpath", bookXml, {
+                query: "//book/@category",
+            });
+            expect(result).toContain("fiction");
+            expect(result).toContain("non-fiction");
+        });
+
+        it("should evaluate a string() XPath function", async () => {
+            const result = await execute("xml.xpath", bookXml, {
+                query: "string(//book[1]/title)",
+                resultType: "string",
+            });
+            expect(result).toBe("Great Expectations");
+        });
+
+        it("should evaluate a count() XPath function as number", async () => {
+            const result = await execute("xml.xpath", bookXml, {
+                query: "count(//book)",
+                resultType: "number",
+            });
+            expect(result).toBe("2");
+        });
+
+        it("should evaluate a boolean XPath expression", async () => {
+            const result = await execute("xml.xpath", bookXml, {
+                query: "count(//book) > 1",
+                resultType: "boolean",
+            });
+            expect(result).toBe("true");
+        });
+
+        it("should return XML serialization when nodeFormat=xml", async () => {
+            const result = await execute("xml.xpath", bookXml, {
+                query: "//book[@category='fiction']",
+                nodeFormat: "xml",
+            });
+            expect(result).toContain("<title>");
+            expect(result).toContain("Great Expectations");
+        });
+
+        it("should use custom separator", async () => {
+            const result = await execute("xml.xpath", bookXml, {
+                query: "//title",
+                separator: " | ",
+            });
+            expect(result).toBe("Great Expectations | Sapiens");
+        });
+
+        it("should support \\n literal as newline separator", async () => {
+            const result = await execute("xml.xpath", bookXml, {
+                query: "//title",
+                separator: "\\n",
+            });
+            expect(result).toContain("\n");
+        });
+
+        it("should throw on invalid XML", async () => {
+            await expect(execute("xml.xpath", "<root><unclosed>", { query: "//*" }))
+                .rejects.toThrow();
+        });
+
+        it("should throw on invalid XPath expression", async () => {
+            await expect(execute("xml.xpath", "<root/>", { query: "///invalid[[[" }))
+                .rejects.toThrow();
+        });
+
+        it("should return empty string when no nodes match", async () => {
+            const result = await execute("xml.xpath", bookXml, { query: "//nonexistent" });
+            expect(result).toBe("");
+        });
+
+        it("should handle simple single-element XML", async () => {
+            const xml = "<root><item>hello</item></root>";
+            const result = await execute("xml.xpath", xml, { query: "//item" });
+            expect(result).toBe("hello");
+        });
+    });
+
     describe("json.to-xml", () => {
         it("should convert simple JSON to XML", async () => {
             const input = '{"root":{"name":"John"}}';
