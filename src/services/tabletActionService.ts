@@ -11,6 +11,7 @@ export interface TabletActionMessage<T = unknown> {
     tabId?: string;
     titleHint?: string;
     side?: 'left' | 'right';
+    openInBackground?: boolean;
   };
 }
 
@@ -26,7 +27,7 @@ class TabletActionService {
     }
 
     if (action === 'new-tab') {
-      const { handleNewPopulatedTab } = useRootStore.getState();
+      const { addBackgroundTab, handleNewPopulatedTab } = useRootStore.getState();
       const { activeWorkspaceId } = useWorkspaceStore.getState();
 
       const initialState = targetTabletDef.createInitialState(payload);
@@ -48,7 +49,12 @@ class TabletActionService {
       // Determine which side to open the tab on
       // If source.side is 'right', pass true; otherwise default to false (left side)
       const toRightSide = source.side === 'right';
-      
+
+      if (source.openInBackground) {
+        addBackgroundTab(newTab, toRightSide);
+        return;
+      }
+
       handleNewPopulatedTab(newTab, toRightSide);
     }
   }
