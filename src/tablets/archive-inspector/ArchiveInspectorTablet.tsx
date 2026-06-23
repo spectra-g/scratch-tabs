@@ -26,8 +26,8 @@ import { ZipBombWarning } from "./components/ZipBombWarning";
 import { storeArchiveBlob, loadArchiveBlob } from "./utils/blobStore";
 import { hasGarbledFilenames } from "./utils/detectGarbledFilenames";
 import { isZipBomb } from "./utils/detectZipBomb";
-import { prettyPrint, needsPrettyPrint } from "./utils/prettyPrintXmlJson";
 import { getAllParentPaths } from "./utils/sortEntries";
+import { buildPreviewFromBytes, PREVIEW_TEXT_LIMIT, HEX_PAGE_SIZE } from "./utils/buildPreview";
 import { useTabletContext } from "../bridge/context";
 import { useRootStore } from "../../stores";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
@@ -37,15 +37,7 @@ import { Loader2, AlertCircle } from "../../components/Icons";
 // Vite worker import — mocked in component tests
 import ArchiveWorkerFactory from "../../workers/archiveWorker?worker";
 
-const PREVIEW_TEXT_LIMIT = 512 * 1024;
-const HEX_PAGE_SIZE = 64 * 1024;
 const MAX_FILE_SIZE = 256 * 1024 * 1024;
-
-const TEXT_EXTS = new Set([
-  "txt", "md", "log", "sh", "py", "go", "rs", "java", "kt", "ts", "tsx",
-  "js", "jsx", "css", "html", "htm", "xml", "json", "yaml", "yml", "toml",
-  "ini", "properties", "env", "gitignore", "sql", "csv", "conf", "cfg",
-]);
 
 function createInitialData(): ArchiveInspectorData {
   return {
@@ -82,74 +74,6 @@ function createInitialData(): ArchiveInspectorData {
     contentSearchSkipped: 0,
     contentSearchLimited: false,
     openedEntryPath: null,
-  };
-}
-
-function buildPreviewFromBytes(
-  path: string,
-  bytes: Uint8Array,
-  truncated: boolean,
-  entry: ArchiveEntry | null,
-  hexPage: number,
-): PreviewResult {
-  const name = path.split("/").pop() ?? path;
-  const ext = name.split(".").pop()?.toLowerCase() ?? "";
-
-  if (entry?.isImagePreviewable) {
-    let binary = "";
-    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-    return {
-      path,
-      type: "image",
-      content: `data:${entry.mimeType};base64,${btoa(binary)}`,
-      truncated: false,
-      hexPage: 0,
-      originalSize: entry.sizeUncompressed,
-    };
-  }
-
-  if (entry?.isTextPreviewable || TEXT_EXTS.has(ext)) {
-    try {
-      let text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
-      const type = ext === "json" ? "json" : ext === "xml" ? "xml" : "text";
-      if ((ext === "json" || ext === "xml") && needsPrettyPrint(text)) {
-        text = prettyPrint(text, ext as "json" | "xml");
-      }
-      return {
-        path,
-        type,
-        content: text,
-        truncated,
-        hexPage: 0,
-        originalSize: entry?.sizeUncompressed ?? bytes.length,
-      };
-    } catch {
-      // fall through to hex
-    }
-  }
-
-  const hexLines: string[] = [];
-  for (let row = 0; row < bytes.length; row += 16) {
-    const chunk = bytes.slice(row, row + 16);
-    const absOffset = hexPage * HEX_PAGE_SIZE + row;
-    const offset = absOffset.toString(16).padStart(8, "0").toUpperCase();
-    const hex = Array.from(chunk)
-      .map((b) => b.toString(16).padStart(2, "0").toUpperCase())
-      .join(" ")
-      .padEnd(47, " ");
-    const ascii = Array.from(chunk)
-      .map((b) => (b >= 32 && b <= 126 ? String.fromCharCode(b) : "."))
-      .join("");
-    hexLines.push(`${offset}  ${hex}  ${ascii}`);
-  }
-
-  return {
-    path,
-    type: "binary-hex",
-    content: hexLines.join("\n"),
-    truncated,
-    hexPage,
-    originalSize: entry?.sizeUncompressed ?? bytes.length,
   };
 }
 
@@ -271,7 +195,11 @@ const ArchiveInspectorUI: React.FC<ArchiveInspectorUIProps> = ({ state, onChange
     workerRef.current = null;
   }
 
-  useEffect(() => () => terminateWorker(), []);
+  useEffect(() => () => {
+    terminateWorker();
+    deleteArchiveBlob(blobKey).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Re-attach handler when callback reference changes
   useEffect(() => {
@@ -374,9 +302,11 @@ const ArchiveInspectorUI: React.FC<ArchiveInspectorUIProps> = ({ state, onChange
   }
 
   async function handleOpenInNewTab(entry: ArchiveEntry) {
-    const content = stateRef.current.data.previewContent?.content ?? "";
+    const currentPreview = stateRef.current.data.previewContent;
+    const content = currentPreview?.path === entry.path ? currentPreview.content : "";
     const ext = entry.name.split(".").pop()?.toLowerCase() ?? "";
-    const language = ext || "plaintext";
+    const isImage = entry.isImagePreviewable && currentPreview?.type === "image";
+    const language = isImage ? "image" : ext || "plaintext";
     update({ openedEntryPath: entry.path });
     addBackgroundTab(
       {
@@ -384,7 +314,8 @@ const ArchiveInspectorUI: React.FC<ArchiveInspectorUIProps> = ({ state, onChange
         title: `${stateRef.current.data.fileName ?? "archive"}: ${entry.name}`,
         content,
         language,
-        languageLocked: language !== "plaintext",
+        languageLocked: isImage || language !== "plaintext",
+        activeViewId: isImage ? "image-smart-view" : undefined,
         cursorPosition: { lineNumber: 1, column: 1 },
         dateCreated: Date.now(),
         lastModified: Date.now(),
@@ -592,8 +523,9 @@ const ArchiveInspectorUI: React.FC<ArchiveInspectorUIProps> = ({ state, onChange
                 onExtractSubtree={handleExtractSubtree}
                 onInspectNested={handleInspectNested}
                 onCopyContent={async (entry) => {
-                  if (data.previewContent?.content) {
-                    await navigator.clipboard.writeText(data.previewContent.content);
+                  const { previewContent } = data;
+                  if (previewContent?.path === entry.path && previewContent.content) {
+                    await navigator.clipboard.writeText(previewContent.content);
                   }
                 }}
               />
