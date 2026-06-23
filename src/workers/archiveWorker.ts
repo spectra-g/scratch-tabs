@@ -75,7 +75,7 @@ async function handleExtract(msg: {
   const slice = allBytes.slice(offset, offset + maxBytes);
   const truncated = offset + maxBytes < allBytes.length;
 
-  self.postMessage({ type: "extract-result", path: msg.path, bytes: slice, truncated });
+  self.postMessage({ type: "extract-result", path: msg.path, bytes: slice, truncated }, [slice.buffer]);
 }
 
 async function handleExtractBatch(msg: { buffer: ArrayBuffer; paths: string[] }) {
@@ -89,7 +89,7 @@ async function handleExtractBatch(msg: { buffer: ArrayBuffer; paths: string[] })
     results.push({ path, bytes });
   }
 
-  self.postMessage({ type: "extract-batch-result", results });
+  self.postMessage({ type: "extract-batch-result", results }, results.map((r) => r.bytes.buffer));
 }
 
 async function handleZipSubtree(msg: { buffer: ArrayBuffer; folderPath: string }) {
@@ -118,7 +118,7 @@ async function handleZipSubtree(msg: { buffer: ArrayBuffer; folderPath: string }
   await Promise.all(promises);
   const bytes = await newZip.generateAsync({ type: "uint8array", compression: "DEFLATE" });
   const folderName = prefix.split("/").filter(Boolean).pop() ?? "subtree";
-  self.postMessage({ type: "zip-subtree-result", bytes, fileName: `${folderName}.zip` });
+  self.postMessage({ type: "zip-subtree-result", bytes, fileName: `${folderName}.zip` }, [bytes.buffer]);
 }
 
 async function handleContentSearch(msg: {
