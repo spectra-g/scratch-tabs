@@ -26,7 +26,7 @@ function renderHexView(content: string): React.ReactNode {
   );
 }
 
-function buildHexContent(base64Page: string): string {
+export function buildHexContent(base64Page: string): string {
   try {
     const binary = atob(base64Page);
     const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
@@ -47,7 +47,7 @@ function buildHexContent(base64Page: string): string {
 
     return lines.join("\n");
   } catch {
-    return content;
+    return base64Page;
   }
 }
 

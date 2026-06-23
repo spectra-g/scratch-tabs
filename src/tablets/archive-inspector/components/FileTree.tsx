@@ -155,6 +155,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
           entry={contextMenu.entry}
           position={contextMenu.position}
           copiedId={contextMenu.copiedId}
+          isCurrentlyPreviewed={contextMenu.entry.path === selectedPath}
           onClose={() => setContextMenu(null)}
           onPreview={() => onSelectEntry(contextMenu.entry.path)}
           onOpenInNewTab={() => onOpenInNewTab(contextMenu.entry)}

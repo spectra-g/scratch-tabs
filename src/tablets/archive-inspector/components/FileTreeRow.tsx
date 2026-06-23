@@ -1,4 +1,5 @@
 import React from "react";
+import { areEqual } from "react-window";
 import {
   ChevronRight,
   ChevronDown,
@@ -97,4 +98,4 @@ export const FileTreeRow = React.memo<FileTreeRowProps>(function FileTreeRow({
       )}
     </div>
   );
-});
+}, areEqual);

@@ -21,6 +21,7 @@ interface EntryContextMenuProps {
   onExtractSubtree?: () => void;
   onInspectNested?: () => void;
   copiedId: string | null;
+  isCurrentlyPreviewed?: boolean;
 }
 
 const ARCHIVE_EXTS = new Set(["zip", "jar", "war", "ear", "apk", "ipa", "epub", "docx", "xlsx", "pptx"]);
@@ -42,6 +43,7 @@ export const EntryContextMenu: React.FC<EntryContextMenuProps> = ({
   onExtractSubtree,
   onInspectNested,
   copiedId,
+  isCurrentlyPreviewed = false,
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -65,9 +67,9 @@ export const EntryContextMenu: React.FC<EntryContextMenuProps> = ({
 
   const items = [
     { id: "preview", label: "Preview", icon: Eye, action: onPreview, hidden: entry.isDirectory },
-    { id: "new-tab", label: "Open in New Tab", icon: ExternalLink, action: onOpenInNewTab, hidden: entry.isDirectory },
+    { id: "new-tab", label: "Open in New Tab", icon: ExternalLink, action: onOpenInNewTab, hidden: entry.isDirectory || !isCurrentlyPreviewed },
     { id: "copy-path", label: copiedId === "path" ? "Copied!" : "Copy path", icon: Copy, action: onCopyPath },
-    { id: "copy-content", label: copiedId === "content" ? "Copied!" : "Copy content", icon: Copy, action: onCopyContent, hidden: entry.isDirectory },
+    { id: "copy-content", label: copiedId === "content" ? "Copied!" : "Copy content", icon: Copy, action: onCopyContent, hidden: entry.isDirectory || !isCurrentlyPreviewed },
     { id: "extract", label: "Extract file", icon: Download, action: onExtractFile, hidden: entry.isDirectory },
     { id: "subtree", label: "Extract subtree", icon: FolderOpen, action: onExtractSubtree, hidden: !entry.isDirectory },
     { id: "nested", label: "Inspect nested archive → New Tab", icon: Archive, action: onInspectNested, hidden: !isNestedArchive(entry) },

@@ -21,6 +21,8 @@ export function prettyPrint(content: string, type: "json" | "xml"): string {
 }
 
 function formatXml(xml: string): string {
+  // CDATA sections and text nodes with embedded '<'/'>' would be corrupted by regex splitting
+  if (xml.includes("<![CDATA[")) return xml;
   const normalized = xml.replace(/>\s*</g, ">\n<");
   const tokens = normalized.split("\n");
   let indent = 0;
