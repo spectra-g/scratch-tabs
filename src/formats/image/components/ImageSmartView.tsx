@@ -70,9 +70,31 @@ export const ImageSmartView: React.FC<SmartViewProps> = ({
     }
   }, []);
 
+  const showNotice = useCallback((msg: string) => {
+    setNotice(msg);
+    if (noticeTimerRef.current !== null) window.clearTimeout(noticeTimerRef.current);
+    noticeTimerRef.current = window.setTimeout(() => {
+      setNotice(null);
+      noticeTimerRef.current = null;
+    }, 1800);
+  }, []);
+
   const copyText = useCallback((value: string) => {
     navigator.clipboard?.writeText(value).catch(() => undefined);
   }, []);
+
+  const handleCopyImage = useCallback(() => {
+    if (!activeCanvas) return;
+    activeCanvas.toBlob(async (blob) => {
+      if (!blob) return;
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+        showNotice("Copied");
+      } catch {
+        showNotice("Copy failed");
+      }
+    }, "image/png");
+  }, [activeCanvas, showNotice]);
 
   const sendToPalette = useCallback((payload: Record<string, unknown>, titleHint = `${sourceTitle} Palette`) => {
     tabletActionService.handleAction({
@@ -91,15 +113,8 @@ export const ImageSmartView: React.FC<SmartViewProps> = ({
         openInBackground: true,
       },
     });
-    setNotice("Sent to Colour Palette");
-    if (noticeTimerRef.current !== null) {
-      window.clearTimeout(noticeTimerRef.current);
-    }
-    noticeTimerRef.current = window.setTimeout(() => {
-      setNotice(null);
-      noticeTimerRef.current = null;
-    }, 1800);
-  }, [content, side, sourceTitle, tabId]);
+    showNotice("Sent to Colour Palette");
+  }, [content, showNotice, side, sourceTitle, tabId]);
 
   const handleExport = useCallback((format: ImageExportFormat) => {
     const option = getExportOption(format);
@@ -136,6 +151,7 @@ export const ImageSmartView: React.FC<SmartViewProps> = ({
         onRedo={() => dispatch({ type: "redo" })}
         onResetEdits={() => dispatch({ type: "reset" })}
         onExport={handleExport}
+        onCopyImage={handleCopyImage}
         onDownloadOriginal={() => parsed && downloadDataUri(content.trim(), makeImageFileName(sourceTitle, imageMimeTypeToExtension(parsed.mimeType)))}
         onOpenPalette={() => sendToPalette({ initialColors: rendered.palette })}
         onSendPalette={() => sendToPalette({ initialColors: rendered.palette })}

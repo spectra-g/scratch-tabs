@@ -47,36 +47,44 @@ export function useImagePasteHandler({
         return;
       }
 
+      const cursorPosition = editorRef.current?.getPosition() ?? null;
+
+      const triggerImageModal = (dataUrl: string) => {
+        setPendingImageData(dataUrl);
+        if (cursorPosition) {
+          setPendingImageCursorPosition(cursorPosition);
+        }
+        onShowUpgradeModal();
+      };
+
+      // Direct image item (e.g. screenshot from OS clipboard)
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
         if (item.type.startsWith("image/")) {
           event.preventDefault();
           event.stopPropagation();
-
-          // Capture cursor position at the time of paste
-          let cursorPosition = null;
-          if (editorRef.current) {
-            cursorPosition = editorRef.current.getPosition();
-          }
-
           const file = item.getAsFile();
           if (file) {
             const reader = new FileReader();
             reader.onload = (e) => {
               const dataUrl = e.target?.result as string;
-              setPendingImageData(dataUrl);
-
-              // Store cursor position along with image data
-              if (cursorPosition) {
-                setPendingImageCursorPosition(cursorPosition);
-              }
-
-              onShowUpgradeModal();
+              triggerImageModal(dataUrl);
             };
             reader.readAsDataURL(file);
           }
-
           return;
+        }
+      }
+
+      // HTML clipboard item containing an embedded image data URL
+      // (e.g. an image copied from the rich text editor — TipTap serialises as text/html)
+      const html = event.clipboardData?.getData("text/html") ?? "";
+      if (html) {
+        const match = html.match(/src=["'](data:image\/[^"']+)["']/);
+        if (match) {
+          event.preventDefault();
+          event.stopPropagation();
+          triggerImageModal(match[1]);
         }
       }
     };

@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  Copy,
   Download,
   FlipHorizontal,
   FlipVertical,
@@ -33,6 +34,7 @@ interface ImageToolbarProps {
   onRedo: () => void;
   onResetEdits: () => void;
   onExport: (format: ImageExportFormat) => void;
+  onCopyImage: () => void;
   onDownloadOriginal: () => void;
   onOpenPalette: () => void;
   onSendPalette: () => void;
@@ -63,6 +65,7 @@ export const ImageToolbar: React.FC<ImageToolbarProps> = ({
   onRedo,
   onResetEdits,
   onExport,
+  onCopyImage,
   onDownloadOriginal,
   onOpenPalette,
   onSendPalette,
@@ -129,6 +132,9 @@ export const ImageToolbar: React.FC<ImageToolbarProps> = ({
         <Palette size={15} />
       </button>
       <button className={textButton} onClick={onSendPalette}>Send Palette</button>
+      <button className={iconButton} onClick={onCopyImage} aria-label="Copy image" title="Copy image to clipboard">
+        <Copy size={15} />
+      </button>
       <button className={iconButton} onClick={onDownloadOriginal} aria-label="Download original" title="Download original">
         <Download size={15} />
       </button>

@@ -176,6 +176,7 @@ describe("useImagePasteHandler", () => {
     };
     const mockDataTransfer = {
       items: [mockDataTransferItem],
+      getData: jest.fn(() => ""),
     };
 
     // Create custom paste event (ClipboardEvent not available in jsdom)
@@ -203,6 +204,39 @@ describe("useImagePasteHandler", () => {
     expect(mockOnShowUpgradeModal).toHaveBeenCalled();
   });
 
+  it("should detect an image embedded in a text/html clipboard item", () => {
+    renderHook(() =>
+      useImagePasteHandler({
+        containerRef: mockContainerRef,
+        editorRef: mockEditorRef,
+        activeTab: createMockTab(),
+        setPendingImageData: mockSetPendingImageData,
+        setPendingImageCursorPosition: mockSetPendingImageCursorPosition,
+        onShowUpgradeModal: mockOnShowUpgradeModal,
+      })
+    );
+
+    const dataUrl = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA";
+    const html = `<meta charset="utf-8"><img src="${dataUrl}" alt="">`;
+
+    const mockDataTransfer = {
+      items: [{ kind: "string", type: "text/html", getAsFile: () => null, getAsString: jest.fn(), webkitGetAsEntry: jest.fn() }],
+      getData: jest.fn((type: string) => (type === "text/html" ? html : "")),
+    };
+
+    const pasteEvent = new Event("paste", { bubbles: true, cancelable: true });
+    Object.defineProperty(pasteEvent, "clipboardData", {
+      value: mockDataTransfer,
+      writable: false,
+    });
+
+    mockContainer.dispatchEvent(pasteEvent);
+
+    expect(mockSetPendingImageData).toHaveBeenCalledWith(dataUrl);
+    expect(mockSetPendingImageCursorPosition).toHaveBeenCalledWith({ lineNumber: 5, column: 10 });
+    expect(mockOnShowUpgradeModal).toHaveBeenCalled();
+  });
+
   it("should ignore non-image paste events", () => {
     renderHook(() =>
       useImagePasteHandler({
@@ -225,6 +259,7 @@ describe("useImagePasteHandler", () => {
     };
     const mockDataTransfer = {
       items: [mockDataTransferItem],
+      getData: jest.fn(() => ""),
     };
 
     // Create custom paste event (ClipboardEvent not available in jsdom)
