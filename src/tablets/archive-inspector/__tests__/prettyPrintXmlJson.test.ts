@@ -61,4 +61,15 @@ describe("prettyPrint XML", () => {
     const result = prettyPrint("<a><b><c>text</c></b></a>", "xml");
     expect(result).toContain("\n    <c>");
   });
+
+  it("returns CDATA content unchanged to avoid corruption", () => {
+    const xml = "<root><![CDATA[<b>not a tag</b>]]></root>";
+    expect(prettyPrint(xml, "xml")).toBe(xml);
+  });
+
+  it("does not insert newlines inside CDATA when input has no existing newlines", () => {
+    const xml = '<doc><data><![CDATA[x<y&z]]></data></doc>';
+    const result = prettyPrint(xml, "xml");
+    expect(result).toContain("<![CDATA[x<y&z]]>");
+  });
 });

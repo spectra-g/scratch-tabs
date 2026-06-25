@@ -613,6 +613,31 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
     setShowUpgradeModal(false);
   };
 
+  const handleOpenAsImageTab = () => {
+    const { pendingImageData, setPendingImageData, setPendingImageCursorPosition, setPendingImageCursorOffset } = useClipboardStore.getState();
+    if (pendingImageData) {
+      const { handleNewPopulatedTab } = useRootStore.getState();
+      handleNewPopulatedTab(
+        {
+          id: crypto.randomUUID(),
+          title: "image",
+          content: pendingImageData,
+          language: "image",
+          languageLocked: true,
+          cursorPosition: { lineNumber: 1, column: 1 },
+          dateCreated: Date.now(),
+          lastModified: Date.now(),
+          workspaceId: activeTab?.workspaceId || "",
+        },
+        side === "right",
+      );
+    }
+    setPendingImageData(null);
+    setPendingImageCursorPosition(null);
+    setPendingImageCursorOffset(null);
+    setShowUpgradeModal(false);
+  };
+
 
   return (
     <div className="flex flex-col h-full w-full bg-surface">
@@ -661,6 +686,7 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
         isOpen={showUpgradeModal}
         onConfirm={handleUpgradeConfirm}
         onCancel={handleUpgradeCancel}
+        onOpenAsImage={handleOpenAsImageTab}
       />
     </div>
   );

@@ -42,11 +42,21 @@ export interface ColourPaletteState {
   colors: ColorInfo[];
   sourceImageUrl: string | null;
   extractionRegion: { x: number; y: number; width: number; height: number } | null;
+  initialOpenPanel?: 'image' | 'preview' | 'accessibility' | 'export' | 'history' | null;
   uiMapping: UIPreviewMapping;
   selectedExportFormat: string;
   harmonyType: 'complementary' | 'triadic' | 'analogous' | 'monochromatic' | 'tetradic';
   baseColor: string;
   history?: ColorInfo[][];
+}
+
+export interface ColourPaletteImagePayload {
+  sourceImageUrl?: string;
+  sourceTitle?: string;
+  initialColors?: string[];
+  extractionRegion?: { x: number; y: number; width: number; height: number };
+  samplePoint?: { x: number; y: number };
+  openPanel?: 'image' | 'preview' | 'accessibility' | 'export';
 }
 
 export interface ImageExtractionOptions {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { ColourPaletteState, ColorInfo, UIPreviewMapping } from './types';
+import { ColourPaletteImagePayload, ColourPaletteState, ColorInfo, UIPreviewMapping } from './types';
 import { createColorInfo } from './utils/colourUtils';
 import { usePaletteEngine } from './hooks/usePaletteEngine';
 import { PaletteCanvas } from './components/PaletteCanvas';
@@ -45,7 +45,9 @@ export const ColourPaletteTablet: React.FC<ColourPaletteTabletProps> = ({
   const { tabId } = useTabletContext();
 
   // -- Local UI State --
-  const [activePanel, setActivePanel] = useState<'image' | 'preview' | 'accessibility' | 'export' | 'history' | null>(null);
+  const [activePanel, setActivePanel] = useState<'image' | 'preview' | 'accessibility' | 'export' | 'history' | null>(
+    state.initialOpenPanel ?? (state.sourceImageUrl ? 'image' : null),
+  );
   const [uiMapping, setUiMapping] = useState<UIPreviewMapping>(state.uiMapping || DEFAULT_UI_MAPPING);
 
   // -- Engine Hook --
@@ -224,16 +226,17 @@ export const ColourPaletteTablet: React.FC<ColourPaletteTabletProps> = ({
 };
 
 // Default export for the dynamic registry
-const createColourPaletteInitialState = (): ColourPaletteState => ({
+const createColourPaletteInitialState = (payload?: ColourPaletteImagePayload): ColourPaletteState => ({
   type: 'colourpalette' as const,
-  colors: [],
-  sourceImageUrl: null,
-  extractionRegion: null,
+  colors: payload?.initialColors?.map(createColorInfo) ?? [],
+  sourceImageUrl: payload?.sourceImageUrl ?? null,
+  extractionRegion: payload?.extractionRegion ?? null,
+  initialOpenPanel: payload?.openPanel ?? (payload?.sourceImageUrl ? 'image' : null),
   uiMapping: DEFAULT_UI_MAPPING,
   selectedExportFormat: 'hex',
   harmonyType: 'complementary',
   history: [],
-  baseColor: DEFAULT_COLORS[0]
+  baseColor: payload?.initialColors?.[0] ?? DEFAULT_COLORS[0]
 });
 
 export default {

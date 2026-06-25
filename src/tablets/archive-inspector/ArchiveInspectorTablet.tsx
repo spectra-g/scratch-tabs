@@ -197,7 +197,6 @@ const ArchiveInspectorUI: React.FC<ArchiveInspectorUIProps> = ({ state, onChange
 
   useEffect(() => () => {
     terminateWorker();
-    deleteArchiveBlob(blobKey).catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -597,7 +596,7 @@ export const archiveInspectorTablet: Tablet = {
   serializeState(state: TabletState): string {
     const s = state as ArchiveInspectorState;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { isParsing, isLoadingPreview, previewError, ...persistable } = s.data;
+    const { isParsing, isLoadingPreview, previewError, blobMissing, ...persistable } = s.data;
     // Clear base64Input rather than omit it — TabletView passes raw JSON directly to
     // render(), so any omitted key arrives as undefined and breaks string methods.
     return JSON.stringify({ type: s.type, data: { ...persistable, base64Input: "" } });
