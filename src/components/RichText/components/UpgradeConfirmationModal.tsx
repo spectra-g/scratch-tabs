@@ -5,12 +5,14 @@ interface UpgradeConfirmationModalProps {
   isOpen: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  onOpenAsImage?: () => void;
 }
 
 export const UpgradeConfirmationModal: React.FC<UpgradeConfirmationModalProps> = ({
   isOpen,
   onConfirm,
   onCancel,
+  onOpenAsImage,
 }) => {
   if (!isOpen) return null;
 
@@ -44,8 +46,16 @@ export const UpgradeConfirmationModal: React.FC<UpgradeConfirmationModalProps> =
             onClick={onCancel}
             className="px-4 py-2 text-sm text-muted hover:text-main transition-colors"
           >
-            Keep as Text
+            Dismiss
           </button>
+          {onOpenAsImage && (
+            <button
+              onClick={onOpenAsImage}
+              className="px-4 py-2 text-sm border border-base text-main hover:bg-surface-highlight rounded-md transition-colors"
+            >
+              Open in New Tab
+            </button>
+          )}
           <button
             onClick={onConfirm}
             className="px-4 py-2 text-sm bg-primary hover:bg-primary-hover text-white rounded-md transition-colors"

@@ -596,4 +596,10 @@ export const tabletMetadata: TabletMetadata[] = [
       return [];
     },
   },
+  {
+    id: "archive-inspector",
+    label: "Archive Inspector",
+    description: "Inspect ZIP, JAR, APK, DOCX, EPUB and all ZIP-format archives offline.",
+    keywords: ["zip", "jar", "apk", "docx", "epub", "archive", "unzip", "inspect"],
+  },
 ];

@@ -22,15 +22,18 @@ const mockUseWorkspaceStore = useWorkspaceStore as jest.MockedFunction<typeof us
 
 describe('TabletActionService', () => {
   let mockHandleNewPopulatedTab: jest.Mock;
+  let mockAddBackgroundTab: jest.Mock;
   let mockTablet: Tablet;
 
   beforeEach(() => {
     jest.clearAllMocks();
     
     mockHandleNewPopulatedTab = jest.fn();
+    mockAddBackgroundTab = jest.fn();
     
     (mockUseRootStore as any).getState = jest.fn(() => ({
       handleNewPopulatedTab: mockHandleNewPopulatedTab,
+      addBackgroundTab: mockAddBackgroundTab,
     }));
 
     (mockUseWorkspaceStore as any).getState = jest.fn(() => ({
@@ -105,6 +108,34 @@ describe('TabletActionService', () => {
         }),
         false
       );
+    });
+
+    it('should create a background tab when requested', async () => {
+      mockDynamicTabletRegistry.getById.mockResolvedValue(mockTablet);
+
+      const message: TabletActionMessage = {
+        targetTablet: 'test-tablet',
+        action: 'new-tab',
+        payload: { content: 'test content' },
+        source: {
+          tabId: 'source-tab-id',
+          titleHint: 'Background Tablet',
+          side: 'right',
+          openInBackground: true,
+        },
+      };
+
+      await tabletActionService.handleAction(message);
+
+      expect(mockAddBackgroundTab).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Background Tablet',
+          isTablet: true,
+          tabletState: '{"type":"test","data":{"content":"test content"}}',
+        }),
+        true,
+      );
+      expect(mockHandleNewPopulatedTab).not.toHaveBeenCalled();
     });
 
     it('should handle empty workspace ID gracefully', async () => {

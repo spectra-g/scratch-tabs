@@ -130,38 +130,45 @@
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
 
-        <!-- Version 1.40.0 -->
+        <!-- Version 1.41.0 -->
         <div class="changelog-entry latest">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-white">V1.40.0</h2>
+              <h2 class="text-2xl font-bold text-white">V1.41.0</h2>
               <span class="badge latest">LATEST</span>
             </div>
-            <span class="text-gray-500 text-xs font-mono">06/19/2026</span>
+            <span class="text-gray-500 text-xs font-mono">06/25/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">XML SMART VIEW + FIVE NEW PIPELINE OPERATIONS</h3>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">ARCHIVE INSPECTOR + IMAGE SMART VIEW</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">The XML Smart View replaces the plain editor for XML tabs with a three-panel layout: a live structure tree on the left, the Monaco editor in the center, and a node detail panel on the right. A bottom panel switches between diagnostics (parse errors, security warnings, large-payload flags) and an XPath workbench with live evaluation and CSV/JSON/XML export. Clicking anywhere in the editor selects the corresponding tree node and updates the detail panel. All UI state - expanded nodes, selected node, XPath expression, scroll positions - is preserved when switching tabs. This release also adds five pipeline operations: xml.xpath for querying XML without leaving the pipeline, jwt.sign to close the encode/decode symmetry gap, docker.run-to-compose for offline container config conversion, and two text utilities - remove-line-numbers and column-align.</p>
+            <p class="mb-4">Archive Inspector opens ZIP-format archives entirely offline - browse the file tree, preview entries, and extract files with zero upload. Images now get their own smart view with zoom, pan, crop, and basic edits, and can send colours straight to the Colour Palette tablet.</p>
 
             <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
             <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>XML Structure tree:</strong> Collapsible element tree synced bidirectionally with the editor - clicking a tree node selects and reveals it in the editor; moving the cursor in the editor highlights the deepest node at that position</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Node inspector:</strong> Right-hand panel shows element kind, path, line/column, namespace, attribute list, and one-click copy buttons for node XML, inner XML, text content, XPath, Clark notation, and CSS path</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Diagnostics panel:</strong> Reports parse errors with jump-to-line links, security warnings (XXE entities, external DTDs, large base64 payloads), and payload size stats</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>XPath workbench:</strong> Live XPath 1.0 evaluator with 300ms debounce, result table showing type/name/value/path, and export to CSV, JSON, or XML in a background tab; hints when a default namespace requires a generated prefix</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Format and Minify:</strong> Toolbar buttons to pretty-print (2-space indent, comment-preserving, xml:space aware) or minify the XML in place, with full undo stack support</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>JSON conversion:</strong> Converts XML to a structured JSON object (attributes under `@attributes`, text under `#text`) and opens it in a background tab</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>xml.xpath pipeline operation:</strong> Evaluate an XPath 1.0 expression on XML input and return matching nodes, strings, numbers, or booleans - the natural companion to json.jsonpath</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>jwt.sign pipeline operation:</strong> Sign a JSON payload as a JWT using HS256, HS384, or HS512 via Web Crypto - closes the encode/decode symmetry gap left by jwt.decode</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>docker.run-to-compose pipeline operation:</strong> Convert a `docker run` command into an equivalent docker-compose.yml service definition; handles ports, volumes, env vars, restart policy, resource limits, and more</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>text.remove-line-numbers pipeline operation:</strong> Strip leading numbering from each line (complement of the existing text.add-line-numbers)</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>text.column-align pipeline operation:</strong> Align whitespace- or tab-separated columns to uniform widths, equivalent to `column -t`</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Archive Inspector tablet:</strong> Browse ZIP, JAR, APK, DOCX, XLSX, and EPUB archives with a file tree, search, and stats panel - fully offline</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Archive previews:</strong> Text, JSON, XML, image, and hex previews per entry, with copy, extract, and open-in-new-tab actions</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Image smart view:</strong> Zoom, pan, rotate, flip, crop, resize, and colour adjustments with undo/redo and compare</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Colour Palette handoff:</strong> Send a sampled colour or extracted palette from the Image smart view into a new Colour Palette tab</span></li>
             </ul>
 
             <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># improvements</h4>
             <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Tab state persistence:</strong> Expanded tree nodes, selected node, active bottom tab, XPath expression, tree scroll position, and editor scroll/cursor/fold state are all saved and restored when switching between tabs</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Image paste/drop:</strong> Pasting or dropping an image now opens it in the Image smart view instead of raw text</span></li>
             </ul>
+          </div>
+        </div>
+        <!-- Version 1.40.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.40.0</h2>
+              <span class="badge latest">LATEST</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">06/19/2026</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">XML SMART VIEW + FIVE NEW PIPELINE OPERATIONS</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p>A dedicated smart view for XML tabs with a live structure tree, node inspector, diagnostics panel, and XPath workbench - plus five new pipeline operations including xml.xpath, jwt.sign, and docker run-to-compose conversion.</p>
           </div>
         </div>
         <!-- Version 1.39.0 -->
@@ -877,7 +884,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.40.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.41.0</span>
         </div>
 
         <div class="flex space-x-8">

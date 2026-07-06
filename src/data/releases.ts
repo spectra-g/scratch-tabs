@@ -15,9 +15,33 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.40.0';
+export const APP_VERSION = '1.41.0';
 
 export const RELEASES: Release[] = [
+  {
+    "version": "1.41.0",
+    "type": "latest",
+    "date": "2026-06-25",
+    "headline": "Archive Inspector + Image Smart View",
+    "summary": "A new Archive Inspector tablet for browsing ZIP/JAR/APK/DOCX/EPUB archives offline, plus an Image smart view for viewing and editing images.",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Archive Inspector tablet:** Browse ZIP, JAR, APK, DOCX, XLSX, and EPUB archives with a file tree, search, and stats panel - fully offline",
+          "**Archive previews:** Text, JSON, XML, image, and hex previews per entry, with copy, extract, and open-in-new-tab actions",
+          "**Image smart view:** Zoom, pan, rotate, flip, crop, resize, and colour adjustments with undo/redo and compare",
+          "**Colour Palette handoff:** Send a sampled colour or extracted palette from the Image smart view into a new Colour Palette tab"
+        ]
+      },
+      {
+        "name": "Improvements",
+        "changes": [
+          "**Image paste/drop:** Pasting or dropping an image now opens it in the Image smart view instead of raw text"
+        ]
+      }
+    ]
+  },
   {
     "version": "1.40.0",
     "type": "latest",

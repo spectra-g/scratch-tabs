@@ -15,6 +15,15 @@ const readFileAsText = (file: File): Promise<string> => {
   });
 };
 
+const readFileAsDataURL = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (event) => resolve(event.target?.result as string);
+    reader.onerror = (error) => reject(error);
+    reader.readAsDataURL(file);
+  });
+};
+
 interface FileSystemEntry {
   isFile: boolean;
   isDirectory: boolean;
@@ -253,7 +262,9 @@ const DragDropOverlay: React.FC = () => {
             const toRightSide = splitView?.activeSide === "right" || false;
             for (const file of regularFiles) {
               try {
-                const fileContent = await readFileAsText(file);
+                const fileContent = file.type.startsWith("image/")
+                  ? await readFileAsDataURL(file)
+                  : await readFileAsText(file);
                 const fileName = file.name.replace(/\.[^/.]+$/, ""); // Title without extension
 
                 // Detect language from file extension

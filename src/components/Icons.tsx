@@ -28,6 +28,8 @@ export {
   Pause,
   RotateCcw,
   RotateCw,
+  FlipHorizontal,
+  FlipVertical,
   SkipForward,
   Undo2,
   Redo2,
@@ -156,6 +158,8 @@ export {
   Coffee,
   ExternalLink,
   RefreshCw,
+  ZoomIn,
+  ZoomOut,
   Github,
   HardDrive,
 
