@@ -35,6 +35,8 @@ export interface UseCsvDataReturn {
   insertAndShift: (cellIdentifiers: Array<{rowId: string, columnId: string}>) => void;
   promoteFirstRowToHeader: () => void;
   demoteHeaderToFirstRow: () => void;
+  pasteCells: (startRowId: string, startColumnId: string, pastedGrid: string[][]) => void;
+  insertColumnsFromGrid: (targetColumnId: string, columnNames: string[], columnRows: string[][]) => void;
 
   // Undo/Redo (simplified)
   canUndo: boolean;
@@ -627,6 +629,134 @@ export const useCsvData = (
     [csvState, hasHeader, onContentChange],
   );
 
+  const pasteCells = useCallback(
+    (startRowId: string, startColumnId: string, pastedGrid: string[][]) => {
+      if (pastedGrid.length === 0 || pastedGrid[0].length === 0) return;
+
+      const startRowIndex = csvState.data.findIndex((row) => row.id === startRowId);
+      const startColumnIndex = csvState.columns.findIndex((col) => col.id === startColumnId);
+
+      if (startRowIndex === -1 || startColumnIndex === -1) return;
+
+      // Determine if we need to add columns or rows
+      const requiredRowCount = startRowIndex + pastedGrid.length;
+      const requiredColCount = startColumnIndex + Math.max(...pastedGrid.map(r => r.length));
+
+      let newColumns = [...csvState.columns];
+      const additionalColsNeeded = requiredColCount - csvState.columns.length;
+      if (additionalColsNeeded > 0) {
+        for (let i = 0; i < additionalColsNeeded; i++) {
+          newColumns.push({
+            id: `col_${Date.now()}_${Math.random()}_${i}`,
+            name: `Column ${newColumns.length + 1}`,
+            type: "text",
+            index: newColumns.length,
+          });
+        }
+      }
+
+      let newData = csvState.data.map((row) => {
+        // Pad existing rows with extra cells if columns were added
+        const newCells = [...row.cells];
+        if (newCells.length < newColumns.length) {
+          const cellsToAdd = newColumns.length - newCells.length;
+          for (let i = 0; i < cellsToAdd; i++) {
+            newCells.push({ value: "", isValid: true });
+          }
+        }
+        return { ...row, cells: newCells };
+      });
+
+      const additionalRowsNeeded = requiredRowCount - csvState.data.length;
+      if (additionalRowsNeeded > 0) {
+        for (let i = 0; i < additionalRowsNeeded; i++) {
+          const newRow: CsvRow = {
+            id: `row_${Date.now()}_${Math.random()}_${i}`,
+            cells: newColumns.map(() => ({ value: "", isValid: true })),
+            originalIndex: newData.length,
+            isValid: true,
+          };
+          newData.push(newRow);
+        }
+      }
+
+      // Now apply the pasted values
+      pastedGrid.forEach((pastedRow, rIdx) => {
+        const targetRowIndex = startRowIndex + rIdx;
+        const targetRow = newData[targetRowIndex];
+        if (targetRow) {
+          pastedRow.forEach((pastedValue, cIdx) => {
+            const targetColIndex = startColumnIndex + cIdx;
+            if (targetColIndex < newColumns.length) {
+              targetRow.cells[targetColIndex] = { value: pastedValue || "", isValid: true };
+            }
+          });
+        }
+      });
+
+      const newState = { columns: newColumns, data: newData };
+      setCsvState(newState);
+      saveToHistory(newState);
+      syncToContent(newState);
+    },
+    [csvState, saveToHistory, syncToContent],
+  );
+
+  const insertColumnsFromGrid = useCallback(
+    (targetColumnId: string, columnNames: string[], columnRows: string[][]) => {
+      if (columnNames.length === 0) return;
+
+      const targetColumnIndex = csvState.columns.findIndex(
+        (col) => col.id === targetColumnId,
+      );
+      const insertIndex =
+        targetColumnIndex === -1 ? csvState.columns.length : targetColumnIndex;
+      const newColumnCount = columnNames.length;
+      const requiredRowCount = Math.max(csvState.data.length, columnRows.length);
+
+      const insertedColumns: CsvColumn[] = columnNames.map((name, index) => ({
+        id: `col_${Date.now()}_${Math.random()}_${index}`,
+        name: name.trim() || `Column ${insertIndex + index + 1}`,
+        type: "text",
+        index: insertIndex + index,
+      }));
+
+      const newColumns = [
+        ...csvState.columns.slice(0, insertIndex),
+        ...insertedColumns,
+        ...csvState.columns.slice(insertIndex),
+      ].map((column, index) => ({ ...column, index }));
+
+      const newData: CsvRow[] = Array.from({ length: requiredRowCount }, (_, rowIndex) => {
+        const existingRow = csvState.data[rowIndex];
+        const existingCells =
+          existingRow?.cells.map((cell) => ({ ...cell })) ??
+          csvState.columns.map(() => ({ value: "", isValid: true }));
+        const insertedCells = Array.from({ length: newColumnCount }, (_, columnIndex) => ({
+          value: columnRows[rowIndex]?.[columnIndex] ?? "",
+          isValid: true,
+        }));
+
+        return {
+          id: existingRow?.id ?? `row_${Date.now()}_${Math.random()}_${rowIndex}`,
+          cells: [
+            ...existingCells.slice(0, insertIndex),
+            ...insertedCells,
+            ...existingCells.slice(insertIndex),
+          ],
+          originalIndex: existingRow?.originalIndex ?? rowIndex,
+          isValid: existingRow?.isValid ?? true,
+        };
+      });
+
+      const newState = { columns: newColumns, data: newData };
+      setCsvState(newState);
+      saveToHistory(newState);
+      syncToContent(newState);
+    },
+    [csvState, saveToHistory, syncToContent],
+  );
+
   // Undo/Redo
   const undo = useCallback(() => {
     if (historyIndex > 0) {
@@ -879,6 +1009,8 @@ export const useCsvData = (
     insertAndShift,
     promoteFirstRowToHeader,
     demoteHeaderToFirstRow,
+    pasteCells,
+    insertColumnsFromGrid,
 
     // Undo/Redo
     canUndo: historyIndex > 0,

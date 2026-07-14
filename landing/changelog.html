@@ -130,31 +130,46 @@
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
 
-        <!-- Version 1.41.0 -->
+        <!-- Version 1.42.0 -->
         <div class="changelog-entry latest">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-white">V1.41.0</h2>
+              <h2 class="text-2xl font-bold text-white">V1.42.0</h2>
               <span class="badge latest">LATEST</span>
             </div>
-            <span class="text-gray-500 text-xs font-mono">06/25/2026</span>
+            <span class="text-gray-500 text-xs font-mono">07/14/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">ARCHIVE INSPECTOR + IMAGE SMART VIEW</h3>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">MOBILE WELCOME + CSV TABLE EDITING</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">Archive Inspector opens ZIP-format archives entirely offline - browse the file tree, preview entries, and extract files with zero upload. Images now get their own smart view with zoom, pan, crop, and basic edits, and can send colours straight to the Colour Palette tablet.</p>
-
-            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
-            <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Archive Inspector tablet:</strong> Browse ZIP, JAR, APK, DOCX, XLSX, and EPUB archives with a file tree, search, and stats panel - fully offline</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Archive previews:</strong> Text, JSON, XML, image, and hex previews per entry, with copy, extract, and open-in-new-tab actions</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Image smart view:</strong> Zoom, pan, rotate, flip, crop, resize, and colour adjustments with undo/redo and compare</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Colour Palette handoff:</strong> Send a sampled colour or extracted palette from the Image smart view into a new Colour Palette tab</span></li>
-            </ul>
+            <p class="mb-4">The welcome screen now adapts for smaller viewports with compact actions and a desktop recommendation, while the desktop layout stays unchanged. CSV tables now support column selection and spreadsheet-style copy and paste.</p>
 
             <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># improvements</h4>
             <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Image paste/drop:</strong> Pasting or dropping an image now opens it in the Image smart view instead of raw text</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Mobile scrolling:</strong> Welcome content can be scrolled on smaller screens</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Compact actions:</strong> Primary actions use space-efficient rows and secondary actions are tucked behind More ways to start</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Desktop recommendation:</strong> A small mobile-only note sets clear expectations without blocking access</span></li>
             </ul>
+
+            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># csv_table_editing</h4>
+            <ul class="space-y-2 mb-6">
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Column selection:</strong> Click a header to select a column, then Ctrl/Cmd-click or Shift-click to extend the selection</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Copy and paste:</strong> Paste tabular data into a selected cell, expanding rows and columns as needed with undo/redo support</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Copy columns:</strong> Copy selected columns with headers and insert them before another column without overwriting data</span></li>
+            </ul>
+          </div>
+        </div>
+        <!-- Version 1.41.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.41.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">06/25/2026</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">ARCHIVE INSPECTOR + IMAGE SMART VIEW</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p>A new Archive Inspector tablet for browsing ZIP/JAR/APK/DOCX/EPUB archives offline, plus an Image smart view for viewing and editing images.</p>
           </div>
         </div>
         <!-- Version 1.40.0 -->
@@ -162,7 +177,7 @@
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
               <h2 class="text-xl font-bold text-white uppercase">V1.40.0</h2>
-              <span class="badge latest">LATEST</span>
+              <span class="badge release">RELEASE</span>
             </div>
             <span class="text-gray-500 text-xs font-mono">06/19/2026</span>
           </div>
@@ -884,7 +899,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.41.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.42.0</span>
         </div>
 
         <div class="flex space-x-8">

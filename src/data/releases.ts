@@ -15,12 +15,37 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.41.0';
+export const APP_VERSION = '1.42.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.41.0",
+    "version": "1.42.0",
     "type": "latest",
+    "date": "2026-07-14",
+    "headline": "Mobile Welcome + CSV Table Editing",
+    "summary": "A compact, scrollable welcome screen for mobile, plus column selection and spreadsheet-style copy and paste for CSV tables.",
+    "categories": [
+      {
+        "name": "Improvements",
+        "changes": [
+          "**Mobile scrolling:** Welcome content can be scrolled on smaller screens",
+          "**Compact actions:** Primary actions use space-efficient rows and secondary actions are tucked behind More ways to start",
+          "**Desktop recommendation:** A small mobile-only note sets clear expectations without blocking access"
+        ]
+      },
+      {
+        "name": "CSV Table Editing",
+        "changes": [
+          "**Column selection:** Click a header to select a column, then Ctrl/Cmd-click or Shift-click to extend the selection",
+          "**Copy and paste:** Paste tabular data into a selected cell, expanding rows and columns as needed with undo/redo support",
+          "**Copy columns:** Copy selected columns with headers and insert them before another column without overwriting data"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.41.0",
+    "type": "release",
     "date": "2026-06-25",
     "headline": "Archive Inspector + Image Smart View",
     "summary": "A new Archive Inspector tablet for browsing ZIP/JAR/APK/DOCX/EPUB archives offline, plus an Image smart view for viewing and editing images.",
@@ -44,7 +69,7 @@ export const RELEASES: Release[] = [
   },
   {
     "version": "1.40.0",
-    "type": "latest",
+    "type": "release",
     "date": "2026-06-19",
     "headline": "XML Smart View + Five New Pipeline Operations",
     "summary": "A dedicated smart view for XML tabs with a live structure tree, node inspector, diagnostics panel, and XPath workbench - plus five new pipeline operations including xml.xpath, jwt.sign, and docker run-to-compose conversion.",

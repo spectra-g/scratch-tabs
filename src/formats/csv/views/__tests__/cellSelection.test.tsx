@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { act, render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { CsvTableViewer } from "../components/CsvTableViewer";
 
@@ -20,6 +20,7 @@ Object.defineProperty(Element.prototype, "getBoundingClientRect", {
 });
 
 const mockOnContentChange = jest.fn();
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // CSV with ragged rows for testing shift right functionality
 const raggedCsv = `Name,Age,City,Country
@@ -69,6 +70,38 @@ describe("Cell Selection Functionality", () => {
       fireEvent.click(tableContainer);
       expect(tableContainer).toBeInTheDocument();
     });
+
+    it("should clear cell selection when clicking outside the table", async () => {
+      render(
+        <>
+          <button type="button">Outside table</button>
+          <CsvTableViewer
+            content={raggedCsv}
+            onContentChange={mockOnContentChange}
+            tabId="test-tab"
+            isActive={true}
+            side="left"
+          />
+        </>,
+      );
+
+      fireEvent.click(screen.getByText("John Doe"));
+      await act(async () => {
+        await delay(300);
+      });
+
+      const selectedCell = screen.getByText("John Doe").closest("div");
+      expect(selectedCell).toHaveClass("bg-info/30");
+
+      fireEvent.click(screen.getByRole("button", { name: "Outside table" }));
+
+      await waitFor(() => {
+        expect(screen.getByText("John Doe").closest("div")).not.toHaveClass(
+          "bg-info/30",
+        );
+      });
+    });
+
   });
 
   describe("Multi-Selection Logic", () => {
@@ -123,6 +156,85 @@ describe("Cell Selection Functionality", () => {
       fireEvent.keyUp(viewer, { key: "Meta", metaKey: false });
       
       expect(viewer).toBeInTheDocument();
+    });
+
+    it("should clear column selection when clicking outside the table", async () => {
+      render(
+        <>
+          <button type="button">Outside table</button>
+          <CsvTableViewer
+            content={raggedCsv}
+            onContentChange={mockOnContentChange}
+            tabId="test-tab"
+            isActive={true}
+            side="left"
+          />
+        </>,
+      );
+
+      fireEvent.click(screen.getByText("Age"), { ctrlKey: true });
+
+      const primaryColumnCell = screen.getByText("28").closest("div");
+      const multiSelectedColumnCell = screen.getByText("32").closest("div");
+      expect(primaryColumnCell).toHaveClass("bg-info/30");
+      expect(multiSelectedColumnCell).toHaveClass("bg-primary/20");
+
+      fireEvent.click(screen.getByRole("button", { name: "Outside table" }));
+
+      await waitFor(() => {
+        expect(screen.getByText("28").closest("div")).not.toHaveClass(
+          "bg-info/30",
+        );
+        expect(screen.getByText("32").closest("div")).not.toHaveClass(
+          "bg-primary/20",
+        );
+      });
+    });
+
+    it("should select a column on header click and add another with Ctrl-click", () => {
+      render(
+        <CsvTableViewer
+          content={raggedCsv}
+          onContentChange={mockOnContentChange}
+          tabId="test-tab"
+          isActive={true}
+          side="left"
+        />,
+      );
+
+      fireEvent.click(screen.getByText("Age"));
+
+      expect(screen.getByText("28").closest("div")).toHaveClass("bg-info/30");
+      expect(screen.getByText("32").closest("div")).toHaveClass("bg-primary/20");
+      expect(screen.getByText("45").closest("div")).toHaveClass("bg-primary/20");
+
+      fireEvent.click(screen.getByText("City"), { ctrlKey: true });
+
+      expect(screen.getByText("New York").closest("div")).toHaveClass("bg-info/30");
+      expect(screen.getByText("28").closest("div")).toHaveClass("bg-primary/20");
+      expect(screen.getByText("32").closest("div")).toHaveClass("bg-primary/20");
+      expect(screen.getByText("45").closest("div")).toHaveClass("bg-primary/20");
+    });
+
+    it("should clear column selection when entering header rename mode", () => {
+      render(
+        <CsvTableViewer
+          content={raggedCsv}
+          onContentChange={mockOnContentChange}
+          tabId="test-tab"
+          isActive={true}
+          side="left"
+        />,
+      );
+
+      fireEvent.click(screen.getByText("Age"));
+      expect(screen.getByText("28").closest("div")).toHaveClass("bg-info/30");
+
+      fireEvent.doubleClick(screen.getByText("Age"));
+      fireEvent.click(screen.getByDisplayValue("Age"));
+
+      expect(screen.getByText("28").closest("div")).not.toHaveClass("bg-info/30");
+      expect(screen.getByText("32").closest("div")).not.toHaveClass("bg-primary/20");
     });
   });
 

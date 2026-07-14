@@ -162,6 +162,202 @@ Jane Smith,32,San Francisco,Extra`;
         expect(row.cells).toHaveLength(initialColumnCount - 1);
       });
     });
+
+    describe("Pasting Cells", () => {
+      it("should paste cells within existing boundaries", () => {
+        const { result } = renderHook(() =>
+          useCsvData(sampleCsv, mockOnContentChange),
+        );
+
+        const firstRowId = result.current.data[0].id;
+        const firstColumnId = result.current.columns[0].id;
+
+        act(() => {
+          result.current.pasteCells(firstRowId, firstColumnId, [
+            ["Alpha", "Beta"],
+            ["Gamma", "Delta"],
+          ]);
+        });
+
+        expect(result.current.data[0].cells[0].value).toBe("Alpha");
+        expect(result.current.data[0].cells[1].value).toBe("Beta");
+        expect(result.current.data[1].cells[0].value).toBe("Gamma");
+        expect(result.current.data[1].cells[1].value).toBe("Delta");
+        expect(result.current.columns).toHaveLength(3);
+      });
+
+      it("should expand columns when pasting beyond column boundary", () => {
+        const { result } = renderHook(() =>
+          useCsvData(sampleCsv, mockOnContentChange),
+        );
+
+        const firstRowId = result.current.data[0].id;
+        const lastColumnId = result.current.columns[2].id;
+
+        act(() => {
+          result.current.pasteCells(firstRowId, lastColumnId, [
+            ["NewCity", "NewCountry", "NewContinent"],
+          ]);
+        });
+
+        expect(result.current.data[0].cells[2].value).toBe("NewCity");
+        expect(result.current.data[0].cells[3].value).toBe("NewCountry");
+        expect(result.current.data[0].cells[4].value).toBe("NewContinent");
+
+        expect(result.current.columns).toHaveLength(5);
+        expect(result.current.columns[3].name).toBe("Column 4");
+        expect(result.current.columns[4].name).toBe("Column 5");
+
+        expect(result.current.data[1].cells).toHaveLength(5);
+        expect(result.current.data[1].cells[3].value).toBe("");
+      });
+
+      it("should expand rows when pasting beyond row boundary", () => {
+        const { result } = renderHook(() =>
+          useCsvData(sampleCsv, mockOnContentChange),
+        );
+
+        const lastRowId = result.current.data[2].id;
+        const firstColumnId = result.current.columns[0].id;
+
+        act(() => {
+          result.current.pasteCells(lastRowId, firstColumnId, [
+            ["Row2Col0"],
+            ["Row3Col0"],
+            ["Row4Col0"],
+          ]);
+        });
+
+        expect(result.current.data[2].cells[0].value).toBe("Row2Col0");
+        expect(result.current.data[3].cells[0].value).toBe("Row3Col0");
+        expect(result.current.data[4].cells[0].value).toBe("Row4Col0");
+
+        expect(result.current.data).toHaveLength(5);
+        expect(result.current.data[3].cells).toHaveLength(3);
+      });
+
+      it("should support atomic undo/redo of paste operations", () => {
+        const { result } = renderHook(() =>
+          useCsvData(sampleCsv, mockOnContentChange),
+        );
+
+        const firstRowId = result.current.data[0].id;
+        const firstColumnId = result.current.columns[0].id;
+
+        const originalVal = result.current.data[0].cells[0].value;
+
+        act(() => {
+          result.current.pasteCells(firstRowId, firstColumnId, [
+            ["Pasted1", "Pasted2"],
+            ["Pasted3", "Pasted4"],
+          ]);
+        });
+
+        expect(result.current.data[0].cells[0].value).toBe("Pasted1");
+
+        act(() => {
+          result.current.undo();
+        });
+
+        expect(result.current.data[0].cells[0].value).toBe(originalVal);
+
+        act(() => {
+          result.current.redo();
+        });
+
+        expect(result.current.data[0].cells[0].value).toBe("Pasted1");
+      });
+    });
+
+    describe("Pasting Columns", () => {
+      it("should insert copied columns before the target column without overwriting existing data", () => {
+        const { result } = renderHook(() =>
+          useCsvData(sampleCsv, mockOnContentChange),
+        );
+
+        const cityColumnId = result.current.columns[2].id;
+
+        act(() => {
+          result.current.insertColumnsFromGrid(cityColumnId, ["Score"], [
+            ["10"],
+            ["20"],
+            ["30"],
+          ]);
+        });
+
+        expect(result.current.columns.map((column) => column.name)).toEqual([
+          "Name",
+          "Age",
+          "Score",
+          "City",
+        ]);
+        expect(result.current.data[0].cells.map((cell) => cell.value)).toEqual([
+          "John Doe",
+          "28",
+          "10",
+          "New York",
+        ]);
+        expect(result.current.data[1].cells.map((cell) => cell.value)).toEqual([
+          "Jane Smith",
+          "32",
+          "20",
+          "San Francisco",
+        ]);
+      });
+
+      it("should insert multiple copied columns and preserve undo/redo as one operation", () => {
+        const { result } = renderHook(() =>
+          useCsvData(sampleCsv, mockOnContentChange),
+        );
+
+        const ageColumnId = result.current.columns[1].id;
+
+        act(() => {
+          result.current.insertColumnsFromGrid(ageColumnId, ["First", "Last"], [
+            ["John", "Doe"],
+            ["Jane", "Smith"],
+            ["Bob", "Johnson"],
+          ]);
+        });
+
+        expect(result.current.columns.map((column) => column.name)).toEqual([
+          "Name",
+          "First",
+          "Last",
+          "Age",
+          "City",
+        ]);
+        expect(result.current.data[2].cells.map((cell) => cell.value)).toEqual([
+          "Bob Johnson",
+          "Bob",
+          "Johnson",
+          "45",
+          "Chicago",
+        ]);
+
+        act(() => {
+          result.current.undo();
+        });
+
+        expect(result.current.columns.map((column) => column.name)).toEqual([
+          "Name",
+          "Age",
+          "City",
+        ]);
+
+        act(() => {
+          result.current.redo();
+        });
+
+        expect(result.current.columns.map((column) => column.name)).toEqual([
+          "Name",
+          "First",
+          "Last",
+          "Age",
+          "City",
+        ]);
+      });
+    });
   });
 
   describe("Undo/Redo", () => {

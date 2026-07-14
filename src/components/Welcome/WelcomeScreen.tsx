@@ -62,15 +62,18 @@ const HeroActionCard: React.FC<HeroActionCardProps> = ({
   return (
     <button
       onClick={onClick}
-      className={`group p-6 bg-surface ${colors.border} ${colors.hoverBorder} border rounded-sm
+      className={`group flex items-center p-4 md:block md:p-6 bg-surface ${colors.border} ${colors.hoverBorder} border rounded-sm
         transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg text-left w-full`}
     >
-      <div className={`p-3 ${colors.iconBg} ${colors.iconHoverBg} rounded-sm inline-block mb-4 transition-colors`}>
-        <Icon size={24} className={colors.iconColor} />
+      <div className={`p-2 md:p-3 ${colors.iconBg} ${colors.iconHoverBg} rounded-sm inline-block mr-3 md:mr-0 md:mb-4 transition-colors`}>
+        <Icon size={20} className={`md:hidden ${colors.iconColor}`} />
+        <Icon size={24} className={`hidden md:block ${colors.iconColor}`} />
       </div>
-      <h3 className="text-main font-semibold text-base mb-2">{title}</h3>
-      <p className="text-muted text-sm mb-2">{description}</p>
-      <p className="text-muted/70 text-xs leading-relaxed">{hint}</p>
+      <div>
+        <h3 className="text-main font-semibold text-sm md:text-base md:mb-2">{title}</h3>
+        <p className="text-muted text-xs md:text-sm md:mb-2">{description}</p>
+        <p className="hidden md:block text-muted/70 text-xs leading-relaxed">{hint}</p>
+      </div>
     </button>
   );
 };
@@ -284,7 +287,7 @@ export const WelcomeScreen: React.FC = () => {
   ];
 
   return (
-    <div className="h-full w-full flex flex-col bg-canvas">
+    <div className="h-full min-h-0 w-full flex flex-col bg-canvas">
       {/* Tab Actions Bar */}
       <div className="flex justify-end bg-surface h-8">
         <TabActions
@@ -296,58 +299,70 @@ export const WelcomeScreen: React.FC = () => {
       {/* Welcome Content */}
       <div
         ref={welcomeRef}
-        className="flex-1 flex flex-col items-center justify-center text-muted cursor-pointer relative outline-none px-8 py-12"
+        data-testid="welcome-scroll-container"
+        className="flex-1 min-h-0 overflow-y-auto overscroll-contain custom-scrollbar flex flex-col items-center justify-start md:justify-center text-muted cursor-pointer relative outline-none px-4 py-6 md:px-8 md:py-12"
         onDoubleClick={handleDoubleClick}
         onPaste={handlePaste}
         tabIndex={-1}
       >
         {/* TIER 1: Hero Section - Orientation */}
-        <div className="text-center mb-12 w-full max-w-3xl">
-          <div className="bg-element border border-base rounded-sm p-8">
+        <div className="text-center mb-6 md:mb-12 w-full max-w-3xl">
+          <div className="bg-element border border-base rounded-sm p-4 md:p-8">
 
             {/* Logo + Title */}
-            <div className="flex items-center justify-center mb-4">
+            <div className="flex items-center justify-center mb-3 md:mb-4">
               <img
                 src="/favicon-gray.svg"
                 alt="Scratch Tabs Logo"
-                className="w-7 h-7 mr-4 flex-shrink-0"
+                className="w-6 h-6 mr-3 md:w-7 md:h-7 md:mr-4 flex-shrink-0"
               />
-              <h1 className="text-3xl font-mono font-medium text-main">SCRATCH_TABS</h1>
+              <h1 className="text-xl md:text-3xl font-mono font-medium text-main">SCRATCH_TABS</h1>
             </div>
-            <p className="text-muted text-sm font-mono mb-6">// v1.41.0</p>
+            <p className="text-muted text-xs md:text-sm font-mono mb-4 md:mb-6">// v1.42.0</p>
 
             {/* Value Proposition */}
-            <h2 className="text-2xl font-semibold text-main mb-4">
+            <h2 className="text-lg md:text-2xl font-semibold text-main mb-2 md:mb-4">
               Your Private Dev Workspace
             </h2>
-            <p className="text-sm text-muted mb-6">
+            <p className="text-xs md:text-sm text-muted mb-4 md:mb-6">
               Monaco editor • <span className="text-primary">Smart Views</span> • 40+ Dev Tools
             </p>
 
             {/* Trust Badges */}
-            <div className="flex justify-center gap-6 text-xs text-muted">
+            <div className="flex justify-center gap-3 md:gap-6 text-xs text-muted">
               <div className="flex items-center gap-2">
                 <Lock size={14} className="text-success/60" />
-                <span>Offline & Private</span>
+                <span className="md:hidden">Private</span>
+                <span className="hidden md:inline">Offline & Private</span>
               </div>
               <div className="flex items-center gap-2">
                 <Database size={14} className="text-success/60" />
-                <span>Persisted Locally</span>
+                <span className="md:hidden">Local</span>
+                <span className="hidden md:inline">Persisted Locally</span>
               </div>
               <div className="flex items-center gap-2">
                 <Globe size={14} className="text-success/60" />
-                <span>No Server Calls</span>
+                <span className="md:hidden">Offline</span>
+                <span className="hidden md:inline">No Server Calls</span>
               </div>
             </div>
           </div>
+
+          <aside
+            data-testid="mobile-desktop-recommendation"
+            className="md:hidden mt-3 flex items-start gap-2 rounded-sm border border-info/30 bg-info/10 px-3 py-2 text-left text-xs text-muted"
+          >
+            <span className="font-semibold text-main whitespace-nowrap">Best on desktop</span>
+            <span>Scratch Tabs is built for larger screens. Core tools work here.</span>
+          </aside>
         </div>
 
         {/* TIER 2: Primary Actions - Common Tasks */}
-        <section className="w-full max-w-4xl mb-8">
-          <h3 className="text-xs font-mono text-muted/50 mb-4 text-center tracking-[0.2em] uppercase">
+        <section className="w-full max-w-4xl mb-6 md:mb-8">
+          <h3 className="text-xs font-mono text-muted/50 mb-3 md:mb-4 text-center tracking-[0.2em] uppercase">
             <span className="text-success/60">// </span>get_started
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4">
             {primaryActions.map((action, index) => (
               <HeroActionCard key={index} {...action} />
             ))}
@@ -355,7 +370,7 @@ export const WelcomeScreen: React.FC = () => {
         </section>
 
         {/* TIER 3: Secondary Actions - Other Options */}
-        <section className="w-full max-w-4xl mb-8">
+        <section data-testid="desktop-secondary-actions" className="hidden md:block w-full max-w-4xl mb-8">
           <h4 className="text-xs font-mono text-muted/50 mb-3 text-center tracking-[0.2em] uppercase">
             <span className="text-success/60">// </span>other_options
           </h4>
@@ -380,8 +395,31 @@ export const WelcomeScreen: React.FC = () => {
           </div>
         </section>
 
+        <details data-testid="mobile-secondary-actions" className="md:hidden w-full max-w-4xl mb-4 group">
+          <summary className="cursor-pointer text-center text-xs font-mono text-muted/70 tracking-[0.16em] uppercase py-2">
+            More ways to start
+          </summary>
+          <div className="grid grid-cols-1 gap-2 pt-2">
+            {secondaryActions.map((action, index) => (
+              <button
+                key={index}
+                onClick={action.onClick}
+                className="flex items-center gap-3 p-3 bg-surface hover:bg-surface-highlight rounded-sm border border-base hover:border-primary/30 transition-all duration-200 text-left"
+              >
+                <div className="p-2 bg-element rounded-sm">
+                  <action.icon size={18} className="text-secondary" />
+                </div>
+                <div>
+                  <div className="text-main font-medium text-sm">{action.title}</div>
+                  <p className="text-muted text-xs">{action.description}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </details>
+
         {/* TIER 4: Keyboard Shortcuts */}
-        <div className="mt-8 text-xs text-muted font-mono flex flex-wrap gap-4 justify-center">
+        <div className="hidden md:flex mt-8 text-xs text-muted font-mono flex-wrap gap-4 justify-center">
           <span>
             <kbd className="bg-surface border border-base px-2 py-1 rounded">Double Click</kbd>
             {" "}to create tab
@@ -401,6 +439,9 @@ export const WelcomeScreen: React.FC = () => {
             {" "}to navigate
           </span>
         </div>
+        <p className="md:hidden pb-2 text-center text-xs text-muted">
+          Paste content or choose an action to get started.
+        </p>
       </div>
 
       {showToolSelector && (
