@@ -31,6 +31,7 @@ import { CsvToolbar } from "./CsvToolbar";
 import { CsvSnapshotsPanel } from "./CsvSnapshotsPanel";
 import { CsvDiagnosticsFooter } from "./CsvDiagnosticsFooter";
 import { useRootStore } from "../../../../stores/rootStore";
+import { tabletActionService } from "../../../../services/tabletActionService";
 import { createTab } from "../../../../utils/tabUtils";
 import { EditableCell } from "./EditableCell";
 import { MaskedCell } from "./MaskedCell";
@@ -58,6 +59,8 @@ interface CopiedColumns {
 export const CsvTableViewer: React.FC<SmartViewProps> = ({
   content,
   onContentChange,
+  tabId,
+  side,
 }) => {
   const { addBackgroundTab } = useRootStore();
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -1458,6 +1461,12 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
         columnCount={columns.length}
         diagnostics={diagnostics}
         isValid={isValid}
+        onCompareTab={() => tabletActionService.handleAction({
+          targetTablet: "datareconcile",
+          action: "new-tab",
+          payload: { sourceAId: tabId, csvMode: true },
+          source: { tabId, titleHint: "Data Reconcile", side },
+        })}
       />
 
       {/* Snapshots Panel */}

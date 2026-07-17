@@ -1,5 +1,5 @@
 import { TabletActionContext, TabletAction } from "./types";
-import { FileText, Type, Shield, Network, Palette, QrCode, Binary, ShieldAlert } from "../components/Icons";
+import { FileText, Type, Shield, Network, Palette, QrCode, Binary, ShieldAlert, GitCompare } from "../components/Icons";
 import { tabletActionService } from "../services/tabletActionService";
 
 export interface TabletMetadata {
@@ -16,6 +16,26 @@ export interface TabletMetadata {
 }
 
 export const tabletMetadata: TabletMetadata[] = [
+  {
+    id: "datareconcile",
+    label: "Data Reconcile",
+    description: "Compare and reconcile rows from two tabs, with CSV key-column matching.",
+    keywords: ["compare", "reconcile", "csv", "diff", "rows"],
+    getActionsForContext: (context) => {
+      if (context.source !== "editor-tab" || !context.tab || context.tab.isRich || context.tab.isTablet) return [];
+      return [{
+        id: "datareconcile.compare-tab",
+        label: "Compare with another tab…",
+        icon: GitCompare,
+        action: () => tabletActionService.handleAction({
+          targetTablet: "datareconcile",
+          action: "new-tab",
+          payload: { sourceAId: context.tab?.id, csvMode: context.tab?.language === "csv" },
+          source: { tabId: context.tab?.id, titleHint: `${context.tab?.title} (Reconcile)`, side: context.side },
+        }),
+      }];
+    },
+  },
   {
     id: "base64",
     label: "Base64",

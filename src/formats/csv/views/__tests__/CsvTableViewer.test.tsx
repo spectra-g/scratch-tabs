@@ -1,6 +1,11 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { CsvTableViewer } from "../components/CsvTableViewer";
+import { tabletActionService } from "../../../../services/tabletActionService";
+
+jest.mock("../../../../services/tabletActionService", () => ({
+  tabletActionService: { handleAction: jest.fn() },
+}));
 
 // Mock getBoundingClientRect to provide dimensions for virtualization
 const mockGetBoundingClientRect = jest.fn(() => ({
@@ -29,6 +34,21 @@ Jane Smith,32,San Francisco`;
 describe("CsvTableViewer", () => {
   beforeEach(() => {
     mockOnContentChange.mockClear();
+    jest.clearAllMocks();
+  });
+
+  it("launches Data Reconcile through the tablet action service", () => {
+    render(
+      <CsvTableViewer content={sampleCsv} onContentChange={mockOnContentChange} tabId="customers" isActive={true} side="right" />,
+    );
+
+    fireEvent.click(screen.getByTestId("csv-compare-tab"));
+    expect(tabletActionService.handleAction).toHaveBeenCalledWith({
+      targetTablet: "datareconcile",
+      action: "new-tab",
+      payload: { sourceAId: "customers", csvMode: true },
+      source: { tabId: "customers", titleHint: "Data Reconcile", side: "right" },
+    });
   });
 
   it("should render CSV data in a table", () => {

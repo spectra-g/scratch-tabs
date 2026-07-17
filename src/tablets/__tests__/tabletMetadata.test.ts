@@ -124,6 +124,33 @@ describe('Tablet Metadata Actions', () => {
     });
   });
 
+  describe('Data Reconcile metadata getActionsForContext', () => {
+    const tab: Tab = {
+      id: 'csv-tab', title: 'Customers', content: 'email\na@example.com',
+      language: 'csv', languageLocked: false, workspaceId: 'workspace',
+      dateCreated: 1, lastModified: 1, cursorPosition: { lineNumber: 1, column: 1 },
+    };
+
+    it('launches a CSV-aware reconciliation tablet for an editor tab', () => {
+      const metadata = tabletMetadata.find((item) => item.id === 'datareconcile');
+      const actions = metadata?.getActionsForContext?.({ source: 'editor-tab', tab, content: tab.content, side: 'right' }) ?? [];
+
+      expect(actions).toHaveLength(1);
+      expect(actions[0].label).toBe('Compare with another tab…');
+      actions[0].action();
+      expect(mockTabletActionService.handleAction).toHaveBeenCalledWith(expect.objectContaining({
+        targetTablet: 'datareconcile', action: 'new-tab', payload: { sourceAId: tab.id, csvMode: true },
+        source: expect.objectContaining({ tabId: tab.id, side: 'right' }),
+      }));
+    });
+
+    it('does not offer reconciliation for a tablet or rich-text tab', () => {
+      const metadata = tabletMetadata.find((item) => item.id === 'datareconcile');
+      expect(metadata?.getActionsForContext?.({ source: 'editor-tab', tab: { ...tab, isTablet: true }, content: tab.content })).toEqual([]);
+      expect(metadata?.getActionsForContext?.({ source: 'editor-tab', tab: { ...tab, isRich: true }, content: tab.content })).toEqual([]);
+    });
+  });
+
   describe('Metadata consistency with tablet implementations', () => {
     it('should have WordCount metadata with correct properties', () => {
       const wordCountMetadata = tabletMetadata.find(meta => meta.id === 'wordcount');

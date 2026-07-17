@@ -15,12 +15,29 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.42.0';
+export const APP_VERSION = '1.43.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.42.0",
+    "version": "1.43.0",
     "type": "latest",
+    "date": "2026-07-17",
+    "headline": "Data Reconcile Tablet",
+    "summary": "Compare rows across two tabs with whole-line or CSV key-column matching, then open or copy the results without changing either source.",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Data Reconcile tablet:** Compare whole lines or CSV rows across two tabs, preserving duplicate occurrences and keeping source tabs unchanged",
+          "**CSV key matching:** Pair different header names between sources, surface changed fields, and create cleaned copies or result tabs",
+          "**Fast entry points:** Start a comparison from the tab context menu or directly from the CSV table toolbar"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.42.0",
+    "type": "release",
     "date": "2026-07-14",
     "headline": "Mobile Welcome + CSV Table Editing",
     "summary": "A compact, scrollable welcome screen for mobile, plus column selection and spreadsheet-style copy and paste for CSV tables.",
