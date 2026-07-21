@@ -3,11 +3,9 @@ import { formatRegistry } from "./registry";
 import { DetectionResult, FormatModule } from "./types";
 
 // All recognized PEM block types
-const PEM_HEADER = /^-----BEGIN ([A-Z0-9 ]+)-----$/m;
-const PEM_FOOTER = /^-----END ([A-Z0-9 ]+)-----$/m;
+const PEM_HEADER = /^-----BEGIN ([A-Z0-9 ]+)-----/;
 const PEM_BLOCK =
   /-----BEGIN ([A-Z0-9 ]+)-----[\r\n]+([\s\S]*?)[\r\n]+-----END \1-----/g;
-const BASE64_LINE = /^[A-Za-z0-9+/]{1,76}={0,2}$/;
 
 const KNOWN_TYPES = new Set([
   "CERTIFICATE",
@@ -67,13 +65,18 @@ Ypf4plh3e5BzwGxVL2QlRJWwk+GplHSVEVWvrGJEGyJTkBqxph4ZDH9XCPVP0ugp
     const trimmed = content.trim();
     if (!trimmed) return this.noMatch();
 
-    const hasHeader = PEM_HEADER.test(trimmed);
-    const hasFooter = PEM_FOOTER.test(trimmed);
+    // PEM must be explicitly armored. Base64-like text is common in IDs,
+    // hashes, and single-column CSV data, so it is not enough on its own.
+    const headerMatch = PEM_HEADER.exec(trimmed);
+    if (!headerMatch) return this.noMatch();
 
-    // Both markers present → definitive match
-    if (hasHeader && hasFooter) {
-      const typeMatch = PEM_HEADER.exec(trimmed);
-      const isKnownType = typeMatch ? KNOWN_TYPES.has(typeMatch[1]) : false;
+    const type = headerMatch[1];
+    const footer = new RegExp(`^-----END ${type}-----\\r?$`, "m");
+    const hasFooter = footer.test(trimmed);
+
+    // Matching markers present → definitive match
+    if (hasFooter) {
+      const isKnownType = KNOWN_TYPES.has(type);
       return {
         match: true,
         confidence: isKnownType ? 0.99 : 0.92,
@@ -81,19 +84,8 @@ Ypf4plh3e5BzwGxVL2QlRJWwk+GplHSVEVWvrGJEGyJTkBqxph4ZDH9XCPVP0ugp
       };
     }
 
-    // Header only (partial paste) → high confidence
-    if (hasHeader) {
-      return { match: true, confidence: 0.85 };
-    }
-
-    // Check for base64 body with surrounding context suggesting PEM
-    const lines = trimmed.split("\n");
-    const base64Lines = lines.filter((l) => BASE64_LINE.test(l.trim())).length;
-    if (base64Lines > 3 && base64Lines / lines.length > 0.7) {
-      return { match: true, confidence: 0.6 };
-    }
-
-    return this.noMatch();
+    // An opening armor marker still supports partial PEM pastes.
+    return { match: true, confidence: 0.85 };
   }
 
   /** Count distinct PEM blocks in the content. */

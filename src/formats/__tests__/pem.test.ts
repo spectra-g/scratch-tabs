@@ -159,6 +159,22 @@ The process will end after completion.
 This is not a PEM file.`);
       expect(match).toBe(false);
     });
+
+    it("does NOT detect Base64-like account IDs without PEM armor", () => {
+      const { match } = detector.detect(`AWD3R
+FJ9KP
+ZX7M2
+QWERT`);
+      expect(match).toBe(false);
+    });
+
+    it("does NOT detect PEM markers that are not at the start of content", () => {
+      const { match } = detector.detect(`Account export
+-----BEGIN CERTIFICATE-----
+MIIDXTCCAkWgAwIBAgIJANMegADn5RkG
+-----END CERTIFICATE-----`);
+      expect(match).toBe(false);
+    });
   });
 
   describe("Static helper methods", () => {

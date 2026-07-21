@@ -90,6 +90,20 @@ export class SvgFormatDetector extends BaseFormatDetector implements FormatModul
       return this.noMatch();
     }
 
+    // A namespaced SVG root identifies the enclosing document, even when it
+    // contains embedded CSS, JavaScript, or other supported syntax.
+    if (
+      /^(?:<\?xml\s[^?]*\?>\s*)?<svg\b[^>]*\bxmlns\s*=\s*["']http:\/\/www\.w3\.org\/2000\/svg["'][^>]*>/i.test(
+        trimmedContent,
+      )
+    ) {
+      return {
+        match: true,
+        confidence: 1.0,
+        matchedDefinitive: true,
+      };
+    }
+
     let confidenceScore = 0.0;
     let patternsMatched = 0;
     let strongSignalFound = false;

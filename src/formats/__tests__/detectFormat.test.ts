@@ -1,4 +1,5 @@
 import { detectFormat, getPotentialFormatMatches } from '../index';
+import { CssFormatDetector } from '../css';
 
 describe('Format Detection', () => {
   describe('detectFormat function', () => {
@@ -32,6 +33,30 @@ describe('Format Detection', () => {
       const matches = getPotentialFormatMatches(content, 5);
 
       expect(result).toBe('json');
+    });
+
+    test('prefers SVG over CSS embedded in an SVG style element', () => {
+      const content = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 295">
+  <style>
+    .wordmark {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+    .tagline {
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+    }
+  </style>
+  <path d="M60 8 L105 34 L105 86 L60 112 Z" fill="none" stroke="#0F172A"/>
+</svg>`;
+
+      // Embedded CSS remains recognizable, but the SVG root is decisive for
+      // the enclosing document's language.
+      expect(new CssFormatDetector().detect(content).match).toBe(true);
+      expect(detectFormat(content)).toBe('svg');
+      expect(getPotentialFormatMatches(content, 5)[0].id).toBe('svg');
     });
 
     test('correctly identifies Properties files (regression test)', () => {

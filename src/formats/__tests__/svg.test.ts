@@ -50,6 +50,25 @@ describe('SVG Language Detector', () => {
       expect(result.confidence).toBeGreaterThan(0.7);
     });
 
+    it('should definitively detect a namespaced SVG containing embedded CSS', () => {
+      const content = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 295">
+  <style>
+    .wordmark {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+  </style>
+  <path d="M60 8 L105 34 L105 86 L60 112 Z" fill="none" stroke="#0F172A"/>
+</svg>`;
+
+      expect(detector.detect(content)).toEqual({
+        match: true,
+        confidence: 1.0,
+        matchedDefinitive: true,
+      });
+    });
+
     it('should detect SVG with path elements', () => {
       const content = `<svg>
         <path d="M 10 10 L 90 90" stroke="black"/>
