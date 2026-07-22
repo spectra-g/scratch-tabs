@@ -5,6 +5,7 @@ import {
   createDefaultCanvasSession,
   createEmptyCanvasDocument,
 } from "../../utils/canvasSchemas";
+import type { CanvasTextItem } from "../../types";
 
 const canvasTab: Tab = {
   id: "tab-1",
@@ -28,12 +29,30 @@ const document = createEmptyCanvasDocument({
 });
 
 const createRepository = (): jest.Mocked<CanvasDocumentRepositoryContract> => ({
-  createWithTab: jest.fn().mockResolvedValue(document),
-  getByTabId: jest.fn().mockResolvedValue(document),
+  createWithTab: jest.fn().mockResolvedValue({ ...document }),
+  getByTabId: jest.fn().mockResolvedValue({
+    ...document,
+    items: [],
+    edges: [],
+    settings: { ...document.settings },
+  }),
   saveDocument: jest.fn().mockResolvedValue(undefined),
   getSession: jest.fn().mockResolvedValue(undefined),
   saveSession: jest.fn().mockResolvedValue(undefined),
   removeWithTab: jest.fn().mockResolvedValue(undefined),
+});
+
+const textItem = (text: string): CanvasTextItem => ({
+  id: "item-1",
+  type: "text",
+  x: 10,
+  y: 20,
+  width: 280,
+  height: 180,
+  zIndex: 1,
+  createdAt: 100,
+  updatedAt: 100,
+  text,
 });
 
 describe("CanvasDocumentManager", () => {
@@ -91,5 +110,86 @@ describe("CanvasDocumentManager", () => {
     await manager.remove(canvasTab);
 
     expect(repository.removeWithTab).toHaveBeenCalledWith(canvasTab);
+  });
+
+  it("debounces document writes, increments revisions, and throttles parent-tab updates", async () => {
+    jest.useFakeTimers();
+    let now = 1_000;
+    const repository = createRepository();
+    const manager = new CanvasDocumentManager(repository, () => now);
+    const saveStates: string[] = [];
+    manager.subscribe(canvasTab.id, (state) => saveStates.push(state.status));
+    await manager.acquire(canvasTab);
+
+    manager.setItems(canvasTab.id, [textItem("first")]);
+    manager.setItems(canvasTab.id, [textItem("latest")]);
+    expect(repository.saveDocument).not.toHaveBeenCalled();
+
+    await jest.advanceTimersByTimeAsync(500);
+    expect(repository.saveDocument).toHaveBeenCalledTimes(1);
+    expect(repository.saveDocument).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        revision: 1,
+        items: [expect.objectContaining({ text: "latest" })],
+      }),
+      true,
+    );
+
+    now = 1_500;
+    manager.setItems(canvasTab.id, [textItem("second save")]);
+    await jest.advanceTimersByTimeAsync(500);
+
+    expect(repository.saveDocument).toHaveBeenLastCalledWith(
+      expect.objectContaining({ revision: 2 }),
+      false,
+    );
+    expect(saveStates).toEqual(["saving", "saving", "saved", "saving", "saved"]);
+
+    await manager.release(canvasTab.id);
+    jest.useRealTimers();
+  });
+
+  it("flushes a pending scene immediately", async () => {
+    jest.useFakeTimers();
+    const repository = createRepository();
+    const manager = new CanvasDocumentManager(repository, () => 5_000);
+    await manager.acquire(canvasTab);
+    manager.setItems(canvasTab.id, [textItem("flush me")]);
+
+    await manager.flush(canvasTab.id);
+
+    expect(repository.saveDocument).toHaveBeenCalledTimes(1);
+    expect(repository.saveDocument.mock.calls[0][0].revision).toBe(1);
+    expect(jest.getTimerCount()).toBe(0);
+    await manager.release(canvasTab.id);
+    jest.useRealTimers();
+  });
+
+  it("keeps a remounted Strict Mode consumer alive while the first cleanup waits for loading", async () => {
+    const repository = createRepository();
+    let finishLoad: ((value: typeof document) => void) | undefined;
+    repository.getByTabId.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishLoad = resolve;
+        }),
+    );
+    const manager = new CanvasDocumentManager(repository);
+
+    const firstAcquire = manager.acquire(canvasTab);
+    const firstCleanup = manager.release(canvasTab.id);
+    const remountAcquire = manager.acquire(canvasTab);
+    finishLoad?.(document);
+
+    const [first, remounted] = await Promise.all([
+      firstAcquire,
+      remountAcquire,
+      firstCleanup,
+    ]);
+    expect(remounted).toBe(first);
+
+    await manager.saveViewport(canvasTab.id, { x: 5, y: 10, zoom: 2 });
+    expect(repository.saveSession).toHaveBeenCalledTimes(1);
+    await manager.release(canvasTab.id);
   });
 });

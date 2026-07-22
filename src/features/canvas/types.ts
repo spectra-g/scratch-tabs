@@ -11,13 +11,36 @@ export interface CanvasEdge {
   targetItemId: string;
 }
 
+export type CanvasItemType = "text";
+
+export interface CanvasItemBase {
+  id: string;
+  type: CanvasItemType;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  zIndex: number;
+  rotation?: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface CanvasTextItem extends CanvasItemBase {
+  type: "text";
+  text: string;
+  noteColor?: string;
+}
+
+export type CanvasItem = CanvasTextItem;
+
 export interface CanvasDocument {
   id: string;
   tabId: string;
   workspaceId: string;
   schemaVersion: number;
   revision: number;
-  items: never[];
+  items: CanvasItem[];
   edges: CanvasEdge[];
   settings: CanvasSettings;
   searchText: string;
@@ -57,3 +80,10 @@ export interface ActiveCanvasDocument {
 }
 
 export type CanvasSaveStatus = "loading" | "saved" | "saving" | "error";
+
+export interface CanvasDocumentSaveState {
+  status: CanvasSaveStatus;
+  revision: number;
+  error?: string;
+  lastModified?: number;
+}

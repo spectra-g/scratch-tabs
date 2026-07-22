@@ -1,7 +1,13 @@
 import type { Tab } from "../../../types";
+import {
+  CANVAS_DOCUMENT_SAVE_DEBOUNCE_MS,
+  CANVAS_TAB_MODIFIED_THROTTLE_MS,
+} from "../constants";
 import type {
   ActiveCanvasDocument,
   CanvasDocument,
+  CanvasDocumentSaveState,
+  CanvasItem,
   CanvasViewport,
 } from "../types";
 import { createDefaultCanvasSession } from "../utils/canvasSchemas";
@@ -10,22 +16,48 @@ import {
   type CanvasDocumentRepositoryContract,
 } from "./CanvasDocumentRepository";
 
+interface DocumentSaveQueue {
+  dirtyVersion: number;
+  savedVersion: number;
+  timer?: ReturnType<typeof setTimeout>;
+  savePromise?: Promise<void>;
+  lastParentTabUpdate: number | null;
+}
+
+type SaveStateListener = (state: CanvasDocumentSaveState) => void;
+
 export class CanvasDocumentManager {
   private readonly activeDocuments = new Map<string, ActiveCanvasDocument>();
   private readonly loadingDocuments = new Map<
     string,
     Promise<ActiveCanvasDocument>
   >();
-  private readonly pendingSaves = new Map<string, Promise<void>>();
+  private readonly documentSaveQueues = new Map<string, DocumentSaveQueue>();
+  private readonly pendingSessionSaves = new Map<string, Promise<void>>();
   private readonly referenceCounts = new Map<string, number>();
+  private readonly saveStateListeners = new Map<
+    string,
+    Set<SaveStateListener>
+  >();
 
   constructor(
     private readonly repository: CanvasDocumentRepositoryContract =
       canvasDocumentRepository,
+    private readonly now: () => number = Date.now,
   ) {}
 
   async create(tab: Tab): Promise<CanvasDocument> {
     return this.repository.createWithTab(tab);
+  }
+
+  subscribe(tabId: string, listener: SaveStateListener): () => void {
+    const listeners = this.saveStateListeners.get(tabId) ?? new Set();
+    listeners.add(listener);
+    this.saveStateListeners.set(tabId, listeners);
+    return () => {
+      listeners.delete(listener);
+      if (listeners.size === 0) this.saveStateListeners.delete(tabId);
+    };
   }
 
   async acquire(
@@ -68,16 +100,126 @@ export class CanvasDocumentManager {
 
     const session =
       (await this.repository.getSession(tab.id)) ??
-      createDefaultCanvasSession(tab.id);
+      createDefaultCanvasSession(tab.id, this.now());
     const active = { document, session };
     this.activeDocuments.set(tab.id, active);
+    this.documentSaveQueues.set(tab.id, {
+      dirtyVersion: 0,
+      savedVersion: 0,
+      lastParentTabUpdate:
+        document.revision === 0 ? null : document.updatedAt,
+    });
     return active;
   }
 
-  async save(tabId: string): Promise<void> {
+  setItems(tabId: string, items: CanvasItem[]): CanvasDocument {
+    const active = this.requireActive(tabId);
+    const updatedAt = this.now();
+    active.document = {
+      ...active.document,
+      items: items.map((item) => ({ ...item })),
+      updatedAt,
+    };
+    this.markDocumentDirty(tabId);
+    return active.document;
+  }
+
+  private requireActive(tabId: string): ActiveCanvasDocument {
     const active = this.activeDocuments.get(tabId);
-    if (!active) return;
-    await this.repository.saveDocument(active.document);
+    if (!active) {
+      throw new Error(`Canvas document ${tabId} is not active`);
+    }
+    return active;
+  }
+
+  private markDocumentDirty(tabId: string): void {
+    const queue = this.documentSaveQueues.get(tabId);
+    const active = this.requireActive(tabId);
+    if (!queue) throw new Error(`Canvas save queue ${tabId} is not active`);
+
+    queue.dirtyVersion += 1;
+    if (queue.timer) clearTimeout(queue.timer);
+    queue.timer = setTimeout(() => {
+      queue.timer = undefined;
+      void this.persistLatestDocument(tabId).catch(() => undefined);
+    }, CANVAS_DOCUMENT_SAVE_DEBOUNCE_MS);
+    this.notify(tabId, {
+      status: "saving",
+      revision: active.document.revision,
+    });
+  }
+
+  private async persistLatestDocument(tabId: string): Promise<void> {
+    const queue = this.documentSaveQueues.get(tabId);
+    const active = this.activeDocuments.get(tabId);
+    if (!queue || !active || queue.dirtyVersion === queue.savedVersion) return;
+    if (queue.savePromise) return queue.savePromise;
+
+    const versionBeingSaved = queue.dirtyVersion;
+    const savedAt = this.now();
+    const documentToSave: CanvasDocument = {
+      ...active.document,
+      items: active.document.items.map((item) => ({ ...item })),
+      edges: active.document.edges.map((edge) => ({ ...edge })),
+      settings: { ...active.document.settings },
+      revision: active.document.revision + 1,
+      updatedAt: savedAt,
+    };
+    const updateParentTab =
+      queue.lastParentTabUpdate === null ||
+      savedAt - queue.lastParentTabUpdate >= CANVAS_TAB_MODIFIED_THROTTLE_MS;
+
+    const savePromise = this.repository
+      .saveDocument(documentToSave, updateParentTab)
+      .then(() => {
+        const latest = this.activeDocuments.get(tabId);
+        if (!latest) return;
+        latest.document = {
+          ...latest.document,
+          revision: documentToSave.revision,
+          updatedAt: Math.max(latest.document.updatedAt, savedAt),
+        };
+        queue.savedVersion = versionBeingSaved;
+        if (updateParentTab) queue.lastParentTabUpdate = savedAt;
+        const hasPendingChanges = queue.dirtyVersion > versionBeingSaved;
+        this.notify(tabId, {
+          status: hasPendingChanges ? "saving" : "saved",
+          revision: latest.document.revision,
+          ...(updateParentTab ? { lastModified: savedAt } : {}),
+        });
+      })
+      .catch((error: unknown) => {
+        this.notify(tabId, {
+          status: "error",
+          revision: active.document.revision,
+          error:
+            error instanceof Error
+              ? error.message
+              : "Unable to save this Canvas",
+        });
+        throw error;
+      })
+      .finally(() => {
+        if (queue.savePromise === savePromise) queue.savePromise = undefined;
+        if (queue.dirtyVersion > versionBeingSaved && !queue.timer) {
+          queue.timer = setTimeout(() => {
+            queue.timer = undefined;
+            void this.persistLatestDocument(tabId).catch(() => undefined);
+          }, CANVAS_DOCUMENT_SAVE_DEBOUNCE_MS);
+        }
+      });
+    queue.savePromise = savePromise;
+    return savePromise;
+  }
+
+  private notify(tabId: string, state: CanvasDocumentSaveState): void {
+    this.saveStateListeners
+      .get(tabId)
+      ?.forEach((listener) => listener(state));
+  }
+
+  async save(tabId: string): Promise<void> {
+    await this.flush(tabId);
   }
 
   async saveViewport(tabId: string, viewport: CanvasViewport): Promise<void> {
@@ -87,34 +229,50 @@ export class CanvasDocumentManager {
     active.session = {
       ...active.session,
       viewport: { ...viewport },
-      updatedAt: Date.now(),
+      updatedAt: this.now(),
     };
     const sessionToSave = {
       ...active.session,
       viewport: { ...active.session.viewport },
     };
 
-    const previousSave = this.pendingSaves.get(tabId) ?? Promise.resolve();
+    const previousSave =
+      this.pendingSessionSaves.get(tabId) ?? Promise.resolve();
     const nextSave = previousSave
       .catch(() => undefined)
       .then(() => this.repository.saveSession(sessionToSave));
-    this.pendingSaves.set(tabId, nextSave);
+    this.pendingSessionSaves.set(tabId, nextSave);
 
     try {
       await nextSave;
     } finally {
-      if (this.pendingSaves.get(tabId) === nextSave) {
-        this.pendingSaves.delete(tabId);
+      if (this.pendingSessionSaves.get(tabId) === nextSave) {
+        this.pendingSessionSaves.delete(tabId);
       }
     }
   }
 
   async flush(tabId: string): Promise<void> {
-    await this.pendingSaves.get(tabId);
+    const queue = this.documentSaveQueues.get(tabId);
+    if (queue?.timer) {
+      clearTimeout(queue.timer);
+      queue.timer = undefined;
+    }
+    while (queue && queue.dirtyVersion > queue.savedVersion) {
+      await queue.savePromise;
+      await this.persistLatestDocument(tabId);
+      if (queue.timer) {
+        clearTimeout(queue.timer);
+        queue.timer = undefined;
+      }
+    }
+    await this.pendingSessionSaves.get(tabId);
   }
 
   async flushAll(): Promise<void> {
-    await Promise.all(this.pendingSaves.values());
+    await Promise.all(
+      Array.from(this.activeDocuments.keys(), (tabId) => this.flush(tabId)),
+    );
   }
 
   async release(tabId: string): Promise<void> {
@@ -129,6 +287,7 @@ export class CanvasDocumentManager {
     if ((this.referenceCounts.get(tabId) ?? 0) > 0) return;
     await this.flush(tabId);
     this.activeDocuments.delete(tabId);
+    this.documentSaveQueues.delete(tabId);
   }
 
   async dispose(tabId: string): Promise<void> {
@@ -136,6 +295,7 @@ export class CanvasDocumentManager {
     await this.loadingDocuments.get(tabId);
     await this.flush(tabId);
     this.activeDocuments.delete(tabId);
+    this.documentSaveQueues.delete(tabId);
   }
 
   async remove(tab: Tab): Promise<void> {

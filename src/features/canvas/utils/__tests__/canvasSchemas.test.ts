@@ -35,6 +35,52 @@ describe("Canvas schemas", () => {
     expect(session.lastTool).toBe("select");
   });
 
+  it("round-trips populated documents without discarding items or edges", () => {
+    const document = createEmptyCanvasDocument({
+      id: "document-1",
+      tabId: "tab-1",
+      workspaceId: "workspace-1",
+      now: 123,
+    });
+    document.items = [
+      {
+        id: "item-1",
+        type: "text",
+        x: -120,
+        y: 40,
+        width: 280,
+        height: 180,
+        zIndex: 2,
+        rotation: 0,
+        createdAt: 124,
+        updatedAt: 125,
+        text: "First note",
+        noteColor: "yellow",
+      },
+      {
+        id: "item-2",
+        type: "text",
+        x: 400,
+        y: 40,
+        width: 320,
+        height: 220,
+        zIndex: 3,
+        createdAt: 126,
+        updatedAt: 127,
+        text: "Second note",
+      },
+    ];
+    document.edges = [
+      { id: "edge-1", sourceItemId: "item-1", targetItemId: "item-2" },
+    ];
+
+    const parsed = parseCanvasDocument(document);
+
+    expect(parsed).toEqual(document);
+    expect(parsed.items).not.toBe(document.items);
+    expect(parsed.items[0]).not.toBe(document.items[0]);
+  });
+
   it("rejects unsupported and malformed documents", () => {
     const valid = createEmptyCanvasDocument({
       id: "document-1",
@@ -47,8 +93,39 @@ describe("Canvas schemas", () => {
       "Unsupported Canvas schema version",
     );
     expect(() => parseCanvasDocument({ ...valid, items: [{}] })).toThrow(
-      "increment 1 documents must be empty",
+      "unsupported item type",
     );
+    expect(() =>
+      parseCanvasDocument({
+        ...valid,
+        items: [
+          {
+            id: "item-1",
+            type: "text",
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 100,
+            zIndex: 1,
+            createdAt: 1,
+            updatedAt: 1,
+            text: "invalid size",
+          },
+        ],
+      }),
+    ).toThrow("dimensions must be positive");
+    expect(() =>
+      parseCanvasDocument({
+        ...valid,
+        edges: [
+          {
+            id: "edge-1",
+            sourceItemId: "missing-1",
+            targetItemId: "missing-2",
+          },
+        ],
+      }),
+    ).toThrow("references a missing item");
     expect(() => parseCanvasSession({})).toThrow("session and viewport");
   });
 });

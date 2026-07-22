@@ -1,3 +1,9 @@
 export const CANVAS_SCHEMA_VERSION = 1;
 export const MIN_CANVAS_PANE_WIDTH = 640;
 export const CANVAS_FEATURE_SETTING_KEY = "features.canvas.enabled";
+export const CANVAS_DOCUMENT_SAVE_DEBOUNCE_MS = 500;
+export const CANVAS_TAB_MODIFIED_THROTTLE_MS = 2000;
+export const DEFAULT_TEXT_ITEM_WIDTH = 280;
+export const DEFAULT_TEXT_ITEM_HEIGHT = 180;
+export const MIN_TEXT_ITEM_WIDTH = 180;
+export const MIN_TEXT_ITEM_HEIGHT = 120;

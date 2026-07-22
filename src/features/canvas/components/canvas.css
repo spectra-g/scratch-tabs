@@ -24,3 +24,36 @@
   background: rgb(var(--color-surface) / 0.8);
   color: rgb(var(--color-text-muted));
 }
+
+.canvas-flow-root .react-flow__node-text {
+  border-radius: 0.5rem;
+}
+
+.canvas-flow-root .react-flow__node-text.selected .canvas-text-node {
+  border-color: rgb(var(--color-primary));
+  box-shadow: 0 0 0 2px rgb(var(--color-primary) / 0.28);
+}
+
+.canvas-flow-root .react-flow__resize-control.line {
+  border-color: rgb(var(--color-primary));
+}
+
+.canvas-flow-root .react-flow__resize-control.handle {
+  width: 9px;
+  height: 9px;
+  border: 1px solid rgb(var(--color-surface));
+  background: rgb(var(--color-primary));
+}
+
+.canvas-toolbar {
+  display: flex;
+  gap: 0.25rem;
+  overflow: hidden;
+  margin: 0.75rem;
+  padding: 0.25rem;
+  border: 1px solid rgb(var(--color-border-base));
+  border-radius: 0.625rem;
+  background: rgb(var(--color-surface) / 0.94);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.12);
+  backdrop-filter: blur(6px);
+}

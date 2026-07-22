@@ -2,6 +2,8 @@ import { CANVAS_SCHEMA_VERSION } from "../constants";
 import type {
   CanvasBackground,
   CanvasDocument,
+  CanvasEdge,
+  CanvasItem,
   CanvasSessionRecord,
   CanvasSettings,
   CanvasViewport,
@@ -44,6 +46,79 @@ const requireNumber = (
 const parseBackground = (value: unknown): CanvasBackground => {
   if (value === "dots" || value === "grid" || value === "none") return value;
   throw new Error("Invalid Canvas schema: unsupported background");
+};
+
+const parseOptionalString = (
+  record: Record<string, unknown>,
+  key: string,
+): string | undefined => {
+  const value = record[key];
+  if (value === undefined) return undefined;
+  if (typeof value !== "string") {
+    throw new Error(`Invalid Canvas schema: ${key} must be a string`);
+  }
+  return value;
+};
+
+const parseCanvasItem = (value: unknown): CanvasItem => {
+  if (!isRecord(value)) {
+    throw new Error("Invalid Canvas schema: item must be an object");
+  }
+  if (value.type !== "text") {
+    throw new Error(`Invalid Canvas schema: unsupported item type ${String(value.type)}`);
+  }
+
+  const width = requireNumber(value, "width");
+  const height = requireNumber(value, "height");
+  if (width <= 0 || height <= 0) {
+    throw new Error("Invalid Canvas schema: item dimensions must be positive");
+  }
+  if (typeof value.text !== "string") {
+    throw new Error("Invalid Canvas schema: text item text must be a string");
+  }
+
+  const rotation = value.rotation;
+  if (rotation !== undefined && !isFiniteNumber(rotation)) {
+    throw new Error("Invalid Canvas schema: rotation must be a finite number");
+  }
+
+  return {
+    id: requireString(value, "id"),
+    type: "text",
+    x: requireNumber(value, "x"),
+    y: requireNumber(value, "y"),
+    width,
+    height,
+    zIndex: requireNumber(value, "zIndex"),
+    ...(rotation === undefined ? {} : { rotation }),
+    createdAt: requireNumber(value, "createdAt"),
+    updatedAt: requireNumber(value, "updatedAt"),
+    text: value.text,
+    ...(value.noteColor === undefined
+      ? {}
+      : { noteColor: parseOptionalString(value, "noteColor") }),
+  };
+};
+
+const parseCanvasEdge = (value: unknown): CanvasEdge => {
+  if (!isRecord(value)) {
+    throw new Error("Invalid Canvas schema: edge must be an object");
+  }
+  return {
+    id: requireString(value, "id"),
+    sourceItemId: requireString(value, "sourceItemId"),
+    targetItemId: requireString(value, "targetItemId"),
+  };
+};
+
+const assertUniqueIds = (values: Array<{ id: string }>, label: string) => {
+  const ids = new Set<string>();
+  for (const value of values) {
+    if (ids.has(value.id)) {
+      throw new Error(`Invalid Canvas schema: duplicate ${label} id ${value.id}`);
+    }
+    ids.add(value.id);
+  }
 };
 
 export const createEmptyCanvasDocument = ({
@@ -89,14 +164,26 @@ export const parseCanvasDocument = (value: unknown): CanvasDocument => {
   if (schemaVersion !== CANVAS_SCHEMA_VERSION) {
     throw new Error(`Unsupported Canvas schema version: ${schemaVersion}`);
   }
-  if (!Array.isArray(value.items) || value.items.length !== 0) {
-    throw new Error("Invalid Canvas schema: increment 1 documents must be empty");
+  if (!Array.isArray(value.items)) {
+    throw new Error("Invalid Canvas schema: items must be an array");
   }
-  if (!Array.isArray(value.edges) || value.edges.length !== 0) {
-    throw new Error("Invalid Canvas schema: increment 1 documents cannot have edges");
+  if (!Array.isArray(value.edges)) {
+    throw new Error("Invalid Canvas schema: edges must be an array");
   }
   if (!isRecord(value.settings)) {
     throw new Error("Invalid Canvas schema: settings must be an object");
+  }
+
+  const items = value.items.map(parseCanvasItem);
+  const edges = value.edges.map(parseCanvasEdge);
+  assertUniqueIds(items, "item");
+  assertUniqueIds(edges, "edge");
+
+  const itemIds = new Set(items.map((item) => item.id));
+  for (const edge of edges) {
+    if (!itemIds.has(edge.sourceItemId) || !itemIds.has(edge.targetItemId)) {
+      throw new Error(`Invalid Canvas schema: edge ${edge.id} references a missing item`);
+    }
   }
 
   return {
@@ -105,8 +192,8 @@ export const parseCanvasDocument = (value: unknown): CanvasDocument => {
     workspaceId: requireString(value, "workspaceId"),
     schemaVersion,
     revision: requireNumber(value, "revision"),
-    items: [],
-    edges: [],
+    items,
+    edges,
     settings: {
       background: parseBackground(value.settings.background),
       snapToGrid: value.settings.snapToGrid === true,

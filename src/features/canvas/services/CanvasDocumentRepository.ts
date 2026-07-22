@@ -14,7 +14,10 @@ import {
 export interface CanvasDocumentRepositoryContract {
   createWithTab(tab: Tab): Promise<CanvasDocument>;
   getByTabId(tabId: string): Promise<CanvasDocument | undefined>;
-  saveDocument(document: CanvasDocument): Promise<void>;
+  saveDocument(
+    document: CanvasDocument,
+    updateParentTabModified?: boolean,
+  ): Promise<void>;
   getSession(tabId: string): Promise<CanvasSessionRecord | undefined>;
   saveSession(session: CanvasSessionRecord): Promise<void>;
   removeWithTab(tab: Tab): Promise<void>;
@@ -66,8 +69,22 @@ export class CanvasDocumentRepository
     return record ? parseCanvasDocument(record) : undefined;
   }
 
-  async saveDocument(document: CanvasDocument): Promise<void> {
-    await db.canvasDocuments.put(parseCanvasDocument(document));
+  async saveDocument(
+    document: CanvasDocument,
+    updateParentTabModified = false,
+  ): Promise<void> {
+    const parsedDocument = parseCanvasDocument(document);
+    if (!updateParentTabModified) {
+      await db.canvasDocuments.put(parsedDocument);
+      return;
+    }
+
+    await db.transaction("rw", db.canvasDocuments, db.tabs, async () => {
+      await db.canvasDocuments.put(parsedDocument);
+      await db.tabs.update(parsedDocument.tabId, {
+        lastModified: parsedDocument.updatedAt,
+      });
+    });
   }
 
   async getSession(tabId: string): Promise<CanvasSessionRecord | undefined> {

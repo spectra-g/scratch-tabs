@@ -1,13 +1,8 @@
-import {
-  Background,
-  BackgroundVariant,
-  Controls,
-  ReactFlow,
-  type Viewport,
-} from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import type { Tab } from "../../../types";
 import { useCanvasDocument } from "../hooks/useCanvasDocument";
+import { canvasEdgesToFlowEdges } from "../utils/canvasFlowMapping";
+import { CanvasScene } from "./CanvasScene";
 import "./canvas.css";
 
 interface CanvasViewProps {
@@ -15,10 +10,16 @@ interface CanvasViewProps {
 }
 
 const CanvasView = ({ tab }: CanvasViewProps) => {
-  const { activeDocument, status, error, saveViewport } =
-    useCanvasDocument(tab);
+  const {
+    activeDocument,
+    status,
+    revision,
+    error,
+    saveViewport,
+    updateItems,
+  } = useCanvasDocument(tab);
 
-  if (status === "error" || error) {
+  if (status === "error" && !activeDocument) {
     return (
       <div
         className="flex h-full items-center justify-center bg-canvas p-6 text-danger"
@@ -41,61 +42,20 @@ const CanvasView = ({ tab }: CanvasViewProps) => {
     );
   }
 
-  const backgroundVariant =
-    activeDocument.document.settings.background === "grid"
-      ? BackgroundVariant.Lines
-      : BackgroundVariant.Dots;
-
   return (
-    <div
-      className="canvas-flow-root h-full w-full bg-canvas text-main"
-      data-testid="canvas-flow"
-      data-canvas-document-id={activeDocument.document.id}
-      tabIndex={0}
-      role="application"
-      aria-label={`${tab.title} Canvas`}
-    >
-      <ReactFlow
-        nodes={[]}
-        edges={[]}
-        defaultViewport={activeDocument.session.viewport}
-        minZoom={0.1}
-        maxZoom={4}
-        panOnDrag
-        zoomOnPinch
-        zoomOnScroll
-        zoomOnDoubleClick={false}
-        onMoveEnd={(_event, viewport: Viewport) => {
-          void saveViewport(viewport);
-        }}
-      >
-        {activeDocument.document.settings.background !== "none" && (
-          <Background
-            variant={backgroundVariant}
-            color="rgb(var(--color-border-base))"
-            gap={20}
-            size={1.5}
-          />
-        )}
-        <Controls position="bottom-right" showInteractive={false} />
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="rounded-lg border border-base bg-surface/90 px-5 py-4 text-center shadow-sm backdrop-blur-sm">
-            <p className="font-medium text-main">Empty Canvas</p>
-            <p className="mt-1 text-xs text-muted">
-              Pan by dragging and use the controls to zoom.
-            </p>
-          </div>
-        </div>
-        <div
-          className="pointer-events-none absolute bottom-3 left-3 rounded-full border border-base bg-surface/90 px-2.5 py-1 text-xs text-secondary shadow-sm backdrop-blur-sm"
-          data-testid="canvas-save-status"
-          data-save-state={status}
-          aria-live="polite"
-        >
-          Local only · {status === "saving" ? "Saving..." : "Saved"}
-        </div>
-      </ReactFlow>
-    </div>
+    <CanvasScene
+      key={activeDocument.document.id}
+      tab={tab}
+      initialItems={activeDocument.document.items}
+      edges={canvasEdgesToFlowEdges(activeDocument.document.edges)}
+      viewport={activeDocument.session.viewport}
+      background={activeDocument.document.settings.background}
+      status={status}
+      revision={revision}
+      error={error}
+      updateItems={updateItems}
+      saveViewport={saveViewport}
+    />
   );
 };
 

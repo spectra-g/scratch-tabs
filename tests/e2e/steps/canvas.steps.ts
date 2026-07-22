@@ -24,6 +24,41 @@ When("I remember the active Canvas document", async function (this: E2EWorld) {
   await this.canvas.rememberDocumentId();
 });
 
+When(
+  "I add a Canvas text card containing {string}",
+  async function (this: E2EWorld, text: string) {
+    await this.canvas.addTextCard(text);
+  },
+);
+
+When(
+  "I wait for the Canvas scene to be saved",
+  async function (this: E2EWorld) {
+    await this.canvas.waitForSceneSave();
+  },
+);
+
+When(
+  "I move and resize the Canvas text card",
+  async function (this: E2EWorld) {
+    await this.canvas.moveAndResizeTextCard();
+  },
+);
+
+When(
+  "I remember the Canvas text card bounds",
+  async function (this: E2EWorld) {
+    await this.canvas.rememberTextCardBounds();
+  },
+);
+
+When(
+  "I delete the Canvas text card",
+  async function (this: E2EWorld) {
+    await this.canvas.deleteTextCard();
+  },
+);
+
 Then("I should see an empty Canvas", async function (this: E2EWorld) {
   await this.canvas.expectEmptyCanvas();
 });
@@ -53,3 +88,23 @@ Then(
   },
 );
 
+Then(
+  "the Canvas should contain a text card with {string}",
+  async function (this: E2EWorld, text: string) {
+    await this.canvas.expectTextCard(text);
+  },
+);
+
+Then(
+  "the Canvas text card should have the remembered bounds",
+  async function (this: E2EWorld) {
+    await this.canvas.expectRememberedTextCardBounds();
+  },
+);
+
+Then(
+  "the Canvas should not contain any cards",
+  async function (this: E2EWorld) {
+    await this.canvas.expectNoCards();
+  },
+);
