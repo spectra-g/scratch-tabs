@@ -5,7 +5,6 @@ import {
   useRef,
   useState,
   type FocusEvent,
-  type KeyboardEvent,
   type RefObject,
 } from "react";
 import type { CanvasInteractionState, CanvasItem } from "../types";
@@ -21,34 +20,10 @@ interface UseSpatialNavigationOptions {
   items: CanvasItem[];
   interactionState: CanvasInteractionState;
   selectForKeyboardNavigation: (itemId: string) => void;
-  markKeyboardInteraction: () => void;
   beginEditing: (itemId: string) => void;
   clearSelection: () => void;
-  deleteSelection: () => void;
-  duplicateSelection: () => void;
-  undo: () => void;
-  redo: () => void;
   revealItem: (item: CanvasItem) => void;
 }
-
-const directionByKey: Partial<Record<string, CanvasNavigationDirection>> = {
-  ArrowUp: "up",
-  ArrowRight: "right",
-  ArrowDown: "down",
-  ArrowLeft: "left",
-};
-
-const isEditableEventTarget = (event: KeyboardEvent): boolean =>
-  event.nativeEvent
-    .composedPath()
-    .some(
-      (target) =>
-        target instanceof HTMLElement &&
-        (target.isContentEditable ||
-          target.matches(
-            'input, textarea, select, [role="textbox"], [role="combobox"]',
-          )),
-    );
 
 const focusCardElement = (root: HTMLElement | null, itemId: string): void => {
   const card = Array.from(
@@ -62,13 +37,8 @@ export const useSpatialNavigation = ({
   items,
   interactionState,
   selectForKeyboardNavigation,
-  markKeyboardInteraction,
   beginEditing,
   clearSelection,
-  deleteSelection,
-  duplicateSelection,
-  undo,
-  redo,
   revealItem,
 }: UseSpatialNavigationOptions) => {
   const [announcement, setAnnouncement] = useState("");
@@ -76,6 +46,7 @@ export const useSpatialNavigation = ({
     useState<CanvasNavigationDirection | null>(null);
   const edgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const suppressRootEntryRef = useRef(false);
+  const lastAnnouncedItemIdRef = useRef<string | null>(null);
   const readingOrder = useMemo(
     () => getCanvasSpatialReadingOrder(items),
     [items],
@@ -92,12 +63,16 @@ export const useSpatialNavigation = ({
 
   useEffect(() => {
     if (mode !== "navigation" || focusOrigin !== "keyboard" || !focusedItemId) {
+      lastAnnouncedItemIdRef.current = null;
       return;
     }
+
+    if (lastAnnouncedItemIdRef.current === focusedItemId) return;
 
     const item = items.find((candidate) => candidate.id === focusedItemId);
     if (!item) return;
 
+    lastAnnouncedItemIdRef.current = focusedItemId;
     focusCardElement(rootRef.current, item.id);
     revealItem(item);
     setAnnouncement(getCanvasItemAccessibleLabel(item));
@@ -142,110 +117,63 @@ export const useSpatialNavigation = ({
     [focusForNavigation, focusedItemId, readingOrder],
   );
 
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
-      if (isEditableEventTarget(event) || interactionState.mode === "editing") {
-        return;
-      }
-
-      const commandKey = event.metaKey || event.ctrlKey;
-      const focusedItemId = interactionState.focusedItemId;
+  const navigateDirection = useCallback(
+    (direction: CanvasNavigationDirection, isRepeated: boolean) => {
       const focusedItem = focusedItemId
         ? items.find((item) => item.id === focusedItemId)
         : null;
-      const direction = directionByKey[event.key];
-
-      if (direction && !event.altKey && !commandKey) {
-        event.preventDefault();
-        event.stopPropagation();
-        markKeyboardInteraction();
-        if (!focusedItem) return;
-        const neighbor = findDirectionalCanvasNeighbor(
-          items,
-          focusedItem.id,
-          direction,
-        );
-        if (neighbor) focusForNavigation(neighbor);
-        else showEdgeFeedback(direction, event.repeat);
-        return;
-      }
-
-      if (event.key === "Tab" && focusedItem) {
-        const currentIndex = readingOrder.findIndex(
-          (item) => item.id === focusedItem.id,
-        );
-        const nextIndex = currentIndex + (event.shiftKey ? -1 : 1);
-        const nextItem = readingOrder[nextIndex];
-        if (nextItem) {
-          event.preventDefault();
-          event.stopPropagation();
-          markKeyboardInteraction();
-          focusForNavigation(nextItem);
-        }
-        return;
-      }
-
-      if (commandKey && event.key.toLowerCase() === "z") {
-        event.preventDefault();
-        event.stopPropagation();
-        markKeyboardInteraction();
-        if (event.shiftKey) redo();
-        else undo();
-      } else if (commandKey && event.key.toLowerCase() === "y") {
-        event.preventDefault();
-        event.stopPropagation();
-        markKeyboardInteraction();
-        redo();
-      } else if (commandKey && event.key.toLowerCase() === "d") {
-        event.preventDefault();
-        event.stopPropagation();
-        markKeyboardInteraction();
-        duplicateSelection();
-      } else if (event.key === "Delete" || event.key === "Backspace") {
-        event.preventDefault();
-        event.stopPropagation();
-        markKeyboardInteraction();
-        deleteSelection();
-      } else if (event.key === "Enter" && focusedItem) {
-        event.preventDefault();
-        event.stopPropagation();
-        markKeyboardInteraction();
-        beginEditing(focusedItem.id);
-      } else if (event.key === "Escape") {
-        event.preventDefault();
-        event.stopPropagation();
-        markKeyboardInteraction();
-        if (
-          interactionState.selectedItemIds.length > 1 &&
-          interactionState.focusedItemId
-        ) {
-          selectForKeyboardNavigation(interactionState.focusedItemId);
-        } else {
-          focusCanvasRoot();
-        }
-      }
+      if (!focusedItem) return;
+      const neighbor = findDirectionalCanvasNeighbor(
+        items,
+        focusedItem.id,
+        direction,
+      );
+      if (neighbor) focusForNavigation(neighbor);
+      else showEdgeFeedback(direction, isRepeated);
     },
-    [
-      beginEditing,
-      deleteSelection,
-      duplicateSelection,
-      focusCanvasRoot,
-      focusForNavigation,
-      interactionState,
-      items,
-      markKeyboardInteraction,
-      readingOrder,
-      redo,
-      selectForKeyboardNavigation,
-      showEdgeFeedback,
-      undo,
-    ],
+    [focusForNavigation, focusedItemId, items, showEdgeFeedback],
   );
+
+  const navigateSequentially = useCallback(
+    (backwards: boolean): boolean => {
+      if (!focusedItemId) return false;
+      const currentIndex = readingOrder.findIndex(
+        (item) => item.id === focusedItemId,
+      );
+      const nextItem = readingOrder[currentIndex + (backwards ? -1 : 1)];
+      if (!nextItem) return false;
+      focusForNavigation(nextItem);
+      return true;
+    },
+    [focusedItemId, focusForNavigation, readingOrder],
+  );
+
+  const enterFocusedItem = useCallback(() => {
+    if (!focusedItemId) return;
+    beginEditing(focusedItemId);
+  }, [beginEditing, focusedItemId]);
+
+  const escapeNavigation = useCallback(() => {
+    if (interactionState.selectedItemIds.length > 1 && focusedItemId) {
+      selectForKeyboardNavigation(focusedItemId);
+    } else {
+      focusCanvasRoot();
+    }
+  }, [
+    focusCanvasRoot,
+    focusedItemId,
+    interactionState.selectedItemIds.length,
+    selectForKeyboardNavigation,
+  ]);
 
   return {
     announcement,
     edgeDirection,
-    handleKeyDown,
     handleRootFocus,
+    navigateDirection,
+    navigateSequentially,
+    enterFocusedItem,
+    escapeNavigation,
+    announce: setAnnouncement,
   };
 };

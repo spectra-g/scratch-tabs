@@ -28,8 +28,21 @@ export class CanvasActions {
     backward: false,
   };
   private zoomBeforeOffscreenNavigation: string | null = null;
+  private keyboardNudgeBounds: Array<{
+    before: Record<"x" | "y" | "width" | "height", number>;
+    after: Record<"x" | "y" | "width" | "height", number>;
+  }> = [];
+  private keyboardViewportCommandsCompleted = false;
+  private shortcutEditingGuardCompleted = false;
 
   constructor(private page: Page) {}
+
+  private async primaryShortcut(key: string) {
+    const isMac = await this.page.evaluate(() =>
+      /Mac|iPhone|iPad|iPod/i.test(navigator.platform),
+    );
+    return `${isMac ? "Meta" : "Control"}+${key}`;
+  }
 
   async enableFeature() {
     await this.page.goto(process.env.BASE_URL ?? "http://localhost:5173/");
@@ -458,6 +471,173 @@ export class CanvasActions {
 
   async pressCanvasKey(key: string) {
     await this.page.keyboard.press(key);
+  }
+
+  async createTwoCardsWithKeyboard() {
+    const addButton = this.page.getByTestId("canvas-add-text");
+    await addButton.focus();
+    for (const text of ["Keyboard first", "Keyboard second"]) {
+      await this.page.keyboard.press("Enter");
+      const editor = this.page.getByTestId("canvas-text-editor");
+      await expect(editor).toBeFocused();
+      await this.page.keyboard.type(text);
+      await this.page.keyboard.press("Control+Enter");
+      await addButton.focus();
+    }
+  }
+
+  async selectAllCardsWithKeyboard() {
+    await this.focusCanvasCard("Keyboard first");
+    await this.page.keyboard.press(await this.primaryShortcut("a"));
+    await expect(
+      this.page.locator('[data-item-id][aria-selected="true"]'),
+    ).toHaveCount(2);
+    await expect(
+      this.page.getByTestId("canvas-navigation-announcement"),
+    ).toHaveText("2 cards selected");
+  }
+
+  async nudgeSelectionWithKeyboard() {
+    const selected = this.page.locator('[data-item-id][aria-selected="true"]');
+    const count = await selected.count();
+    const before = await Promise.all(
+      Array.from({ length: count }, (_, index) =>
+        this.readBounds(selected.nth(index)),
+      ),
+    );
+    await this.page.keyboard.press("Alt+ArrowRight");
+    await this.page.keyboard.press("Alt+Shift+ArrowDown");
+    const after = await Promise.all(
+      Array.from({ length: count }, (_, index) =>
+        this.readBounds(selected.nth(index)),
+      ),
+    );
+    this.keyboardNudgeBounds = before.map((bounds, index) => ({
+      before: bounds,
+      after: after[index],
+    }));
+  }
+
+  async duplicateSelectionWithKeyboard() {
+    await this.page.keyboard.press(await this.primaryShortcut("d"));
+  }
+
+  async deleteSelectionWithKeyboard() {
+    await this.page.keyboard.press("Delete");
+  }
+
+  async undoWithKeyboard() {
+    await this.page.keyboard.press(await this.primaryShortcut("z"));
+  }
+
+  async redoWithKeyboard() {
+    await this.page.keyboard.press(await this.primaryShortcut("Shift+z"));
+  }
+
+  async expectKeyboardNudgeDistances() {
+    expect(this.keyboardNudgeBounds).toHaveLength(2);
+    for (const { before, after } of this.keyboardNudgeBounds) {
+      expect(after.x).toBe(before.x + 10);
+      expect(after.y).toBe(before.y + 100);
+    }
+  }
+
+  async expectSelectedCardCount(count: number) {
+    await expect(
+      this.page.locator('[data-item-id][aria-selected="true"]'),
+    ).toHaveCount(count);
+  }
+
+  async exerciseKeyboardViewportCommands() {
+    await this.addTextCard("Viewport near");
+    await this.addTextCard("Viewport far");
+    await this.moveCardBy("Viewport far", 1000, 350);
+    await this.focusCanvasCard("Viewport near");
+    await this.page.keyboard.press(await this.primaryShortcut("a"));
+
+    const canvas = this.page.getByTestId("canvas-flow");
+    const initialZoom = Number(await canvas.getAttribute("data-canvas-zoom"));
+    await this.page.keyboard.press("f");
+    await expect
+      .poll(async () => Number(await canvas.getAttribute("data-canvas-zoom")))
+      .not.toBeCloseTo(initialZoom, 3);
+
+    await this.page.keyboard.press("0");
+    await expect
+      .poll(async () => Number(await canvas.getAttribute("data-canvas-zoom")))
+      .toBeCloseTo(1, 3);
+
+    await expect(canvas).toHaveAttribute("data-canvas-selected-tool", "select");
+    await this.page.keyboard.down("Space");
+    await expect(canvas).toHaveAttribute("data-canvas-active-tool", "pan");
+    await expect(canvas).toHaveAttribute("data-canvas-pan-active", "true");
+
+    const pane = this.page.locator(".react-flow__pane");
+    const paneBox = await pane.boundingBox();
+    expect(paneBox).toBeTruthy();
+    const beforeX = Number(await canvas.getAttribute("data-canvas-viewport-x"));
+    await this.page.mouse.move(
+      paneBox!.x + paneBox!.width * 0.75,
+      paneBox!.y + paneBox!.height * 0.75,
+    );
+    await this.page.mouse.down();
+    await this.page.mouse.move(
+      paneBox!.x + paneBox!.width * 0.75 - 80,
+      paneBox!.y + paneBox!.height * 0.75 - 40,
+      { steps: 6 },
+    );
+    await this.page.mouse.up();
+    await expect
+      .poll(async () =>
+        Number(await canvas.getAttribute("data-canvas-viewport-x")),
+      )
+      .not.toBeCloseTo(beforeX, 3);
+
+    await this.page.keyboard.up("Space");
+    await expect(canvas).toHaveAttribute("data-canvas-active-tool", "select");
+    await expect(canvas).toHaveAttribute("data-canvas-selected-tool", "select");
+    this.keyboardViewportCommandsCompleted = true;
+  }
+
+  async exerciseShortcutHelpAndEditingGuard() {
+    await this.addTextCard("Shortcut guard");
+    await this.focusCanvasCard("Shortcut guard");
+    await this.page.keyboard.press("?");
+    const help = this.page.getByTestId("canvas-shortcut-help");
+    await expect(help).toBeVisible();
+    await expect(
+      this.page.getByTestId("canvas-clipboard-shortcuts-unavailable"),
+    ).toContainText("Cmd/Ctrl+C, X, and V are unavailable");
+    await this.page.keyboard.press("Escape");
+    await expect(help).not.toBeAttached();
+    await expect(
+      this.textCardContaining("Shortcut guard").first(),
+    ).toBeFocused();
+
+    await this.page.keyboard.press("Enter");
+    const editor = this.page.getByTestId("canvas-text-editor");
+    await expect(editor).toBeFocused();
+    await editor.press(await this.primaryShortcut("a"));
+    await editor.press("Delete");
+    await editor.type("?0f");
+    await expect(editor).toHaveValue("?0f");
+    await expect(
+      this.page.getByTestId("canvas-shortcut-help"),
+    ).not.toBeAttached();
+    await expect(this.page.locator("[data-item-id]")).toHaveCount(1);
+    await expect(this.page.getByTestId("canvas-flow")).toHaveAttribute(
+      "data-canvas-zoom",
+      "1",
+    );
+    this.shortcutEditingGuardCompleted = true;
+  }
+
+  expectKeyboardViewportCommandsCompleted() {
+    expect(this.keyboardViewportCommandsCompleted).toBe(true);
+  }
+
+  expectShortcutEditingGuardCompleted() {
+    expect(this.shortcutEditingGuardCompleted).toBe(true);
   }
 
   async expectFocusedCanvasCard(text: string) {

@@ -182,6 +182,69 @@ When(
   },
 );
 
+When(
+  "I create two Canvas cards using the keyboard",
+  async function (this: E2EWorld) {
+    await this.canvas.createTwoCardsWithKeyboard();
+  },
+);
+
+When(
+  "I select all Canvas cards using the keyboard",
+  async function (this: E2EWorld) {
+    await this.canvas.selectAllCardsWithKeyboard();
+  },
+);
+
+When(
+  "I nudge the Canvas selection using small and large keyboard steps",
+  async function (this: E2EWorld) {
+    await this.canvas.nudgeSelectionWithKeyboard();
+  },
+);
+
+When(
+  "I duplicate the Canvas selection using the keyboard",
+  async function (this: E2EWorld) {
+    await this.canvas.duplicateSelectionWithKeyboard();
+  },
+);
+
+When(
+  "I delete the Canvas selection using the keyboard",
+  async function (this: E2EWorld) {
+    await this.canvas.deleteSelectionWithKeyboard();
+  },
+);
+
+When(
+  "I undo using the Canvas keyboard shortcut",
+  async function (this: E2EWorld) {
+    await this.canvas.undoWithKeyboard();
+  },
+);
+
+When(
+  "I redo using the Canvas keyboard shortcut",
+  async function (this: E2EWorld) {
+    await this.canvas.redoWithKeyboard();
+  },
+);
+
+When(
+  "I exercise the Canvas keyboard viewport commands",
+  async function (this: E2EWorld) {
+    await this.canvas.exerciseKeyboardViewportCommands();
+  },
+);
+
+When(
+  "I exercise Canvas shortcut help and the editing guard",
+  async function (this: E2EWorld) {
+    await this.canvas.exerciseShortcutHelpAndEditingGuard();
+  },
+);
+
 Then("I should see an empty Canvas", async function (this: E2EWorld) {
   await this.canvas.expectEmptyCanvas();
 });
@@ -320,5 +383,33 @@ Then(
   "Canvas text-editing keys should remain in card {string}",
   async function (this: E2EWorld, text: string) {
     await this.canvas.expectEditingKeysStayInCard(text);
+  },
+);
+
+Then(
+  "the Canvas selection should move by one and ten grid units",
+  async function (this: E2EWorld) {
+    await this.canvas.expectKeyboardNudgeDistances();
+  },
+);
+
+Then(
+  "the Canvas selected card count should be {int}",
+  async function (this: E2EWorld, count: number) {
+    await this.canvas.expectSelectedCardCount(count);
+  },
+);
+
+Then(
+  "the Canvas viewport commands should complete successfully",
+  function (this: E2EWorld) {
+    this.canvas.expectKeyboardViewportCommandsCompleted();
+  },
+);
+
+Then(
+  "Canvas shortcut help and editing isolation should complete successfully",
+  function (this: E2EWorld) {
+    this.canvas.expectShortcutEditingGuardCompleted();
   },
 );

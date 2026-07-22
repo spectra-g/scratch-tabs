@@ -4,6 +4,7 @@ interface CanvasToolbarProps {
   canRedo: boolean;
   onUndo: () => void;
   onRedo: () => void;
+  onShowShortcuts: () => void;
 }
 
 export const CanvasToolbar = ({
@@ -12,6 +13,7 @@ export const CanvasToolbar = ({
   canRedo,
   onUndo,
   onRedo,
+  onShowShortcuts,
 }: CanvasToolbarProps) => (
   <div className="canvas-toolbar">
     <button
@@ -43,6 +45,16 @@ export const CanvasToolbar = ({
       onClick={onRedo}
     >
       Redo
+    </button>
+    <div className="mx-1 w-px bg-border-base" aria-hidden="true" />
+    <button
+      type="button"
+      className="rounded px-3 py-2 text-sm text-secondary hover:bg-element-hover focus:outline-none focus:ring-2 focus:ring-primary"
+      data-testid="canvas-show-shortcut-help"
+      aria-label="Show Canvas keyboard shortcuts"
+      onClick={onShowShortcuts}
+    >
+      ?
     </button>
   </div>
 );

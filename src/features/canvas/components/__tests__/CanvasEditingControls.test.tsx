@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { CanvasContextMenu } from "../CanvasContextMenu";
 import { CanvasSelectionToolbar } from "../CanvasSelectionToolbar";
 import { CanvasToolbar } from "../CanvasToolbar";
+import { CanvasShortcutHelp } from "../CanvasShortcutHelp";
 
 describe("Canvas editing controls", () => {
   it("routes every selection-toolbar action through its focused callback", () => {
@@ -57,6 +58,7 @@ describe("Canvas editing controls", () => {
   it("reflects undo and redo availability", () => {
     const onUndo = jest.fn();
     const onRedo = jest.fn();
+    const onShowShortcuts = jest.fn();
     render(
       <CanvasToolbar
         onAddText={jest.fn()}
@@ -64,14 +66,31 @@ describe("Canvas editing controls", () => {
         canRedo={false}
         onUndo={onUndo}
         onRedo={onRedo}
+        onShowShortcuts={onShowShortcuts}
       />,
     );
 
     fireEvent.click(screen.getByTestId("canvas-undo"));
     fireEvent.click(screen.getByTestId("canvas-redo"));
+    fireEvent.click(screen.getByTestId("canvas-show-shortcut-help"));
 
     expect(onUndo).toHaveBeenCalledTimes(1);
     expect(onRedo).not.toHaveBeenCalled();
+    expect(onShowShortcuts).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId("canvas-redo")).toBeDisabled();
+  });
+
+  it("marks clipboard shortcuts as unavailable in shortcut help", () => {
+    const onClose = jest.fn();
+    render(<CanvasShortcutHelp onClose={onClose} />);
+
+    expect(screen.getByRole("dialog")).toHaveAccessibleName(
+      "Canvas keyboard shortcuts",
+    );
+    expect(
+      screen.getByTestId("canvas-clipboard-shortcuts-unavailable"),
+    ).toHaveTextContent("Cmd/Ctrl+C, X, and V are unavailable");
+    fireEvent.click(screen.getByTestId("canvas-close-shortcut-help"));
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

@@ -227,4 +227,32 @@ describe("useCanvasItems", () => {
 
     expect(result.current.focusedItemId).toBe("right");
   });
+
+  it("selects every card without adding an undo boundary", () => {
+    const items = [makeItem("one"), makeItem("two", { x: 400 })];
+    const { result } = renderHook(() => useCanvasItems(items, jest.fn()));
+
+    act(() => result.current.selectAll());
+
+    expect(result.current.interactionState.selectedItemIds).toEqual([
+      "one",
+      "two",
+    ]);
+    expect(result.current.focusedItemId).toBe("one");
+    expect(result.current.canUndo).toBe(false);
+  });
+
+  it("nudges a multi-selection as one undoable operation", () => {
+    const items = [makeItem("one"), makeItem("two", { x: 400 })];
+    const { result } = renderHook(() => useCanvasItems(items, jest.fn()));
+
+    act(() => result.current.selectAll());
+    act(() => result.current.nudgeSelection("right", 10));
+
+    expect(result.current.items.map(({ x }) => x)).toEqual([20, 410]);
+    act(() => result.current.undo());
+    expect(result.current.items.map(({ x }) => x)).toEqual([10, 400]);
+    act(() => result.current.redo());
+    expect(result.current.items.map(({ x }) => x)).toEqual([20, 410]);
+  });
 });

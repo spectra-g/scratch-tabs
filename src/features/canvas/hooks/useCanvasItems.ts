@@ -23,6 +23,11 @@ import {
   moveCanvasItemsOneLayer,
   type CanvasLayerDirection,
 } from "../utils/canvasSelectionOperations";
+import {
+  getCanvasSpatialReadingOrder,
+  type CanvasNavigationDirection,
+} from "../utils/canvasSpatialNavigation";
+import { getCanvasNudgeDelta } from "../utils/canvasKeyboard";
 
 interface ReplaceItemsOptions {
   editingItemId?: string | null;
@@ -311,6 +316,42 @@ export const useCanvasItems = (
     });
   }, [commitOperation, selectedItemIds]);
 
+  const selectAll = useCallback(() => {
+    if (itemsRef.current.length === 0) return;
+    const allIds = new Set(itemsRef.current.map((item) => item.id));
+    const nextFocusedItemId =
+      focusedItemIdRef.current ??
+      getCanvasSpatialReadingOrder(itemsRef.current)[0]?.id ??
+      null;
+    replaceSelection(allIds, nextFocusedItemId, "keyboard");
+  }, [replaceSelection]);
+
+  const nudgeSelection = useCallback(
+    (direction: CanvasNavigationDirection, distance: number) => {
+      const selectedIds = selectedItemIds();
+      if (selectedIds.size === 0) return;
+      const delta = getCanvasNudgeDelta(direction, distance);
+      const now = Date.now();
+      commitOperation(
+        itemsRef.current.map((item) =>
+          selectedIds.has(item.id)
+            ? {
+                ...item,
+                x: item.x + delta.x,
+                y: item.y + delta.y,
+                updatedAt: now,
+              }
+            : item,
+        ),
+        {
+          selectedIds,
+          focusedItemId: focusedItemIdRef.current,
+        },
+      );
+    },
+    [commitOperation, selectedItemIds],
+  );
+
   const moveSelectionOneLayer = useCallback(
     (direction: CanvasLayerDirection) => {
       const selectedIds = selectedItemIds();
@@ -513,6 +554,8 @@ export const useCanvasItems = (
     createTextItem,
     deleteSelection,
     duplicateSelection,
+    selectAll,
+    nudgeSelection,
     moveSelectionOneLayer,
     commitNodePositions,
     onNodesChange,

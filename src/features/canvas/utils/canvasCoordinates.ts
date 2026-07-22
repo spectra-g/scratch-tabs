@@ -8,6 +8,22 @@ interface CanvasDocumentBounds {
   height: number;
 }
 
+export const getCombinedCanvasBounds = (
+  bounds: CanvasDocumentBounds[],
+): CanvasDocumentBounds | null => {
+  if (bounds.length === 0) return null;
+  const left = Math.min(...bounds.map((item) => item.x));
+  const top = Math.min(...bounds.map((item) => item.y));
+  const right = Math.max(...bounds.map((item) => item.x + item.width));
+  const bottom = Math.max(...bounds.map((item) => item.y + item.height));
+  return {
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top,
+  };
+};
+
 export interface CanvasPaneBounds {
   left: number;
   top: number;

@@ -46,6 +46,16 @@
   box-shadow: inset 0 0 0 2px rgb(var(--color-primary) / 0.32);
 }
 
+.canvas-flow-root[data-canvas-pan-active="true"],
+.canvas-flow-root[data-canvas-pan-active="true"] .react-flow__pane {
+  cursor: grab;
+}
+
+.canvas-flow-root[data-canvas-pan-active="true"]:active,
+.canvas-flow-root[data-canvas-pan-active="true"] .react-flow__pane:active {
+  cursor: grabbing;
+}
+
 .canvas-flow-root .react-flow__resize-control.line {
   border-color: rgb(var(--color-primary));
 }

@@ -1,10 +1,21 @@
 import {
+  getCombinedCanvasBounds,
   getCanvasViewportCenter,
   getViewportToRevealCanvasBounds,
   screenPointToCanvasPoint,
 } from "../canvasCoordinates";
 
 describe("Canvas coordinate conversion", () => {
+  it("combines differently sized and negative item bounds", () => {
+    expect(
+      getCombinedCanvasBounds([
+        { x: -40, y: 20, width: 100, height: 80 },
+        { x: 200, y: -30, width: 50, height: 200 },
+      ]),
+    ).toEqual({ x: -40, y: -30, width: 290, height: 200 });
+    expect(getCombinedCanvasBounds([])).toBeNull();
+  });
+
   it("converts screen points using pane offset, pan, and zoom", () => {
     expect(
       screenPointToCanvasPoint(

@@ -14,10 +14,12 @@ import {
   DEFAULT_TEXT_ITEM_WIDTH,
 } from "../constants";
 import { useCanvasItems } from "../hooks/useCanvasItems";
+import { useCanvasKeyboardShortcuts } from "../hooks/useCanvasKeyboardShortcuts";
 import { useSpatialNavigation } from "../hooks/useSpatialNavigation";
 import type { CanvasItem, CanvasSaveStatus } from "../types";
 import {
   getCanvasViewportCenter,
+  getCombinedCanvasBounds,
   getViewportToRevealCanvasBounds,
 } from "../utils/canvasCoordinates";
 import type { CanvasFlowNode } from "../utils/canvasFlowMapping";
@@ -27,6 +29,7 @@ import {
   type CanvasContextMenuPosition,
 } from "./CanvasContextMenu";
 import { CanvasSelectionToolbar } from "./CanvasSelectionToolbar";
+import { CanvasShortcutHelp } from "./CanvasShortcutHelp";
 import { CanvasNodeInteractionContext } from "./nodes/CanvasNodeInteractionContext";
 import { TextNode } from "./nodes/TextNode";
 import { useRendererStatusStore } from "../../../stores/rendererStatusStore";
@@ -95,19 +98,63 @@ export const CanvasScene = ({
     void flowInstance.setViewport(nextViewport, { duration: 150 });
   }, []);
 
+  const fitSelection = useCallback(() => {
+    const flowInstance = flowInstanceRef.current;
+    if (!flowInstance) return;
+    const selectedIds = new Set(canvasItems.interactionState.selectedItemIds);
+    const bounds = getCombinedCanvasBounds(
+      canvasItems.items.filter((item) => selectedIds.has(item.id)),
+    );
+    if (!bounds) return;
+    void flowInstance.fitBounds(bounds, { padding: 0.18, duration: 150 });
+  }, [canvasItems.interactionState.selectedItemIds, canvasItems.items]);
+
+  const resetZoom = useCallback(() => {
+    const pane = rootRef.current?.getBoundingClientRect();
+    const flowInstance = flowInstanceRef.current;
+    if (!pane || !flowInstance) return;
+    const focusedItem = canvasItems.focusedItemId
+      ? canvasItems.items.find((item) => item.id === canvasItems.focusedItemId)
+      : null;
+    const center = focusedItem
+      ? {
+          x: focusedItem.x + focusedItem.width / 2,
+          y: focusedItem.y + focusedItem.height / 2,
+        }
+      : getCanvasViewportCenter(pane, viewportRef.current);
+    void flowInstance.setCenter(center.x, center.y, {
+      zoom: 1,
+      duration: 150,
+    });
+  }, [canvasItems.focusedItemId, canvasItems.items]);
+
   const spatialNavigation = useSpatialNavigation({
     rootRef,
     items: canvasItems.items,
     interactionState: canvasItems.interactionState,
     selectForKeyboardNavigation: canvasItems.selectForKeyboardNavigation,
-    markKeyboardInteraction: canvasItems.markKeyboardInteraction,
     beginEditing: canvasItems.beginEditing,
     clearSelection: canvasItems.clearSelection,
+    revealItem,
+  });
+
+  const keyboardShortcuts = useCanvasKeyboardShortcuts({
+    interactionState: canvasItems.interactionState,
+    itemCount: canvasItems.items.length,
+    markKeyboardInteraction: canvasItems.markKeyboardInteraction,
+    navigateDirection: spatialNavigation.navigateDirection,
+    navigateSequentially: spatialNavigation.navigateSequentially,
+    enterFocusedItem: spatialNavigation.enterFocusedItem,
+    escapeNavigation: spatialNavigation.escapeNavigation,
+    selectAll: canvasItems.selectAll,
     deleteSelection: canvasItems.deleteSelection,
     duplicateSelection: canvasItems.duplicateSelection,
+    nudgeSelection: canvasItems.nudgeSelection,
     undo: canvasItems.undo,
     redo: canvasItems.redo,
-    revealItem,
+    fitSelection,
+    resetZoom,
+    announce: spatialNavigation.announce,
   });
 
   useEffect(() => {
@@ -173,11 +220,19 @@ export const CanvasScene = ({
       data-focused-item-id={canvasItems.focusedItemId ?? ""}
       data-edge-direction={spatialNavigation.edgeDirection ?? ""}
       data-canvas-zoom={viewportRef.current.zoom}
+      data-canvas-viewport-x={viewportRef.current.x}
+      data-canvas-viewport-y={viewportRef.current.y}
+      data-canvas-selected-tool="select"
+      data-canvas-active-tool={
+        keyboardShortcuts.isSpacePanning ? "pan" : "select"
+      }
+      data-canvas-pan-active={keyboardShortcuts.isSpacePanning}
       tabIndex={canvasItems.focusedItemId === null ? 0 : -1}
       role="application"
       aria-label={`${tab.title} Canvas`}
       onFocus={spatialNavigation.handleRootFocus}
-      onKeyDown={spatialNavigation.handleKeyDown}
+      onKeyDown={keyboardShortcuts.handleKeyDown}
+      onKeyUp={keyboardShortcuts.handleKeyUp}
     >
       <CanvasNodeInteractionContext.Provider value={canvasItems.interaction}>
         <ReactFlow<CanvasFlowNode>
@@ -188,6 +243,9 @@ export const CanvasScene = ({
           minZoom={0.1}
           maxZoom={4}
           panOnDrag
+          panActivationKeyCode={null}
+          nodesDraggable={!keyboardShortcuts.isSpacePanning}
+          elementsSelectable={!keyboardShortcuts.isSpacePanning}
           zoomOnPinch
           zoomOnScroll
           zoomOnDoubleClick={false}
@@ -229,6 +287,11 @@ export const CanvasScene = ({
           }}
           onMove={(_event, nextViewport) => {
             viewportRef.current = nextViewport;
+            if (rootRef.current) {
+              rootRef.current.dataset.canvasZoom = String(nextViewport.zoom);
+              rootRef.current.dataset.canvasViewportX = String(nextViewport.x);
+              rootRef.current.dataset.canvasViewportY = String(nextViewport.y);
+            }
             setZoomPercent(Math.round(nextViewport.zoom * 100));
           }}
           onMoveEnd={(_event, nextViewport) => {
@@ -261,6 +324,7 @@ export const CanvasScene = ({
               canRedo={canvasItems.canRedo}
               onUndo={canvasItems.undo}
               onRedo={canvasItems.redo}
+              onShowShortcuts={keyboardShortcuts.showShortcutHelp}
             />
           </Panel>
           {canvasItems.selectedCount > 0 && (
@@ -301,6 +365,9 @@ export const CanvasScene = ({
           onDelete={canvasItems.deleteSelection}
           onClose={closeContextMenu}
         />
+      )}
+      {keyboardShortcuts.isShortcutHelpOpen && (
+        <CanvasShortcutHelp onClose={keyboardShortcuts.closeShortcutHelp} />
       )}
       <div
         className="sr-only"
