@@ -5,6 +5,7 @@ import {
   Controls,
   Panel,
   ReactFlow,
+  type ReactFlowInstance,
   type Viewport,
 } from "@xyflow/react";
 import type { Tab } from "../../../types";
@@ -13,8 +14,12 @@ import {
   DEFAULT_TEXT_ITEM_WIDTH,
 } from "../constants";
 import { useCanvasItems } from "../hooks/useCanvasItems";
+import { useSpatialNavigation } from "../hooks/useSpatialNavigation";
 import type { CanvasItem, CanvasSaveStatus } from "../types";
-import { getCanvasViewportCenter } from "../utils/canvasCoordinates";
+import {
+  getCanvasViewportCenter,
+  getViewportToRevealCanvasBounds,
+} from "../utils/canvasCoordinates";
 import type { CanvasFlowNode } from "../utils/canvasFlowMapping";
 import { CanvasToolbar } from "./CanvasToolbar";
 import {
@@ -28,18 +33,6 @@ import { useRendererStatusStore } from "../../../stores/rendererStatusStore";
 
 const nodeTypes = { text: TextNode };
 const multiSelectionKeyCodes = ["Meta", "Control", "Shift"];
-
-const isEditableTarget = (event: React.KeyboardEvent): boolean =>
-  event.nativeEvent
-    .composedPath()
-    .some(
-      (target) =>
-        target instanceof HTMLElement &&
-        (target.isContentEditable ||
-          target.tagName === "INPUT" ||
-          target.tagName === "TEXTAREA" ||
-          target.tagName === "SELECT"),
-    );
 
 interface CanvasSceneProps {
   tab: Tab;
@@ -68,6 +61,10 @@ export const CanvasScene = ({
 }: CanvasSceneProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef(viewport);
+  const flowInstanceRef = useRef<ReactFlowInstance<CanvasFlowNode> | null>(
+    null,
+  );
+  const automaticViewportRef = useRef<Viewport | null>(null);
   const [zoomPercent, setZoomPercent] = useState(() =>
     Math.round(viewport.zoom * 100),
   );
@@ -76,6 +73,42 @@ export const CanvasScene = ({
   const canvasItems = useCanvasItems(initialItems, updateItems);
   const backgroundVariant =
     background === "grid" ? BackgroundVariant.Lines : BackgroundVariant.Dots;
+
+  const revealItem = useCallback((item: CanvasItem) => {
+    const pane = rootRef.current?.getBoundingClientRect();
+    const flowInstance = flowInstanceRef.current;
+    if (!pane || !flowInstance) return;
+
+    const nextViewport = getViewportToRevealCanvasBounds(
+      item,
+      pane,
+      viewportRef.current,
+    );
+    if (
+      nextViewport.x === viewportRef.current.x &&
+      nextViewport.y === viewportRef.current.y
+    ) {
+      return;
+    }
+
+    automaticViewportRef.current = nextViewport;
+    void flowInstance.setViewport(nextViewport, { duration: 150 });
+  }, []);
+
+  const spatialNavigation = useSpatialNavigation({
+    rootRef,
+    items: canvasItems.items,
+    interactionState: canvasItems.interactionState,
+    selectForKeyboardNavigation: canvasItems.selectForKeyboardNavigation,
+    markKeyboardInteraction: canvasItems.markKeyboardInteraction,
+    beginEditing: canvasItems.beginEditing,
+    clearSelection: canvasItems.clearSelection,
+    deleteSelection: canvasItems.deleteSelection,
+    duplicateSelection: canvasItems.duplicateSelection,
+    undo: canvasItems.undo,
+    redo: canvasItems.redo,
+    revealItem,
+  });
 
   useEffect(() => {
     useRendererStatusStore.getState().setContribution(tab.id, {
@@ -136,42 +169,15 @@ export const CanvasScene = ({
       className="canvas-flow-root h-full w-full bg-canvas text-main"
       data-testid="canvas-flow"
       data-canvas-document-id={tab.documentId}
-      tabIndex={0}
+      data-canvas-mode={canvasItems.interactionState.mode}
+      data-focused-item-id={canvasItems.focusedItemId ?? ""}
+      data-edge-direction={spatialNavigation.edgeDirection ?? ""}
+      data-canvas-zoom={viewportRef.current.zoom}
+      tabIndex={canvasItems.focusedItemId === null ? 0 : -1}
       role="application"
       aria-label={`${tab.title} Canvas`}
-      onKeyDown={(event) => {
-        if (isEditableTarget(event)) return;
-        const commandKey = event.metaKey || event.ctrlKey;
-        if (commandKey && event.key.toLowerCase() === "z") {
-          event.preventDefault();
-          event.stopPropagation();
-          if (event.shiftKey) canvasItems.redo();
-          else canvasItems.undo();
-        } else if (commandKey && event.key.toLowerCase() === "y") {
-          event.preventDefault();
-          event.stopPropagation();
-          canvasItems.redo();
-        } else if (commandKey && event.key.toLowerCase() === "d") {
-          event.preventDefault();
-          event.stopPropagation();
-          canvasItems.duplicateSelection();
-        } else if (event.key === "Delete" || event.key === "Backspace") {
-          event.preventDefault();
-          canvasItems.deleteSelection();
-        } else if (event.key === "Enter") {
-          const selected = canvasItems.nodes.find((node) => node.selected);
-          if (selected) {
-            event.preventDefault();
-            canvasItems.beginEditing(selected.id);
-          }
-        } else if (
-          event.key === "Escape" &&
-          canvasItems.editingItemId === null
-        ) {
-          canvasItems.clearSelection();
-          rootRef.current?.focus();
-        }
-      }}
+      onFocus={spatialNavigation.handleRootFocus}
+      onKeyDown={spatialNavigation.handleKeyDown}
     >
       <CanvasNodeInteractionContext.Provider value={canvasItems.interaction}>
         <ReactFlow<CanvasFlowNode>
@@ -186,7 +192,14 @@ export const CanvasScene = ({
           zoomOnScroll
           zoomOnDoubleClick={false}
           nodesConnectable={false}
+          nodesFocusable={false}
+          edgesFocusable={false}
+          disableKeyboardA11y
+          autoPanOnNodeFocus={false}
           deleteKeyCode={null}
+          onInit={(instance) => {
+            flowInstanceRef.current = instance;
+          }}
           onNodesChange={canvasItems.onNodesChange}
           multiSelectionKeyCode={multiSelectionKeyCodes}
           elevateNodesOnSelect={false}
@@ -220,6 +233,16 @@ export const CanvasScene = ({
           }}
           onMoveEnd={(_event, nextViewport) => {
             viewportRef.current = nextViewport;
+            const automaticViewport = automaticViewportRef.current;
+            automaticViewportRef.current = null;
+            if (
+              automaticViewport &&
+              Math.abs(automaticViewport.x - nextViewport.x) < 0.01 &&
+              Math.abs(automaticViewport.y - nextViewport.y) < 0.01 &&
+              automaticViewport.zoom === nextViewport.zoom
+            ) {
+              return;
+            }
             void saveViewport(nextViewport);
           }}
         >
@@ -279,6 +302,15 @@ export const CanvasScene = ({
           onClose={closeContextMenu}
         />
       )}
+      <div
+        className="sr-only"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        data-testid="canvas-navigation-announcement"
+      >
+        {spatialNavigation.announcement}
+      </div>
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import { CANVAS_DUPLICATE_OFFSET } from "../constants";
 import type { CanvasItem } from "../types";
+import { getCanvasSpatialReadingOrder } from "./canvasSpatialNavigation";
 
 export type CanvasLayerDirection = "forward" | "backward";
 
@@ -101,17 +102,26 @@ export const getSelectionFallbackAfterDeletion = (
 ): string | null => {
   if (items.length === deletedItemIds.size) return null;
 
+  const readingOrder = getCanvasSpatialReadingOrder(items);
   const focusedIndex = focusedItemId
-    ? items.findIndex((item) => item.id === focusedItemId)
+    ? readingOrder.findIndex((item) => item.id === focusedItemId)
     : -1;
   if (focusedIndex >= 0) {
-    for (let index = focusedIndex + 1; index < items.length; index += 1) {
-      if (!deletedItemIds.has(items[index].id)) return items[index].id;
+    for (
+      let index = focusedIndex + 1;
+      index < readingOrder.length;
+      index += 1
+    ) {
+      if (!deletedItemIds.has(readingOrder[index].id)) {
+        return readingOrder[index].id;
+      }
     }
     for (let index = focusedIndex - 1; index >= 0; index -= 1) {
-      if (!deletedItemIds.has(items[index].id)) return items[index].id;
+      if (!deletedItemIds.has(readingOrder[index].id)) {
+        return readingOrder[index].id;
+      }
     }
   }
 
-  return items.find((item) => !deletedItemIds.has(item.id))?.id ?? null;
+  return readingOrder.find((item) => !deletedItemIds.has(item.id))?.id ?? null;
 };

@@ -1,4 +1,5 @@
 import { createContext, useContext } from "react";
+import type { CanvasFocusOrigin } from "../../types";
 
 export interface CanvasNodeBounds {
   x: number;
@@ -14,6 +15,7 @@ interface CanvasNodeInteraction {
   commitResize: (itemId: string, bounds: CanvasNodeBounds) => void;
   preparePointerSelection: (itemId: string, additive: boolean) => void;
   completePointerSelection: (itemId: string) => void;
+  syncFocusedItem: (itemId: string, origin: CanvasFocusOrigin) => void;
 }
 
 export const CanvasNodeInteractionContext =

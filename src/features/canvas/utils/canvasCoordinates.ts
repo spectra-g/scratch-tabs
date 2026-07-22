@@ -1,6 +1,13 @@
 import type { CanvasViewport } from "../types";
 import type { CanvasPoint } from "./canvasItemFactory";
 
+interface CanvasDocumentBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface CanvasPaneBounds {
   left: number;
   top: number;
@@ -29,3 +36,40 @@ export const getCanvasViewportCenter = (
     pane,
     viewport,
   );
+
+/** Returns the smallest pan needed to fully reveal an item at the current zoom. */
+export const getViewportToRevealCanvasBounds = (
+  item: CanvasDocumentBounds,
+  pane: Pick<CanvasPaneBounds, "width" | "height">,
+  viewport: CanvasViewport,
+  padding = 32,
+): CanvasViewport => {
+  const availableWidth = Math.max(0, pane.width - padding * 2);
+  const availableHeight = Math.max(0, pane.height - padding * 2);
+  const itemScreenWidth = item.width * viewport.zoom;
+  const itemScreenHeight = item.height * viewport.zoom;
+  const left = item.x * viewport.zoom + viewport.x;
+  const top = item.y * viewport.zoom + viewport.y;
+  const right = left + itemScreenWidth;
+  const bottom = top + itemScreenHeight;
+  let x = viewport.x;
+  let y = viewport.y;
+
+  if (itemScreenWidth > availableWidth) {
+    x += padding - left;
+  } else if (left < padding) {
+    x += padding - left;
+  } else if (right > pane.width - padding) {
+    x -= right - (pane.width - padding);
+  }
+
+  if (itemScreenHeight > availableHeight) {
+    y += padding - top;
+  } else if (top < padding) {
+    y += padding - top;
+  } else if (bottom > pane.height - padding) {
+    y -= bottom - (pane.height - padding);
+  }
+
+  return { x, y, zoom: viewport.zoom };
+};

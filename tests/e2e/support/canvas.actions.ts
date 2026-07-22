@@ -19,6 +19,15 @@ export class CanvasActions {
     string,
     Record<"x" | "y" | "width" | "height", number>
   >();
+  private sequentialTraversal: Record<"forward" | "backward", string[]> = {
+    forward: [],
+    backward: [],
+  };
+  private exitedCanvasAtBoundary: Record<"forward" | "backward", boolean> = {
+    forward: false,
+    backward: false,
+  };
+  private zoomBeforeOffscreenNavigation: string | null = null;
 
   constructor(private page: Page) {}
 
@@ -90,6 +99,31 @@ export class CanvasActions {
       width: await readNumber("width"),
       height: await readNumber("height"),
     };
+  }
+
+  private async moveCardBy(text: string, deltaX: number, deltaY: number) {
+    const card = this.textCardContaining(text).first();
+    await expect(card).toBeVisible();
+    const box = await card.boundingBox();
+    expect(box).toBeTruthy();
+    await this.page.mouse.move(
+      box!.x + box!.width / 2,
+      box!.y + box!.height / 2,
+    );
+    await this.page.mouse.down();
+    await this.page.mouse.move(
+      box!.x + box!.width / 2 + deltaX,
+      box!.y + box!.height / 2 + deltaY,
+      { steps: 8 },
+    );
+    await this.page.mouse.up();
+  }
+
+  private async focusedCardName() {
+    const label = await this.page
+      .locator('[data-item-id][data-focused="true"]')
+      .getAttribute("aria-label");
+    return label?.replace(/^Text card,?\s*/, "") ?? "";
   }
 
   private pane(side: "left" | "right") {
@@ -400,6 +434,144 @@ export class CanvasActions {
 
   async expectNoCards() {
     await expect(this.page.locator("[data-item-id]")).toHaveCount(0);
+  }
+
+  async createKeyboardNavigationLayout() {
+    for (const text of [
+      "Top left",
+      "Top right",
+      "Middle left",
+      "Middle right",
+      "Bottom left",
+    ]) {
+      await this.addTextCard(text);
+    }
+    await this.moveCardBy("Top right", 70, 0);
+  }
+
+  async focusCanvasCard(text: string) {
+    const card = this.textCardContaining(text).first();
+    await card.focus();
+    await expect(card).toHaveAttribute("data-focused", "true");
+    await expect(card).toHaveAttribute("aria-selected", "true");
+  }
+
+  async pressCanvasKey(key: string) {
+    await this.page.keyboard.press(key);
+  }
+
+  async expectFocusedCanvasCard(text: string) {
+    const card = this.textCardContaining(text).first();
+    await expect(card).toHaveAttribute("data-focused", "true");
+    await expect(card).toHaveAttribute("aria-selected", "true");
+    await expect(card).toBeFocused();
+    await expect(
+      this.page.getByTestId("canvas-navigation-announcement"),
+    ).toHaveText(`Text card, ${text}`);
+  }
+
+  async traverseCanvasSequentially(direction: "forward" | "backward") {
+    const expected = [
+      "Top left",
+      "Top right",
+      "Middle left",
+      "Middle right",
+      "Bottom left",
+    ];
+    const ordered =
+      direction === "forward" ? expected : [...expected].reverse();
+    const key = direction === "forward" ? "Tab" : "Shift+Tab";
+    await this.focusCanvasCard(ordered[0]);
+    this.sequentialTraversal[direction] = [await this.focusedCardName()];
+
+    for (let index = 1; index < ordered.length; index += 1) {
+      await this.page.keyboard.press(key);
+      this.sequentialTraversal[direction].push(await this.focusedCardName());
+    }
+
+    await this.page.keyboard.press(key);
+    this.exitedCanvasAtBoundary[direction] = await this.page.evaluate(() => {
+      const active = document.activeElement as HTMLElement | null;
+      return Boolean(
+        active &&
+        !active.closest("[data-item-id]") &&
+        !active.matches('[data-testid="canvas-flow"]'),
+      );
+    });
+  }
+
+  async expectSequentialTraversal(direction: "forward" | "backward") {
+    const expected = [
+      "Top left",
+      "Top right",
+      "Middle left",
+      "Middle right",
+      "Bottom left",
+    ];
+    expect(this.sequentialTraversal[direction]).toEqual(
+      direction === "forward" ? expected : [...expected].reverse(),
+    );
+    expect(this.exitedCanvasAtBoundary[direction]).toBe(true);
+  }
+
+  async createOffscreenNavigationLayout() {
+    await this.addTextCard("Visible card");
+    await this.addTextCard("Offscreen card");
+    await this.moveCardBy("Offscreen card", 1400, 0);
+    await this.focusCanvasCard("Visible card");
+    this.zoomBeforeOffscreenNavigation = await this.page
+      .getByTestId("canvas-flow")
+      .getAttribute("data-canvas-zoom");
+  }
+
+  async expectOffscreenCardRevealedWithoutZoomChange() {
+    const canvas = this.page.getByTestId("canvas-flow");
+    const card = this.textCardContaining("Offscreen card").first();
+    await expect
+      .poll(async () => {
+        const [canvasBox, cardBox] = await Promise.all([
+          canvas.boundingBox(),
+          card.boundingBox(),
+        ]);
+        if (!canvasBox || !cardBox) return false;
+        return (
+          cardBox.x >= canvasBox.x + 24 &&
+          cardBox.y >= canvasBox.y + 24 &&
+          cardBox.x + cardBox.width <= canvasBox.x + canvasBox.width - 24 &&
+          cardBox.y + cardBox.height <= canvasBox.y + canvasBox.height - 24
+        );
+      })
+      .toBe(true);
+    await expect(canvas).toHaveAttribute(
+      "data-canvas-zoom",
+      this.zoomBeforeOffscreenNavigation ?? "1",
+    );
+  }
+
+  async enterFocusedCardEditing() {
+    await this.page.keyboard.press("Enter");
+    await expect(this.page.getByTestId("canvas-text-editor")).toBeFocused();
+  }
+
+  async expectEditingKeysStayInCard(text: string) {
+    const canvas = this.page.getByTestId("canvas-flow");
+    const focusedItemId = await canvas.getAttribute("data-focused-item-id");
+    const editor = this.page.getByTestId("canvas-text-editor");
+    await editor.press("ArrowRight");
+    await editor.press("Home");
+    await expect(editor).toBeFocused();
+    await expect(canvas).toHaveAttribute(
+      "data-focused-item-id",
+      focusedItemId ?? "",
+    );
+    await expect(this.textCardContaining(text).first()).toHaveAttribute(
+      "data-editing",
+      "true",
+    );
+  }
+
+  async leaveCardEditing() {
+    await this.page.getByTestId("canvas-text-editor").press("Escape");
   }
 
   async expectEmptyCanvas() {

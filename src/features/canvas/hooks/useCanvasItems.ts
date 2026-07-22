@@ -1,6 +1,10 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { applyNodeChanges, type NodeChange } from "@xyflow/react";
-import type { CanvasItem } from "../types";
+import type {
+  CanvasFocusOrigin,
+  CanvasInteractionState,
+  CanvasItem,
+} from "../types";
 import {
   canvasItemsToFlowNodes,
   type CanvasFlowNode,
@@ -46,6 +50,8 @@ export const useCanvasItems = (
   const editingItemIdRef = useRef(editingItemId);
   const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
   const focusedItemIdRef = useRef(focusedItemId);
+  const [focusOrigin, setFocusOrigin] = useState<CanvasFocusOrigin>(null);
+  const focusOriginRef = useRef(focusOrigin);
   const {
     record: recordHistory,
     undo: undoHistory,
@@ -132,9 +138,12 @@ export const useCanvasItems = (
     (
       nextSelectedIds: ReadonlySet<string>,
       nextFocusedItemId: string | null,
+      nextFocusOrigin: CanvasFocusOrigin = focusOriginRef.current,
     ) => {
       focusedItemIdRef.current = nextFocusedItemId;
+      focusOriginRef.current = nextFocusOrigin;
       setFocusedItemId(nextFocusedItemId);
+      setFocusOrigin(nextFocusOrigin);
       replaceFlowNodes(
         nodesRef.current.map((node) => ({
           ...node,
@@ -377,7 +386,7 @@ export const useCanvasItems = (
       pointerSelectionRef.current = null;
       if (!prepared || prepared.itemId !== itemId || !prepared.additive) {
         if (selectedItemIds().has(itemId)) {
-          replaceSelection(selectedItemIds(), itemId);
+          replaceSelection(selectedItemIds(), itemId, "pointer");
         }
         return;
       }
@@ -388,18 +397,44 @@ export const useCanvasItems = (
       const nextFocusedItemId = nextSelectedIds.has(itemId)
         ? itemId
         : (Array.from(nextSelectedIds).at(-1) ?? null);
-      replaceSelection(nextSelectedIds, nextFocusedItemId);
+      replaceSelection(nextSelectedIds, nextFocusedItemId, "pointer");
     },
     [replaceSelection, selectedItemIds],
   );
 
   const selectOnly = useCallback(
-    (itemId: string) => replaceSelection(new Set([itemId]), itemId),
+    (itemId: string, origin: CanvasFocusOrigin = focusOriginRef.current) =>
+      replaceSelection(new Set([itemId]), itemId, origin),
     [replaceSelection],
   );
 
+  const syncFocusedItem = useCallback(
+    (itemId: string, origin: CanvasFocusOrigin) => {
+      const selectedIds = selectedItemIds();
+      if (focusedItemIdRef.current === itemId && selectedIds.has(itemId)) {
+        return;
+      }
+      replaceSelection(
+        selectedIds.has(itemId) ? selectedIds : new Set([itemId]),
+        itemId,
+        origin,
+      );
+    },
+    [replaceSelection, selectedItemIds],
+  );
+
+  const selectForKeyboardNavigation = useCallback(
+    (itemId: string) => replaceSelection(new Set([itemId]), itemId, "keyboard"),
+    [replaceSelection],
+  );
+
+  const markKeyboardInteraction = useCallback(() => {
+    focusOriginRef.current = "keyboard";
+    setFocusOrigin("keyboard");
+  }, []);
+
   const clearSelection = useCallback(
-    () => replaceSelection(new Set(), null),
+    () => replaceSelection(new Set(), null, null),
     [replaceSelection],
   );
 
@@ -440,6 +475,7 @@ export const useCanvasItems = (
       commitText,
       preparePointerSelection,
       completePointerSelection,
+      syncFocusedItem,
     }),
     [
       beginEditing,
@@ -448,14 +484,26 @@ export const useCanvasItems = (
       commitText,
       preparePointerSelection,
       completePointerSelection,
+      syncFocusedItem,
     ],
   );
+
+  const interactionState: CanvasInteractionState = {
+    mode: editingItemId === null ? "navigation" : "editing",
+    focusedItemId,
+    selectedItemIds: nodes
+      .filter((node) => node.selected)
+      .map((node) => node.id),
+    focusOrigin,
+  };
 
   return {
     items,
     nodes,
     editingItemId,
     focusedItemId,
+    focusOrigin,
+    interactionState,
     selectedCount: nodes.filter((node) => node.selected).length,
     canUndo,
     canRedo,
@@ -471,6 +519,8 @@ export const useCanvasItems = (
     focusItem,
     completePointerSelection,
     selectOnly,
+    selectForKeyboardNavigation,
+    markKeyboardInteraction,
     clearSelection,
     undo,
     redo,

@@ -1,5 +1,6 @@
 import type { Edge, Node } from "@xyflow/react";
 import type { CanvasEdge, CanvasItem, CanvasTextItem } from "../types";
+import { getCanvasItemAccessibleLabel } from "./canvasAccessibility";
 
 export type CanvasTextNodeData = {
   item: CanvasTextItem;
@@ -28,7 +29,7 @@ export const canvasItemToFlowNode = (
     isEditing: editingItemId === item.id,
     isFocused: focusedItemId === item.id,
   },
-  ariaLabel: `Text card${item.text.trim() ? `, ${item.text.trim().slice(0, 80)}` : ""}`,
+  ariaLabel: getCanvasItemAccessibleLabel(item),
 });
 
 export const canvasItemsToFlowNodes = (

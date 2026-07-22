@@ -196,4 +196,35 @@ describe("useCanvasItems", () => {
     act(() => result.current.redo());
     expect(result.current.items.find(({ id }) => id === "one")?.zIndex).toBe(2);
   });
+
+  it("synchronizes keyboard focus with a single primary selection", () => {
+    const items = [makeItem("one"), makeItem("two", { x: 400 })];
+    const { result } = renderHook(() => useCanvasItems(items, jest.fn()));
+
+    act(() => result.current.selectForKeyboardNavigation("two"));
+
+    expect(result.current.interactionState).toEqual({
+      mode: "navigation",
+      focusedItemId: "two",
+      selectedItemIds: ["two"],
+      focusOrigin: "keyboard",
+    });
+    expect(
+      result.current.nodes.find(({ id }) => id === "two")?.data.isFocused,
+    ).toBe(true);
+  });
+
+  it("chooses deletion fallback from spatial reading order, not array order", () => {
+    const items = [
+      makeItem("right", { x: 400 }),
+      makeItem("left", { x: 0 }),
+      makeItem("middle", { x: 200 }),
+    ];
+    const { result } = renderHook(() => useCanvasItems(items, jest.fn()));
+
+    act(() => result.current.selectForKeyboardNavigation("middle"));
+    act(() => result.current.deleteSelection());
+
+    expect(result.current.focusedItemId).toBe("right");
+  });
 });

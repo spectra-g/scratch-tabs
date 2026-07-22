@@ -2,6 +2,7 @@ import { memo, useEffect, useRef, useState } from "react";
 import { NodeResizer, type NodeProps } from "@xyflow/react";
 import { MIN_TEXT_ITEM_HEIGHT, MIN_TEXT_ITEM_WIDTH } from "../../constants";
 import type { CanvasFlowNode } from "../../utils/canvasFlowMapping";
+import { getCanvasItemAccessibleLabel } from "../../utils/canvasAccessibility";
 import { useCanvasNodeInteraction } from "./CanvasNodeInteractionContext";
 
 const TextNodeComponent = ({
@@ -17,9 +18,11 @@ const TextNodeComponent = ({
     commitText,
     preparePointerSelection,
     completePointerSelection,
+    syncFocusedItem,
   } = useCanvasNodeInteraction();
   const [draft, setDraft] = useState(item.text);
   const initialTextRef = useRef(item.text);
+  const cardRef = useRef<HTMLElement>(null);
   const editorRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -37,10 +40,14 @@ const TextNodeComponent = ({
   const cancel = () => {
     setDraft(initialTextRef.current);
     cancelEditing(id);
+    requestAnimationFrame(() =>
+      cardRef.current?.focus({ preventScroll: true }),
+    );
   };
 
   return (
     <article
+      ref={cardRef}
       className="canvas-text-node h-full w-full overflow-hidden rounded-lg border bg-surface shadow-sm"
       data-testid={`canvas-item-${id}`}
       data-item-id={id}
@@ -52,14 +59,18 @@ const TextNodeComponent = ({
       data-z-index={item.zIndex}
       data-editing={isEditing}
       data-focused={isFocused}
-      aria-label={`Text card${item.text.trim() ? `, ${item.text.trim().slice(0, 80)}` : ""}`}
+      tabIndex={isFocused ? 0 : -1}
+      aria-label={getCanvasItemAccessibleLabel(item)}
       aria-selected={selected}
+      onFocus={() => syncFocusedItem(id, "keyboard")}
       onPointerDownCapture={(event) => {
         if (!isEditing && event.button === 0) {
           preparePointerSelection(
             id,
             event.metaKey || event.ctrlKey || event.shiftKey,
           );
+          syncFocusedItem(id, "pointer");
+          event.currentTarget.focus({ preventScroll: true });
         }
       }}
       onClickCapture={() => {

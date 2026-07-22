@@ -129,6 +129,59 @@ When("I delete the Canvas text card", async function (this: E2EWorld) {
   await this.canvas.deleteTextCard();
 });
 
+When(
+  "I create the fixed Canvas keyboard layout",
+  async function (this: E2EWorld) {
+    await this.canvas.createKeyboardNavigationLayout();
+  },
+);
+
+When(
+  "I focus the Canvas card {string}",
+  async function (this: E2EWorld, text: string) {
+    await this.canvas.focusCanvasCard(text);
+  },
+);
+
+When(
+  "I press {string} in the Canvas",
+  async function (this: E2EWorld, key: string) {
+    await this.canvas.pressCanvasKey(key);
+  },
+);
+
+When("I traverse the Canvas forward with Tab", async function (this: E2EWorld) {
+  await this.canvas.traverseCanvasSequentially("forward");
+});
+
+When(
+  "I traverse the Canvas backward with Shift+Tab",
+  async function (this: E2EWorld) {
+    await this.canvas.traverseCanvasSequentially("backward");
+  },
+);
+
+When(
+  "I create a Canvas layout with an offscreen card",
+  async function (this: E2EWorld) {
+    await this.canvas.createOffscreenNavigationLayout();
+  },
+);
+
+When(
+  "I enter the focused Canvas card editing mode",
+  async function (this: E2EWorld) {
+    await this.canvas.enterFocusedCardEditing();
+  },
+);
+
+When(
+  "I leave Canvas card editing with Escape",
+  async function (this: E2EWorld) {
+    await this.canvas.leaveCardEditing();
+  },
+);
+
 Then("I should see an empty Canvas", async function (this: E2EWorld) {
   await this.canvas.expectEmptyCanvas();
 });
@@ -232,5 +285,40 @@ Then(
   "the Canvas should not contain any cards",
   async function (this: E2EWorld) {
     await this.canvas.expectNoCards();
+  },
+);
+
+Then(
+  "the Canvas card {string} should be focused and selected",
+  async function (this: E2EWorld, text: string) {
+    await this.canvas.expectFocusedCanvasCard(text);
+  },
+);
+
+Then(
+  "the forward Canvas traversal should follow spatial order and exit at the boundary",
+  async function (this: E2EWorld) {
+    await this.canvas.expectSequentialTraversal("forward");
+  },
+);
+
+Then(
+  "the backward Canvas traversal should reverse spatial order and exit at the boundary",
+  async function (this: E2EWorld) {
+    await this.canvas.expectSequentialTraversal("backward");
+  },
+);
+
+Then(
+  "the offscreen Canvas card should be fully visible without a zoom change",
+  async function (this: E2EWorld) {
+    await this.canvas.expectOffscreenCardRevealedWithoutZoomChange();
+  },
+);
+
+Then(
+  "Canvas text-editing keys should remain in card {string}",
+  async function (this: E2EWorld, text: string) {
+    await this.canvas.expectEditingKeysStayInCard(text);
   },
 );

@@ -87,3 +87,13 @@ export interface CanvasDocumentSaveState {
   error?: string;
   lastModified?: number;
 }
+
+export type CanvasInteractionMode = "navigation" | "editing";
+export type CanvasFocusOrigin = "keyboard" | "pointer" | null;
+
+export interface CanvasInteractionState {
+  mode: CanvasInteractionMode;
+  focusedItemId: string | null;
+  selectedItemIds: string[];
+  focusOrigin: CanvasFocusOrigin;
+}
