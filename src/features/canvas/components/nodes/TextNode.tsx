@@ -1,16 +1,23 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { NodeResizer, type NodeProps } from "@xyflow/react";
-import {
-  MIN_TEXT_ITEM_HEIGHT,
-  MIN_TEXT_ITEM_WIDTH,
-} from "../../constants";
+import { MIN_TEXT_ITEM_HEIGHT, MIN_TEXT_ITEM_WIDTH } from "../../constants";
 import type { CanvasFlowNode } from "../../utils/canvasFlowMapping";
 import { useCanvasNodeInteraction } from "./CanvasNodeInteractionContext";
 
-const TextNodeComponent = ({ id, data, selected }: NodeProps<CanvasFlowNode>) => {
-  const { item, isEditing } = data;
-  const { beginEditing, cancelEditing, commitResize, commitText } =
-    useCanvasNodeInteraction();
+const TextNodeComponent = ({
+  id,
+  data,
+  selected,
+}: NodeProps<CanvasFlowNode>) => {
+  const { item, isEditing, isFocused } = data;
+  const {
+    beginEditing,
+    cancelEditing,
+    commitResize,
+    commitText,
+    preparePointerSelection,
+    completePointerSelection,
+  } = useCanvasNodeInteraction();
   const [draft, setDraft] = useState(item.text);
   const initialTextRef = useRef(item.text);
   const editorRef = useRef<HTMLTextAreaElement>(null);
@@ -42,9 +49,22 @@ const TextNodeComponent = ({ id, data, selected }: NodeProps<CanvasFlowNode>) =>
       data-y={item.y}
       data-width={item.width}
       data-height={item.height}
+      data-z-index={item.zIndex}
       data-editing={isEditing}
+      data-focused={isFocused}
       aria-label={`Text card${item.text.trim() ? `, ${item.text.trim().slice(0, 80)}` : ""}`}
       aria-selected={selected}
+      onPointerDownCapture={(event) => {
+        if (!isEditing && event.button === 0) {
+          preparePointerSelection(
+            id,
+            event.metaKey || event.ctrlKey || event.shiftKey,
+          );
+        }
+      }}
+      onClickCapture={() => {
+        requestAnimationFrame(() => completePointerSelection(id));
+      }}
       onDoubleClick={(event) => {
         event.stopPropagation();
         beginEditing(id);
@@ -70,7 +90,10 @@ const TextNodeComponent = ({ id, data, selected }: NodeProps<CanvasFlowNode>) =>
             if (event.key === "Escape") {
               event.preventDefault();
               cancel();
-            } else if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+            } else if (
+              event.key === "Enter" &&
+              (event.metaKey || event.ctrlKey)
+            ) {
               event.preventDefault();
               commit();
             }
@@ -78,7 +101,9 @@ const TextNodeComponent = ({ id, data, selected }: NodeProps<CanvasFlowNode>) =>
         />
       ) : (
         <div className="h-full whitespace-pre-wrap break-words p-4 text-sm leading-6 text-main">
-          {item.text || <span className="text-muted">Double-click to edit</span>}
+          {item.text || (
+            <span className="text-muted">Double-click to edit</span>
+          )}
         </div>
       )}
     </article>

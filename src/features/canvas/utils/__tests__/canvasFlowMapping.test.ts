@@ -25,6 +25,7 @@ describe("Canvas React Flow mapping", () => {
       item,
       item.id,
       new Set([item.id]),
+      item.id,
     );
 
     expect(node).toMatchObject({
@@ -36,7 +37,7 @@ describe("Canvas React Flow mapping", () => {
       zIndex: 4,
       selected: true,
       draggable: false,
-      data: { isEditing: true },
+      data: { isEditing: true, isFocused: true },
     });
     expect(node.data.item).toEqual(item);
     expect(node.data.item).not.toBe(item);

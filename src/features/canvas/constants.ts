@@ -7,3 +7,5 @@ export const DEFAULT_TEXT_ITEM_WIDTH = 280;
 export const DEFAULT_TEXT_ITEM_HEIGHT = 180;
 export const MIN_TEXT_ITEM_WIDTH = 180;
 export const MIN_TEXT_ITEM_HEIGHT = 120;
+export const CANVAS_DUPLICATE_OFFSET = 32;
+export const CANVAS_HISTORY_LIMIT = 100;

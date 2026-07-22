@@ -5,8 +5,20 @@ const CANVAS_FEATURE_SETTING_KEY = "features.canvas.enabled";
 export class CanvasActions {
   private lastDocumentId: string | null = null;
   private pendingSaveRevision = 0;
-  private pendingPaneSaveRevision: Partial<Record<"left" | "right", number>> = {};
-  private rememberedBounds: Record<"x" | "y" | "width" | "height", number> | null = null;
+  private pendingPaneSaveRevision: Partial<Record<"left" | "right", number>> =
+    {};
+  private rememberedBounds: Record<
+    "x" | "y" | "width" | "height",
+    number
+  > | null = null;
+  private operationBounds: {
+    before: Record<"x" | "y" | "width" | "height", number>;
+    after: Record<"x" | "y" | "width" | "height", number>;
+  } | null = null;
+  private duplicatedSourceBounds = new Map<
+    string,
+    Record<"x" | "y" | "width" | "height", number>
+  >();
 
   constructor(private page: Page) {}
 
@@ -63,6 +75,23 @@ export class CanvasActions {
     return this.page.locator('[data-item-type="text"]').first();
   }
 
+  private textCardContaining(text: string) {
+    return this.page
+      .locator('[data-item-type="text"]')
+      .filter({ hasText: text });
+  }
+
+  private async readBounds(card: ReturnType<Page["locator"]>) {
+    const readNumber = async (attribute: string) =>
+      Number(await card.getAttribute(`data-${attribute}`));
+    return {
+      x: await readNumber("x"),
+      y: await readNumber("y"),
+      width: await readNumber("width"),
+      height: await readNumber("height"),
+    };
+  }
+
   private pane(side: "left" | "right") {
     return this.page.locator(`[data-editor-pane-side="${side}"]`);
   }
@@ -83,6 +112,155 @@ export class CanvasActions {
     await expect(editor).toBeVisible();
     await editor.fill(text);
     await editor.press("Control+Enter");
+  }
+
+  async multiSelectTextCards(firstText: string, secondText: string) {
+    const first = this.textCardContaining(firstText).first();
+    const second = this.textCardContaining(secondText).first();
+    await expect(first).toBeVisible();
+    await expect(second).toBeVisible();
+
+    if ((await second.getAttribute("aria-selected")) !== "true") {
+      await second.click();
+    }
+    await first.click({ modifiers: ["Shift"] });
+
+    await expect(first).toHaveAttribute("aria-selected", "true");
+    await expect(second).toHaveAttribute("aria-selected", "true");
+    await expect(
+      this.page.getByTestId("canvas-selection-toolbar"),
+    ).toContainText("2 selected");
+  }
+
+  async duplicateSelection(texts: string[]) {
+    this.duplicatedSourceBounds.clear();
+    for (const text of texts) {
+      this.duplicatedSourceBounds.set(
+        text,
+        await this.readBounds(this.textCardContaining(text).first()),
+      );
+    }
+    await this.markPendingSceneChange();
+    await this.page.getByTestId("canvas-duplicate-selection").click();
+  }
+
+  async duplicateCurrentSelection() {
+    await this.markPendingSceneChange();
+    await this.page.getByTestId("canvas-duplicate-selection").click();
+  }
+
+  async expectOffsetDuplicatesSelected(texts: string[]) {
+    await expect(
+      this.page.locator('[data-item-type="text"][aria-selected="true"]'),
+    ).toHaveCount(texts.length);
+
+    for (const text of texts) {
+      const matches = this.textCardContaining(text);
+      await expect(matches).toHaveCount(2);
+      const duplicate = this.page
+        .locator('[data-item-type="text"][aria-selected="true"]')
+        .filter({ hasText: text });
+      await expect(duplicate).toHaveCount(1);
+      const sourceBounds = this.duplicatedSourceBounds.get(text);
+      expect(sourceBounds).toBeTruthy();
+      const duplicateBounds = await this.readBounds(duplicate);
+      expect(duplicateBounds.x).toBe(sourceBounds!.x + 32);
+      expect(duplicateBounds.y).toBe(sourceBounds!.y + 32);
+      expect(duplicateBounds.width).toBe(sourceBounds!.width);
+      expect(duplicateBounds.height).toBe(sourceBounds!.height);
+    }
+  }
+
+  async moveSelectedCard() {
+    const card = this.page
+      .locator('[data-item-type="text"][aria-selected="true"]')
+      .first();
+    await expect(card).toBeVisible();
+    const before = await this.readBounds(card);
+    await this.markPendingSceneChange();
+    const box = await card.boundingBox();
+    expect(box).toBeTruthy();
+    await this.page.mouse.move(
+      box!.x + box!.width / 2,
+      box!.y + box!.height / 2,
+    );
+    await this.page.mouse.down();
+    await this.page.mouse.move(
+      box!.x + box!.width / 2 + 120,
+      box!.y + box!.height / 2 + 80,
+      { steps: 8 },
+    );
+    await this.page.mouse.up();
+    const after = await this.readBounds(card);
+    expect(after.x).not.toBe(before.x);
+    expect(after.y).not.toBe(before.y);
+    this.operationBounds = { before, after };
+  }
+
+  async resizeSelectedCard() {
+    const card = this.page
+      .locator('[data-item-type="text"][aria-selected="true"]')
+      .first();
+    await expect(card).toBeVisible();
+    const before = await this.readBounds(card);
+    const resizeHandle = this.page
+      .locator(".react-flow__resize-control.handle.bottom.right")
+      .first();
+    await expect(resizeHandle).toBeVisible();
+    const box = await resizeHandle.boundingBox();
+    expect(box).toBeTruthy();
+    await this.page.mouse.move(
+      box!.x + box!.width / 2,
+      box!.y + box!.height / 2,
+    );
+    await this.page.mouse.down();
+    await this.page.mouse.move(
+      box!.x + box!.width / 2 + 80,
+      box!.y + box!.height / 2 + 60,
+      {
+        steps: 8,
+      },
+    );
+    await this.page.mouse.up();
+    const after = await this.readBounds(card);
+    expect(after.width).not.toBe(before.width);
+    expect(after.height).not.toBe(before.height);
+    this.operationBounds = { before, after };
+  }
+
+  async undoOperation() {
+    await this.page.getByTestId("canvas-undo").click();
+  }
+
+  async redoOperation() {
+    await this.page.getByTestId("canvas-redo").click();
+  }
+
+  async expectOperationBounds(state: "before" | "after") {
+    expect(this.operationBounds).toBeTruthy();
+    const expectedBounds = this.operationBounds![state];
+    const card = this.page.locator('[data-item-type="text"]').first();
+    await expect(card).toBeVisible();
+    for (const [name, expected] of Object.entries(expectedBounds)) {
+      await expect
+        .poll(async () => Number(await card.getAttribute(`data-${name}`)))
+        .toBeCloseTo(expected, 3);
+    }
+  }
+
+  async deleteSelectionFromToolbar() {
+    await this.page.getByTestId("canvas-delete-selection").click();
+  }
+
+  async expectTextCardCount(count: number) {
+    await expect(this.page.locator('[data-item-type="text"]')).toHaveCount(
+      count,
+    );
+  }
+
+  async expectUndoHistoryEmpty() {
+    await expect(this.page.getByTestId("canvas-undo")).toBeDisabled();
+    await expect(this.page.getByTestId("canvas-redo")).toBeDisabled();
   }
 
   async addTextCardInPane(text: string, side: "left" | "right") {
@@ -227,7 +405,9 @@ export class CanvasActions {
   async expectEmptyCanvas() {
     const canvas = this.page.getByTestId("canvas-flow");
     await expect(canvas).toBeVisible();
-    await expect(canvas.getByText("Empty Canvas", { exact: true })).toBeVisible();
+    await expect(
+      canvas.getByText("Empty Canvas", { exact: true }),
+    ).toBeVisible();
     this.lastDocumentId = await canvas.getAttribute("data-canvas-document-id");
     expect(this.lastDocumentId).toBeTruthy();
   }
@@ -248,9 +428,7 @@ export class CanvasActions {
 
   async expectRememberedCanvas() {
     await expect(
-      this.page.locator(
-        '[data-testid="tab-Canvas 1"][aria-selected="true"]',
-      ),
+      this.page.locator('[data-testid="tab-Canvas 1"][aria-selected="true"]'),
     ).toBeVisible();
     await this.expectEmptyCanvas();
   }

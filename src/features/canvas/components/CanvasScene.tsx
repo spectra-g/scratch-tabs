@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Background,
   BackgroundVariant,
@@ -8,21 +8,29 @@ import {
   type Viewport,
 } from "@xyflow/react";
 import type { Tab } from "../../../types";
-import { DEFAULT_TEXT_ITEM_HEIGHT, DEFAULT_TEXT_ITEM_WIDTH } from "../constants";
+import {
+  DEFAULT_TEXT_ITEM_HEIGHT,
+  DEFAULT_TEXT_ITEM_WIDTH,
+} from "../constants";
 import { useCanvasItems } from "../hooks/useCanvasItems";
 import type { CanvasItem, CanvasSaveStatus } from "../types";
 import { getCanvasViewportCenter } from "../utils/canvasCoordinates";
 import type { CanvasFlowNode } from "../utils/canvasFlowMapping";
 import { CanvasToolbar } from "./CanvasToolbar";
+import {
+  CanvasContextMenu,
+  type CanvasContextMenuPosition,
+} from "./CanvasContextMenu";
+import { CanvasSelectionToolbar } from "./CanvasSelectionToolbar";
 import { CanvasNodeInteractionContext } from "./nodes/CanvasNodeInteractionContext";
 import { TextNode } from "./nodes/TextNode";
 import { useRendererStatusStore } from "../../../stores/rendererStatusStore";
 
 const nodeTypes = { text: TextNode };
+const multiSelectionKeyCodes = ["Meta", "Control", "Shift"];
 
 const isEditableTarget = (event: React.KeyboardEvent): boolean =>
-  event
-    .nativeEvent
+  event.nativeEvent
     .composedPath()
     .some(
       (target) =>
@@ -63,6 +71,8 @@ export const CanvasScene = ({
   const [zoomPercent, setZoomPercent] = useState(() =>
     Math.round(viewport.zoom * 100),
   );
+  const [contextMenuPosition, setContextMenuPosition] =
+    useState<CanvasContextMenuPosition | null>(null);
   const canvasItems = useCanvasItems(initialItems, updateItems);
   const backgroundVariant =
     background === "grid" ? BackgroundVariant.Lines : BackgroundVariant.Dots;
@@ -99,11 +109,26 @@ export const CanvasScene = ({
     const pane = rootRef.current?.getBoundingClientRect();
     if (!pane) return;
     const center = getCanvasViewportCenter(pane, viewportRef.current);
+    const column = canvasItems.items.length % 2;
+    const row = Math.floor(canvasItems.items.length / 2);
     canvasItems.createTextItem({
-      x: center.x - DEFAULT_TEXT_ITEM_WIDTH / 2,
-      y: center.y - DEFAULT_TEXT_ITEM_HEIGHT / 2,
+      x:
+        center.x -
+        DEFAULT_TEXT_ITEM_WIDTH / 2 +
+        column * (DEFAULT_TEXT_ITEM_WIDTH + 32),
+      y:
+        center.y -
+        DEFAULT_TEXT_ITEM_HEIGHT / 2 +
+        row * (DEFAULT_TEXT_ITEM_HEIGHT + 32),
     });
   };
+
+  const closeContextMenu = useCallback(() => setContextMenuPosition(null), []);
+
+  const openContextMenu = useCallback((event: React.MouseEvent) => {
+    event.preventDefault();
+    setContextMenuPosition({ x: event.clientX, y: event.clientY });
+  }, []);
 
   return (
     <div
@@ -116,7 +141,21 @@ export const CanvasScene = ({
       aria-label={`${tab.title} Canvas`}
       onKeyDown={(event) => {
         if (isEditableTarget(event)) return;
-        if (event.key === "Delete" || event.key === "Backspace") {
+        const commandKey = event.metaKey || event.ctrlKey;
+        if (commandKey && event.key.toLowerCase() === "z") {
+          event.preventDefault();
+          event.stopPropagation();
+          if (event.shiftKey) canvasItems.redo();
+          else canvasItems.undo();
+        } else if (commandKey && event.key.toLowerCase() === "y") {
+          event.preventDefault();
+          event.stopPropagation();
+          canvasItems.redo();
+        } else if (commandKey && event.key.toLowerCase() === "d") {
+          event.preventDefault();
+          event.stopPropagation();
+          canvasItems.duplicateSelection();
+        } else if (event.key === "Delete" || event.key === "Backspace") {
           event.preventDefault();
           canvasItems.deleteSelection();
         } else if (event.key === "Enter") {
@@ -149,6 +188,8 @@ export const CanvasScene = ({
           nodesConnectable={false}
           deleteKeyCode={null}
           onNodesChange={canvasItems.onNodesChange}
+          multiSelectionKeyCode={multiSelectionKeyCodes}
+          elevateNodesOnSelect={false}
           onNodeClick={(_event, node) => {
             if (
               canvasItems.editingItemId &&
@@ -160,10 +201,15 @@ export const CanvasScene = ({
           onNodeDoubleClick={(_event, node) =>
             canvasItems.beginEditing(node.id)
           }
-          onNodeDragStop={(_event, node) =>
-            canvasItems.commitNodePosition(node)
-          }
+          onNodeDragStop={() => canvasItems.commitNodePositions()}
+          onNodeContextMenu={(event, node) => {
+            if (!node.selected) canvasItems.selectOnly(node.id);
+            else canvasItems.focusItem(node.id);
+            openContextMenu(event);
+          }}
+          onSelectionContextMenu={(event) => openContextMenu(event)}
           onPaneClick={() => {
+            closeContextMenu();
             if (canvasItems.editingItemId) {
               canvasItems.cancelEditing(canvasItems.editingItemId);
             }
@@ -187,11 +233,28 @@ export const CanvasScene = ({
           )}
           <Panel position="top-left">
             <CanvasToolbar
-              selectedCount={canvasItems.selectedCount}
               onAddText={addTextAtViewportCenter}
-              onDeleteSelection={canvasItems.deleteSelection}
+              canUndo={canvasItems.canUndo}
+              canRedo={canvasItems.canRedo}
+              onUndo={canvasItems.undo}
+              onRedo={canvasItems.redo}
             />
           </Panel>
+          {canvasItems.selectedCount > 0 && (
+            <Panel position="top-center">
+              <CanvasSelectionToolbar
+                selectedCount={canvasItems.selectedCount}
+                onDuplicate={canvasItems.duplicateSelection}
+                onBringForward={() =>
+                  canvasItems.moveSelectionOneLayer("forward")
+                }
+                onSendBackward={() =>
+                  canvasItems.moveSelectionOneLayer("backward")
+                }
+                onDelete={canvasItems.deleteSelection}
+              />
+            </Panel>
+          )}
           <Controls position="bottom-right" showInteractive={false} />
           {canvasItems.items.length === 0 && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -205,6 +268,17 @@ export const CanvasScene = ({
           )}
         </ReactFlow>
       </CanvasNodeInteractionContext.Provider>
+      {contextMenuPosition && canvasItems.selectedCount > 0 && (
+        <CanvasContextMenu
+          position={contextMenuPosition}
+          selectedCount={canvasItems.selectedCount}
+          onDuplicate={canvasItems.duplicateSelection}
+          onBringForward={() => canvasItems.moveSelectionOneLayer("forward")}
+          onSendBackward={() => canvasItems.moveSelectionOneLayer("backward")}
+          onDelete={canvasItems.deleteSelection}
+          onClose={closeContextMenu}
+        />
+      )}
     </div>
   );
 };

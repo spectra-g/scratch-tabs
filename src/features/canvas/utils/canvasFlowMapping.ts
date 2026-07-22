@@ -4,6 +4,7 @@ import type { CanvasEdge, CanvasItem, CanvasTextItem } from "../types";
 export type CanvasTextNodeData = {
   item: CanvasTextItem;
   isEditing: boolean;
+  isFocused: boolean;
 };
 
 export type CanvasFlowNode = Node<CanvasTextNodeData, "text">;
@@ -12,6 +13,7 @@ export const canvasItemToFlowNode = (
   item: CanvasItem,
   editingItemId: string | null = null,
   selectedItemIds: ReadonlySet<string> = new Set(),
+  focusedItemId: string | null = null,
 ): CanvasFlowNode => ({
   id: item.id,
   type: "text",
@@ -24,6 +26,7 @@ export const canvasItemToFlowNode = (
   data: {
     item: { ...item },
     isEditing: editingItemId === item.id,
+    isFocused: focusedItemId === item.id,
   },
   ariaLabel: `Text card${item.text.trim() ? `, ${item.text.trim().slice(0, 80)}` : ""}`,
 });
@@ -32,9 +35,10 @@ export const canvasItemsToFlowNodes = (
   items: CanvasItem[],
   editingItemId: string | null = null,
   selectedItemIds: ReadonlySet<string> = new Set(),
+  focusedItemId: string | null = null,
 ): CanvasFlowNode[] =>
   items.map((item) =>
-    canvasItemToFlowNode(item, editingItemId, selectedItemIds),
+    canvasItemToFlowNode(item, editingItemId, selectedItemIds, focusedItemId),
   );
 
 export const canvasEdgesToFlowEdges = (edges: CanvasEdge[]): Edge[] =>
