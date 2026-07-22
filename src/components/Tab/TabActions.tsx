@@ -1,5 +1,6 @@
-import { Plus, ClipboardPlus, Extension } from "../Icons";
+import { Plus, ClipboardPlus, Extension, Layers } from "../Icons";
 import { useRootStore } from "../../stores";
+import { useCanvasFeatureEnabled } from "../../features/canvas/hooks/useCanvasFeatureEnabled";
 
 interface TabActionsProps {
   side?: "left" | "right";
@@ -14,7 +15,8 @@ export const TabActions: React.FC<TabActionsProps> = ({
   tabletButtonRef,
   newTabButtonRef,
 }) => {
-  const { handleNewTab, handleNewTabFromPaste } = useRootStore();
+  const { handleNewTab, handleNewTabFromPaste, handleNewCanvas } = useRootStore();
+  const canvasEnabled = useCanvasFeatureEnabled();
 
   return (
     <div className="flex items-center">
@@ -28,6 +30,18 @@ export const TabActions: React.FC<TabActionsProps> = ({
       >
         <Plus size={16} />
       </button>
+      {canvasEnabled && (
+        <button
+          onClick={() => handleNewCanvas(side === "right")}
+          className="px-2 py-1 text-main flex items-center h-8"
+          title="New Canvas"
+          aria-label="New Canvas"
+          data-testid="icon-new-canvas"
+          data-side={side}
+        >
+          <Layers size={16} />
+        </button>
+      )}
       <button
         onClick={() => handleNewTabFromPaste(side === "right")}
         className="px-2 py-1 text-main flex items-center h-8"

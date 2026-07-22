@@ -21,6 +21,7 @@ import { FloatingMacroToolbar } from "../Macro/FloatingMacroToolbar";
 import { useMacroEngine } from "../Macro/useMacroEngine";
 import { useMacroStore } from "../../stores/macroStore";
 import { QuickTransformModalWrapper } from "../QuickTransform/QuickTransformModalWrapper";
+import { getTabContentKind } from "../../utils/tabContentKind";
 
 interface EditorPaneWrapperProps {
   side: "left" | "right";
@@ -88,6 +89,8 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
         prev.language === next.language &&
         prev.title === next.title &&
         prev.isTablet === next.isTablet &&
+        prev.contentKind === next.contentKind &&
+        prev.documentId === next.documentId &&
         prev.activeViewId === next.activeViewId &&
         prev.tabletState === next.tabletState
       );
@@ -293,7 +296,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
       />
 
       {/* Floating Macro Toolbar - Shows when recording/playing for the correct tab/side */}
-      {!activeTab?.isTablet && !activeTab?.isRich && forceShowToolbar && targetTabId === activeTabId && targetSide === side && (
+      {activeTab && getTabContentKind(activeTab) === "text" && forceShowToolbar && targetTabId === activeTabId && targetSide === side && (
         <FloatingMacroToolbar
           editor={editorInstanceRef.current}
           engine={macroEngine}

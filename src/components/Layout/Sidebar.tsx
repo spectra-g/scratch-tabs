@@ -21,7 +21,7 @@ import { useSidebarStore } from "../../stores/sidebarStore";
 import { useSplitViewStore } from "../../stores/splitViewStore";
 import { useModalStore } from "../../stores/modalStore";
 import { useNavigationStore } from "../../stores/navigationStore";
-import { SidebarTabInfo } from "../../types";
+import { SidebarTabInfo, TabContentKind } from "../../types";
 import {
     Folder,
     ChevronLeft,
@@ -57,7 +57,7 @@ const QUICK_PANEL_LIMIT = 12;
 
 type TreeItem =
     | { type: 'workspace'; id: string; name: string; isExpanded: boolean; isActive: boolean; tabCount: number }
-    | { type: 'tab'; id: string; title: string; language: string; workspaceId: string; isActive: boolean; isPinned?: boolean; isTablet?: boolean; isRich?: boolean };
+    | { type: 'tab'; id: string; title: string; language: string; workspaceId: string; isActive: boolean; isPinned?: boolean; isTablet?: boolean; isRich?: boolean; contentKind?: TabContentKind };
 
 interface SidebarRowData {
     treeItems: TreeItem[];
@@ -125,6 +125,7 @@ const SidebarRow = React.memo(({ index, style, data }: { index: number; style: R
             isPinned={item.isPinned}
             isTablet={item.isTablet}
             isRich={item.isRich}
+            contentKind={item.contentKind}
             style={style}
             onClick={() => handleTabClick(item.id, item.workspaceId)}
             onContextMenu={(e) => handleTabContextMenu(e, item.id, item.workspaceId)}
@@ -381,6 +382,8 @@ export const Sidebar: React.FC = () => {
                             language: tab.language,
                             isTablet: tab.isTablet,
                             isRich: tab.isRich,
+                            contentKind: tab.contentKind,
+                            documentId: tab.documentId,
                             isPinned: tab.isPinned,
                             lastModified: tab.lastModified,
                             lastAccessed: tab.lastAccessed,
@@ -423,7 +426,8 @@ export const Sidebar: React.FC = () => {
                         isActive: tab.id === activeTabId,
                         isPinned: tab.isPinned,
                         isTablet: tab.isTablet,
-                        isRich: tab.isRich
+                        isRich: tab.isRich,
+                        contentKind: tab.contentKind,
                     });
                 });
             }
@@ -442,6 +446,8 @@ export const Sidebar: React.FC = () => {
                 language: tab.language,
                 isTablet: tab.isTablet,
                 isRich: tab.isRich,
+                contentKind: tab.contentKind,
+                documentId: tab.documentId,
                 isPinned: tab.isPinned,
                 lastModified: tab.lastModified,
                 lastAccessed: tab.lastAccessed,
@@ -574,6 +580,7 @@ export const Sidebar: React.FC = () => {
                     workspaceId: workspaceId,
                     isTablet: tabItem.isTablet,
                     isRich: tabItem.isRich,
+                    contentKind: tabItem.contentKind,
                     isPinned: tabItem.isPinned,
                     lastModified: Date.now()
                 });
@@ -646,6 +653,8 @@ export const Sidebar: React.FC = () => {
                             language: t.language,
                             isTablet: t.isTablet,
                             isRich: t.isRich,
+                            contentKind: t.contentKind,
+                            documentId: t.documentId,
                             isPinned: t.isPinned,
                             lastModified: t.lastModified,
                             lastAccessed: t.lastAccessed,

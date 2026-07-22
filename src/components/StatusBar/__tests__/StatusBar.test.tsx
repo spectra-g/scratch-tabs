@@ -456,6 +456,33 @@ describe('StatusBar - Font Size Controls Integration', () => {
       expect(screen.queryByTestId('status-language')).not.toBeInTheDocument();
     });
 
+    it('should keep the Rich Text toggle visible in Rich Text mode', () => {
+      render(
+        <StatusBar
+          activeTab={{
+            id: 'tab-1',
+            title: 'Rich Text Tab',
+            content: 'content',
+            richContent: { type: 'doc', content: [] },
+            language: 'plaintext',
+            languageLocked: false,
+            isTablet: false,
+            isRich: true,
+            fontSize: 16,
+            workspaceId: 'workspace-1',
+            dateCreated: Date.now(),
+            lastModified: Date.now(),
+            cursorPosition: { lineNumber: 1, column: 1 },
+          }}
+          side="left"
+        />
+      );
+
+      expect(screen.getByTestId('rich-text-toggle')).toBeInTheDocument();
+      expect(screen.getByText('Rich')).toBeInTheDocument();
+      expect(screen.queryByTestId('font-size-controls')).not.toBeInTheDocument();
+    });
+
     it('should show format/language info when NOT in Rich Text mode', () => {
       render(
         <StatusBar

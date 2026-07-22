@@ -1,0 +1,26 @@
+.canvas-flow-root .react-flow {
+  background: rgb(var(--color-canvas));
+}
+
+.canvas-flow-root .react-flow__controls {
+  overflow: hidden;
+  border: 1px solid rgb(var(--color-border-base));
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.12);
+}
+
+.canvas-flow-root .react-flow__controls-button {
+  border-bottom-color: rgb(var(--color-border-base));
+  background: rgb(var(--color-surface));
+  color: rgb(var(--color-text-main));
+  fill: currentColor;
+}
+
+.canvas-flow-root .react-flow__controls-button:hover {
+  background: rgb(var(--color-element-hover));
+}
+
+.canvas-flow-root .react-flow__attribution {
+  background: rgb(var(--color-surface) / 0.8);
+  color: rgb(var(--color-text-muted));
+}

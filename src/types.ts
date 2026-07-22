@@ -14,6 +14,8 @@ export interface RichContent {
   attrs?: RichContentAttrs;
 }
 
+export type TabContentKind = "text" | "rich-text" | "tablet" | "canvas";
+
 export interface Tab {
   id: string;
   title: string;
@@ -24,6 +26,8 @@ export interface Tab {
   isTablet?: boolean;
   tabletState?: string;
   isRich?: boolean; // New property for rich text mode
+  contentKind?: TabContentKind;
+  documentId?: string;
   cursorPosition: EditorPosition;
   isPinned?: boolean;
   dateCreated: number;
@@ -107,6 +111,8 @@ export interface SidebarTabInfo {
   language: string;
   isTablet?: boolean;
   isRich?: boolean;
+  contentKind?: TabContentKind;
+  documentId?: string;
   isPinned?: boolean;
   lastModified: number;
   lastAccessed?: number;

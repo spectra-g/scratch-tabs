@@ -1,5 +1,10 @@
 import Dexie from "dexie";
 import { Tab, Workspace, WorkspaceLink, SplitViewRecord } from "../types";
+import type {
+  CanvasAssetRecord,
+  CanvasDocument,
+  CanvasSessionRecord,
+} from "../features/canvas/types";
 
 interface TabRecord {
   id: string;
@@ -11,6 +16,8 @@ interface TabRecord {
   isTablet?: boolean;
   tabletState?: string;
   isRich?: boolean;
+  contentKind?: Tab["contentKind"];
+  documentId?: string;
   lastModified: number;
   lastAccessed?: number;
   dateCreated: number;
@@ -54,6 +61,9 @@ export class ScratchTabsDB extends Dexie {
   workspaces!: Dexie.Table<WorkspaceRecord>;
   settings!: Dexie.Table<SettingsRecord>;
   pipelines!: Dexie.Table<PipelineRecord>;
+  canvasDocuments!: Dexie.Table<CanvasDocument>;
+  canvasAssets!: Dexie.Table<CanvasAssetRecord>;
+  canvasSessions!: Dexie.Table<CanvasSessionRecord>;
 
   constructor() {
     super("ScratchTabsDB");
@@ -108,6 +118,19 @@ export class ScratchTabsDB extends Dexie {
         pipelines: "id, name, lastUsedAt, lastModified, isFavorite",
       })
       .upgrade((tx) => this.upgradeToV6(tx));
+
+    // Version 7: Store Canvas scenes, binary assets, and viewport sessions
+    // separately from lightweight tab metadata.
+    this.version(7).stores({
+      tabs: "id, workspaceId, lastModified, lastAccessed",
+      splitView: "id, workspaceId, lastModified",
+      workspaces: "id, lastAccessed, displayOrder",
+      settings: "key",
+      pipelines: "id, name, lastUsedAt, lastModified, isFavorite",
+      canvasDocuments: "id, tabId, workspaceId, updatedAt",
+      canvasAssets: "id, workspaceId, sha256, createdAt",
+      canvasSessions: "tabId, updatedAt",
+    });
   }
 
   private async upgradeToV2(tx: any): Promise<void> {

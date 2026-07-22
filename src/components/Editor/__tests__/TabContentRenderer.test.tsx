@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { TabContentRenderer } from '../TabContentRenderer';
 import type { SmartView } from '../../../views/registry';
+import type { Tab } from '../../../types';
 
 // Mock the dynamic registry to prevent import.meta.glob issues
 jest.mock('../../../tablets/dynamicRegistry');
@@ -35,6 +36,14 @@ jest.mock('../../RichText/RichTextEditor', () => ({
   RichTextEditor: ({ tab }: any) => (
     <div data-testid="rich-text-editor" data-tab-id={tab.id}>
       Rich Text Editor
+    </div>
+  ),
+}));
+
+jest.mock('../../../features/canvas', () => ({
+  CanvasRenderer: ({ tab }: { tab: Tab }) => (
+    <div data-testid="canvas-renderer" data-tab-id={tab.id}>
+      Canvas Renderer
     </div>
   ),
 }));
@@ -173,6 +182,31 @@ describe('TabContentRenderer', () => {
 
       // Wait for lazy loaded component
       expect(await screen.findByTestId('rich-text-editor')).toBeInTheDocument();
+      expect(screen.queryByTestId('editor-instance')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Canvas rendering', () => {
+    it('lazy loads the Canvas renderer before legacy renderers', async () => {
+      render(
+        <TabContentRenderer
+          {...baseProps}
+          activeTab={createMockTab({
+            contentKind: 'canvas',
+            documentId: 'tab-1',
+            isRich: true,
+            isTablet: true,
+          })}
+          activeTabId="tab-1"
+        />
+      );
+
+      expect(await screen.findByTestId('canvas-renderer')).toHaveAttribute(
+        'data-tab-id',
+        'tab-1',
+      );
+      expect(screen.queryByTestId('rich-text-editor')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('tablet-view')).not.toBeInTheDocument();
       expect(screen.queryByTestId('editor-instance')).not.toBeInTheDocument();
     });
   });

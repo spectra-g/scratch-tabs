@@ -1,10 +1,11 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
-import { X, Pin } from "../Icons";
+import { X, Pin, Layers } from "../Icons";
 import { Tab } from "../../types";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { ConfirmationDialog } from "./ConfirmationDialog";
 import { RichTextService } from "../RichText/services/RichTextService";
+import { getTabContentKind } from "../../utils/tabContentKind";
 
 // Touch activation delay matches the TouchSensor configuration in TabBar
 const TOUCH_ACTIVATION_DELAY_MS = 250;
@@ -129,8 +130,9 @@ export const SortableTab: React.FC<SortableTabProps> = ({
     if (!content) return 0;
     return content.split("\n").length;
   };
+  const contentKind = getTabContentKind(tab);
   const lineCount =
-    !tab.isTablet && tab.content ? getTabLineCount(tab.content) : 0;
+    contentKind === "text" && tab.content ? getTabLineCount(tab.content) : 0;
   const relativeWidth =
     maxLineCount > 0
       ? Math.max(Math.min(lineCount / maxLineCount, 1), 0.05) * 100
@@ -366,6 +368,10 @@ export const SortableTab: React.FC<SortableTabProps> = ({
               : "text-secondary group-hover:text-main"
               }`}
           />
+        )}
+
+        {contentKind === "canvas" && !isEditing && (
+          <Layers size={12} className="mr-1.5 flex-shrink-0 text-secondary" />
         )}
 
         <div

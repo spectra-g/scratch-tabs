@@ -19,6 +19,7 @@ import { useQueryPanelStore } from "../formats/json/stores/useQueryPanelStore";
 import { contentProcessingService } from "../services/contentProcessing";
 import { navigationService } from "../services/navigationService";
 import { SidebarTabInfo } from "../types";
+import { getTabContentKind } from "../utils/tabContentKind";
 
 const _updateStoredTabAccessed = (
   storage: StorageProvider,
@@ -54,6 +55,7 @@ interface RootStore {
   handleNewPopulatedTab: (tab: Partial<Tab>, toRightSide?: boolean) => Promise<string | undefined>;
   addBackgroundTab: (tab: Tab, toRightSide?: boolean) => void;
   handleNewTab: (isRightSide: boolean, content?: string) => Promise<string | undefined>;
+  handleNewCanvas: (isRightSide: boolean) => Promise<string | undefined>;
   handleNewTabFromPaste: (isRightSide: boolean) => Promise<string | undefined>;
   removeTab: (id: string) => void;
   setActiveTab: (id: string) => void;
@@ -161,6 +163,8 @@ const _broadcastMetadataUpdate = async (workspaceId: string): Promise<void> => {
       language: t.language,
       isTablet: t.isTablet,
       isRich: t.isRich,
+      contentKind: t.contentKind,
+      documentId: t.documentId,
       isPinned: t.isPinned,
       lastModified: t.lastModified,
       lastAccessed: t.lastAccessed,
@@ -239,6 +243,8 @@ export const useRootStore = create<RootStore>((set, get) => {
       language: partialInputTab.language || language,
       languageLocked: partialInputTab.languageLocked ?? languageLocked,
       isRich: partialInputTab.isRich ?? false,
+      contentKind: partialInputTab.contentKind,
+      documentId: partialInputTab.documentId,
       workspaceId: workspaceId,
       dateCreated: partialInputTab.dateCreated || now,
       lastModified: now,
@@ -365,6 +371,50 @@ export const useRootStore = create<RootStore>((set, get) => {
       return newTabObject.id;
     },
 
+    handleNewCanvas: async (isRightSide) => {
+      const ensuredWorkspaceId = await useWorkspaceStore
+        .getState()
+        .ensureWorkspace();
+      if (!ensuredWorkspaceId) return undefined;
+
+      useSidebarStore.getState().expandWorkspace(ensuredWorkspaceId);
+
+      const canvasCount = useTabsStore
+        .getState()
+        .tabs.filter(
+          (tab) =>
+            tab.workspaceId === ensuredWorkspaceId &&
+            getTabContentKind(tab) === "canvas",
+        ).length;
+      const tabId = crypto.randomUUID();
+      const canvasTab = _createFinalTabObject(
+        {
+          id: tabId,
+          title: `Canvas ${canvasCount + 1}`,
+          contentKind: "canvas",
+          documentId: tabId,
+          content: "",
+          language: "plaintext",
+          languageLocked: true,
+        },
+        ensuredWorkspaceId,
+        { defaultTitle: `Canvas ${canvasCount + 1}` },
+      );
+
+      const { canvasDocumentManager } = await import(
+        "../features/canvas/services/CanvasDocumentManager"
+      );
+      await canvasDocumentManager.create(canvasTab);
+      get().addTab(canvasTab, isRightSide);
+
+      await storage.saveSplitViewNow({
+        ...useSplitViewStore.getState().splitView,
+        lastModified: Date.now(),
+      });
+
+      return tabId;
+    },
+
     handleNewTabFromPaste: async (isRightSide) => {
       try {
         const imageDataUrl = await _extractImageFromClipboard();
@@ -396,16 +446,30 @@ export const useRootStore = create<RootStore>((set, get) => {
       const tabToRemove = useTabsStore.getState().tabs.find((t) => t.id === id);
       if (!tabToRemove) return;
 
-      modelManager.dispose(id);
+      const isCanvas = getTabContentKind(tabToRemove) === "canvas";
+
+      if (!isCanvas) {
+        modelManager.dispose(id);
+      }
 
       // Clean up query panel state for JSON tabs
       useQueryPanelStore.getState().removePanelState(id);
 
       useSplitViewStore.getState().removeTabFromSide(id);
       useTabsStore.getState().removeTab(id);
-      storage
-        .deleteTab(id)
-        .catch((err) => console.error("Failed to delete tab from DB:", err));
+      if (isCanvas) {
+        void import("../features/canvas/services/CanvasDocumentManager")
+          .then(async ({ canvasDocumentManager }) => {
+            await canvasDocumentManager.remove(tabToRemove);
+          })
+          .catch((err) =>
+            console.error("Failed to delete Canvas from DB:", err),
+          );
+      } else {
+        storage
+          .deleteTab(id)
+          .catch((err) => console.error("Failed to delete tab from DB:", err));
+      }
 
       broadcastManager.broadcastWorkspaceState(
         useSplitViewStore.getState().splitView.workspaceId,

@@ -30,6 +30,7 @@ import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 import { KeyboardSensor } from "@dnd-kit/core";
 import { SortableTabList } from "./SortableTabList";
 import { NEW_TAB_PREFIX } from "../../constants";
+import { getTabContentKind } from "../../utils/tabContentKind";
 
 // Constants for scroll behavior
 const SCROLL_SAVE_DEBOUNCE_MS = 300;
@@ -151,7 +152,7 @@ export const TabBar: React.FC<TabBarProps> = ({
   };
 
   const tabLineCounts = tabs
-    .filter((tab) => tab.isTablet != true)
+    .filter((tab) => getTabContentKind(tab) === "text")
     .map((tab) => getTabLineCount(tab.content));
   const maxLineCount = Math.max(...tabLineCounts, 1);
 
@@ -338,7 +339,7 @@ export const TabBar: React.FC<TabBarProps> = ({
       lastModified: tab.lastModified || Date.now(),
     };
 
-    if (!tab.isTablet) {
+    if (getTabContentKind(tab) === "text") {
       content.lineCount = getTabLineCount(tab.content);
 
       try {
