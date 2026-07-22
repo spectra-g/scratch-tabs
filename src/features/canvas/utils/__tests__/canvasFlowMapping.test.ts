@@ -1,4 +1,4 @@
-import type { CanvasTextItem } from "../../types";
+import type { CanvasCodeItem, CanvasTextItem } from "../../types";
 import {
   canvasEdgesToFlowEdges,
   canvasItemToFlowNode,
@@ -61,6 +61,27 @@ describe("Canvas React Flow mapping", () => {
       width: 360,
       height: 240,
       updatedAt: 200,
+    });
+  });
+
+  it("maps code cards to the dedicated renderer without losing settings", () => {
+    const codeItem: CanvasCodeItem = {
+      ...item,
+      id: "code-1",
+      type: "code",
+      source: "const x = 1;",
+      language: "javascript",
+      languageLocked: true,
+      collapsed: false,
+      wrap: true,
+    };
+
+    const node = canvasItemToFlowNode(codeItem);
+
+    expect(node).toMatchObject({
+      id: "code-1",
+      type: "code",
+      data: { item: codeItem },
     });
   });
 

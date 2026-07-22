@@ -60,21 +60,22 @@ const parseOptionalString = (
   return value;
 };
 
-const parseCanvasItem = (value: unknown): CanvasItem => {
-  if (!isRecord(value)) {
-    throw new Error("Invalid Canvas schema: item must be an object");
+const requireBoolean = (
+  record: Record<string, unknown>,
+  key: string,
+): boolean => {
+  const value = record[key];
+  if (typeof value !== "boolean") {
+    throw new Error(`Invalid Canvas schema: ${key} must be a boolean`);
   }
-  if (value.type !== "text") {
-    throw new Error(`Invalid Canvas schema: unsupported item type ${String(value.type)}`);
-  }
+  return value;
+};
 
+const parseCanvasItemBase = (value: Record<string, unknown>) => {
   const width = requireNumber(value, "width");
   const height = requireNumber(value, "height");
   if (width <= 0 || height <= 0) {
     throw new Error("Invalid Canvas schema: item dimensions must be positive");
-  }
-  if (typeof value.text !== "string") {
-    throw new Error("Invalid Canvas schema: text item text must be a string");
   }
 
   const rotation = value.rotation;
@@ -84,7 +85,6 @@ const parseCanvasItem = (value: unknown): CanvasItem => {
 
   return {
     id: requireString(value, "id"),
-    type: "text",
     x: requireNumber(value, "x"),
     y: requireNumber(value, "y"),
     width,
@@ -93,11 +93,61 @@ const parseCanvasItem = (value: unknown): CanvasItem => {
     ...(rotation === undefined ? {} : { rotation }),
     createdAt: requireNumber(value, "createdAt"),
     updatedAt: requireNumber(value, "updatedAt"),
-    text: value.text,
-    ...(value.noteColor === undefined
-      ? {}
-      : { noteColor: parseOptionalString(value, "noteColor") }),
   };
+};
+
+const parseCanvasItem = (value: unknown): CanvasItem => {
+  if (!isRecord(value)) {
+    throw new Error("Invalid Canvas schema: item must be an object");
+  }
+  if (value.type !== "text" && value.type !== "code") {
+    throw new Error(
+      `Invalid Canvas schema: unsupported item type ${String(value.type)}`,
+    );
+  }
+  const base = parseCanvasItemBase(value);
+
+  if (value.type === "text") {
+    if (typeof value.text !== "string") {
+      throw new Error("Invalid Canvas schema: text item text must be a string");
+    }
+    return {
+      ...base,
+      type: "text",
+      text: value.text,
+      ...(value.noteColor === undefined
+        ? {}
+        : { noteColor: parseOptionalString(value, "noteColor") }),
+    };
+  }
+
+  if (value.type === "code") {
+    if (typeof value.source !== "string") {
+      throw new Error("Invalid Canvas schema: code item source must be a string");
+    }
+    const expandedHeight =
+      value.expandedHeight === undefined
+        ? undefined
+        : requireNumber(value, "expandedHeight");
+    if (expandedHeight !== undefined && expandedHeight <= 0) {
+      throw new Error(
+        "Invalid Canvas schema: expandedHeight must be positive",
+      );
+    }
+    return {
+      ...base,
+      type: "code",
+      source: value.source,
+      language: requireString(value, "language"),
+      languageLocked: requireBoolean(value, "languageLocked"),
+      collapsed: requireBoolean(value, "collapsed"),
+      ...(expandedHeight === undefined ? {} : { expandedHeight }),
+      wrap: requireBoolean(value, "wrap"),
+    };
+  }
+
+  // The type guard above makes this branch unreachable.
+  throw new Error("Invalid Canvas schema: unsupported item type");
 };
 
 const parseCanvasEdge = (value: unknown): CanvasEdge => {

@@ -1,5 +1,10 @@
 import type { Edge, Node } from "@xyflow/react";
-import type { CanvasEdge, CanvasItem, CanvasTextItem } from "../types";
+import type {
+  CanvasCodeItem,
+  CanvasEdge,
+  CanvasItem,
+  CanvasTextItem,
+} from "../types";
 import { getCanvasItemAccessibleLabel } from "./canvasAccessibility";
 
 export type CanvasTextNodeData = {
@@ -8,29 +13,49 @@ export type CanvasTextNodeData = {
   isFocused: boolean;
 };
 
-export type CanvasFlowNode = Node<CanvasTextNodeData, "text">;
+export type CanvasCodeNodeData = {
+  item: CanvasCodeItem;
+  isEditing: boolean;
+  isFocused: boolean;
+};
+
+export type CanvasTextFlowNode = Node<CanvasTextNodeData, "text">;
+export type CanvasCodeFlowNode = Node<CanvasCodeNodeData, "code">;
+export type CanvasFlowNode = CanvasTextFlowNode | CanvasCodeFlowNode;
 
 export const canvasItemToFlowNode = (
   item: CanvasItem,
   editingItemId: string | null = null,
   selectedItemIds: ReadonlySet<string> = new Set(),
   focusedItemId: string | null = null,
-): CanvasFlowNode => ({
-  id: item.id,
-  type: "text",
-  position: { x: item.x, y: item.y },
-  width: item.width,
-  height: item.height,
-  zIndex: item.zIndex,
-  selected: selectedItemIds.has(item.id),
-  draggable: editingItemId !== item.id,
-  data: {
-    item: { ...item },
+): CanvasFlowNode => {
+  const common = {
+    id: item.id,
+    position: { x: item.x, y: item.y },
+    width: item.width,
+    height: item.height,
+    zIndex: item.zIndex,
+    selected: selectedItemIds.has(item.id),
+    draggable: editingItemId !== item.id,
+    ariaLabel: getCanvasItemAccessibleLabel(item),
+  };
+  const interaction = {
     isEditing: editingItemId === item.id,
     isFocused: focusedItemId === item.id,
-  },
-  ariaLabel: getCanvasItemAccessibleLabel(item),
-});
+  };
+
+  return item.type === "code"
+    ? {
+        ...common,
+        type: "code",
+        data: { item: { ...item }, ...interaction },
+      }
+    : {
+        ...common,
+        type: "text",
+        data: { item: { ...item }, ...interaction },
+      };
+};
 
 export const canvasItemsToFlowNodes = (
   items: CanvasItem[],

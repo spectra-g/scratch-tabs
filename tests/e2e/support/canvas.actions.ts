@@ -2,6 +2,19 @@ import { expect, Page } from "@playwright/test";
 
 const CANVAS_FEATURE_SETTING_KEY = "features.canvas.enabled";
 
+interface BrowserMonacoEditor {
+  getDomNode(): HTMLElement | null;
+  setValue(value: string): void;
+}
+
+interface BrowserMonacoWindow extends Window {
+  monaco?: {
+    editor: {
+      getEditors(): BrowserMonacoEditor[];
+    };
+  };
+}
+
 export class CanvasActions {
   private lastDocumentId: string | null = null;
   private pendingSaveRevision = 0;
@@ -34,6 +47,7 @@ export class CanvasActions {
   }> = [];
   private keyboardViewportCommandsCompleted = false;
   private shortcutEditingGuardCompleted = false;
+  private openedCodeSource: string | null = null;
 
   constructor(private page: Page) {}
 
@@ -103,6 +117,10 @@ export class CanvasActions {
       .filter({ hasText: text });
   }
 
+  private codeCard() {
+    return this.page.locator('[data-item-type="code"]').first();
+  }
+
   private async readBounds(card: ReturnType<Page["locator"]>) {
     const readNumber = async (attribute: string) =>
       Number(await card.getAttribute(`data-${attribute}`));
@@ -112,6 +130,27 @@ export class CanvasActions {
       width: await readNumber("width"),
       height: await readNumber("height"),
     };
+  }
+
+  private async areAllCanvasCardsVisible() {
+    const canvasBox = await this.page.getByTestId("canvas-flow").boundingBox();
+    if (!canvasBox) return false;
+
+    const cards = this.page.locator("[data-item-id]");
+    const count = await cards.count();
+    for (let index = 0; index < count; index += 1) {
+      const cardBox = await cards.nth(index).boundingBox();
+      if (
+        !cardBox ||
+        cardBox.x < canvasBox.x - 1 ||
+        cardBox.y < canvasBox.y - 1 ||
+        cardBox.x + cardBox.width > canvasBox.x + canvasBox.width + 1 ||
+        cardBox.y + cardBox.height > canvasBox.y + canvasBox.height + 1
+      ) {
+        return false;
+      }
+    }
+    return count > 0;
   }
 
   private async moveCardBy(text: string, deltaX: number, deltaY: number) {
@@ -159,6 +198,85 @@ export class CanvasActions {
     await expect(editor).toBeVisible();
     await editor.fill(text);
     await editor.press("Control+Enter");
+  }
+
+  async addCodeCard(source: string) {
+    await this.markPendingSceneChange();
+    await this.page.getByTestId("canvas-add-code").click();
+    const editor = this.page.getByTestId("canvas-code-editor");
+    await expect(editor).toBeVisible();
+    await editor.fill(source);
+    await editor.press("Control+Enter");
+    await expect(this.codeCard()).toHaveAttribute("data-editing", "false");
+  }
+
+  async formatAndConfigureCodeCard() {
+    await this.page.getByTestId("canvas-code-format").click();
+    await this.page.getByTestId("canvas-code-wrap").click();
+    await this.page.getByTestId("canvas-code-collapse").click();
+  }
+
+  async expectFormattedCodeCardAfterReload() {
+    const card = this.codeCard();
+    await expect(card).toHaveAttribute("data-language", "json");
+    await expect(card).toHaveAttribute("data-language-locked", "true");
+    await expect(card).toHaveAttribute("data-wrap", "true");
+    await expect(card).toHaveAttribute("data-collapsed", "true");
+    await expect(card).toHaveAttribute("data-height", "40");
+    await this.page.getByTestId("canvas-code-collapse").click();
+    await expect(card).toHaveAttribute("data-height", "320");
+    await expect(this.page.getByTestId("canvas-code-preview")).toHaveText(
+      '{\n  "users": [\n    {\n      "id": 1\n    }\n  ]\n}',
+    );
+  }
+
+  async expectCodeLanguageAndEscapedRendering(language: string) {
+    const card = this.codeCard();
+    await expect(card).toHaveAttribute("data-language", language);
+    await expect(this.page.getByTestId("canvas-code-preview")).toContainText(
+      "<strong>",
+    );
+    await expect(card.locator("strong")).toHaveCount(0);
+    await expect(card.locator(".monaco-editor")).toHaveCount(0);
+  }
+
+  async openCodeCardInTextTab() {
+    this.openedCodeSource = await this.page
+      .getByTestId("canvas-code-preview")
+      .textContent();
+    await this.page.getByTestId("canvas-code-open-tab").click();
+    await expect(
+      this.page.locator('[data-testid="tab-JSON from Canvas"][aria-selected="true"]'),
+    ).toBeVisible();
+  }
+
+  async editOpenedCodeTabWithoutChangingCanvas() {
+    const selector = '[data-editor-pane-side="left"] .monaco-editor';
+    await expect(this.page.locator(selector).first()).toBeVisible();
+    await this.page.waitForFunction((cssSelector) => {
+      const container = document.querySelector(cssSelector);
+      return (window as BrowserMonacoWindow).monaco?.editor
+        ?.getEditors()
+        .some((editor) => container?.contains(editor.getDomNode()));
+    }, selector);
+    await this.page.evaluate((cssSelector) => {
+      const container = document.querySelector(cssSelector);
+      const editor = (window as BrowserMonacoWindow).monaco?.editor
+        .getEditors()
+        .find((candidate) => container?.contains(candidate.getDomNode()));
+      editor?.setValue('{"changedOutsideCanvas":true}');
+    }, selector);
+    await this.page.getByTestId("tab-Canvas 1").click();
+  }
+
+  async expectCanvasCodeUnchanged() {
+    expect(this.openedCodeSource).toBeTruthy();
+    await expect(this.page.getByTestId("canvas-code-preview")).toHaveText(
+      this.openedCodeSource!,
+    );
+    await expect(this.page.getByTestId("canvas-code-preview")).not.toContainText(
+      "changedOutsideCanvas",
+    );
   }
 
   async multiSelectTextCards(firstText: string, secondText: string) {
@@ -596,6 +714,37 @@ export class CanvasActions {
     await this.page.keyboard.up("Space");
     await expect(canvas).toHaveAttribute("data-canvas-active-tool", "select");
     await expect(canvas).toHaveAttribute("data-canvas-selected-tool", "select");
+
+    await this.page.keyboard.press("Escape");
+    await this.page.keyboard.press("Escape");
+    await expect(
+      this.page.locator('[data-item-id][aria-selected="true"]'),
+    ).toHaveCount(0);
+    const zoomIn = this.page.getByTitle("Zoom in");
+    await zoomIn.click();
+    await zoomIn.click();
+    await canvas.focus();
+    await this.page.keyboard.press("Escape");
+    await expect(
+      this.page.locator('[data-item-id][aria-selected="true"]'),
+    ).toHaveCount(0);
+    const zoomBeforeFitAll = Number(
+      await canvas.getAttribute("data-canvas-zoom"),
+    );
+    await this.page.keyboard.press("f");
+    await expect
+      .poll(async () => Number(await canvas.getAttribute("data-canvas-zoom")))
+      .not.toBeCloseTo(zoomBeforeFitAll, 3);
+    await expect.poll(() => this.areAllCanvasCardsVisible()).toBe(true);
+
+    await zoomIn.click();
+    await canvas.focus();
+    await this.page.keyboard.press("Escape");
+    await expect(
+      this.page.locator('[data-item-id][aria-selected="true"]'),
+    ).toHaveCount(0);
+    await this.page.keyboard.press("0");
+    await expect.poll(() => this.areAllCanvasCardsVisible()).toBe(true);
     this.keyboardViewportCommandsCompleted = true;
   }
 

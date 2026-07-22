@@ -1,5 +1,6 @@
 import { createContext, useContext } from "react";
 import type { CanvasFocusOrigin } from "../../types";
+import type { FormatJsonResult } from "../../utils/canvasCode";
 
 export interface CanvasNodeBounds {
   x: number;
@@ -11,6 +12,11 @@ export interface CanvasNodeBounds {
 interface CanvasNodeInteraction {
   beginEditing: (itemId: string) => void;
   commitText: (itemId: string, text: string) => void;
+  commitCode: (itemId: string, source: string) => void;
+  formatCode: (itemId: string) => FormatJsonResult;
+  toggleCodeCollapsed: (itemId: string) => void;
+  toggleCodeWrap: (itemId: string) => void;
+  openCodeInTab: (itemId: string) => Promise<void>;
   cancelEditing: (itemId: string) => void;
   commitResize: (itemId: string, bounds: CanvasNodeBounds) => void;
   preparePointerSelection: (itemId: string, additive: boolean) => void;

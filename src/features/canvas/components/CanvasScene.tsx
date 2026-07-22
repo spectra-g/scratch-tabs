@@ -10,6 +10,8 @@ import {
 } from "@xyflow/react";
 import type { Tab } from "../../../types";
 import {
+  DEFAULT_CODE_ITEM_HEIGHT,
+  DEFAULT_CODE_ITEM_WIDTH,
   DEFAULT_TEXT_ITEM_HEIGHT,
   DEFAULT_TEXT_ITEM_WIDTH,
 } from "../constants";
@@ -32,9 +34,10 @@ import { CanvasSelectionToolbar } from "./CanvasSelectionToolbar";
 import { CanvasShortcutHelp } from "./CanvasShortcutHelp";
 import { CanvasNodeInteractionContext } from "./nodes/CanvasNodeInteractionContext";
 import { TextNode } from "./nodes/TextNode";
+import { CodeNode } from "./nodes/CodeNode";
 import { useRendererStatusStore } from "../../../stores/rendererStatusStore";
 
-const nodeTypes = { text: TextNode };
+const nodeTypes = { text: TextNode, code: CodeNode };
 const multiSelectionKeyCodes = ["Meta", "Control", "Shift"];
 
 interface CanvasSceneProps {
@@ -73,7 +76,7 @@ export const CanvasScene = ({
   );
   const [contextMenuPosition, setContextMenuPosition] =
     useState<CanvasContextMenuPosition | null>(null);
-  const canvasItems = useCanvasItems(initialItems, updateItems);
+  const canvasItems = useCanvasItems(initialItems, updateItems, tab.id);
   const backgroundVariant =
     background === "grid" ? BackgroundVariant.Lines : BackgroundVariant.Dots;
 
@@ -105,14 +108,21 @@ export const CanvasScene = ({
     const bounds = getCombinedCanvasBounds(
       canvasItems.items.filter((item) => selectedIds.has(item.id)),
     );
-    if (!bounds) return;
-    void flowInstance.fitBounds(bounds, { padding: 0.18, duration: 150 });
+    if (bounds) {
+      void flowInstance.fitBounds(bounds, { padding: 0.18, duration: 150 });
+      return;
+    }
+    void flowInstance.fitView({ padding: 0.18, duration: 150 });
   }, [canvasItems.interactionState.selectedItemIds, canvasItems.items]);
 
   const resetZoom = useCallback(() => {
     const pane = rootRef.current?.getBoundingClientRect();
     const flowInstance = flowInstanceRef.current;
     if (!pane || !flowInstance) return;
+    if (canvasItems.interactionState.selectedItemIds.length === 0) {
+      void flowInstance.fitView({ padding: 0.18, duration: 150 });
+      return;
+    }
     const focusedItem = canvasItems.focusedItemId
       ? canvasItems.items.find((item) => item.id === canvasItems.focusedItemId)
       : null;
@@ -126,7 +136,11 @@ export const CanvasScene = ({
       zoom: 1,
       duration: 150,
     });
-  }, [canvasItems.focusedItemId, canvasItems.items]);
+  }, [
+    canvasItems.focusedItemId,
+    canvasItems.interactionState.selectedItemIds.length,
+    canvasItems.items,
+  ]);
 
   const spatialNavigation = useSpatialNavigation({
     rootRef,
@@ -200,6 +214,24 @@ export const CanvasScene = ({
         center.y -
         DEFAULT_TEXT_ITEM_HEIGHT / 2 +
         row * (DEFAULT_TEXT_ITEM_HEIGHT + 32),
+    });
+  };
+
+  const addCodeAtViewportCenter = () => {
+    const pane = rootRef.current?.getBoundingClientRect();
+    if (!pane) return;
+    const center = getCanvasViewportCenter(pane, viewportRef.current);
+    const column = canvasItems.items.length % 2;
+    const row = Math.floor(canvasItems.items.length / 2);
+    canvasItems.createCodeItem({
+      x:
+        center.x -
+        DEFAULT_CODE_ITEM_WIDTH / 2 +
+        column * (DEFAULT_CODE_ITEM_WIDTH + 32),
+      y:
+        center.y -
+        DEFAULT_CODE_ITEM_HEIGHT / 2 +
+        row * (DEFAULT_CODE_ITEM_HEIGHT + 32),
     });
   };
 
@@ -320,6 +352,7 @@ export const CanvasScene = ({
           <Panel position="top-left">
             <CanvasToolbar
               onAddText={addTextAtViewportCenter}
+              onAddCode={addCodeAtViewportCenter}
               canUndo={canvasItems.canUndo}
               canRedo={canvasItems.canRedo}
               onUndo={canvasItems.undo}
@@ -348,7 +381,7 @@ export const CanvasScene = ({
               <div className="rounded-lg border border-base bg-surface/90 px-5 py-4 text-center shadow-sm backdrop-blur-sm">
                 <p className="font-medium text-main">Empty Canvas</p>
                 <p className="mt-1 text-xs text-muted">
-                  Add a text card or pan and zoom to explore.
+                  Add a text or code card, or pan and zoom to explore.
                 </p>
               </div>
             </div>

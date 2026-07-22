@@ -39,6 +39,34 @@ When(
 );
 
 When(
+  "I add a Canvas code card containing {string}",
+  async function (this: E2EWorld, source: string) {
+    await this.canvas.addCodeCard(source);
+  },
+);
+
+When(
+  "I format, wrap, and collapse the Canvas code card",
+  async function (this: E2EWorld) {
+    await this.canvas.formatAndConfigureCodeCard();
+  },
+);
+
+When(
+  "I open the Canvas code card in a text tab",
+  async function (this: E2EWorld) {
+    await this.canvas.openCodeCardInTextTab();
+  },
+);
+
+When(
+  "I edit the opened code tab and return to the Canvas",
+  async function (this: E2EWorld) {
+    await this.canvas.editOpenedCodeTabWithoutChangingCanvas();
+  },
+);
+
+When(
   "I multi-select Canvas cards {string} and {string}",
   async function (this: E2EWorld, firstText: string, secondText: string) {
     await this.canvas.multiSelectTextCards(firstText, secondText);
@@ -278,6 +306,27 @@ Then(
   "the Canvas should contain a text card with {string}",
   async function (this: E2EWorld, text: string) {
     await this.canvas.expectTextCard(text);
+  },
+);
+
+Then(
+  "the formatted Canvas code and settings should be restored",
+  async function (this: E2EWorld) {
+    await this.canvas.expectFormattedCodeCardAfterReload();
+  },
+);
+
+Then(
+  "the Canvas code card should use {string} and render markup as text",
+  async function (this: E2EWorld, language: string) {
+    await this.canvas.expectCodeLanguageAndEscapedRendering(language);
+  },
+);
+
+Then(
+  "the Canvas code card should be unchanged",
+  async function (this: E2EWorld) {
+    await this.canvas.expectCanvasCodeUnchanged();
   },
 );
 

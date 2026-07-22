@@ -11,7 +11,7 @@ export interface CanvasEdge {
   targetItemId: string;
 }
 
-export type CanvasItemType = "text";
+export type CanvasItemType = "text" | "code";
 
 export interface CanvasItemBase {
   id: string;
@@ -32,7 +32,17 @@ export interface CanvasTextItem extends CanvasItemBase {
   noteColor?: string;
 }
 
-export type CanvasItem = CanvasTextItem;
+export interface CanvasCodeItem extends CanvasItemBase {
+  type: "code";
+  source: string;
+  language: string;
+  languageLocked: boolean;
+  collapsed: boolean;
+  expandedHeight?: number;
+  wrap: boolean;
+}
+
+export type CanvasItem = CanvasTextItem | CanvasCodeItem;
 
 export interface CanvasDocument {
   id: string;

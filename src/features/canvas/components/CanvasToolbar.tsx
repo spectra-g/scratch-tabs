@@ -1,5 +1,6 @@
 interface CanvasToolbarProps {
   onAddText: () => void;
+  onAddCode: () => void;
   canUndo: boolean;
   canRedo: boolean;
   onUndo: () => void;
@@ -9,6 +10,7 @@ interface CanvasToolbarProps {
 
 export const CanvasToolbar = ({
   onAddText,
+  onAddCode,
   canUndo,
   canRedo,
   onUndo,
@@ -24,6 +26,15 @@ export const CanvasToolbar = ({
       onClick={onAddText}
     >
       Text
+    </button>
+    <button
+      type="button"
+      className="rounded px-3 py-2 text-sm font-medium text-main hover:bg-element-hover focus:outline-none focus:ring-2 focus:ring-primary"
+      data-testid="canvas-add-code"
+      aria-label="Add code card"
+      onClick={onAddCode}
+    >
+      Code
     </button>
     <div className="mx-1 w-px bg-border-base" aria-hidden="true" />
     <button

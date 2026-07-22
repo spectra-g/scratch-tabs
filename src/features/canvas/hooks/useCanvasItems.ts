@@ -11,7 +11,9 @@ import {
   updateItemFromFlowNode,
 } from "../utils/canvasFlowMapping";
 import {
+  createCodeCanvasItem,
   createTextCanvasItem,
+  getDetectedCanvasCodeLanguage,
   type CanvasPoint,
 } from "../utils/canvasItemFactory";
 import type { CanvasNodeBounds } from "../components/nodes/CanvasNodeInteractionContext";
@@ -28,6 +30,12 @@ import {
   type CanvasNavigationDirection,
 } from "../utils/canvasSpatialNavigation";
 import { getCanvasNudgeDelta } from "../utils/canvasKeyboard";
+import {
+  formatCanvasJson,
+  toggleCanvasCodeCollapsed,
+  type FormatJsonResult,
+} from "../utils/canvasCode";
+import { openCanvasCodeItemInTab } from "../services/CanvasCodeTabService";
 
 interface ReplaceItemsOptions {
   editingItemId?: string | null;
@@ -44,6 +52,7 @@ const sameBounds = (item: CanvasItem, node: CanvasFlowNode): boolean =>
 export const useCanvasItems = (
   initialItems: CanvasItem[],
   persistItems: (items: CanvasItem[]) => void,
+  canvasTabId?: string,
 ) => {
   const [items, setItems] = useState<CanvasItem[]>(initialItems);
   const itemsRef = useRef(items);
@@ -165,6 +174,26 @@ export const useCanvasItems = (
 
   const beginEditing = useCallback(
     (itemId: string) => {
+      const item = itemsRef.current.find((candidate) => candidate.id === itemId);
+      if (item?.type === "code" && item.collapsed) {
+        recordHistory(currentSnapshot());
+        applyItems(
+          itemsRef.current.map((candidate) =>
+            candidate.id === itemId
+              ? {
+                  ...toggleCanvasCodeCollapsed(item),
+                  updatedAt: Date.now(),
+                }
+              : candidate,
+          ),
+          {
+            editingItemId: itemId,
+            selectedIds: new Set([itemId]),
+            focusedItemId: itemId,
+          },
+        );
+        return;
+      }
       editingItemIdRef.current = itemId;
       setEditingItemId(itemId);
       focusedItemIdRef.current = itemId;
@@ -178,7 +207,7 @@ export const useCanvasItems = (
         ),
       );
     },
-    [replaceFlowNodes],
+    [applyItems, currentSnapshot, recordHistory, replaceFlowNodes],
   );
 
   const preparePointerSelection = useCallback(
@@ -234,6 +263,112 @@ export const useCanvasItems = (
     [cancelEditing, commitOperation],
   );
 
+  const commitCode = useCallback(
+    (itemId: string, source: string) => {
+      const current = itemsRef.current.find((item) => item.id === itemId);
+      if (!current || current.type !== "code") return;
+      if (current.source === source) {
+        cancelEditing(itemId);
+        return;
+      }
+
+      const detected = current.languageLocked
+        ? {
+            language: current.language,
+            languageLocked: current.languageLocked,
+          }
+        : getDetectedCanvasCodeLanguage(source);
+      commitOperation(
+        itemsRef.current.map((item) =>
+          item.id === itemId
+            ? { ...item, source, ...detected, updatedAt: Date.now() }
+            : item,
+        ),
+        {
+          editingItemId: null,
+          selectedIds: new Set([itemId]),
+          focusedItemId: itemId,
+        },
+      );
+    },
+    [cancelEditing, commitOperation],
+  );
+
+  const updateCodeItem = useCallback(
+    (
+      itemId: string,
+      update: (
+        item: Extract<CanvasItem, { type: "code" }>,
+      ) => Extract<CanvasItem, { type: "code" }>,
+    ): boolean => {
+      const current = itemsRef.current.find((item) => item.id === itemId);
+      if (!current || current.type !== "code") return false;
+      const updated = update(current);
+      if (updated === current) return false;
+      commitOperation(
+        itemsRef.current.map((item) =>
+          item.id === itemId ? updated : item,
+        ),
+        {
+          selectedIds: selectedItemIds(),
+          focusedItemId: itemId,
+        },
+      );
+      return true;
+    },
+    [commitOperation, selectedItemIds],
+  );
+
+  const formatCode = useCallback(
+    (itemId: string): FormatJsonResult => {
+      const current = itemsRef.current.find((item) => item.id === itemId);
+      if (!current || current.type !== "code") {
+        return { ok: false, error: "Code card not found." };
+      }
+      const result = formatCanvasJson(current.source);
+      if (!result.ok || result.source === current.source) return result;
+      updateCodeItem(itemId, (item) => ({
+        ...item,
+        source: result.source,
+        language: "json",
+        languageLocked: true,
+        updatedAt: Date.now(),
+      }));
+      return result;
+    },
+    [updateCodeItem],
+  );
+
+  const toggleCodeCollapsed = useCallback(
+    (itemId: string) => {
+      updateCodeItem(itemId, (item) => ({
+        ...toggleCanvasCodeCollapsed(item),
+        updatedAt: Date.now(),
+      }));
+    },
+    [updateCodeItem],
+  );
+
+  const toggleCodeWrap = useCallback(
+    (itemId: string) => {
+      updateCodeItem(itemId, (item) => ({
+        ...item,
+        wrap: !item.wrap,
+        updatedAt: Date.now(),
+      }));
+    },
+    [updateCodeItem],
+  );
+
+  const openCodeInTab = useCallback(
+    async (itemId: string) => {
+      const item = itemsRef.current.find((candidate) => candidate.id === itemId);
+      if (!canvasTabId || !item || item.type !== "code") return;
+      await openCanvasCodeItemInTab(canvasTabId, item);
+    },
+    [canvasTabId],
+  );
+
   const commitResize = useCallback(
     (itemId: string, bounds: CanvasNodeBounds) => {
       const current = itemsRef.current.find((item) => item.id === itemId);
@@ -272,6 +407,25 @@ export const useCanvasItems = (
   const createTextItem = useCallback(
     (position: CanvasPoint) => {
       const item = createTextCanvasItem({
+        position,
+        zIndex:
+          Math.max(
+            0,
+            ...itemsRef.current.map((candidate) => candidate.zIndex),
+          ) + 1,
+      });
+      commitOperation([...itemsRef.current, item], {
+        editingItemId: item.id,
+        selectedIds: new Set([item.id]),
+        focusedItemId: item.id,
+      });
+    },
+    [commitOperation],
+  );
+
+  const createCodeItem = useCallback(
+    (position: CanvasPoint) => {
+      const item = createCodeCanvasItem({
         position,
         zIndex:
           Math.max(
@@ -513,7 +667,12 @@ export const useCanvasItems = (
       beginEditing,
       cancelEditing,
       commitResize,
+      commitCode,
       commitText,
+      formatCode,
+      toggleCodeCollapsed,
+      toggleCodeWrap,
+      openCodeInTab,
       preparePointerSelection,
       completePointerSelection,
       syncFocusedItem,
@@ -522,7 +681,12 @@ export const useCanvasItems = (
       beginEditing,
       cancelEditing,
       commitResize,
+      commitCode,
       commitText,
+      formatCode,
+      toggleCodeCollapsed,
+      toggleCodeWrap,
+      openCodeInTab,
       preparePointerSelection,
       completePointerSelection,
       syncFocusedItem,
@@ -552,6 +716,7 @@ export const useCanvasItems = (
     beginEditing,
     cancelEditing,
     createTextItem,
+    createCodeItem,
     deleteSelection,
     duplicateSelection,
     selectAll,

@@ -69,6 +69,23 @@ describe("Canvas schemas", () => {
         updatedAt: 127,
         text: "Second note",
       },
+      {
+        id: "item-3",
+        type: "code",
+        x: 800,
+        y: -100,
+        width: 480,
+        height: 320,
+        zIndex: 4,
+        createdAt: 128,
+        updatedAt: 129,
+        source: '{"ok":true}',
+        language: "json",
+        languageLocked: true,
+        collapsed: true,
+        expandedHeight: 320,
+        wrap: true,
+      },
     ];
     document.edges = [
       { id: "edge-1", sourceItemId: "item-1", targetItemId: "item-2" },
@@ -79,6 +96,50 @@ describe("Canvas schemas", () => {
     expect(parsed).toEqual(document);
     expect(parsed.items).not.toBe(document.items);
     expect(parsed.items[0]).not.toBe(document.items[0]);
+  });
+
+  it("rejects malformed code-card settings", () => {
+    const valid = createEmptyCanvasDocument({
+      id: "document-1",
+      tabId: "tab-1",
+      workspaceId: "workspace-1",
+      now: 123,
+    });
+    const codeItem = {
+      id: "code-1",
+      type: "code",
+      x: 0,
+      y: 0,
+      width: 480,
+      height: 320,
+      zIndex: 1,
+      createdAt: 1,
+      updatedAt: 1,
+      source: "const value = 1;",
+      language: "javascript",
+      languageLocked: true,
+      collapsed: false,
+      wrap: false,
+    };
+
+    expect(() =>
+      parseCanvasDocument({
+        ...valid,
+        items: [{ ...codeItem, source: 123 }],
+      }),
+    ).toThrow("code item source must be a string");
+    expect(() =>
+      parseCanvasDocument({
+        ...valid,
+        items: [{ ...codeItem, wrap: "yes" }],
+      }),
+    ).toThrow("wrap must be a boolean");
+    expect(() =>
+      parseCanvasDocument({
+        ...valid,
+        items: [{ ...codeItem, expandedHeight: -1 }],
+      }),
+    ).toThrow("expandedHeight must be positive");
   });
 
   it("rejects unsupported and malformed documents", () => {

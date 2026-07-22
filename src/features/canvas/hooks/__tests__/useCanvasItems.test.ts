@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import type { CanvasTextItem } from "../../types";
+import type { CanvasCodeItem, CanvasTextItem } from "../../types";
 import { useCanvasItems } from "../useCanvasItems";
 
 const makeItem = (
@@ -16,6 +16,27 @@ const makeItem = (
   createdAt: 100,
   updatedAt: 100,
   text: id,
+  ...overrides,
+});
+
+const makeCodeItem = (
+  id: string,
+  overrides: Partial<CanvasCodeItem> = {},
+): CanvasCodeItem => ({
+  id,
+  type: "code",
+  x: 10,
+  y: 20,
+  width: 480,
+  height: 320,
+  zIndex: 1,
+  createdAt: 100,
+  updatedAt: 100,
+  source: '{"value":1}',
+  language: "json",
+  languageLocked: true,
+  collapsed: false,
+  wrap: false,
   ...overrides,
 });
 
@@ -117,6 +138,107 @@ describe("useCanvasItems", () => {
     );
     act(() => result.current.redo());
     expect(result.current.items[0].text).toBe("Updated");
+  });
+
+  it("creates, edits, formats, and configures code cards through undo boundaries", () => {
+    const persistItems = jest.fn();
+    const item = makeCodeItem("code", { source: '{"value":1}' });
+    const { result } = renderHook(() =>
+      useCanvasItems([item], persistItems, "canvas-tab"),
+    );
+
+    act(() => result.current.interaction.commitCode(item.id, '{"value":2}'));
+    expect(result.current.items[0]).toEqual(
+      expect.objectContaining({ source: '{"value":2}', language: "json" }),
+    );
+
+    act(() => {
+      expect(result.current.interaction.formatCode(item.id)).toEqual({
+        ok: true,
+        source: '{\n  "value": 2\n}',
+      });
+    });
+    act(() => result.current.interaction.toggleCodeWrap(item.id));
+    act(() => result.current.interaction.toggleCodeCollapsed(item.id));
+
+    expect(result.current.items[0]).toEqual(
+      expect.objectContaining({
+        source: '{\n  "value": 2\n}',
+        language: "json",
+        languageLocked: true,
+        wrap: true,
+        collapsed: true,
+        height: 40,
+        expandedHeight: 320,
+      }),
+    );
+    act(() => result.current.undo());
+    expect(result.current.items[0]).toEqual(
+      expect.objectContaining({
+        wrap: true,
+        collapsed: false,
+        height: 320,
+      }),
+    );
+  });
+
+  it("keeps a locked language while editing and detects an unlocked source", () => {
+    const locked = makeCodeItem("locked", {
+      language: "javascript",
+      languageLocked: true,
+      source: "const oldValue = 1;",
+    });
+    const unlocked = makeCodeItem("unlocked", {
+      language: "plaintext",
+      languageLocked: false,
+      source: "",
+    });
+    const { result } = renderHook(() =>
+      useCanvasItems([locked, unlocked], jest.fn()),
+    );
+
+    act(() =>
+      result.current.interaction.commitCode("locked", '{"now":"json"}'),
+    );
+    act(() =>
+      result.current.interaction.commitCode("unlocked", '{"now":"json"}'),
+    );
+
+    expect(result.current.items[0]).toEqual(
+      expect.objectContaining({
+        language: "javascript",
+        languageLocked: true,
+      }),
+    );
+    expect(result.current.items[1]).toEqual(
+      expect.objectContaining({ language: "json", languageLocked: true }),
+    );
+  });
+
+  it("expands a collapsed code card before entering editing mode", () => {
+    const item = makeCodeItem("code", {
+      collapsed: true,
+      height: 40,
+      expandedHeight: 360,
+    });
+    const { result } = renderHook(() =>
+      useCanvasItems([item], jest.fn()),
+    );
+
+    act(() => result.current.beginEditing(item.id));
+
+    expect(result.current.interactionState.mode).toBe("editing");
+    expect(result.current.items[0]).toEqual(
+      expect.objectContaining({ collapsed: false, height: 360 }),
+    );
+    act(() => result.current.undo());
+    expect(result.current.items[0]).toEqual(
+      expect.objectContaining({
+        collapsed: true,
+        height: 40,
+        expandedHeight: 360,
+      }),
+    );
   });
 
   it("duplicates all selected items and makes the duplicates primary selection", () => {
