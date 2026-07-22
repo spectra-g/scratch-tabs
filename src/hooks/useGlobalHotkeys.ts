@@ -7,6 +7,7 @@ import { useStoreWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import { useRootStore } from "../stores/rootStore";
 import { useSidebarStore } from "../stores/sidebarStore";
+import { shouldConfirmTabClose } from "../services/tabCloseProtection";
 
 
 interface UseGlobalHotkeysParams {
@@ -95,14 +96,15 @@ export function useGlobalHotkeys({
           const activeTab = tabs.find(tab => tab.id === targetTabId);
 
           if (activeTab) {
-            // Check if confirmation is needed (same logic as SortableTab)
-            const needsConfirmation = (activeTab.content && activeTab.content.trim() !== "") || activeTab.isTablet;
-
-            if (needsConfirmation) {
-              onKeyboardCloseConfirmation(targetTabId, activeTab.title);
-            } else {
-              onTabClose(targetTabId);
-            }
+            void shouldConfirmTabClose(activeTab, false).then(
+              (needsConfirmation) => {
+                if (needsConfirmation) {
+                  onKeyboardCloseConfirmation(targetTabId, activeTab.title);
+                } else {
+                  onTabClose(targetTabId);
+                }
+              },
+            );
           }
         }
       }

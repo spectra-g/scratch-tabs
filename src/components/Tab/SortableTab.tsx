@@ -4,8 +4,8 @@ import { Tab } from "../../types";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { ConfirmationDialog } from "./ConfirmationDialog";
-import { RichTextService } from "../RichText/services/RichTextService";
 import { getTabContentKind } from "../../utils/tabContentKind";
+import { shouldConfirmTabClose } from "../../services/tabCloseProtection";
 
 // Touch activation delay matches the TouchSensor configuration in TabBar
 const TOUCH_ACTIVATION_DELAY_MS = 250;
@@ -180,7 +180,7 @@ export const SortableTab: React.FC<SortableTabProps> = ({
     };
   }, []);
 
-  const handleCloseClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleCloseClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     e.preventDefault(); // Prevent any default behavior
 
@@ -193,17 +193,14 @@ export const SortableTab: React.FC<SortableTabProps> = ({
 
     // Check if CTRL key is pressed - if so, bypass confirmation
     const shouldBypassConfirmation = e.ctrlKey || e.metaKey; // Include metaKey for Mac Cmd+click
+    const closeButtonBounds = e.currentTarget.getBoundingClientRect();
+    const needsConfirmation = await shouldConfirmTabClose(
+      tab,
+      shouldBypassConfirmation,
+    );
 
-    // Show confirmation for any tab that has content (text or rich) or is a tablet
-    // (tablets might not have traditional content but should still be confirmed)
-    // BUT bypass confirmation if CTRL/Cmd+clicking
-    const hasTextContent = tab.content && tab.content.trim() !== "";
-    const hasRichContent = RichTextService.hasContent(tab.richContent || null);
-    const hasAnyContent = hasTextContent || hasRichContent;
-
-    if (!shouldBypassConfirmation && (hasAnyContent || tab.isTablet)) {
-      // Get the position of the close button for positioning the confirmation dialog
-      const rect = e.currentTarget.getBoundingClientRect();
+    if (needsConfirmation) {
+      const rect = closeButtonBounds;
 
       // Calculate position ensuring the dialog stays on screen
       const dialogHeight = 140; // Slightly larger estimate for the confirmation dialog
@@ -416,7 +413,7 @@ export const SortableTab: React.FC<SortableTabProps> = ({
                 e.preventDefault();
                 e.stopPropagation();
                 // Trigger close immediately for CTRL+click
-                handleCloseClick(e as any);
+                void handleCloseClick(e);
               }
             }}
             onContextMenu={(e) => {

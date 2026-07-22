@@ -13,6 +13,7 @@ import { RichTextControls } from "./RichTextControls";
 import { useActiveEditorStore } from "../../stores/activeEditorStore";
 import { useCursorPosition, useStatusBarLogic } from "./useStatusBarLogic";
 import { getTabContentKind } from "../../utils/tabContentKind";
+import { RendererStatusItems } from "./RendererStatusItems";
 
 interface StatusBarProps {
   activeTab: Tab;
@@ -89,12 +90,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
     if (!activeTab) return null;
 
     if (contentKind === "canvas") {
-      return (
-        <span className="flex items-center gap-2">
-          <span className="font-medium">Canvas</span>
-          <span className="text-muted">Local only</span>
-        </span>
-      );
+      return <RendererStatusItems tabId={activeTab.id} fallbackLabel="Canvas" />;
     }
 
     if (activeTab.isTablet) {

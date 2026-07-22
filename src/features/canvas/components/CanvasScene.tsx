@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Background,
   BackgroundVariant,
@@ -16,6 +16,7 @@ import type { CanvasFlowNode } from "../utils/canvasFlowMapping";
 import { CanvasToolbar } from "./CanvasToolbar";
 import { CanvasNodeInteractionContext } from "./nodes/CanvasNodeInteractionContext";
 import { TextNode } from "./nodes/TextNode";
+import { useRendererStatusStore } from "../../../stores/rendererStatusStore";
 
 const nodeTypes = { text: TextNode };
 
@@ -59,9 +60,40 @@ export const CanvasScene = ({
 }: CanvasSceneProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef(viewport);
+  const [zoomPercent, setZoomPercent] = useState(() =>
+    Math.round(viewport.zoom * 100),
+  );
   const canvasItems = useCanvasItems(initialItems, updateItems);
   const backgroundVariant =
     background === "grid" ? BackgroundVariant.Lines : BackgroundVariant.Dots;
+
+  useEffect(() => {
+    useRendererStatusStore.getState().setContribution(tab.id, {
+      label: "Canvas",
+      itemCount: canvasItems.items.length,
+      selectionCount: canvasItems.selectedCount,
+      zoomPercent,
+      save: {
+        state: status,
+        revision,
+        scopeLabel: "Local only",
+        ...(error ? { error } : {}),
+      },
+    });
+  }, [
+    tab.id,
+    canvasItems.items.length,
+    canvasItems.selectedCount,
+    zoomPercent,
+    status,
+    revision,
+    error,
+  ]);
+
+  useEffect(
+    () => () => useRendererStatusStore.getState().clearContribution(tab.id),
+    [tab.id],
+  );
 
   const addTextAtViewportCenter = () => {
     const pane = rootRef.current?.getBoundingClientRect();
@@ -138,6 +170,7 @@ export const CanvasScene = ({
           }}
           onMove={(_event, nextViewport) => {
             viewportRef.current = nextViewport;
+            setZoomPercent(Math.round(nextViewport.zoom * 100));
           }}
           onMoveEnd={(_event, nextViewport) => {
             viewportRef.current = nextViewport;
@@ -170,20 +203,6 @@ export const CanvasScene = ({
               </div>
             </div>
           )}
-          <div
-            className="pointer-events-none absolute bottom-3 left-3 rounded-full border border-base bg-surface/90 px-2.5 py-1 text-xs text-secondary shadow-sm backdrop-blur-sm"
-            data-testid="canvas-save-status"
-            data-save-state={status}
-            data-save-revision={revision}
-            aria-live="polite"
-          >
-            Local only ·{" "}
-            {status === "saving"
-              ? "Saving..."
-              : status === "error"
-                ? error || "Save failed"
-                : "Saved"}
-          </div>
         </ReactFlow>
       </CanvasNodeInteractionContext.Provider>
     </div>

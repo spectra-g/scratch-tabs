@@ -222,6 +222,16 @@ export class CanvasDocumentManager {
     await this.flush(tabId);
   }
 
+  async hasContent(tabId: string): Promise<boolean> {
+    const active = this.activeDocuments.get(tabId);
+    if (active) return active.document.items.length > 0;
+
+    const loading = this.loadingDocuments.get(tabId);
+    if (loading) return (await loading).document.items.length > 0;
+
+    return this.repository.hasContent(tabId);
+  }
+
   async saveViewport(tabId: string, viewport: CanvasViewport): Promise<void> {
     const active = this.activeDocuments.get(tabId);
     if (!active) return;

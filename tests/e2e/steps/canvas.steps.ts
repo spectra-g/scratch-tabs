@@ -16,6 +16,13 @@ When("I resize to a narrow Canvas viewport", async function (this: E2EWorld) {
   await this.canvas.useNarrowViewport();
 });
 
+When(
+  "I resize to a wide Canvas split viewport",
+  async function (this: E2EWorld) {
+    await this.canvas.useWideSplitViewport();
+  },
+);
+
 When("I create a new Canvas", async function (this: E2EWorld) {
   await this.canvas.createCanvas();
 });
@@ -32,9 +39,37 @@ When(
 );
 
 When(
+  "I add a Canvas text card containing {string} on the left side",
+  async function (this: E2EWorld, text: string) {
+    await this.canvas.addTextCardInPane(text, "left");
+  },
+);
+
+When(
+  "I add a Canvas text card containing {string} on the right side",
+  async function (this: E2EWorld, text: string) {
+    await this.canvas.addTextCardInPane(text, "right");
+  },
+);
+
+When(
   "I wait for the Canvas scene to be saved",
   async function (this: E2EWorld) {
     await this.canvas.waitForSceneSave();
+  },
+);
+
+When(
+  "I wait for the left Canvas scene to be saved",
+  async function (this: E2EWorld) {
+    await this.canvas.waitForPaneSceneSave("left");
+  },
+);
+
+When(
+  "I wait for the right Canvas scene to be saved",
+  async function (this: E2EWorld) {
+    await this.canvas.waitForPaneSceneSave("right");
   },
 );
 
@@ -92,6 +127,27 @@ Then(
   "the Canvas should contain a text card with {string}",
   async function (this: E2EWorld, text: string) {
     await this.canvas.expectTextCard(text);
+  },
+);
+
+Then(
+  "the left Canvas should contain a text card with {string}",
+  async function (this: E2EWorld, text: string) {
+    await this.canvas.expectTextCardInPane(text, "left");
+  },
+);
+
+Then(
+  "the right Canvas should contain a text card with {string}",
+  async function (this: E2EWorld, text: string) {
+    await this.canvas.expectTextCardInPane(text, "right");
+  },
+);
+
+Then(
+  "each split Canvas should show its own status contribution",
+  async function (this: E2EWorld) {
+    await this.canvas.expectIndependentSplitStatusContributions();
   },
 );
 

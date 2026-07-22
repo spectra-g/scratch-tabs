@@ -3,6 +3,7 @@ import { useTabsStore } from "./tabsStore";
 import { useSplitViewStore } from "./splitViewStore";
 import { useWorkspaceStore } from "./workspaceStore";
 import { Tab, SplitViewState, Workspace, SidebarTabInfo } from "../types"; // Ensure these types are correct
+import { prepareTabsForBroadcast } from "./broadcastPayload";
 
 /**
  * Generates a UUID, with fallback for environments where crypto.randomUUID is not available
@@ -185,7 +186,7 @@ class BroadcastManager {
               payload: {
                 workspaces: WsState.workspaces,
                 activeWorkspaceId: WsState.activeWorkspaceId,
-                tabs: TState.tabs, // these are tabs for WsState.activeWorkspaceId
+                tabs: prepareTabsForBroadcast(TState.tabs),
                 splitView: SpState.splitView, // this is splitView for WsState.activeWorkspaceId
                 recipientId: payload.senderId,
               },
@@ -275,7 +276,7 @@ class BroadcastManager {
       type: "WORKSPACE_STATE_UPDATED",
       payload: {
         workspaceId,
-        tabs: state.tabs,
+        tabs: state.tabs ? prepareTabsForBroadcast(state.tabs) : undefined,
         splitView: state.splitView,
       },
     });

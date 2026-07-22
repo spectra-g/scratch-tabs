@@ -36,6 +36,7 @@ const createRepository = (): jest.Mocked<CanvasDocumentRepositoryContract> => ({
     edges: [],
     settings: { ...document.settings },
   }),
+  hasContent: jest.fn().mockResolvedValue(false),
   saveDocument: jest.fn().mockResolvedValue(undefined),
   getSession: jest.fn().mockResolvedValue(undefined),
   saveSession: jest.fn().mockResolvedValue(undefined),
@@ -163,6 +164,76 @@ describe("CanvasDocumentManager", () => {
     expect(jest.getTimerCount()).toBe(0);
     await manager.release(canvasTab.id);
     jest.useRealTimers();
+  });
+
+  it("reports unsaved active content without reading the repository", async () => {
+    const repository = createRepository();
+    const manager = new CanvasDocumentManager(repository);
+    await manager.acquire(canvasTab);
+
+    manager.setItems(canvasTab.id, [textItem("not persisted yet")]);
+
+    await expect(manager.hasContent(canvasTab.id)).resolves.toBe(true);
+    expect(repository.hasContent).not.toHaveBeenCalled();
+    await manager.release(canvasTab.id);
+  });
+
+  it("reads persisted content for an inactive Canvas", async () => {
+    const repository = createRepository();
+    repository.hasContent.mockResolvedValue(true);
+    const manager = new CanvasDocumentManager(repository);
+
+    await expect(manager.hasContent(canvasTab.id)).resolves.toBe(true);
+    expect(repository.hasContent).toHaveBeenCalledWith(canvasTab.id);
+  });
+
+  it("flushes every active Canvas independently", async () => {
+    const repository = createRepository();
+    repository.getByTabId.mockImplementation(async (tabId) => ({
+      ...document,
+      id: tabId,
+      tabId,
+      items: [],
+      edges: [],
+      settings: { ...document.settings },
+    }));
+    const manager = new CanvasDocumentManager(repository, () => 5_000);
+    const secondTab = {
+      ...canvasTab,
+      id: "tab-2",
+      documentId: "tab-2",
+    };
+    await Promise.all([manager.acquire(canvasTab), manager.acquire(secondTab)]);
+    manager.setItems(canvasTab.id, [textItem("left")]);
+    manager.setItems(secondTab.id, [{ ...textItem("right"), id: "item-2" }]);
+
+    await manager.flushAll();
+
+    expect(repository.saveDocument).toHaveBeenCalledTimes(2);
+    expect(repository.saveDocument.mock.calls.map(([saved]) => saved.tabId).sort()).toEqual([
+      "tab-1",
+      "tab-2",
+    ]);
+    await Promise.all([
+      manager.release(canvasTab.id),
+      manager.release(secondTab.id),
+    ]);
+  });
+
+  it("flushes dirty content before releasing the final consumer", async () => {
+    const repository = createRepository();
+    const manager = new CanvasDocumentManager(repository, () => 5_000);
+    await manager.acquire(canvasTab);
+    manager.setItems(canvasTab.id, [textItem("dispose safely")]);
+
+    await manager.release(canvasTab.id);
+
+    expect(repository.saveDocument).toHaveBeenCalledWith(
+      expect.objectContaining({
+        items: [expect.objectContaining({ text: "dispose safely" })],
+      }),
+      true,
+    );
   });
 
   it("keeps a remounted Strict Mode consumer alive while the first cleanup waits for loading", async () => {

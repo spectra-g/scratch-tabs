@@ -5,6 +5,7 @@ const CANVAS_FEATURE_SETTING_KEY = "features.canvas.enabled";
 export class CanvasActions {
   private lastDocumentId: string | null = null;
   private pendingSaveRevision = 0;
+  private pendingPaneSaveRevision: Partial<Record<"left" | "right", number>> = {};
   private rememberedBounds: Record<"x" | "y" | "width" | "height", number> | null = null;
 
   constructor(private page: Page) {}
@@ -44,6 +45,10 @@ export class CanvasActions {
     await this.page.setViewportSize({ width: 700, height: 800 });
   }
 
+  async useWideSplitViewport() {
+    await this.page.setViewportSize({ width: 1800, height: 900 });
+  }
+
   async createCanvas() {
     const button = this.page.getByTestId("icon-new-canvas");
     await expect(button).toBeVisible();
@@ -58,6 +63,14 @@ export class CanvasActions {
     return this.page.locator('[data-item-type="text"]').first();
   }
 
+  private pane(side: "left" | "right") {
+    return this.page.locator(`[data-editor-pane-side="${side}"]`);
+  }
+
+  private paneSaveStatus(side: "left" | "right") {
+    return this.pane(side).getByTestId("canvas-save-status");
+  }
+
   private async markPendingSceneChange() {
     const revision = await this.saveStatus().getAttribute("data-save-revision");
     this.pendingSaveRevision = Number(revision ?? "0");
@@ -70,6 +83,28 @@ export class CanvasActions {
     await expect(editor).toBeVisible();
     await editor.fill(text);
     await editor.press("Control+Enter");
+  }
+
+  async addTextCardInPane(text: string, side: "left" | "right") {
+    const pane = this.pane(side);
+    const status = this.paneSaveStatus(side);
+    this.pendingPaneSaveRevision[side] = Number(
+      (await status.getAttribute("data-save-revision")) ?? "0",
+    );
+    await pane.getByTestId("canvas-add-text").click();
+    const editor = pane.getByTestId("canvas-text-editor");
+    await expect(editor).toBeVisible();
+    await editor.fill(text);
+    await editor.press("Control+Enter");
+  }
+
+  async waitForPaneSceneSave(side: "left" | "right") {
+    const status = this.paneSaveStatus(side);
+    const previousRevision = this.pendingPaneSaveRevision[side] ?? 0;
+    await expect
+      .poll(async () => Number(await status.getAttribute("data-save-revision")))
+      .toBeGreaterThan(previousRevision);
+    await expect(status).toHaveAttribute("data-save-state", "saved");
   }
 
   async waitForSceneSave() {
@@ -163,6 +198,26 @@ export class CanvasActions {
     await expect(card).toContainText(text);
     await expect(card).toHaveAttribute("aria-selected", /true|false/);
     await expect(card).toHaveAttribute("data-item-id", /.+/);
+  }
+
+  async expectTextCardInPane(text: string, side: "left" | "right") {
+    const card = this.pane(side).locator('[data-item-type="text"]').first();
+    await expect(card).toBeVisible();
+    await expect(card).toContainText(text);
+  }
+
+  async expectIndependentSplitStatusContributions() {
+    const leftStatus = this.paneSaveStatus("left");
+    const rightStatus = this.paneSaveStatus("right");
+    await expect(leftStatus).toBeVisible();
+    await expect(rightStatus).toBeVisible();
+    const leftTabId = await leftStatus.getAttribute("data-renderer-tab-id");
+    const rightTabId = await rightStatus.getAttribute("data-renderer-tab-id");
+    expect(leftTabId).toBeTruthy();
+    expect(rightTabId).toBeTruthy();
+    expect(leftTabId).not.toBe(rightTabId);
+    await expect(leftStatus).toContainText("1 item");
+    await expect(rightStatus).toContainText("1 item");
   }
 
   async expectNoCards() {

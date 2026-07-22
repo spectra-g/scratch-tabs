@@ -14,6 +14,7 @@ import {
 export interface CanvasDocumentRepositoryContract {
   createWithTab(tab: Tab): Promise<CanvasDocument>;
   getByTabId(tabId: string): Promise<CanvasDocument | undefined>;
+  hasContent(tabId: string): Promise<boolean>;
   saveDocument(
     document: CanvasDocument,
     updateParentTabModified?: boolean,
@@ -67,6 +68,11 @@ export class CanvasDocumentRepository
   async getByTabId(tabId: string): Promise<CanvasDocument | undefined> {
     const record = await db.canvasDocuments.where("tabId").equals(tabId).first();
     return record ? parseCanvasDocument(record) : undefined;
+  }
+
+  async hasContent(tabId: string): Promise<boolean> {
+    const record = await db.canvasDocuments.where("tabId").equals(tabId).first();
+    return record ? parseCanvasDocument(record).items.length > 0 : false;
   }
 
   async saveDocument(

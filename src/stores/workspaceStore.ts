@@ -9,6 +9,7 @@ import { incrementSetting } from "../db";
 import { WELCOME_TAB_CONTENT, NEW_TAB_PREFIX } from "../constants";
 import { modelManager } from "../services/modelManager";
 import { broadcastManager } from "./broadcastStore";
+import { canvasLifecycleCoordinator } from "../services/canvasLifecycleCoordinator";
 
 // Helper function to sort workspaces by displayOrder (primary) or lastAccessed (fallback)
 const sortWorkspaces = (workspaces: Workspace[]): Workspace[] => {
@@ -260,6 +261,8 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
       set({ isLoading: true, error: null });
 
       try {
+        await canvasLifecycleCoordinator.flushActiveDocuments();
+
         // 1. Save content from all active models BEFORE persisting state
         const { tabs } = useTabsStore.getState();
         const currentWorkspaceTabs = tabs.filter(
