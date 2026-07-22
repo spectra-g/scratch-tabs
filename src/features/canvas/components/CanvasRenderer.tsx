@@ -4,6 +4,7 @@ import { useIsMobile } from "../../../hooks/useIsMobile";
 import { useRootStore } from "../../../stores/rootStore";
 import { useTabsStore } from "../../../stores/tabsStore";
 import { MIN_CANVAS_PANE_WIDTH } from "../constants";
+import { resolveCanvasPaneWidth } from "../utils/canvasPaneWidth";
 import { DesktopOnlyCanvasNotice } from "./DesktopOnlyCanvasNotice";
 
 const CanvasView = React.lazy(() => import("./CanvasView"));
@@ -22,12 +23,20 @@ export const CanvasRenderer = ({ tab }: CanvasRendererProps) => {
     const container = containerRef.current;
     if (!container) return;
 
-    const updateWidth = () => setPaneWidth(container.getBoundingClientRect().width);
+    const updateWidth = (observedWidth?: number) => {
+      const measuredWidth = container.getBoundingClientRect().width;
+      setPaneWidth((previousWidth) =>
+        resolveCanvasPaneWidth({
+          observedWidth,
+          measuredWidth,
+          previousWidth,
+        }),
+      );
+    };
     updateWidth();
 
     const observer = new ResizeObserver((entries) => {
-      const width = entries[0]?.contentRect.width;
-      setPaneWidth(width ?? container.getBoundingClientRect().width);
+      updateWidth(entries[0]?.contentRect.width);
     });
     observer.observe(container);
     return () => observer.disconnect();
