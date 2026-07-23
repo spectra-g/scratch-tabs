@@ -27,6 +27,13 @@ When("I create a new Canvas", async function (this: E2EWorld) {
   await this.canvas.createCanvas();
 });
 
+When(
+  "I duplicate the Canvas tab {string}",
+  async function (this: E2EWorld, title: string) {
+    await this.canvas.duplicateCanvasTab(title);
+  },
+);
+
 When("I remember the active Canvas document", async function (this: E2EWorld) {
   await this.canvas.rememberDocumentId();
 });
@@ -371,6 +378,34 @@ Then(
   "the Canvas should contain a text card with {string}",
   async function (this: E2EWorld, text: string) {
     await this.canvas.expectTextCard(text);
+  },
+);
+
+Then(
+  "the Canvas should not contain a text card with {string}",
+  async function (this: E2EWorld, text: string) {
+    await this.canvas.expectNoTextCard(text);
+  },
+);
+
+Then(
+  "the remembered Canvas image asset should still exist",
+  async function (this: E2EWorld) {
+    await this.canvas.expectRememberedImageAsset(true);
+  },
+);
+
+Then(
+  "the remembered Canvas image asset should be deleted",
+  async function (this: E2EWorld) {
+    await this.canvas.expectRememberedImageAsset(false);
+  },
+);
+
+Then(
+  "the moved Canvas image should use a target-workspace asset",
+  async function (this: E2EWorld) {
+    await this.canvas.expectMovedImageAssetRemapped();
   },
 );
 

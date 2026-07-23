@@ -55,7 +55,9 @@ export function useAppHotkeys(): UseAppHotkeysReturn {
   // Tab close handler for keyboard shortcut
   const handleTabClose = useCallback(
     (tabId: string) => {
-      removeTab(tabId);
+      void Promise.resolve(removeTab(tabId)).catch((error) =>
+        console.error("Failed to close tab:", error),
+      );
     },
     [removeTab]
   );

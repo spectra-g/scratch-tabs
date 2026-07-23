@@ -154,8 +154,13 @@ export const useContextMenuConfig = (
   })();
 
   // Action handlers
-  const handleSimpleAction = (actionFn: (...args: any[]) => void, ...args: any[]) => {
-    actionFn(...args);
+  const handleSimpleAction = <Args extends unknown[],>(
+    actionFn: (...args: Args) => void | Promise<unknown>,
+    ...args: Args
+  ) => {
+    void Promise.resolve(actionFn(...args)).catch((error) =>
+      console.error("Tab action failed:", error),
+    );
     closeContextMenu();
   };
 
@@ -353,18 +358,18 @@ Add any other context about the problem here.
     [],
   );
 
-  const executeConfirmedAction = useCallback(() => {
+  const executeConfirmedAction = useCallback(async () => {
     if (!confirmationState) return;
     const { type, targetTabId } = confirmationState;
 
     if (type === "close") {
-      rootStore.removeTab(targetTabId);
+      await rootStore.removeTab(targetTabId);
     } else if (type === "closeAllExcept") {
-      rootStore.closeAllExcept(targetTabId, isRightSide);
+      await rootStore.closeAllExcept(targetTabId, isRightSide);
     } else if (type === "closeTabsToLeft") {
-      rootStore.closeTabsToLeft(targetTabId, isRightSide);
+      await rootStore.closeTabsToLeft(targetTabId, isRightSide);
     } else if (type === "closeTabsToRight") {
-      rootStore.closeTabsToRight(targetTabId, isRightSide);
+      await rootStore.closeTabsToRight(targetTabId, isRightSide);
     }
 
     setConfirmationState(null);

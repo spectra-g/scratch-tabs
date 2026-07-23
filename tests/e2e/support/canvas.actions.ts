@@ -109,6 +109,22 @@ export class CanvasActions {
     await button.click();
   }
 
+  async duplicateCanvasTab(title: string) {
+    const tab = this.page.getByTestId(`tab-${title}`);
+    await expect(tab).toBeVisible();
+    await tab.click({ button: "right" });
+    const duplicateMenuItem = this.page
+      .getByRole("button", { name: "Duplicate", exact: true })
+      .first();
+    await expect(duplicateMenuItem).toBeVisible();
+    await duplicateMenuItem.click();
+    await expect(
+      this.page.locator(
+        `[data-testid="tab-${title} (Copy)"][aria-selected="true"]`,
+      ),
+    ).toBeVisible();
+  }
+
   private saveStatus() {
     return this.page.getByTestId("canvas-save-status");
   }
@@ -908,6 +924,90 @@ export class CanvasActions {
     await expect(card).toContainText(text);
     await expect(card).toHaveAttribute("aria-selected", /true|false/);
     await expect(card).toHaveAttribute("data-item-id", /.+/);
+  }
+
+  async expectNoTextCard(text: string) {
+    await expect(this.textCardContaining(text)).toHaveCount(0);
+  }
+
+  async expectRememberedImageAsset(exists: boolean) {
+    expect(this.imageAssetId).toBeTruthy();
+    const assetExists = await this.page.evaluate(async (assetId) => {
+      const database = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open("ScratchTabsDB");
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      try {
+        const transaction = database.transaction("canvasAssets", "readonly");
+        return await new Promise<boolean>((resolve, reject) => {
+          const request = transaction.objectStore("canvasAssets").get(assetId!);
+          request.onsuccess = () => resolve(request.result !== undefined);
+          request.onerror = () => reject(request.error);
+        });
+      } finally {
+        database.close();
+      }
+    }, this.imageAssetId);
+    expect(assetExists).toBe(exists);
+  }
+
+  async expectMovedImageAssetRemapped() {
+    const movedAssetId = await this.imageCard().getAttribute("data-asset-id");
+    const documentId = await this.page
+      .getByTestId("canvas-flow")
+      .getAttribute("data-canvas-document-id");
+    expect(movedAssetId).toBeTruthy();
+    expect(movedAssetId).not.toBe(this.imageAssetId);
+
+    const ownership = await this.page.evaluate(
+      async ({ assetId, oldAssetId, canvasDocumentId }) => {
+        const database = await new Promise<IDBDatabase>((resolve, reject) => {
+          const request = indexedDB.open("ScratchTabsDB");
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+        try {
+          const transaction = database.transaction(
+            ["canvasAssets", "canvasDocuments"],
+            "readonly",
+          );
+          const assetStore = transaction.objectStore("canvasAssets");
+          const documentStore = transaction.objectStore("canvasDocuments");
+          const read = <T>(request: IDBRequest<T>) =>
+            new Promise<T>((resolve, reject) => {
+              request.onsuccess = () => resolve(request.result);
+              request.onerror = () => reject(request.error);
+            });
+          const [asset, oldAsset, document] = await Promise.all([
+            read<{ workspaceId?: string } | undefined>(
+              assetStore.get(assetId!),
+            ),
+            read<{ workspaceId?: string } | undefined>(
+              assetStore.get(oldAssetId!),
+            ),
+            read<{ workspaceId?: string } | undefined>(
+              documentStore.get(canvasDocumentId!),
+            ),
+          ]);
+          return {
+            assetWorkspaceId: asset?.workspaceId,
+            documentWorkspaceId: document?.workspaceId,
+            oldAssetExists: oldAsset !== undefined,
+          };
+        } finally {
+          database.close();
+        }
+      },
+      {
+        assetId: movedAssetId,
+        oldAssetId: this.imageAssetId,
+        canvasDocumentId: documentId,
+      },
+    );
+
+    expect(ownership.assetWorkspaceId).toBe(ownership.documentWorkspaceId);
+    expect(ownership.oldAssetExists).toBe(false);
   }
 
   async expectTextCardInPane(text: string, side: "left" | "right") {

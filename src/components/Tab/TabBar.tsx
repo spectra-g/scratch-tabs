@@ -603,8 +603,8 @@ export const TabBar: React.FC<TabBarProps> = ({
   const pinnedTabs = visibleTabs.filter((tab) => tab.isPinned);
   const unpinnedTabs = visibleTabs.filter((tab) => !tab.isPinned);
 
-  const handleTabClose = (tabId: string) => {
-    removeTab(tabId);
+  const handleTabClose = async (tabId: string) => {
+    await removeTab(tabId);
 
     if (hoveredTabId === tabId) {
       setTooltipVisible(false);

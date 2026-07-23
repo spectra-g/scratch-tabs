@@ -197,7 +197,9 @@ const TabletWrapper = memo<TabletViewProps>(({ tab, onChange }) => {
 
   // Error boundary recovery functions
   const handleCloseTab = () => {
-    removeTab(tab.id);
+    void removeTab(tab.id).catch((error) =>
+      console.error("Failed to close tablet tab:", error),
+    );
   };
 
   const handleRetry = () => {
