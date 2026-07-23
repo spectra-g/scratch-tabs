@@ -1,4 +1,7 @@
-import type { TabDocumentAdapter } from "../../../services/tabDocumentAdapter";
+import type {
+  TabDocumentAdapter,
+  TabDocumentSearchData,
+} from "../../../services/tabDocumentAdapter";
 import type { Tab } from "../../../types";
 import {
   canvasDocumentManager,
@@ -8,6 +11,14 @@ import {
   canvasDocumentLifecycleRepository,
   type CanvasDocumentLifecycleRepositoryContract,
 } from "./CanvasDocumentLifecycleRepository";
+import {
+  canvasDocumentRepository,
+  type CanvasDocumentRepositoryContract,
+} from "./CanvasDocumentRepository";
+import {
+  buildCanvasSearchText,
+  getCanvasSearchEntries,
+} from "./CanvasSearchIndexer";
 
 type CanvasManagerLifecycle = Pick<
   CanvasDocumentManager,
@@ -22,6 +33,10 @@ export class CanvasTabDocumentAdapter implements TabDocumentAdapter {
     private readonly createId: () => string = () => crypto.randomUUID(),
     private readonly reportCleanupError: (error: unknown) => void = (error) =>
       console.error("Canvas asset garbage collection failed:", error),
+    private readonly documentRepository: Pick<
+      CanvasDocumentRepositoryContract,
+      "getByTabId"
+    > = canvasDocumentRepository,
   ) {}
 
   hasContent(tab: Tab): Promise<boolean> {
@@ -71,6 +86,15 @@ export class CanvasTabDocumentAdapter implements TabDocumentAdapter {
     await this.manager.dispose(tab.id);
     await this.collectOrphans(tab.workspaceId, sourceAssetIds);
     return moved;
+  }
+
+  async getSearchData(tab: Tab): Promise<TabDocumentSearchData> {
+    const document = await this.documentRepository.getByTabId(tab.id);
+    if (!document) return { searchText: "", entries: [] };
+    return {
+      searchText: buildCanvasSearchText(document.items),
+      entries: getCanvasSearchEntries(document.items),
+    };
   }
 
   private async collectOrphans(

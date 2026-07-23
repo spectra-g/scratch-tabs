@@ -8,9 +8,11 @@ import {
   WholeWord,
   ListFilter,
   Loader2,
+  Layers,
 } from "../Icons";
 import { BaseModal } from "../Modals/BaseModal";
 import { SearchResult, SearchOptions } from "../../stores/searchStore";
+import type { SearchScope } from "../../stores/searchStore";
 import { highlightMatchesInText } from "../../services/searchService";
 import { SearchPreviewPane } from "./SearchPreviewPane";
 import { SearchEngine } from "./useSearchEngine";
@@ -63,6 +65,11 @@ const SearchResultItem: React.FC<SearchResultItemProps> = React.memo(
         role="button"
         tabIndex={0}
         aria-selected={isSelected}
+        data-testid={
+          result.canvasItemId
+            ? `canvas-search-result-${result.canvasItemId}`
+            : undefined
+        }
       >
         <div className="flex justify-between items-start text-xs">
           {/* Left: Highlighted Line */}
@@ -78,8 +85,17 @@ const SearchResultItem: React.FC<SearchResultItemProps> = React.memo(
             className="text-muted text-right flex-shrink-0 max-w-[40%]"
             title={result.tabTitle}
           >
-            <span className="truncate block">{result.tabTitle}</span>
-            <span className="text-muted"> ({result.language})</span>
+            <span className="flex items-center justify-end gap-1 truncate">
+              {result.resultKind === "canvas-item" && (
+                <Layers size={12} aria-hidden="true" />
+              )}
+              {result.tabTitle}
+            </span>
+            <span className="text-muted">
+              {result.itemLabel
+                ? ` (${result.itemLabel})`
+                : ` (${result.language})`}
+            </span>
           </div>
         </div>
       </div>
@@ -295,7 +311,9 @@ export const SearchModalUI: React.FC<SearchModalUIProps> = ({ engine }) => {
               <label className="text-sm text-muted">Scope:</label>
               <select
                 value={scope}
-                onChange={(e) => setScope(e.target.value as any)}
+                onChange={(event) =>
+                  setScope(event.target.value as SearchScope)
+                }
                 className="bg-element text-main border border-base rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-2 focus:border-focus"
               >
                 <option value="activeWorkspace">Active Workspace</option>

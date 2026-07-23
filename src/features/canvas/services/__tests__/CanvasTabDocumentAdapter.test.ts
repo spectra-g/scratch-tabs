@@ -1,6 +1,8 @@
 import type { Tab } from "../../../../types";
 import type { CanvasDocumentLifecycleRepositoryContract } from "../CanvasDocumentLifecycleRepository";
+import type { CanvasDocumentRepositoryContract } from "../CanvasDocumentRepository";
 import { CanvasTabDocumentAdapter } from "../CanvasTabDocumentAdapter";
+import { createEmptyCanvasDocument } from "../../utils/canvasSchemas";
 
 const tab: Tab = {
   id: "tab-1",
@@ -140,5 +142,51 @@ describe("CanvasTabDocumentAdapter", () => {
     expect(reportCleanupError).toHaveBeenCalledWith(
       expect.objectContaining({ message: "cleanup failed" }),
     );
+  });
+
+  it("returns item-addressable search data from the document table only", async () => {
+    const canvasDocument = createEmptyCanvasDocument({
+      id: "document-1",
+      tabId: "tab-1",
+      workspaceId: "workspace-1",
+      now: 1,
+    });
+    canvasDocument.items = [
+      {
+        id: "item-1",
+        type: "text",
+        x: 0,
+        y: 0,
+        width: 280,
+        height: 180,
+        zIndex: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        text: "searchable note",
+      },
+    ];
+    const documentRepository = {
+      getByTabId: jest.fn().mockResolvedValue(canvasDocument),
+    } as Pick<CanvasDocumentRepositoryContract, "getByTabId">;
+    const adapter = new CanvasTabDocumentAdapter(
+      manager(),
+      repository(),
+      Date.now,
+      () => "unused",
+      jest.fn(),
+      documentRepository,
+    );
+
+    await expect(adapter.getSearchData(tab)).resolves.toEqual({
+      searchText: "searchable note",
+      entries: [
+        expect.objectContaining({
+          itemId: "item-1",
+          itemType: "text",
+          text: "searchable note",
+        }),
+      ],
+    });
+    expect(documentRepository.getByTabId).toHaveBeenCalledWith("tab-1");
   });
 });

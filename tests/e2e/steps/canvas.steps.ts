@@ -766,3 +766,70 @@ Then(
     this.canvas.expectShortcutEditingGuardCompleted();
   },
 );
+
+When("I create searchable Canvas cards", async function (this: E2EWorld) {
+  await this.canvas.createSearchableCanvasCards();
+});
+
+Then(
+  "every Canvas card type should appear in global search",
+  async function (this: E2EWorld) {
+    await this.canvas.expectEveryCanvasCardTypeIsSearchable();
+  },
+);
+
+When(
+  "I place a searchable Canvas card offscreen",
+  async function (this: E2EWorld) {
+    await this.canvas.placeSearchTargetOffscreen();
+  },
+);
+
+When(
+  "I activate its global search result",
+  async function (this: E2EWorld) {
+    await this.canvas.activateOffscreenCanvasSearchResult();
+  },
+);
+
+Then(
+  "the searched Canvas card should be visible, selected, and focused",
+  async function (this: E2EWorld) {
+    await this.canvas.expectSearchTargetVisibleSelectedAndFocused();
+  },
+);
+
+When(
+  "I edit and delete indexed Canvas content",
+  async function (this: E2EWorld) {
+    await this.canvas.changeAndDeleteIndexedCanvasContent();
+  },
+);
+
+Then(
+  "stale Canvas search results should disappear",
+  async function (this: E2EWorld) {
+    await this.canvas.expectStaleCanvasSearchResultsRemoved();
+  },
+);
+
+Given(
+  "another workspace has searchable Canvas metadata",
+  async function (this: E2EWorld) {
+    await this.canvas.seedAnotherWorkspaceCanvasAndTrackAssetReads();
+  },
+);
+
+When(
+  "I search all workspaces for that Canvas metadata",
+  async function (this: E2EWorld) {
+    await this.canvas.searchAllWorkspacesForRemoteCanvas();
+  },
+);
+
+Then(
+  "global search should not read Canvas asset blobs",
+  async function (this: E2EWorld) {
+    await this.canvas.expectNoCanvasAssetsReadBySearch();
+  },
+);

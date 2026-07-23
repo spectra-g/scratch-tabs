@@ -175,6 +175,7 @@ describe("CanvasDocumentManager", () => {
       expect.objectContaining({
         revision: 1,
         items: [expect.objectContaining({ text: "latest" })],
+        searchText: "latest",
       }),
       true,
     );
@@ -210,6 +211,9 @@ describe("CanvasDocumentManager", () => {
 
     expect(repository.saveDocument).toHaveBeenCalledTimes(1);
     expect(repository.saveDocument.mock.calls[0][0].revision).toBe(1);
+    expect(repository.saveDocument.mock.calls[0][0].searchText).toBe(
+      "flush me",
+    );
     expect(jest.getTimerCount()).toBe(0);
     await manager.release(canvasTab.id);
     jest.useRealTimers();

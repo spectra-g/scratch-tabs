@@ -26,6 +26,9 @@ export const BaseModal: React.FC<BaseModalProps> = ({
       <div
         className={`bg-surface rounded-lg shadow-xl ${widthClass} ${maxWidthClass} ${maxHeightClass} flex flex-col overflow-hidden border border-base`}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
       >
         <div className="flex-none flex items-center justify-between p-3 border-b border-base bg-surface">
           <h2 className="text-lg font-medium text-main">{title}</h2>

@@ -98,6 +98,7 @@ describe("Canvas schemas", () => {
         updatedAt: 131,
         assetId: "asset-1",
         altText: "Architecture diagram",
+        originalName: "architecture.png",
         objectFit: "contain",
       },
       {
@@ -112,6 +113,11 @@ describe("Canvas schemas", () => {
         updatedAt: 133,
         canonicalUrl: "https://example.com/docs",
         hostname: "example.com",
+        metadata: {
+          title: "Documentation",
+          description: "Canvas reference",
+          siteName: "Example",
+        },
       },
       {
         id: "item-6",
@@ -127,6 +133,7 @@ describe("Canvas schemas", () => {
         hostname: "vimeo.com",
         provider: "vimeo",
         videoId: "76979871",
+        title: "Product tour",
       },
     ];
     document.edges = [

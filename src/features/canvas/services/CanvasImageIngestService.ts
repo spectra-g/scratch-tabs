@@ -39,6 +39,7 @@ export class CanvasImageIngestService {
       sourceWidth: asset.width,
       sourceHeight: asset.height,
       altText: file.name,
+      originalName: file.name,
     });
     await this.manager.addImage(tabId, item, asset);
     return item;
@@ -56,7 +57,12 @@ export class CanvasImageIngestService {
     file: File;
   }): Promise<CanvasImageItem> {
     const asset = await this.prepareAsset(file, workspaceId);
-    const document = await this.manager.replaceImage(tabId, item.id, asset);
+    const document = await this.manager.replaceImage(
+      tabId,
+      item.id,
+      asset,
+      file.name,
+    );
     const replacement = document.items.find(
       (candidate): candidate is CanvasImageItem =>
         candidate.id === item.id && candidate.type === "image",

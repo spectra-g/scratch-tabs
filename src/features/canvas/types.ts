@@ -48,13 +48,21 @@ export interface CanvasImageItem extends CanvasItemBase {
   type: "image";
   assetId: string;
   altText: string;
+  originalName?: string;
   objectFit: "contain" | "cover";
+}
+
+export interface CanvasLinkMetadata {
+  title?: string;
+  description?: string;
+  siteName?: string;
 }
 
 export interface CanvasLinkItem extends CanvasItemBase {
   type: "link";
   canonicalUrl: string;
   hostname: string;
+  metadata?: CanvasLinkMetadata;
 }
 
 export interface CanvasVideoItem extends CanvasItemBase {
@@ -63,6 +71,7 @@ export interface CanvasVideoItem extends CanvasItemBase {
   hostname: string;
   provider: CanvasVideoProvider;
   videoId: string;
+  title?: string;
 }
 
 export type CanvasItem =

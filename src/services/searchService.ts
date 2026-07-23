@@ -1,5 +1,11 @@
 import { Tab } from "../types";
 import { SearchOptions, SearchResult } from "../stores/searchStore";
+import {
+  tabDocumentAdapterResolver,
+  type TabDocumentAdapterResolver,
+  type TabDocumentSearchData,
+  type TabDocumentSearchEntry,
+} from "./tabDocumentAdapter";
 
 /**
  * Core search function. Iterates through tabs and their content.
@@ -9,10 +15,49 @@ export function searchTabs(
   options: SearchOptions,
   tabsToSearch: Tab[],
 ): SearchResult[] {
-  if (!query) {
-    return [];
-  }
+  return searchLoadedTabDocuments(
+    query,
+    options,
+    tabsToSearch.map((tab) => ({
+      tab,
+      searchData:
+        tab.isTablet || !tab.content
+          ? { searchText: "", entries: [] }
+          : {
+              searchText: tab.content,
+              entries: [{ text: tab.content, language: tab.language }],
+            },
+    })),
+  );
+}
 
+interface LoadedTabSearchData {
+  tab: Tab;
+  searchData: TabDocumentSearchData;
+}
+
+export async function searchTabDocuments(
+  query: string,
+  options: SearchOptions,
+  tabsToSearch: Tab[],
+  resolver: TabDocumentAdapterResolver = tabDocumentAdapterResolver,
+): Promise<SearchResult[]> {
+  if (!query) return [];
+  const loaded = await Promise.all(
+    tabsToSearch.map(async (tab) => {
+      const adapter = await resolver.resolve(tab);
+      return { tab, searchData: await adapter.getSearchData(tab) };
+    }),
+  );
+  return searchLoadedTabDocuments(query, options, loaded);
+}
+
+const searchLoadedTabDocuments = (
+  query: string,
+  options: SearchOptions,
+  loadedTabs: LoadedTabSearchData[],
+): SearchResult[] => {
+  if (!query) return [];
   const results: SearchResult[] = [];
   const queryLower = options.caseSensitive ? query : query.toLowerCase();
   const queryRegex = options.wholeWord
@@ -22,34 +67,50 @@ export function searchTabs(
       )
     : null; // Create regex only if needed
 
-  for (const tab of tabsToSearch) {
-    if (tab.isTablet || !tab.content) {
-      // Skip tablets and tabs without content
-      continue;
+  for (const { tab, searchData } of loadedTabs) {
+    if (!searchData.searchText || !searchData.entries.length) continue;
+    if (!containsQuery(searchData.searchText, query, options)) continue;
+    for (const entry of searchData.entries) {
+      appendEntryResults({
+        entry,
+        tab,
+        query,
+        queryLower,
+        queryRegex,
+        options,
+        results,
+      });
     }
+  }
+  return results;
+};
 
-    const lines = tab.content.split("\n");
-
+const appendEntryResults = ({
+  entry,
+  tab,
+  queryLower,
+  queryRegex,
+  options,
+  results,
+}: {
+  entry: TabDocumentSearchEntry;
+  tab: Tab;
+  query: string;
+  queryLower: string;
+  queryRegex: RegExp | null;
+  options: SearchOptions;
+  results: SearchResult[];
+}): void => {
+    const lines = entry.text.split("\n");
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       const lineToSearch = options.caseSensitive ? line : line.toLowerCase();
 
       if (queryRegex) {
-        // Regex search (Whole Word)
+        queryRegex.lastIndex = 0;
         let match;
         while ((match = queryRegex.exec(lineToSearch)) !== null) {
-          results.push({
-            tabId: tab.id,
-            workspaceId: tab.workspaceId,
-            tabTitle: tab.title,
-            language: tab.language,
-            lineNumber: i + 1,
-            lineText: line,
-            matchIndex: match.index,
-            matchLength: match[0].length,
-            tabContent: tab.content,
-          });
-          // Prevent infinite loops with zero-width matches
+          results.push(toSearchResult(tab, entry, line, i, match.index, match[0].length));
           if (match.index === queryRegex.lastIndex) {
             queryRegex.lastIndex++;
           }
@@ -61,25 +122,60 @@ export function searchTabs(
         while (
           (matchIndex = lineToSearch.indexOf(queryLower, startIndex)) !== -1
         ) {
-          results.push({
-            tabId: tab.id,
-            workspaceId: tab.workspaceId,
-            tabTitle: tab.title,
-            language: tab.language,
-            lineNumber: i + 1,
-            lineText: line,
-            matchIndex: matchIndex,
-            matchLength: queryLower.length,
-            tabContent: tab.content,
-          });
-          startIndex = matchIndex + 1; // Move past the current match
+          results.push(
+            toSearchResult(
+              tab,
+              entry,
+              line,
+              i,
+              matchIndex,
+              queryLower.length,
+            ),
+          );
+          startIndex = matchIndex + 1;
         }
       }
     }
-  }
+};
 
-  return results;
-}
+const toSearchResult = (
+  tab: Tab,
+  entry: TabDocumentSearchEntry,
+  lineText: string,
+  lineIndex: number,
+  matchIndex: number,
+  matchLength: number,
+): SearchResult => ({
+  tabId: tab.id,
+  workspaceId: tab.workspaceId,
+  tabTitle: tab.title,
+  language: entry.language,
+  lineNumber: lineIndex + 1,
+  lineText,
+  matchIndex,
+  matchLength,
+  tabContent: entry.text,
+  resultKind: entry.itemId ? "canvas-item" : "tab",
+  ...(entry.itemId ? { canvasItemId: entry.itemId } : {}),
+  ...(entry.itemType ? { canvasItemType: entry.itemType } : {}),
+  ...(entry.itemLabel ? { itemLabel: entry.itemLabel } : {}),
+});
+
+const containsQuery = (
+  text: string,
+  query: string,
+  options: SearchOptions,
+): boolean => {
+  if (options.wholeWord) {
+    return new RegExp(
+      `\\b${escapeRegex(query)}\\b`,
+      options.caseSensitive ? "" : "i",
+    ).test(text);
+  }
+  const searchable = options.caseSensitive ? text : text.toLowerCase();
+  const needle = options.caseSensitive ? query : query.toLowerCase();
+  return searchable.includes(needle);
+};
 
 /** Helper to escape regex special characters in the query */
 function escapeRegex(string: string): string {

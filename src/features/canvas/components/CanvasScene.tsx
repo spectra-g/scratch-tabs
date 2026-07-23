@@ -48,6 +48,7 @@ import { LinkNode } from "./nodes/LinkNode";
 import { VideoNode } from "./nodes/VideoNode";
 import { useRendererStatusStore } from "../../../stores/rendererStatusStore";
 import { canvasActionDispatcher } from "../services/CanvasActionDispatcher";
+import { canvasItemNavigationDispatcher } from "../services/CanvasItemNavigationDispatcher";
 
 const nodeTypes = {
   text: TextNode,
@@ -151,6 +152,29 @@ export const CanvasScene = ({
     automaticViewportRef.current = nextViewport;
     void flowInstance.setViewport(nextViewport, { duration: 150 });
   }, []);
+  const searchableItems = canvasItems.items;
+  const selectSearchResult = canvasItems.selectForKeyboardNavigation;
+
+  useEffect(
+    () =>
+      canvasItemNavigationDispatcher.register(tab.id, async (itemId) => {
+        const item = searchableItems.find(
+          (candidate) => candidate.id === itemId,
+        );
+        if (!item) throw new Error(`Canvas item ${itemId} was not found`);
+        selectSearchResult(itemId);
+        revealItem(item);
+        await new Promise<void>((resolve) =>
+          requestAnimationFrame(() => resolve()),
+        );
+        const card = rootRef.current?.querySelector<HTMLElement>(
+          `[data-item-id="${CSS.escape(itemId)}"]`,
+        );
+        if (!card) throw new Error(`Canvas item ${itemId} was not rendered`);
+        card.focus({ preventScroll: true });
+      }),
+    [revealItem, searchableItems, selectSearchResult, tab.id],
+  );
 
   const fitSelection = useCallback(() => {
     const flowInstance = flowInstanceRef.current;

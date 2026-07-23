@@ -21,6 +21,11 @@ import {
   canvasImagePersistenceRepository,
   type CanvasImagePersistenceRepositoryContract,
 } from "./CanvasImagePersistenceRepository";
+import {
+  buildCanvasSearchText,
+  canvasSearchIndexer,
+  type CanvasSearchIndexer,
+} from "./CanvasSearchIndexer";
 
 interface DocumentSaveQueue {
   dirtyVersion: number;
@@ -50,6 +55,7 @@ export class CanvasDocumentManager {
     private readonly repository: CanvasDocumentRepositoryContract = canvasDocumentRepository,
     private readonly now: () => number = Date.now,
     private readonly imagePersistence: CanvasImagePersistenceRepositoryContract = canvasImagePersistenceRepository,
+    private readonly searchIndexer: CanvasSearchIndexer = canvasSearchIndexer,
   ) {}
 
   async create(tab: Tab): Promise<CanvasDocument> {
@@ -125,6 +131,12 @@ export class CanvasDocumentManager {
       items: items.map((item) => ({ ...item })),
       updatedAt,
     };
+    this.searchIndexer.schedule(tabId, active.document.items, (searchText) => {
+      const current = this.activeDocuments.get(tabId);
+      if (current) {
+        current.document = { ...current.document, searchText };
+      }
+    });
     this.markDocumentDirty(tabId);
     return active.document;
   }
@@ -158,6 +170,7 @@ export class CanvasDocumentManager {
     tabId: string,
     itemId: string,
     asset: CanvasAssetRecord,
+    originalName?: string,
   ): Promise<CanvasDocument> {
     const updatedAt = this.now();
     return this.persistAssetMutation(tabId, [asset], (items) => {
@@ -168,6 +181,7 @@ export class CanvasDocumentManager {
         return {
           ...item,
           assetId: asset.id,
+          ...(originalName ? { originalName } : {}),
           updatedAt,
         };
       });
@@ -195,6 +209,7 @@ export class CanvasDocumentManager {
       items: nextItems,
       edges: active.document.edges.map((edge) => ({ ...edge })),
       settings: { ...active.document.settings },
+      searchText: buildCanvasSearchText(nextItems),
       revision: active.document.revision + 1,
       updatedAt: savedAt,
     };
@@ -213,6 +228,7 @@ export class CanvasDocumentManager {
       active.document = {
         ...active.document,
         items: updateItems(active.document.items).map((item) => ({ ...item })),
+        searchText: documentToSave.searchText,
         revision: documentToSave.revision,
         updatedAt: Math.max(active.document.updatedAt, savedAt),
       };
@@ -276,6 +292,7 @@ export class CanvasDocumentManager {
     if (!queue || !active || queue.dirtyVersion === queue.savedVersion) return;
     if (queue.savePromise) return queue.savePromise;
 
+    this.searchIndexer.flush(tabId);
     const versionBeingSaved = queue.dirtyVersion;
     const savedAt = this.now();
     const documentToSave: CanvasDocument = {
@@ -382,6 +399,7 @@ export class CanvasDocumentManager {
   }
 
   async flush(tabId: string): Promise<void> {
+    this.searchIndexer.flush(tabId);
     const queue = this.documentSaveQueues.get(tabId);
     if (queue?.timer) {
       clearTimeout(queue.timer);
@@ -416,6 +434,7 @@ export class CanvasDocumentManager {
     await this.loadingDocuments.get(tabId);
     if ((this.referenceCounts.get(tabId) ?? 0) > 0) return;
     await this.flush(tabId);
+    this.searchIndexer.cancel(tabId);
     this.activeDocuments.delete(tabId);
     this.documentSaveQueues.delete(tabId);
   }
@@ -424,6 +443,7 @@ export class CanvasDocumentManager {
     this.referenceCounts.delete(tabId);
     await this.loadingDocuments.get(tabId);
     await this.flush(tabId);
+    this.searchIndexer.cancel(tabId);
     this.activeDocuments.delete(tabId);
     this.documentSaveQueues.delete(tabId);
   }

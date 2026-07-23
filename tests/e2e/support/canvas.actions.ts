@@ -64,6 +64,7 @@ export class CanvasActions {
   private tabsBeforeCanvasDrop: string[] = [];
   private knownPasteAnchor: { x: number; y: number } | null = null;
   private canvasClipboardData: Record<string, string> | null = null;
+  private searchTargetItemId: string | null = null;
 
   constructor(private page: Page) {}
 
@@ -777,6 +778,287 @@ export class CanvasActions {
     await expect(card).toHaveAttribute("data-asset-status", "ready");
     this.imageAssetId = await card.getAttribute("data-asset-id");
     expect(this.imageAssetId).toBeTruthy();
+  }
+
+  private async openGlobalSearch() {
+    await this.page.keyboard.press(await this.primaryShortcut("Shift+F"));
+    const dialog = this.page.getByRole("dialog", { name: "Find in Tabs" });
+    await expect(dialog).toBeVisible();
+    return dialog;
+  }
+
+  private async searchCanvas(term: string) {
+    const dialog = await this.openGlobalSearch();
+    await dialog.getByPlaceholder("Search...").fill(term);
+    return dialog;
+  }
+
+  private async closeGlobalSearch() {
+    const dialog = this.page.getByRole("dialog", { name: "Find in Tabs" });
+    await dialog.getByRole("button", { name: "Close modal" }).click();
+    await expect(dialog).not.toBeAttached();
+  }
+
+  async createSearchableCanvasCards() {
+    await this.addTextCard("release planning note");
+    await this.waitForSceneSave();
+    await this.addCodeCard('const searchToken = "indexed-code";');
+    await this.waitForSceneSave();
+    await this.addImageCard();
+    await this.waitForSceneSave();
+    await this.pasteNormalUrl();
+    await this.waitForSceneSave();
+    await this.pasteRecognizedVideoUrl();
+    await this.waitForSceneSave();
+  }
+
+  async expectEveryCanvasCardTypeIsSearchable() {
+    const cases = [
+      ["planning", "Text card"],
+      ["indexed-code", "Code card"],
+      ["architecture.png", "Image card"],
+      ["example.com", "Link card"],
+      ["youtube", "Video card"],
+    ] as const;
+
+    for (const [term, label] of cases) {
+      const dialog = await this.searchCanvas(term);
+      const result = dialog
+        .locator('[data-testid^="canvas-search-result-"]')
+        .filter({ hasText: label })
+        .first();
+      await expect(result).toBeVisible();
+      await this.closeGlobalSearch();
+    }
+  }
+
+  async placeSearchTargetOffscreen() {
+    await this.addTextCard("offscreen search target");
+    await this.waitForSceneSave();
+    const card = this.textCardContaining("offscreen search target").first();
+    this.searchTargetItemId = await card.getAttribute("data-item-id");
+    expect(this.searchTargetItemId).toBeTruthy();
+    const documentId = await this.page
+      .getByTestId("canvas-flow")
+      .getAttribute("data-canvas-document-id");
+    expect(documentId).toBeTruthy();
+
+    await this.page.evaluate(async ({ itemId, documentId }) => {
+      const database = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open("ScratchTabsDB");
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      try {
+        const transaction = database.transaction(
+          "canvasDocuments",
+          "readwrite",
+        );
+        const store = transaction.objectStore("canvasDocuments");
+        const document = await new Promise<Record<string, unknown>>(
+          (resolve, reject) => {
+            const request = store.get(documentId);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+          },
+        );
+        const items = (document.items as Array<Record<string, unknown>>).map(
+          (item) =>
+            item.id === itemId ? { ...item, x: 5_000, y: 4_000 } : item,
+        );
+        store.put({ ...document, items });
+        await new Promise<void>((resolve, reject) => {
+          transaction.oncomplete = () => resolve();
+          transaction.onerror = () => reject(transaction.error);
+          transaction.onabort = () => reject(transaction.error);
+        });
+      } finally {
+        database.close();
+      }
+    }, { itemId: this.searchTargetItemId, documentId });
+    await this.page.reload();
+    await expect(this.page.getByTestId("canvas-flow")).toBeVisible();
+  }
+
+  async activateOffscreenCanvasSearchResult() {
+    const dialog = await this.searchCanvas("offscreen search target");
+    const result = dialog.getByTestId(
+      `canvas-search-result-${this.searchTargetItemId}`,
+    );
+    await expect(result).toBeVisible();
+    await result.dblclick();
+    await expect(dialog).not.toBeAttached();
+  }
+
+  async expectSearchTargetVisibleSelectedAndFocused() {
+    const itemId = this.searchTargetItemId;
+    expect(itemId).toBeTruthy();
+    const canvas = this.page.getByTestId("canvas-flow");
+    const card = this.page.getByTestId(`canvas-item-${itemId}`);
+    await expect(card).toHaveAttribute("aria-selected", "true");
+    await expect(card).toHaveAttribute("data-focused", "true");
+    await expect(card).toBeFocused();
+    await expect
+      .poll(async () => {
+        const [canvasBox, cardBox] = await Promise.all([
+          canvas.boundingBox(),
+          card.boundingBox(),
+        ]);
+        if (!canvasBox || !cardBox) return false;
+        return (
+          cardBox.x >= canvasBox.x &&
+          cardBox.y >= canvasBox.y &&
+          cardBox.x + cardBox.width <= canvasBox.x + canvasBox.width &&
+          cardBox.y + cardBox.height <= canvasBox.y + canvasBox.height
+        );
+      })
+      .toBe(true);
+  }
+
+  async changeAndDeleteIndexedCanvasContent() {
+    await this.addTextCard("stale edited value");
+    await this.waitForSceneSave();
+    await this.addTextCard("stale deleted value");
+    await this.waitForSceneSave();
+
+    const edited = this.textCardContaining("stale edited value").first();
+    await edited.dblclick();
+    await this.markPendingSceneChange();
+    const editor = this.page.getByTestId("canvas-text-editor");
+    await editor.fill("fresh replacement value");
+    await editor.press("Control+Enter");
+    await this.waitForSceneSave();
+
+    const deleted = this.textCardContaining("stale deleted value").first();
+    await deleted.click();
+    await this.markPendingSceneChange();
+    await this.page.getByTestId("canvas-delete-selection").click();
+    await this.waitForSceneSave();
+  }
+
+  async expectStaleCanvasSearchResultsRemoved() {
+    const dialog = await this.searchCanvas("stale");
+    await expect(dialog.getByText("No results found.").first()).toBeVisible();
+    await expect(
+      dialog.locator('[data-testid^="canvas-search-result-"]'),
+    ).toHaveCount(0);
+  }
+
+  async seedAnotherWorkspaceCanvasAndTrackAssetReads() {
+    await this.page.evaluate(async () => {
+      const database = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open("ScratchTabsDB");
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      try {
+        const now = Date.now();
+        const workspaceId = "canvas-search-workspace";
+        const tabId = "canvas-search-tab";
+        const documentId = "canvas-search-document";
+        const transaction = database.transaction(
+          ["workspaces", "tabs", "canvasDocuments"],
+          "readwrite",
+        );
+        transaction.objectStore("workspaces").put({
+          id: workspaceId,
+          name: "Search Workspace",
+          links: [],
+          createdAt: now,
+          lastAccessed: now,
+        });
+        transaction.objectStore("tabs").put({
+          id: tabId,
+          title: "Remote Canvas",
+          content: "",
+          language: "plaintext",
+          languageLocked: true,
+          contentKind: "canvas",
+          documentId,
+          lastModified: now,
+          lastAccessed: now,
+          dateCreated: now,
+          workspaceId,
+        });
+        transaction.objectStore("canvasDocuments").put({
+          id: documentId,
+          tabId,
+          workspaceId,
+          schemaVersion: 1,
+          revision: 1,
+          items: [
+            {
+              id: "remote-item",
+              type: "text",
+              x: 0,
+              y: 0,
+              width: 280,
+              height: 180,
+              zIndex: 1,
+              createdAt: now,
+              updatedAt: now,
+              text: "remote metadata needle",
+            },
+          ],
+          edges: [],
+          settings: { background: "dots", snapToGrid: false },
+          searchText: "remote metadata needle",
+          createdAt: now,
+          updatedAt: now,
+        });
+        await new Promise<void>((resolve, reject) => {
+          transaction.oncomplete = () => resolve();
+          transaction.onerror = () => reject(transaction.error);
+          transaction.onabort = () => reject(transaction.error);
+        });
+      } finally {
+        database.close();
+      }
+
+      const browserWindow = window as Window & {
+        __canvasAssetReadCount?: number;
+      };
+      browserWindow.__canvasAssetReadCount = 0;
+      const originalGet = IDBObjectStore.prototype.get;
+      const originalGetAll = IDBObjectStore.prototype.getAll;
+      const originalOpenCursor = IDBObjectStore.prototype.openCursor;
+      IDBObjectStore.prototype.get = function (...args) {
+        if (this.name === "canvasAssets") browserWindow.__canvasAssetReadCount! += 1;
+        return originalGet.apply(this, args);
+      };
+      IDBObjectStore.prototype.getAll = function (...args) {
+        if (this.name === "canvasAssets") browserWindow.__canvasAssetReadCount! += 1;
+        return originalGetAll.apply(this, args);
+      };
+      IDBObjectStore.prototype.openCursor = function (...args) {
+        if (this.name === "canvasAssets") browserWindow.__canvasAssetReadCount! += 1;
+        return originalOpenCursor.apply(this, args);
+      };
+    });
+  }
+
+  async searchAllWorkspacesForRemoteCanvas() {
+    const dialog = await this.openGlobalSearch();
+    await dialog.locator("select").selectOption("allWorkspaces");
+    await dialog.getByPlaceholder("Search...").fill("remote metadata needle");
+    await expect(
+      dialog
+        .locator('[data-testid^="canvas-search-result-"]')
+        .filter({ hasText: "Remote Canvas" }),
+    ).toBeVisible();
+  }
+
+  async expectNoCanvasAssetsReadBySearch() {
+    await expect
+      .poll(() =>
+        this.page.evaluate(
+          () =>
+            (
+              window as Window & { __canvasAssetReadCount?: number }
+            ).__canvasAssetReadCount ?? -1,
+        ),
+      )
+      .toBe(0);
   }
 
   async replaceImageCard() {

@@ -167,6 +167,9 @@ export const parseCanvasItem = (value: unknown): CanvasItem => {
       type: "image",
       assetId: requireString(value, "assetId"),
       altText: value.altText,
+      ...(value.originalName === undefined
+        ? {}
+        : { originalName: parseOptionalString(value, "originalName") }),
       objectFit,
     };
   }
@@ -182,7 +185,33 @@ export const parseCanvasItem = (value: unknown): CanvasItem => {
     ) {
       throw new Error("Invalid Canvas schema: link URL is not canonical");
     }
-    return { ...base, type: "link", canonicalUrl, hostname };
+    const metadata = value.metadata;
+    if (metadata !== undefined && !isRecord(metadata)) {
+      throw new Error("Invalid Canvas schema: link metadata must be an object");
+    }
+    return {
+      ...base,
+      type: "link",
+      canonicalUrl,
+      hostname,
+      ...(metadata
+        ? {
+            metadata: {
+              ...(metadata.title === undefined
+                ? {}
+                : { title: parseOptionalString(metadata, "title") }),
+              ...(metadata.description === undefined
+                ? {}
+                : {
+                    description: parseOptionalString(metadata, "description"),
+                  }),
+              ...(metadata.siteName === undefined
+                ? {}
+                : { siteName: parseOptionalString(metadata, "siteName") }),
+            },
+          }
+        : {}),
+    };
   }
 
   if (value.type === "video") {
@@ -207,6 +236,9 @@ export const parseCanvasItem = (value: unknown): CanvasItem => {
       hostname,
       provider: video.provider,
       videoId: video.videoId,
+      ...(value.title === undefined
+        ? {}
+        : { title: parseOptionalString(value, "title") }),
     };
   }
 

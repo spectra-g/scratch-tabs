@@ -4,11 +4,25 @@ import type { Tab } from "../types";
 import { duplicateTab as createDuplicateTab } from "../utils/tabUtils";
 import { getTabContentKind } from "../utils/tabContentKind";
 
+export interface TabDocumentSearchEntry {
+  text: string;
+  language: string;
+  itemId?: string;
+  itemType?: string;
+  itemLabel?: string;
+}
+
+export interface TabDocumentSearchData {
+  searchText: string;
+  entries: TabDocumentSearchEntry[];
+}
+
 export interface TabDocumentAdapter {
   hasContent(tab: Tab): Promise<boolean>;
   duplicate(tab: Tab, targetWorkspaceId: string): Promise<Tab>;
   remove(tab: Tab): Promise<void>;
   move(tab: Tab, targetWorkspaceId: string): Promise<Tab>;
+  getSearchData(tab: Tab): Promise<TabDocumentSearchData>;
 }
 
 export class LegacyTabDocumentAdapter implements TabDocumentAdapter {
@@ -51,6 +65,16 @@ export class LegacyTabDocumentAdapter implements TabDocumentAdapter {
     };
     await this.storage.saveTabNow(moved);
     return moved;
+  }
+
+  async getSearchData(tab: Tab): Promise<TabDocumentSearchData> {
+    if (tab.isTablet || !tab.content) {
+      return { searchText: "", entries: [] };
+    }
+    return {
+      searchText: tab.content,
+      entries: [{ text: tab.content, language: tab.language }],
+    };
   }
 }
 

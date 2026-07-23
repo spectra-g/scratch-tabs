@@ -11,7 +11,7 @@ import { useRootStore } from "../../stores";
 import { useWorkspaceStore } from "../../stores/workspaceStore";
 import { useTabsStore } from "../../stores/tabsStore";
 import { useSplitViewStore } from "../../stores/splitViewStore";
-import { searchTabs } from "../../services/searchService";
+import { searchTabDocuments } from "../../services/searchService";
 import { formatRegistry } from "../../formats";
 import { Tab } from "../../types";
 
@@ -160,29 +160,29 @@ export const useSearchEngine = (): SearchEngine => {
     [titleFilter, setError],
   );
 
-  const runSearch = useCallback(
-    debounce(async () => {
-      const currentQuery = useSearchStore.getState().query;
-      const currentOptions = useSearchStore.getState().options;
-      const currentScope = useSearchStore.getState().scope;
-      const currentTitleFilter = useSearchStore.getState().titleFilter;
-      const currentLanguageFilter = useSearchStore.getState().languageFilter;
+  const runSearch = useMemo(
+    () =>
+      debounce(async () => {
+        const currentQuery = useSearchStore.getState().query;
+        const currentOptions = useSearchStore.getState().options;
+        const currentScope = useSearchStore.getState().scope;
+        const currentTitleFilter = useSearchStore.getState().titleFilter;
+        const currentLanguageFilter =
+          useSearchStore.getState().languageFilter;
 
-      if (!currentQuery || currentQuery.trim().length < 1) {
-        setStatusMessage("Enter text to search.");
-        setResults([]);
-        setLoading(false);
-        return;
-      }
+        if (!currentQuery || currentQuery.trim().length < 1) {
+          setStatusMessage("Enter text to search.");
+          setResults([]);
+          setLoading(false);
+          return;
+        }
 
-      setLoading(true);
-      setStatusMessage("Searching...");
-      setError(null);
-      setSelectedResultIndex(null);
-      addSearchToHistory(currentQuery);
+        setLoading(true);
+        setStatusMessage("Searching...");
+        setError(null);
+        setSelectedResultIndex(null);
+        addSearchToHistory(currentQuery);
 
-      // Use setTimeout to allow UI to update loading state
-      setTimeout(async () => {
         try {
           let tabsToSearch: Tab[];
 
@@ -210,7 +210,7 @@ export const useSearchEngine = (): SearchEngine => {
             );
           }
 
-          const foundResults = searchTabs(
+          const foundResults = await searchTabDocuments(
             currentQuery,
             currentOptions,
             filteredTabs,
@@ -238,8 +238,7 @@ export const useSearchEngine = (): SearchEngine => {
         } finally {
           setLoading(false);
         }
-      }, 50);
-    }, DEBOUNCE_DELAY),
+      }, DEBOUNCE_DELAY),
     [
       setStatusMessage,
       setResults,
@@ -341,6 +340,22 @@ export const useSearchEngine = (): SearchEngine => {
           console.error(
             `Tab ${result.tabId} not found after workspace switch or in current workspace.`,
           );
+          return;
+        }
+      }
+
+      if (result.canvasItemId) {
+        const { canvasItemNavigationDispatcher } = await import(
+          "../../features/canvas/services/CanvasItemNavigationDispatcher"
+        );
+        try {
+          await canvasItemNavigationDispatcher.dispatch(
+            result.tabId,
+            result.canvasItemId,
+          );
+        } catch (navigationError) {
+          console.error("Failed to navigate to Canvas search result:", navigationError);
+          setError("The matching Canvas card could not be opened.");
         }
       }
     },

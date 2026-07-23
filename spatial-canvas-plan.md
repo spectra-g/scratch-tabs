@@ -990,6 +990,9 @@ Keep Canvas behind one temporary experimental feature flag until Increment 17 is
 
 **Additional automated checks:** Test index normalization, every item type, debounce/flush behavior, item-result mapping, and repository calls that exclude blobs.
 
+When Increment 12 is skipped, link URL/hostname and video URL/provider are the
+shipping searchable fields; cached metadata titles are indexed when present.
+
 ### Increment 15: Workspace export and import
 
 **Starting state:** Increment 14 is merged; the Canvas schema, assets, and search data are stable enough to serialize.

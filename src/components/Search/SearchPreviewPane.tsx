@@ -148,6 +148,22 @@ export const SearchPreviewPane: React.FC<SearchPreviewPaneProps> = ({
     };
   }, [tab, selectedResult]);
 
+  if (selectedResult?.resultKind === "canvas-item") {
+    return (
+      <div
+        className="h-full overflow-auto bg-surface p-5 text-main"
+        data-testid="canvas-search-preview"
+      >
+        <div className="mb-3 text-xs font-medium uppercase tracking-wide text-muted">
+          {selectedResult.itemLabel ?? "Canvas card"}
+        </div>
+        <pre className="whitespace-pre-wrap break-words font-mono text-sm">
+          {selectedResult.tabContent}
+        </pre>
+      </div>
+    );
+  }
+
   return (
     <Editor
       height="100%"

@@ -132,6 +132,7 @@ export const createImageCanvasItem = ({
   sourceWidth,
   sourceHeight,
   altText = "",
+  originalName,
   now = Date.now(),
   id = crypto.randomUUID(),
 }: {
@@ -141,6 +142,7 @@ export const createImageCanvasItem = ({
   sourceWidth: number;
   sourceHeight: number;
   altText?: string;
+  originalName?: string;
   now?: number;
   id?: string;
 }): CanvasImageItem => ({
@@ -154,6 +156,7 @@ export const createImageCanvasItem = ({
   updatedAt: now,
   assetId,
   altText,
+  ...(originalName ? { originalName } : {}),
   objectFit: "contain",
 });
 

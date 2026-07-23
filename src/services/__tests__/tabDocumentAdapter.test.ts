@@ -59,6 +59,15 @@ describe("LegacyTabDocumentAdapter", () => {
     await new LegacyTabDocumentAdapter(provider).remove(tab);
     expect(provider.deleteTab).toHaveBeenCalledWith(tab.id);
   });
+
+  it("exposes legacy text through the search boundary", async () => {
+    const adapter = new LegacyTabDocumentAdapter(storage());
+
+    await expect(adapter.getSearchData(tab)).resolves.toEqual({
+      searchText: "hello",
+      entries: [{ text: "hello", language: "plaintext" }],
+    });
+  });
 });
 
 describe("TabDocumentAdapterResolver", () => {
