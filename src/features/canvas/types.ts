@@ -11,7 +11,7 @@ export interface CanvasEdge {
   targetItemId: string;
 }
 
-export type CanvasItemType = "text" | "code";
+export type CanvasItemType = "text" | "code" | "image";
 
 export interface CanvasItemBase {
   id: string;
@@ -42,7 +42,14 @@ export interface CanvasCodeItem extends CanvasItemBase {
   wrap: boolean;
 }
 
-export type CanvasItem = CanvasTextItem | CanvasCodeItem;
+export interface CanvasImageItem extends CanvasItemBase {
+  type: "image";
+  assetId: string;
+  altText: string;
+  objectFit: "contain" | "cover";
+}
+
+export type CanvasItem = CanvasTextItem | CanvasCodeItem | CanvasImageItem;
 
 export interface CanvasDocument {
   id: string;

@@ -1,11 +1,15 @@
 import {
   DEFAULT_CODE_ITEM_HEIGHT,
   DEFAULT_CODE_ITEM_WIDTH,
+  DEFAULT_IMAGE_ITEM_MAX_HEIGHT,
+  DEFAULT_IMAGE_ITEM_MAX_WIDTH,
+  MIN_IMAGE_ITEM_HEIGHT,
+  MIN_IMAGE_ITEM_WIDTH,
   DEFAULT_TEXT_ITEM_HEIGHT,
   DEFAULT_TEXT_ITEM_WIDTH,
 } from "../constants";
 import { detectFormat, isAmbiguousFormat } from "../../../formats";
-import type { CanvasCodeItem, CanvasTextItem } from "../types";
+import type { CanvasCodeItem, CanvasImageItem, CanvasTextItem } from "../types";
 
 export interface CanvasPoint {
   x: number;
@@ -47,8 +51,7 @@ export const getDetectedCanvasCodeLanguage = (
   const language = detectFormat(source);
   return {
     language,
-    languageLocked:
-      language !== "plaintext" && !isAmbiguousFormat(source),
+    languageLocked: language !== "plaintext" && !isAmbiguousFormat(source),
   };
 };
 
@@ -88,3 +91,56 @@ export const createCodeCanvasItem = ({
     wrap: false,
   };
 };
+
+const getImageCardDimensions = (width: number, height: number) => {
+  const scaleDown = Math.min(
+    1,
+    DEFAULT_IMAGE_ITEM_MAX_WIDTH / width,
+    DEFAULT_IMAGE_ITEM_MAX_HEIGHT / height,
+  );
+  let cardWidth = width * scaleDown;
+  let cardHeight = height * scaleDown;
+  const scaleUp = Math.max(
+    1,
+    MIN_IMAGE_ITEM_WIDTH / cardWidth,
+    MIN_IMAGE_ITEM_HEIGHT / cardHeight,
+  );
+  cardWidth *= scaleUp;
+  cardHeight *= scaleUp;
+  return {
+    width: Math.round(cardWidth),
+    height: Math.round(cardHeight),
+  };
+};
+
+export const createImageCanvasItem = ({
+  position,
+  zIndex,
+  assetId,
+  sourceWidth,
+  sourceHeight,
+  altText = "",
+  now = Date.now(),
+  id = crypto.randomUUID(),
+}: {
+  position: CanvasPoint;
+  zIndex: number;
+  assetId: string;
+  sourceWidth: number;
+  sourceHeight: number;
+  altText?: string;
+  now?: number;
+  id?: string;
+}): CanvasImageItem => ({
+  id,
+  type: "image",
+  x: position.x,
+  y: position.y,
+  ...getImageCardDimensions(sourceWidth, sourceHeight),
+  zIndex,
+  createdAt: now,
+  updatedAt: now,
+  assetId,
+  altText,
+  objectFit: "contain",
+});

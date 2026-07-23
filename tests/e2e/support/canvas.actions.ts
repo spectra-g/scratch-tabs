@@ -1,6 +1,8 @@
 import { expect, Page } from "@playwright/test";
 
 const CANVAS_FEATURE_SETTING_KEY = "features.canvas.enabled";
+const ONE_PIXEL_PNG_BASE64 =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
 
 interface BrowserMonacoEditor {
   getDomNode(): HTMLElement | null;
@@ -48,6 +50,7 @@ export class CanvasActions {
   private keyboardViewportCommandsCompleted = false;
   private shortcutEditingGuardCompleted = false;
   private openedCodeSource: string | null = null;
+  private imageAssetId: string | null = null;
 
   constructor(private page: Page) {}
 
@@ -119,6 +122,10 @@ export class CanvasActions {
 
   private codeCard() {
     return this.page.locator('[data-item-type="code"]').first();
+  }
+
+  private imageCard() {
+    return this.page.locator('[data-item-type="image"]').first();
   }
 
   private async readBounds(card: ReturnType<Page["locator"]>) {
@@ -210,6 +217,133 @@ export class CanvasActions {
     await expect(this.codeCard()).toHaveAttribute("data-editing", "false");
   }
 
+  async addImageCard() {
+    await this.markPendingSceneChange();
+    await this.page.getByTestId("canvas-image-input").setInputFiles({
+      name: "architecture.png",
+      mimeType: "image/png",
+      buffer: Buffer.from(ONE_PIXEL_PNG_BASE64, "base64"),
+    });
+    const card = this.imageCard();
+    const error = this.page.getByTestId("canvas-image-error");
+    await expect(card.or(error)).toBeVisible();
+    if (await error.isVisible()) {
+      throw new Error(
+        `Canvas rejected the test image: ${await error.textContent()}`,
+      );
+    }
+    await expect(card).toHaveAttribute("data-asset-status", "ready");
+    this.imageAssetId = await card.getAttribute("data-asset-id");
+    expect(this.imageAssetId).toBeTruthy();
+  }
+
+  async replaceImageCard() {
+    const card = this.imageCard();
+    const previousAssetId = await card.getAttribute("data-asset-id");
+    await this.markPendingSceneChange();
+    await this.page.getByTestId("canvas-image-replace-input").setInputFiles({
+      name: "replacement.png",
+      mimeType: "image/png",
+      buffer: Buffer.from(ONE_PIXEL_PNG_BASE64, "base64"),
+    });
+    await expect
+      .poll(() => card.getAttribute("data-asset-id"))
+      .not.toBe(previousAssetId);
+    await this.waitForSceneSave();
+    this.imageAssetId = await card.getAttribute("data-asset-id");
+  }
+
+  async chooseUnsupportedImage() {
+    await this.page.getByTestId("canvas-image-input").setInputFiles({
+      name: "not-an-image.txt",
+      mimeType: "text/plain",
+      buffer: Buffer.from("not an image", "utf8"),
+    });
+  }
+
+  async expectImageRejected() {
+    await expect(this.page.getByTestId("canvas-image-error")).toContainText(
+      "Choose a PNG, JPEG, GIF, WebP, BMP, ICO, or SVG image.",
+    );
+    await expect(this.page.locator('[data-item-type="image"]')).toHaveCount(0);
+  }
+
+  async expectImageRestored() {
+    const card = this.imageCard();
+    await expect(card).toBeVisible();
+    await expect(card).toHaveAttribute("data-width", "160");
+    await expect(card).toHaveAttribute("data-height", "160");
+    await expect(card).toHaveAttribute("data-asset-status", "ready");
+    await expect(this.page.getByTestId("canvas-image-rendered")).toBeVisible();
+    const assetId = await card.getAttribute("data-asset-id");
+    const dimensions = await this.page.evaluate(async (id) => {
+      const database = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open("ScratchTabsDB");
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      try {
+        const transaction = database.transaction("canvasAssets", "readonly");
+        const record = await new Promise<
+          { width?: number; height?: number } | undefined
+        >((resolve, reject) => {
+          const request = transaction.objectStore("canvasAssets").get(id!);
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+        return record ? { width: record.width, height: record.height } : null;
+      } finally {
+        database.close();
+      }
+    }, assetId);
+    expect(dimensions).toEqual({ width: 1, height: 1 });
+  }
+
+  async openImageInSmartView() {
+    await this.page.getByTestId("canvas-image-open").click();
+    await expect(this.page.getByTestId("image-smart-view")).toBeVisible();
+    await expect(
+      this.page.locator(
+        '[data-testid="tab-replacement.png"][aria-selected="true"]',
+      ),
+    ).toBeVisible();
+  }
+
+  async removeImageAssetFromStorage() {
+    const assetId = await this.imageCard().getAttribute("data-asset-id");
+    expect(assetId).toBeTruthy();
+    await this.page.evaluate(async (id) => {
+      const database = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open("ScratchTabsDB");
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      try {
+        const transaction = database.transaction("canvasAssets", "readwrite");
+        transaction.objectStore("canvasAssets").delete(id!);
+        await new Promise<void>((resolve, reject) => {
+          transaction.oncomplete = () => resolve();
+          transaction.onerror = () => reject(transaction.error);
+          transaction.onabort = () => reject(transaction.error);
+        });
+      } finally {
+        database.close();
+      }
+    }, assetId);
+  }
+
+  async expectMissingImagePlaceholder() {
+    await expect(this.imageCard()).toHaveAttribute(
+      "data-asset-status",
+      "error",
+    );
+    const placeholder = this.page.getByTestId("canvas-image-placeholder");
+    await expect(placeholder).toBeVisible();
+    await expect(placeholder).toContainText(
+      "Use Replace to recover this card.",
+    );
+  }
+
   async formatAndConfigureCodeCard() {
     await this.page.getByTestId("canvas-code-format").click();
     await this.page.getByTestId("canvas-code-wrap").click();
@@ -246,7 +380,9 @@ export class CanvasActions {
       .textContent();
     await this.page.getByTestId("canvas-code-open-tab").click();
     await expect(
-      this.page.locator('[data-testid="tab-JSON from Canvas"][aria-selected="true"]'),
+      this.page.locator(
+        '[data-testid="tab-JSON from Canvas"][aria-selected="true"]',
+      ),
     ).toBeVisible();
   }
 
@@ -274,9 +410,9 @@ export class CanvasActions {
     await expect(this.page.getByTestId("canvas-code-preview")).toHaveText(
       this.openedCodeSource!,
     );
-    await expect(this.page.getByTestId("canvas-code-preview")).not.toContainText(
-      "changedOutsideCanvas",
-    );
+    await expect(
+      this.page.getByTestId("canvas-code-preview"),
+    ).not.toContainText("changedOutsideCanvas");
   }
 
   async multiSelectTextCards(firstText: string, secondText: string) {

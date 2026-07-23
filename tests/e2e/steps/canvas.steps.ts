@@ -46,6 +46,31 @@ When(
 );
 
 When(
+  "I add an image through the Canvas file chooser",
+  async function (this: E2EWorld) {
+    await this.canvas.addImageCard();
+  },
+);
+
+When("I replace the Canvas image", async function (this: E2EWorld) {
+  await this.canvas.replaceImageCard();
+});
+
+When(
+  "I choose an unsupported file for a Canvas image",
+  async function (this: E2EWorld) {
+    await this.canvas.chooseUnsupportedImage();
+  },
+);
+
+When(
+  "I remove the Canvas image asset from local storage",
+  async function (this: E2EWorld) {
+    await this.canvas.removeImageAssetFromStorage();
+  },
+);
+
+When(
   "I format, wrap, and collapse the Canvas code card",
   async function (this: E2EWorld) {
     await this.canvas.formatAndConfigureCodeCard();
@@ -327,6 +352,34 @@ Then(
   "the Canvas code card should be unchanged",
   async function (this: E2EWorld) {
     await this.canvas.expectCanvasCodeUnchanged();
+  },
+);
+
+Then(
+  "the Canvas image and its dimensions should be restored",
+  async function (this: E2EWorld) {
+    await this.canvas.expectImageRestored();
+  },
+);
+
+Then(
+  "I can open the replacement in the Image Smart View",
+  async function (this: E2EWorld) {
+    await this.canvas.openImageInSmartView();
+  },
+);
+
+Then(
+  "I should see a Canvas image error and no image card",
+  async function (this: E2EWorld) {
+    await this.canvas.expectImageRejected();
+  },
+);
+
+Then(
+  "the Canvas image card should show a recoverable placeholder",
+  async function (this: E2EWorld) {
+    await this.canvas.expectMissingImagePlaceholder();
   },
 );
 

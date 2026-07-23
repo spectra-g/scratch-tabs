@@ -1,4 +1,8 @@
-import type { CanvasCodeItem, CanvasTextItem } from "../../types";
+import type {
+  CanvasCodeItem,
+  CanvasImageItem,
+  CanvasTextItem,
+} from "../../types";
 import {
   canvasEdgesToFlowEdges,
   canvasItemToFlowNode,
@@ -82,6 +86,24 @@ describe("Canvas React Flow mapping", () => {
       id: "code-1",
       type: "code",
       data: { item: codeItem },
+    });
+  });
+
+  it("maps image cards to the dedicated renderer", () => {
+    const imageItem: CanvasImageItem = {
+      ...item,
+      id: "image-1",
+      type: "image",
+      assetId: "asset-1",
+      altText: "Architecture",
+      objectFit: "contain",
+    };
+
+    expect(canvasItemToFlowNode(imageItem)).toMatchObject({
+      id: "image-1",
+      type: "image",
+      ariaLabel: "Image, Architecture",
+      data: { item: imageItem },
     });
   });
 

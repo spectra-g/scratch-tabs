@@ -4,6 +4,7 @@ import { CanvasSelectionToolbar } from "../CanvasSelectionToolbar";
 import { CanvasToolbar } from "../CanvasToolbar";
 import { CanvasShortcutHelp } from "../CanvasShortcutHelp";
 import { CodeNodeActions } from "../nodes/CodeNodeActions";
+import { ImageNodeActions } from "../nodes/ImageNodeActions";
 
 describe("Canvas editing controls", () => {
   it("routes every selection-toolbar action through its focused callback", () => {
@@ -60,10 +61,12 @@ describe("Canvas editing controls", () => {
     const onUndo = jest.fn();
     const onRedo = jest.fn();
     const onShowShortcuts = jest.fn();
+    const onAddImage = jest.fn();
     render(
       <CanvasToolbar
         onAddText={jest.fn()}
         onAddCode={jest.fn()}
+        onAddImage={onAddImage}
         canUndo
         canRedo={false}
         onUndo={onUndo}
@@ -73,17 +76,20 @@ describe("Canvas editing controls", () => {
     );
 
     expect(screen.getByTestId("canvas-add-code")).toHaveTextContent("Code");
-    expect(screen.getByTestId("canvas-add-code")).not.toHaveTextContent(
-      "JSON",
-    );
+    expect(screen.getByTestId("canvas-add-code")).not.toHaveTextContent("JSON");
 
     fireEvent.click(screen.getByTestId("canvas-undo"));
     fireEvent.click(screen.getByTestId("canvas-redo"));
     fireEvent.click(screen.getByTestId("canvas-show-shortcut-help"));
+    const image = new File(["image"], "diagram.png", { type: "image/png" });
+    fireEvent.change(screen.getByTestId("canvas-image-input"), {
+      target: { files: [image] },
+    });
 
     expect(onUndo).toHaveBeenCalledTimes(1);
     expect(onRedo).not.toHaveBeenCalled();
     expect(onShowShortcuts).toHaveBeenCalledTimes(1);
+    expect(onAddImage).toHaveBeenCalledWith(image);
     expect(screen.getByTestId("canvas-redo")).toBeDisabled();
   });
 
@@ -146,6 +152,31 @@ describe("Canvas editing controls", () => {
       "aria-pressed",
       "true",
     );
+    for (const action of screen.getAllByRole("button")) {
+      expect(action).not.toHaveClass("focus:ring-primary");
+      expect(action).toHaveClass("focus-visible:ring-primary");
+    }
+  });
+
+  it("shows image copy success and only displays focus rings for keyboard focus", () => {
+    const onCopy = jest.fn();
+    render(
+      <ImageNodeActions
+        disabled={false}
+        copyState="copied"
+        onCopy={onCopy}
+        onDownload={jest.fn()}
+        onOpen={jest.fn()}
+        onReplace={jest.fn()}
+      />,
+    );
+
+    const copyButton = screen.getByTestId("canvas-image-copy");
+    fireEvent.click(copyButton);
+
+    expect(onCopy).toHaveBeenCalledTimes(1);
+    expect(copyButton).toHaveAccessibleName("Copied image");
+    expect(copyButton.querySelector(".text-success")).toBeInTheDocument();
     for (const action of screen.getAllByRole("button")) {
       expect(action).not.toHaveClass("focus:ring-primary");
       expect(action).toHaveClass("focus-visible:ring-primary");

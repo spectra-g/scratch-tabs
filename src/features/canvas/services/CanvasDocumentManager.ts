@@ -7,6 +7,8 @@ import type {
   ActiveCanvasDocument,
   CanvasDocument,
   CanvasDocumentSaveState,
+  CanvasAssetRecord,
+  CanvasImageItem,
   CanvasItem,
   CanvasViewport,
 } from "../types";
@@ -15,6 +17,10 @@ import {
   canvasDocumentRepository,
   type CanvasDocumentRepositoryContract,
 } from "./CanvasDocumentRepository";
+import {
+  canvasImagePersistenceRepository,
+  type CanvasImagePersistenceRepositoryContract,
+} from "./CanvasImagePersistenceRepository";
 
 interface DocumentSaveQueue {
   dirtyVersion: number;
@@ -41,9 +47,9 @@ export class CanvasDocumentManager {
   >();
 
   constructor(
-    private readonly repository: CanvasDocumentRepositoryContract =
-      canvasDocumentRepository,
+    private readonly repository: CanvasDocumentRepositoryContract = canvasDocumentRepository,
     private readonly now: () => number = Date.now,
+    private readonly imagePersistence: CanvasImagePersistenceRepositoryContract = canvasImagePersistenceRepository,
   ) {}
 
   async create(tab: Tab): Promise<CanvasDocument> {
@@ -106,8 +112,7 @@ export class CanvasDocumentManager {
     this.documentSaveQueues.set(tab.id, {
       dirtyVersion: 0,
       savedVersion: 0,
-      lastParentTabUpdate:
-        document.revision === 0 ? null : document.updatedAt,
+      lastParentTabUpdate: document.revision === 0 ? null : document.updatedAt,
     });
     return active;
   }
@@ -122,6 +127,102 @@ export class CanvasDocumentManager {
     };
     this.markDocumentDirty(tabId);
     return active.document;
+  }
+
+  async addImage(
+    tabId: string,
+    item: CanvasImageItem,
+    asset: CanvasAssetRecord,
+  ): Promise<CanvasDocument> {
+    return this.persistImageMutation(tabId, asset, (items) => [...items, item]);
+  }
+
+  async replaceImage(
+    tabId: string,
+    itemId: string,
+    asset: CanvasAssetRecord,
+  ): Promise<CanvasDocument> {
+    const updatedAt = this.now();
+    return this.persistImageMutation(tabId, asset, (items) => {
+      let found = false;
+      const nextItems = items.map((item) => {
+        if (item.id !== itemId || item.type !== "image") return item;
+        found = true;
+        return {
+          ...item,
+          assetId: asset.id,
+          updatedAt,
+        };
+      });
+      if (!found) throw new Error("Canvas image card not found");
+      return nextItems;
+    });
+  }
+
+  private async persistImageMutation(
+    tabId: string,
+    asset: CanvasAssetRecord,
+    updateItems: (items: CanvasItem[]) => CanvasItem[],
+  ): Promise<CanvasDocument> {
+    await this.flush(tabId);
+    const active = this.requireActive(tabId);
+    const queue = this.documentSaveQueues.get(tabId);
+    if (!queue) throw new Error(`Canvas save queue ${tabId} is not active`);
+
+    const savedAt = this.now();
+    const documentToSave: CanvasDocument = {
+      ...active.document,
+      items: updateItems(active.document.items).map((item) => ({ ...item })),
+      edges: active.document.edges.map((edge) => ({ ...edge })),
+      settings: { ...active.document.settings },
+      revision: active.document.revision + 1,
+      updatedAt: savedAt,
+    };
+    this.notify(tabId, {
+      status: "saving",
+      revision: active.document.revision,
+    });
+
+    const savePromise = this.imagePersistence.saveDocumentWithAsset(
+      documentToSave,
+      asset,
+    );
+    queue.savePromise = savePromise;
+    try {
+      await savePromise;
+      active.document = {
+        ...active.document,
+        items: updateItems(active.document.items).map((item) => ({ ...item })),
+        revision: documentToSave.revision,
+        updatedAt: Math.max(active.document.updatedAt, savedAt),
+      };
+      queue.lastParentTabUpdate = savedAt;
+      const hasPendingChanges = queue.dirtyVersion > queue.savedVersion;
+      this.notify(tabId, {
+        status: hasPendingChanges ? "saving" : "saved",
+        revision: documentToSave.revision,
+        lastModified: savedAt,
+      });
+      return active.document;
+    } catch (error) {
+      this.notify(tabId, {
+        status: "error",
+        revision: active.document.revision,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to save this Canvas image",
+      });
+      throw error;
+    } finally {
+      if (queue.savePromise === savePromise) queue.savePromise = undefined;
+      if (queue.dirtyVersion > queue.savedVersion && !queue.timer) {
+        queue.timer = setTimeout(() => {
+          queue.timer = undefined;
+          void this.persistLatestDocument(tabId).catch(() => undefined);
+        }, CANVAS_DOCUMENT_SAVE_DEBOUNCE_MS);
+      }
+    }
   }
 
   private requireActive(tabId: string): ActiveCanvasDocument {
@@ -213,9 +314,7 @@ export class CanvasDocumentManager {
   }
 
   private notify(tabId: string, state: CanvasDocumentSaveState): void {
-    this.saveStateListeners
-      .get(tabId)
-      ?.forEach((listener) => listener(state));
+    this.saveStateListeners.get(tabId)?.forEach((listener) => listener(state));
   }
 
   async save(tabId: string): Promise<void> {
@@ -268,6 +367,7 @@ export class CanvasDocumentManager {
       clearTimeout(queue.timer);
       queue.timer = undefined;
     }
+    await queue?.savePromise;
     while (queue && queue.dirtyVersion > queue.savedVersion) {
       await queue.savePromise;
       await this.persistLatestDocument(tabId);

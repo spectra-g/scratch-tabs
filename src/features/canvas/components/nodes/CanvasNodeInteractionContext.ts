@@ -13,10 +13,15 @@ interface CanvasNodeInteraction {
   beginEditing: (itemId: string) => void;
   commitText: (itemId: string, text: string) => void;
   commitCode: (itemId: string, source: string) => void;
+  commitImageAlt: (itemId: string, altText: string) => void;
   formatCode: (itemId: string) => FormatJsonResult;
   toggleCodeCollapsed: (itemId: string) => void;
   toggleCodeWrap: (itemId: string) => void;
   openCodeInTab: (itemId: string) => Promise<void>;
+  replaceImage: (itemId: string, file: File) => Promise<void>;
+  copyImage: (assetId: string) => Promise<void>;
+  downloadImage: (assetId: string) => Promise<void>;
+  openImageInSmartView: (assetId: string) => Promise<void>;
   cancelEditing: (itemId: string) => void;
   commitResize: (itemId: string, bounds: CanvasNodeBounds) => void;
   preparePointerSelection: (itemId: string, additive: boolean) => void;

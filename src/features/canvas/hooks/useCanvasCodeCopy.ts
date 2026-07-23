@@ -1,35 +1,31 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback } from "react";
 import { COPY_FEEDBACK_DURATION_MS } from "../constants";
+import {
+  type CanvasCopyState,
+  useCanvasCopyFeedback,
+} from "./useCanvasCopyFeedback";
 
-export type CanvasCodeCopyState = "idle" | "copied" | "failed";
+export type CanvasCodeCopyState = CanvasCopyState;
 
 export const useCanvasCodeCopy = (
   source: string,
   feedbackDuration = COPY_FEEDBACK_DURATION_MS,
 ) => {
-  const [state, setState] = useState<CanvasCodeCopyState>("idle");
-  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const clearResetTimer = useCallback(() => {
-    if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
-    resetTimerRef.current = null;
-  }, []);
-
-  useEffect(() => clearResetTimer, [clearResetTimer]);
-
+  const writeSource = useCallback(
+    () => navigator.clipboard.writeText(source),
+    [source],
+  );
+  const { state, copy: copyWithFeedback } = useCanvasCopyFeedback(
+    writeSource,
+    feedbackDuration,
+  );
   const copy = useCallback(async () => {
-    clearResetTimer();
     try {
-      await navigator.clipboard.writeText(source);
-      setState("copied");
+      await copyWithFeedback();
     } catch {
-      setState("failed");
+      // Failure is represented by the feedback state for code-card actions.
     }
-    resetTimerRef.current = setTimeout(
-      () => setState("idle"),
-      feedbackDuration,
-    );
-  }, [clearResetTimer, feedbackDuration, source]);
+  }, [copyWithFeedback]);
 
   return { state, copy };
 };

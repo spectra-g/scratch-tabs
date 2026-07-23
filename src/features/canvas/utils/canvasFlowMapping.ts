@@ -2,6 +2,7 @@ import type { Edge, Node } from "@xyflow/react";
 import type {
   CanvasCodeItem,
   CanvasEdge,
+  CanvasImageItem,
   CanvasItem,
   CanvasTextItem,
 } from "../types";
@@ -19,9 +20,19 @@ export type CanvasCodeNodeData = {
   isFocused: boolean;
 };
 
+export type CanvasImageNodeData = {
+  item: CanvasImageItem;
+  isEditing: boolean;
+  isFocused: boolean;
+};
+
 export type CanvasTextFlowNode = Node<CanvasTextNodeData, "text">;
 export type CanvasCodeFlowNode = Node<CanvasCodeNodeData, "code">;
-export type CanvasFlowNode = CanvasTextFlowNode | CanvasCodeFlowNode;
+export type CanvasImageFlowNode = Node<CanvasImageNodeData, "image">;
+export type CanvasFlowNode =
+  | CanvasTextFlowNode
+  | CanvasCodeFlowNode
+  | CanvasImageFlowNode;
 
 export const canvasItemToFlowNode = (
   item: CanvasItem,
@@ -44,17 +55,26 @@ export const canvasItemToFlowNode = (
     isFocused: focusedItemId === item.id,
   };
 
-  return item.type === "code"
-    ? {
+  switch (item.type) {
+    case "code":
+      return {
         ...common,
         type: "code",
         data: { item: { ...item }, ...interaction },
-      }
-    : {
+      };
+    case "image":
+      return {
+        ...common,
+        type: "image",
+        data: { item: { ...item }, ...interaction },
+      };
+    case "text":
+      return {
         ...common,
         type: "text",
         data: { item: { ...item }, ...interaction },
       };
+  }
 };
 
 export const canvasItemsToFlowNodes = (

@@ -10,11 +10,7 @@ import type {
 } from "../types";
 
 export const useCanvasDocument = (tab: Tab) => {
-  const {
-    id: tabId,
-    documentId,
-    workspaceId,
-  } = tab;
+  const { id: tabId, documentId, workspaceId } = tab;
   const [activeDocument, setActiveDocument] =
     useState<ActiveCanvasDocument | null>(null);
   const [status, setStatus] = useState<CanvasSaveStatus>("loading");
@@ -58,7 +54,10 @@ export const useCanvasDocument = (tab: Tab) => {
             ...loaded.document,
             items: loaded.document.items.map((item) => ({ ...item })),
           },
-          session: { ...loaded.session, viewport: { ...loaded.session.viewport } },
+          session: {
+            ...loaded.session,
+            viewport: { ...loaded.session.viewport },
+          },
         });
         setRevision(loaded.document.revision);
         setStatus("saved");
@@ -76,9 +75,11 @@ export const useCanvasDocument = (tab: Tab) => {
     return () => {
       isMounted = false;
       unsubscribe();
-      void canvasDocumentManager.release(tabId).catch((releaseError) =>
-        console.error("Failed to dispose Canvas session:", releaseError),
-      );
+      void canvasDocumentManager
+        .release(tabId)
+        .catch((releaseError) =>
+          console.error("Failed to dispose Canvas session:", releaseError),
+        );
     };
   }, [tabId, documentId, workspaceId]);
 

@@ -1,11 +1,16 @@
 import type { Tab } from "../../../../types";
 import { CanvasDocumentManager } from "../CanvasDocumentManager";
 import type { CanvasDocumentRepositoryContract } from "../CanvasDocumentRepository";
+import type { CanvasImagePersistenceRepositoryContract } from "../CanvasImagePersistenceRepository";
 import {
   createDefaultCanvasSession,
   createEmptyCanvasDocument,
 } from "../../utils/canvasSchemas";
-import type { CanvasTextItem } from "../../types";
+import type {
+  CanvasAssetRecord,
+  CanvasImageItem,
+  CanvasTextItem,
+} from "../../types";
 
 const canvasTab: Tab = {
   id: "tab-1",
@@ -56,6 +61,37 @@ const textItem = (text: string): CanvasTextItem => ({
   text,
 });
 
+const imageItem: CanvasImageItem = {
+  id: "image-1",
+  type: "image",
+  x: 0,
+  y: 0,
+  width: 400,
+  height: 300,
+  zIndex: 1,
+  createdAt: 100,
+  updatedAt: 100,
+  assetId: "asset-1",
+  altText: "Diagram",
+  objectFit: "contain",
+};
+
+const imageAsset: CanvasAssetRecord = {
+  id: "asset-1",
+  workspaceId: "workspace-1",
+  blob: new Blob(["image"], { type: "image/png" }),
+  mimeType: "image/png",
+  byteLength: 5,
+  width: 400,
+  height: 300,
+  createdAt: 100,
+};
+
+const createImagePersistence =
+  (): jest.Mocked<CanvasImagePersistenceRepositoryContract> => ({
+    saveDocumentWithAsset: jest.fn().mockResolvedValue(undefined),
+  });
+
 describe("CanvasDocumentManager", () => {
   it("loads a document once while it has multiple active consumers", async () => {
     const repository = createRepository();
@@ -68,7 +104,9 @@ describe("CanvasDocumentManager", () => {
 
     expect(first).toBe(second);
     expect(repository.getByTabId).toHaveBeenCalledTimes(1);
-    expect(first.session).toEqual(createDefaultCanvasSession("tab-1", first.session.updatedAt));
+    expect(first.session).toEqual(
+      createDefaultCanvasSession("tab-1", first.session.updatedAt),
+    );
 
     await manager.release(canvasTab.id);
     await manager.release(canvasTab.id);
@@ -86,7 +124,11 @@ describe("CanvasDocumentManager", () => {
     await manager.acquire(canvasTab);
 
     const first = manager.saveViewport(canvasTab.id, { x: 10, y: 20, zoom: 2 });
-    const second = manager.saveViewport(canvasTab.id, { x: 30, y: 40, zoom: 1.5 });
+    const second = manager.saveViewport(canvasTab.id, {
+      x: 30,
+      y: 40,
+      zoom: 1.5,
+    });
     const flush = manager.flush(canvasTab.id);
 
     await Promise.resolve();
@@ -144,7 +186,13 @@ describe("CanvasDocumentManager", () => {
       expect.objectContaining({ revision: 2 }),
       false,
     );
-    expect(saveStates).toEqual(["saving", "saving", "saved", "saving", "saved"]);
+    expect(saveStates).toEqual([
+      "saving",
+      "saving",
+      "saved",
+      "saving",
+      "saved",
+    ]);
 
     await manager.release(canvasTab.id);
     jest.useRealTimers();
@@ -164,6 +212,89 @@ describe("CanvasDocumentManager", () => {
     expect(jest.getTimerCount()).toBe(0);
     await manager.release(canvasTab.id);
     jest.useRealTimers();
+  });
+
+  it("persists an image asset and document as one completed operation", async () => {
+    const repository = createRepository();
+    const imagePersistence = createImagePersistence();
+    const manager = new CanvasDocumentManager(
+      repository,
+      () => 5_000,
+      imagePersistence,
+    );
+    await manager.acquire(canvasTab);
+
+    const saved = await manager.addImage(canvasTab.id, imageItem, imageAsset);
+
+    expect(imagePersistence.saveDocumentWithAsset).toHaveBeenCalledWith(
+      expect.objectContaining({
+        revision: 1,
+        items: [imageItem],
+        updatedAt: 5_000,
+      }),
+      imageAsset,
+    );
+    expect(saved.items).toEqual([imageItem]);
+    expect(await manager.hasContent(canvasTab.id)).toBe(true);
+    await manager.release(canvasTab.id);
+  });
+
+  it("keeps the active document unchanged when atomic image persistence fails", async () => {
+    const repository = createRepository();
+    const imagePersistence = createImagePersistence();
+    imagePersistence.saveDocumentWithAsset.mockRejectedValue(
+      new Error("IndexedDB transaction failed"),
+    );
+    const manager = new CanvasDocumentManager(
+      repository,
+      () => 5_000,
+      imagePersistence,
+    );
+    await manager.acquire(canvasTab);
+
+    await expect(
+      manager.addImage(canvasTab.id, imageItem, imageAsset),
+    ).rejects.toThrow("IndexedDB transaction failed");
+    expect(await manager.hasContent(canvasTab.id)).toBe(false);
+    await manager.release(canvasTab.id);
+  });
+
+  it("preserves edits made while an atomic image transaction is in flight", async () => {
+    const repository = createRepository();
+    const imagePersistence = createImagePersistence();
+    let finishImageSave: (() => void) | undefined;
+    imagePersistence.saveDocumentWithAsset.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          finishImageSave = resolve;
+        }),
+    );
+    const manager = new CanvasDocumentManager(
+      repository,
+      () => 5_000,
+      imagePersistence,
+    );
+    await manager.acquire(canvasTab);
+
+    const imageSave = manager.addImage(canvasTab.id, imageItem, imageAsset);
+    for (let attempt = 0; attempt < 10 && !finishImageSave; attempt += 1) {
+      await Promise.resolve();
+    }
+    expect(finishImageSave).toBeDefined();
+    manager.setItems(canvasTab.id, [textItem("concurrent edit")]);
+    finishImageSave?.();
+
+    const merged = await imageSave;
+    expect(merged.items).toEqual([textItem("concurrent edit"), imageItem]);
+    await manager.flush(canvasTab.id);
+    expect(repository.saveDocument).toHaveBeenCalledWith(
+      expect.objectContaining({
+        revision: 2,
+        items: [textItem("concurrent edit"), imageItem],
+      }),
+      false,
+    );
+    await manager.release(canvasTab.id);
   });
 
   it("reports unsaved active content without reading the repository", async () => {
@@ -210,10 +341,9 @@ describe("CanvasDocumentManager", () => {
     await manager.flushAll();
 
     expect(repository.saveDocument).toHaveBeenCalledTimes(2);
-    expect(repository.saveDocument.mock.calls.map(([saved]) => saved.tabId).sort()).toEqual([
-      "tab-1",
-      "tab-2",
-    ]);
+    expect(
+      repository.saveDocument.mock.calls.map(([saved]) => saved.tabId).sort(),
+    ).toEqual(["tab-1", "tab-2"]);
     await Promise.all([
       manager.release(canvasTab.id),
       manager.release(secondTab.id),

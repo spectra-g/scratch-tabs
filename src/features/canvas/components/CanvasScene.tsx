@@ -12,10 +12,15 @@ import type { Tab } from "../../../types";
 import {
   DEFAULT_CODE_ITEM_HEIGHT,
   DEFAULT_CODE_ITEM_WIDTH,
+  DEFAULT_IMAGE_ITEM_MAX_HEIGHT,
+  DEFAULT_IMAGE_ITEM_MAX_WIDTH,
   DEFAULT_TEXT_ITEM_HEIGHT,
   DEFAULT_TEXT_ITEM_WIDTH,
 } from "../constants";
-import { useCanvasItems } from "../hooks/useCanvasItems";
+import {
+  useCanvasItems,
+  type CanvasImageOperations,
+} from "../hooks/useCanvasItems";
 import { useCanvasKeyboardShortcuts } from "../hooks/useCanvasKeyboardShortcuts";
 import { useSpatialNavigation } from "../hooks/useSpatialNavigation";
 import type { CanvasItem, CanvasSaveStatus } from "../types";
@@ -35,9 +40,10 @@ import { CanvasShortcutHelp } from "./CanvasShortcutHelp";
 import { CanvasNodeInteractionContext } from "./nodes/CanvasNodeInteractionContext";
 import { TextNode } from "./nodes/TextNode";
 import { CodeNode } from "./nodes/CodeNode";
+import { ImageNode } from "./nodes/ImageNode";
 import { useRendererStatusStore } from "../../../stores/rendererStatusStore";
 
-const nodeTypes = { text: TextNode, code: CodeNode };
+const nodeTypes = { text: TextNode, code: CodeNode, image: ImageNode };
 const multiSelectionKeyCodes = ["Meta", "Control", "Shift"];
 
 interface CanvasSceneProps {
@@ -50,6 +56,7 @@ interface CanvasSceneProps {
   revision: number;
   error: string | null;
   updateItems: (items: CanvasItem[]) => void;
+  imageOperations: CanvasImageOperations;
   saveViewport: (viewport: Viewport) => Promise<void>;
 }
 
@@ -63,6 +70,7 @@ export const CanvasScene = ({
   revision,
   error,
   updateItems,
+  imageOperations,
   saveViewport,
 }: CanvasSceneProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -76,7 +84,13 @@ export const CanvasScene = ({
   );
   const [contextMenuPosition, setContextMenuPosition] =
     useState<CanvasContextMenuPosition | null>(null);
-  const canvasItems = useCanvasItems(initialItems, updateItems, tab.id);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const canvasItems = useCanvasItems(
+    initialItems,
+    updateItems,
+    tab.id,
+    imageOperations,
+  );
   const backgroundVariant =
     background === "grid" ? BackgroundVariant.Lines : BackgroundVariant.Dots;
 
@@ -235,6 +249,28 @@ export const CanvasScene = ({
     });
   };
 
+  const addImageAtViewportCenter = async (file: File) => {
+    const pane = rootRef.current?.getBoundingClientRect();
+    if (!pane) return;
+    setImageError(null);
+    const center = getCanvasViewportCenter(pane, viewportRef.current);
+    try {
+      await canvasItems.createImageItem(
+        {
+          x: center.x - DEFAULT_IMAGE_ITEM_MAX_WIDTH / 2,
+          y: center.y - DEFAULT_IMAGE_ITEM_MAX_HEIGHT / 2,
+        },
+        file,
+      );
+    } catch (imageSaveError) {
+      setImageError(
+        imageSaveError instanceof Error
+          ? imageSaveError.message
+          : "The image could not be added to this Canvas.",
+      );
+    }
+  };
+
   const closeContextMenu = useCallback(() => setContextMenuPosition(null), []);
 
   const openContextMenu = useCallback((event: React.MouseEvent) => {
@@ -353,6 +389,7 @@ export const CanvasScene = ({
             <CanvasToolbar
               onAddText={addTextAtViewportCenter}
               onAddCode={addCodeAtViewportCenter}
+              onAddImage={(file) => void addImageAtViewportCenter(file)}
               canUndo={canvasItems.canUndo}
               canRedo={canvasItems.canRedo}
               onUndo={canvasItems.undo}
@@ -381,13 +418,22 @@ export const CanvasScene = ({
               <div className="rounded-lg border border-base bg-surface/90 px-5 py-4 text-center shadow-sm backdrop-blur-sm">
                 <p className="font-medium text-main">Empty Canvas</p>
                 <p className="mt-1 text-xs text-muted">
-                  Add a text or code card, or pan and zoom to explore.
+                  Add a text, code, or image card, or pan and zoom to explore.
                 </p>
               </div>
             </div>
           )}
         </ReactFlow>
       </CanvasNodeInteractionContext.Provider>
+      {imageError && (
+        <div
+          className="absolute left-1/2 top-20 z-20 max-w-md -translate-x-1/2 rounded border border-danger/40 bg-surface px-4 py-3 text-sm text-danger shadow"
+          role="alert"
+          data-testid="canvas-image-error"
+        >
+          {imageError}
+        </div>
+      )}
       {contextMenuPosition && canvasItems.selectedCount > 0 && (
         <CanvasContextMenu
           position={contextMenuPosition}

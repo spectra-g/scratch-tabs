@@ -1,6 +1,10 @@
 import type { CanvasItem } from "../types";
 
 export const getCanvasItemAccessibleLabel = (item: CanvasItem): string => {
+  if (item.type === "image") {
+    const summary = item.altText.trim().replace(/\s+/g, " ").slice(0, 80);
+    return `Image${summary ? `, ${summary}` : ""}`;
+  }
   const content = item.type === "code" ? item.source : item.text;
   const summary = content.trim().replace(/\s+/g, " ").slice(0, 80);
   if (item.type === "code") {

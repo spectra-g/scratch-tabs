@@ -100,7 +100,11 @@ const parseCanvasItem = (value: unknown): CanvasItem => {
   if (!isRecord(value)) {
     throw new Error("Invalid Canvas schema: item must be an object");
   }
-  if (value.type !== "text" && value.type !== "code") {
+  if (
+    value.type !== "text" &&
+    value.type !== "code" &&
+    value.type !== "image"
+  ) {
     throw new Error(
       `Invalid Canvas schema: unsupported item type ${String(value.type)}`,
     );
@@ -123,16 +127,16 @@ const parseCanvasItem = (value: unknown): CanvasItem => {
 
   if (value.type === "code") {
     if (typeof value.source !== "string") {
-      throw new Error("Invalid Canvas schema: code item source must be a string");
+      throw new Error(
+        "Invalid Canvas schema: code item source must be a string",
+      );
     }
     const expandedHeight =
       value.expandedHeight === undefined
         ? undefined
         : requireNumber(value, "expandedHeight");
     if (expandedHeight !== undefined && expandedHeight <= 0) {
-      throw new Error(
-        "Invalid Canvas schema: expandedHeight must be positive",
-      );
+      throw new Error("Invalid Canvas schema: expandedHeight must be positive");
     }
     return {
       ...base,
@@ -143,6 +147,23 @@ const parseCanvasItem = (value: unknown): CanvasItem => {
       collapsed: requireBoolean(value, "collapsed"),
       ...(expandedHeight === undefined ? {} : { expandedHeight }),
       wrap: requireBoolean(value, "wrap"),
+    };
+  }
+
+  if (value.type === "image") {
+    const objectFit = value.objectFit;
+    if (objectFit !== "contain" && objectFit !== "cover") {
+      throw new Error("Invalid Canvas schema: unsupported image object fit");
+    }
+    if (typeof value.altText !== "string") {
+      throw new Error("Invalid Canvas schema: image alt text must be a string");
+    }
+    return {
+      ...base,
+      type: "image",
+      assetId: requireString(value, "assetId"),
+      altText: value.altText,
+      objectFit,
     };
   }
 
@@ -165,7 +186,9 @@ const assertUniqueIds = (values: Array<{ id: string }>, label: string) => {
   const ids = new Set<string>();
   for (const value of values) {
     if (ids.has(value.id)) {
-      throw new Error(`Invalid Canvas schema: duplicate ${label} id ${value.id}`);
+      throw new Error(
+        `Invalid Canvas schema: duplicate ${label} id ${value.id}`,
+      );
     }
     ids.add(value.id);
   }
@@ -232,7 +255,9 @@ export const parseCanvasDocument = (value: unknown): CanvasDocument => {
   const itemIds = new Set(items.map((item) => item.id));
   for (const edge of edges) {
     if (!itemIds.has(edge.sourceItemId) || !itemIds.has(edge.targetItemId)) {
-      throw new Error(`Invalid Canvas schema: edge ${edge.id} references a missing item`);
+      throw new Error(
+        `Invalid Canvas schema: edge ${edge.id} references a missing item`,
+      );
     }
   }
 
@@ -255,7 +280,9 @@ export const parseCanvasDocument = (value: unknown): CanvasDocument => {
 };
 export const parseCanvasSession = (value: unknown): CanvasSessionRecord => {
   if (!isRecord(value) || !isRecord(value.viewport)) {
-    throw new Error("Invalid Canvas schema: session and viewport must be objects");
+    throw new Error(
+      "Invalid Canvas schema: session and viewport must be objects",
+    );
   }
 
   return {

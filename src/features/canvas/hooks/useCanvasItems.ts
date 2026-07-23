@@ -4,6 +4,7 @@ import type {
   CanvasFocusOrigin,
   CanvasInteractionState,
   CanvasItem,
+  CanvasImageItem,
 } from "../types";
 import {
   canvasItemsToFlowNodes,
@@ -41,6 +42,19 @@ interface ReplaceItemsOptions {
   editingItemId?: string | null;
   selectedIds?: ReadonlySet<string>;
   focusedItemId?: string | null;
+  persist?: boolean;
+}
+
+export interface CanvasImageOperations {
+  add: (
+    file: File,
+    position: CanvasPoint,
+    zIndex: number,
+  ) => Promise<CanvasImageItem>;
+  replace: (item: CanvasImageItem, file: File) => Promise<CanvasImageItem>;
+  copy: (assetId: string) => Promise<void>;
+  download: (assetId: string) => Promise<void>;
+  openInSmartView: (assetId: string) => Promise<void>;
 }
 
 const sameBounds = (item: CanvasItem, node: CanvasFlowNode): boolean =>
@@ -53,6 +67,7 @@ export const useCanvasItems = (
   initialItems: CanvasItem[],
   persistItems: (items: CanvasItem[]) => void,
   canvasTabId?: string,
+  imageOperations?: CanvasImageOperations,
 ) => {
   const [items, setItems] = useState<CanvasItem[]>(initialItems);
   const itemsRef = useRef(items);
@@ -108,6 +123,7 @@ export const useCanvasItems = (
         editingItemId: requestedEditingItemId,
         selectedIds: requestedSelectedIds,
         focusedItemId: requestedFocusedItemId,
+        persist = true,
       }: ReplaceItemsOptions = {},
     ) => {
       const nextEditingItemId =
@@ -134,7 +150,7 @@ export const useCanvasItems = (
           nextFocusedItemId,
         ),
       );
-      persistItems(nextItems);
+      if (persist) persistItems(nextItems);
     },
     [persistItems, replaceFlowNodes, selectedItemIds],
   );
@@ -174,7 +190,9 @@ export const useCanvasItems = (
 
   const beginEditing = useCallback(
     (itemId: string) => {
-      const item = itemsRef.current.find((candidate) => candidate.id === itemId);
+      const item = itemsRef.current.find(
+        (candidate) => candidate.id === itemId,
+      );
       if (item?.type === "code" && item.collapsed) {
         recordHistory(currentSnapshot());
         applyItems(
@@ -294,6 +312,30 @@ export const useCanvasItems = (
     [cancelEditing, commitOperation],
   );
 
+  const commitImageAlt = useCallback(
+    (itemId: string, altText: string) => {
+      const current = itemsRef.current.find((item) => item.id === itemId);
+      if (!current || current.type !== "image") return;
+      if (current.altText === altText) {
+        cancelEditing(itemId);
+        return;
+      }
+      commitOperation(
+        itemsRef.current.map((item) =>
+          item.id === itemId
+            ? { ...item, altText, updatedAt: Date.now() }
+            : item,
+        ),
+        {
+          editingItemId: null,
+          selectedIds: new Set([itemId]),
+          focusedItemId: itemId,
+        },
+      );
+    },
+    [cancelEditing, commitOperation],
+  );
+
   const updateCodeItem = useCallback(
     (
       itemId: string,
@@ -306,9 +348,7 @@ export const useCanvasItems = (
       const updated = update(current);
       if (updated === current) return false;
       commitOperation(
-        itemsRef.current.map((item) =>
-          item.id === itemId ? updated : item,
-        ),
+        itemsRef.current.map((item) => (item.id === itemId ? updated : item)),
         {
           selectedIds: selectedItemIds(),
           focusedItemId: itemId,
@@ -362,7 +402,9 @@ export const useCanvasItems = (
 
   const openCodeInTab = useCallback(
     async (itemId: string) => {
-      const item = itemsRef.current.find((candidate) => candidate.id === itemId);
+      const item = itemsRef.current.find(
+        (candidate) => candidate.id === itemId,
+      );
       if (!canvasTabId || !item || item.type !== "code") return;
       await openCanvasCodeItemInTab(canvasTabId, item);
     },
@@ -440,6 +482,78 @@ export const useCanvasItems = (
       });
     },
     [commitOperation],
+  );
+
+  const createImageItem = useCallback(
+    async (position: CanvasPoint, file: File) => {
+      if (!imageOperations)
+        throw new Error("Canvas image support is unavailable");
+      const zIndex =
+        Math.max(0, ...itemsRef.current.map((candidate) => candidate.zIndex)) +
+        1;
+      const item = await imageOperations.add(file, position, zIndex);
+      recordHistory(currentSnapshot());
+      applyItems([...itemsRef.current, item], {
+        editingItemId: null,
+        selectedIds: new Set([item.id]),
+        focusedItemId: item.id,
+        persist: false,
+      });
+      return item;
+    },
+    [applyItems, currentSnapshot, imageOperations, recordHistory],
+  );
+
+  const replaceImage = useCallback(
+    async (itemId: string, file: File) => {
+      if (!imageOperations)
+        throw new Error("Canvas image support is unavailable");
+      const current = itemsRef.current.find((item) => item.id === itemId);
+      if (!current || current.type !== "image") {
+        throw new Error("Canvas image card not found");
+      }
+      const replacement = await imageOperations.replace(current, file);
+      recordHistory(currentSnapshot());
+      applyItems(
+        itemsRef.current.map((item) =>
+          item.id === itemId ? replacement : item,
+        ),
+        {
+          editingItemId: null,
+          selectedIds: new Set([itemId]),
+          focusedItemId: itemId,
+          persist: false,
+        },
+      );
+    },
+    [applyItems, currentSnapshot, imageOperations, recordHistory],
+  );
+
+  const copyImage = useCallback(
+    async (assetId: string) => {
+      if (!imageOperations)
+        throw new Error("Canvas image support is unavailable");
+      await imageOperations.copy(assetId);
+    },
+    [imageOperations],
+  );
+
+  const downloadImage = useCallback(
+    async (assetId: string) => {
+      if (!imageOperations)
+        throw new Error("Canvas image support is unavailable");
+      await imageOperations.download(assetId);
+    },
+    [imageOperations],
+  );
+
+  const openImageInSmartView = useCallback(
+    async (assetId: string) => {
+      if (!imageOperations)
+        throw new Error("Canvas image support is unavailable");
+      await imageOperations.openInSmartView(assetId);
+    },
+    [imageOperations],
   );
 
   const deleteSelection = useCallback(() => {
@@ -668,11 +782,16 @@ export const useCanvasItems = (
       cancelEditing,
       commitResize,
       commitCode,
+      commitImageAlt,
       commitText,
       formatCode,
       toggleCodeCollapsed,
       toggleCodeWrap,
       openCodeInTab,
+      replaceImage,
+      copyImage,
+      downloadImage,
+      openImageInSmartView,
       preparePointerSelection,
       completePointerSelection,
       syncFocusedItem,
@@ -682,11 +801,16 @@ export const useCanvasItems = (
       cancelEditing,
       commitResize,
       commitCode,
+      commitImageAlt,
       commitText,
       formatCode,
       toggleCodeCollapsed,
       toggleCodeWrap,
       openCodeInTab,
+      replaceImage,
+      copyImage,
+      downloadImage,
+      openImageInSmartView,
       preparePointerSelection,
       completePointerSelection,
       syncFocusedItem,
@@ -717,6 +841,7 @@ export const useCanvasItems = (
     cancelEditing,
     createTextItem,
     createCodeItem,
+    createImageItem,
     deleteSelection,
     duplicateSelection,
     selectAll,

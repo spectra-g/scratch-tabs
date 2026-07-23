@@ -1,6 +1,7 @@
 import "@xyflow/react/dist/style.css";
 import type { Tab } from "../../../types";
 import { useCanvasDocument } from "../hooks/useCanvasDocument";
+import { useCanvasImageOperations } from "../hooks/useCanvasImageOperations";
 import { canvasEdgesToFlowEdges } from "../utils/canvasFlowMapping";
 import { CanvasScene } from "./CanvasScene";
 import "./canvas.css";
@@ -10,14 +11,9 @@ interface CanvasViewProps {
 }
 
 const CanvasView = ({ tab }: CanvasViewProps) => {
-  const {
-    activeDocument,
-    status,
-    revision,
-    error,
-    saveViewport,
-    updateItems,
-  } = useCanvasDocument(tab);
+  const imageOperations = useCanvasImageOperations(tab);
+  const { activeDocument, status, revision, error, saveViewport, updateItems } =
+    useCanvasDocument(tab);
 
   if (status === "error" && !activeDocument) {
     return (
@@ -54,6 +50,7 @@ const CanvasView = ({ tab }: CanvasViewProps) => {
       revision={revision}
       error={error}
       updateItems={updateItems}
+      imageOperations={imageOperations}
       saveViewport={saveViewport}
     />
   );

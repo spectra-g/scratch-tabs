@@ -86,6 +86,20 @@ describe("Canvas schemas", () => {
         expandedHeight: 320,
         wrap: true,
       },
+      {
+        id: "item-4",
+        type: "image",
+        x: 100,
+        y: 500,
+        width: 400,
+        height: 300,
+        zIndex: 5,
+        createdAt: 130,
+        updatedAt: 131,
+        assetId: "asset-1",
+        altText: "Architecture diagram",
+        objectFit: "contain",
+      },
     ];
     document.edges = [
       { id: "edge-1", sourceItemId: "item-1", targetItemId: "item-2" },
@@ -96,6 +110,42 @@ describe("Canvas schemas", () => {
     expect(parsed).toEqual(document);
     expect(parsed.items).not.toBe(document.items);
     expect(parsed.items[0]).not.toBe(document.items[0]);
+  });
+
+  it("rejects malformed image-card data", () => {
+    const valid = createEmptyCanvasDocument({
+      id: "document-1",
+      tabId: "tab-1",
+      workspaceId: "workspace-1",
+      now: 123,
+    });
+    const imageItem = {
+      id: "image-1",
+      type: "image",
+      x: 0,
+      y: 0,
+      width: 400,
+      height: 300,
+      zIndex: 1,
+      createdAt: 1,
+      updatedAt: 1,
+      assetId: "asset-1",
+      altText: "Diagram",
+      objectFit: "contain",
+    };
+
+    expect(() =>
+      parseCanvasDocument({
+        ...valid,
+        items: [{ ...imageItem, assetId: "" }],
+      }),
+    ).toThrow("assetId must be a non-empty string");
+    expect(() =>
+      parseCanvasDocument({
+        ...valid,
+        items: [{ ...imageItem, objectFit: "stretch" }],
+      }),
+    ).toThrow("unsupported image object fit");
   });
 
   it("rejects malformed code-card settings", () => {
