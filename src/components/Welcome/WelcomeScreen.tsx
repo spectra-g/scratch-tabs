@@ -79,7 +79,7 @@ const HeroActionCard: React.FC<HeroActionCardProps> = ({
 };
 
 export const WelcomeScreen: React.FC = () => {
-  const { handleNewTab, handleNewPopulatedTab } = useRootStore();
+  const { handleNewTab, handleNewCanvas, handleNewPopulatedTab } = useRootStore();
   const welcomeRef = useRef<HTMLDivElement>(null);
   const tabletButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -108,10 +108,11 @@ export const WelcomeScreen: React.FC = () => {
         side: 'left',
         activeWorkspaceId: '', // Default for welcome
         addTab: (tabData) => handleNewPopulatedTab(tabData),
+        createCanvas: (isRight) => handleNewCanvas(isRight),
       });
       setShowToolSelector(false);
     },
-    [handleNewPopulatedTab],
+    [handleNewCanvas, handleNewPopulatedTab],
   );
 
   const handleCreateNewTab = useCallback(() => {

@@ -18,9 +18,12 @@ import {
 import {
   createCodeCanvasItem,
   createImageCanvasItem,
+  createLinkCanvasItem,
   createTextCanvasItem,
+  createVideoCanvasItem,
   type CanvasPoint,
 } from "../utils/canvasItemFactory";
+import { parseCanvasVideoUrl } from "../utils/canvasVideoProviders";
 import { prepareCanvasImageAsset } from "../utils/canvasImageValidation";
 import {
   canvasAssetRepository,
@@ -156,6 +159,33 @@ export class CanvasIngestService {
         source: input.source,
         language: input.language,
         languageLocked: input.languageLocked,
+      });
+    }
+    if (input.kind === "link") {
+      return createLinkCanvasItem({
+        position: { x: 0, y: 0 },
+        zIndex,
+        canonicalUrl: input.canonicalUrl,
+        hostname: input.hostname,
+      });
+    }
+    if (input.kind === "video") {
+      const video = parseCanvasVideoUrl(input.canonicalUrl);
+      if (
+        !video ||
+        video.provider !== input.provider ||
+        video.videoId !== input.videoId
+      ) {
+        throw new Error("Canvas video provider data is invalid");
+      }
+      return createVideoCanvasItem({
+        position: { x: 0, y: 0 },
+        zIndex,
+        url: {
+          canonicalUrl: input.canonicalUrl,
+          hostname: input.hostname,
+        },
+        video,
       });
     }
 

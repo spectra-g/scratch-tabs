@@ -44,9 +44,18 @@ import { CanvasNodeInteractionContext } from "./nodes/CanvasNodeInteractionConte
 import { TextNode } from "./nodes/TextNode";
 import { CodeNode } from "./nodes/CodeNode";
 import { ImageNode } from "./nodes/ImageNode";
+import { LinkNode } from "./nodes/LinkNode";
+import { VideoNode } from "./nodes/VideoNode";
 import { useRendererStatusStore } from "../../../stores/rendererStatusStore";
+import { canvasActionDispatcher } from "../services/CanvasActionDispatcher";
 
-const nodeTypes = { text: TextNode, code: CodeNode, image: ImageNode };
+const nodeTypes = {
+  text: TextNode,
+  code: CodeNode,
+  image: ImageNode,
+  link: LinkNode,
+  video: VideoNode,
+};
 const multiSelectionKeyCodes = ["Meta", "Control", "Shift"];
 
 interface CanvasSceneProps {
@@ -113,6 +122,12 @@ export const CanvasScene = ({
     ingestInputs: canvasIngest.ingestInputs,
     ingestClipboard: canvasIngest.ingestClipboard,
   });
+
+  useEffect(
+    () =>
+      canvasActionDispatcher.register(tab.id, canvasIngest.ingestInputs),
+    [canvasIngest.ingestInputs, tab.id],
+  );
   const backgroundVariant =
     background === "grid" ? BackgroundVariant.Lines : BackgroundVariant.Dots;
 
@@ -447,7 +462,8 @@ export const CanvasScene = ({
               <div className="rounded-lg border border-base bg-surface/90 px-5 py-4 text-center shadow-sm backdrop-blur-sm">
                 <p className="font-medium text-main">Empty Canvas</p>
                 <p className="mt-1 text-xs text-muted">
-                  Add a text, code, or image card, or pan and zoom to explore.
+                  Add or paste text, code, images, and links, or pan and zoom
+                  to explore.
                 </p>
               </div>
             </div>

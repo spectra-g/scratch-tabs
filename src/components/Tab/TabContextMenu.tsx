@@ -12,6 +12,7 @@ import { ShareModal } from "../Share/ShareModal";
 import { ContextMenuAction, TabSide } from "../../constants";
 import { useTabsStore } from "../../stores/tabsStore";
 import { ToolSelectorModal } from "../ToolSelector";
+import { SendToCanvasDialog } from "../../features/canvas/components/SendToCanvasDialog";
 
 interface ContextMenuActionPayload {
   action: ContextMenuAction;
@@ -78,7 +79,7 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
     closeThisContextMenu(); // Close context menu when download modal closes
   };
 
-  const { menuItems, confirmationDialogProps, splitModalProps, shareModalProps, tabletModalOpen, onOpenTabletModal, onSelectTool }: UseContextMenuConfigReturn =
+  const { menuItems, confirmationDialogProps, splitModalProps, shareModalProps, canvasSendDialogProps, tabletModalOpen, onOpenTabletModal, onSelectTool }: UseContextMenuConfigReturn =
     useContextMenuConfig(
       tabId,
       isRightSide,
@@ -96,7 +97,8 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
       !tabletModalOpen &&
       (!confirmationDialogProps || !confirmationDialogProps.isOpen) &&
       (!splitModalProps || !splitModalProps.isOpen) &&
-      (!shareModalProps || !shareModalProps.isOpen)
+      (!shareModalProps || !shareModalProps.isOpen) &&
+      !canvasSendDialogProps
     ) {
       closeThisContextMenu();
     }
@@ -107,10 +109,11 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
       {/* Hide context menu when any modal is open, but keep component mounted */}
       {(!splitModalProps || !splitModalProps.isOpen) &&
         (!shareModalProps || !shareModalProps.isOpen) &&
+        !canvasSendDialogProps &&
         !tabletModalOpen && (
           <div
             ref={menuRef}
-            className="absolute bg-surface border border-base rounded shadow-lg z-50 py-1"
+            className="absolute overflow-visible bg-surface border border-base rounded shadow-lg z-context-menu py-1"
             style={{
               top: `${(adjustedPosition ?? position).y}px`,
               left: `${(adjustedPosition ?? position).x}px`,
@@ -159,6 +162,10 @@ export const TabContextMenu: React.FC<TabContextMenuProps> = ({
       {/* Render the share modal */}
       {shareModalProps && shareModalProps.isOpen && tab && (
         <ShareModal tab={tab} onClose={shareModalProps.onClose} />
+      )}
+
+      {canvasSendDialogProps && (
+        <SendToCanvasDialog {...canvasSendDialogProps} />
       )}
 
       {/* Render the tool selector modal */}

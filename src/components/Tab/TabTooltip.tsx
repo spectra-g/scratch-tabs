@@ -1,9 +1,11 @@
 import React from "react";
+import { Layers } from "../Icons";
 
 interface TabTooltipProps {
   content: {
     title: string;
     language?: string;
+    documentType?: "Canvas";
     lineCount?: number;
     dateCreated: number;
     lastModified: number;
@@ -49,6 +51,12 @@ export const TabTooltip: React.FC<TabTooltipProps> = ({
         </div>
 
         <div className="space-y-0.5">
+          {content.documentType === "Canvas" && (
+            <div className="mb-1 flex items-center justify-center gap-1.5 text-main">
+              <Layers size={12} />
+              <span className="font-medium">Canvas document</span>
+            </div>
+          )}
           {content.lineCount !== undefined && (
             <div>
               <span className="text-muted mr-1">Lines:</span>

@@ -1,7 +1,10 @@
 import { formatRegistry } from "../../../formats";
 import { CANVAS_TEXT_FILE_MAX_BYTES } from "../constants";
+import type { CanvasVideoProvider } from "../types";
 import type { CanvasPoint } from "./canvasItemFactory";
 import { getDetectedCanvasCodeLanguage } from "./canvasItemFactory";
+import { canonicalizeCanvasUrl } from "./canvasUrl";
+import { parseCanvasVideoUrl } from "./canvasVideoProviders";
 
 export type CanvasNormalizedInput =
   | { kind: "file"; file: File }
@@ -10,6 +13,14 @@ export type CanvasNormalizedInput =
 export type CanvasClassifiedInput =
   | { kind: "image"; file: File }
   | { kind: "text"; text: string }
+  | { kind: "link"; canonicalUrl: string; hostname: string }
+  | {
+      kind: "video";
+      canonicalUrl: string;
+      hostname: string;
+      provider: CanvasVideoProvider;
+      videoId: string;
+    }
   | {
       kind: "code";
       source: string;
@@ -58,6 +69,20 @@ export const classifyCanvasText = (
       language: "json",
       languageLocked: true,
     };
+  }
+
+  const url = canonicalizeCanvasUrl(text);
+  if (url) {
+    const video = parseCanvasVideoUrl(url.canonicalUrl);
+    return video
+      ? {
+          kind: "video",
+          canonicalUrl: url.canonicalUrl,
+          hostname: url.hostname,
+          provider: video.provider,
+          videoId: video.videoId,
+        }
+      : { kind: "link", ...url };
   }
 
   const fileLanguage = fileName ? getFileLanguage(fileName) : null;

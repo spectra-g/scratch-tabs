@@ -1,7 +1,9 @@
 import type {
   CanvasCodeItem,
   CanvasImageItem,
+  CanvasLinkItem,
   CanvasTextItem,
+  CanvasVideoItem,
 } from "../../types";
 import {
   canvasEdgesToFlowEdges,
@@ -104,6 +106,38 @@ describe("Canvas React Flow mapping", () => {
       type: "image",
       ariaLabel: "Image, Architecture",
       data: { item: imageItem },
+    });
+  });
+
+  it("maps link and video cards to their dedicated renderers", () => {
+    const linkItem: CanvasLinkItem = {
+      ...item,
+      id: "link-1",
+      type: "link",
+      canonicalUrl: "https://example.com/",
+      hostname: "example.com",
+    };
+    const videoItem: CanvasVideoItem = {
+      ...item,
+      id: "video-1",
+      type: "video",
+      canonicalUrl: "https://vimeo.com/76979871",
+      hostname: "vimeo.com",
+      provider: "vimeo",
+      videoId: "76979871",
+    };
+
+    expect(canvasItemToFlowNode(linkItem)).toMatchObject({
+      id: "link-1",
+      type: "link",
+      ariaLabel: "Link card, example.com",
+      data: { item: linkItem },
+    });
+    expect(canvasItemToFlowNode(videoItem)).toMatchObject({
+      id: "video-1",
+      type: "video",
+      ariaLabel: "Vimeo video card, 76979871",
+      data: { item: videoItem },
     });
   });
 

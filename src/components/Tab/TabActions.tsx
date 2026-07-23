@@ -1,6 +1,7 @@
-import { Plus, ClipboardPlus, Extension, Layers } from "../Icons";
+import { Plus, ClipboardPlus, Extension } from "../Icons";
 import { useRootStore } from "../../stores";
 import { useCanvasFeatureEnabled } from "../../features/canvas/hooks/useCanvasFeatureEnabled";
+import { NewDocumentMenu } from "./NewDocumentMenu";
 
 interface TabActionsProps {
   side?: "left" | "right";
@@ -30,18 +31,14 @@ export const TabActions: React.FC<TabActionsProps> = ({
       >
         <Plus size={16} />
       </button>
-      {canvasEnabled && (
-        <button
-          onClick={() => handleNewCanvas(side === "right")}
-          className="px-2 py-1 text-main flex items-center h-8"
-          title="New Canvas"
-          aria-label="New Canvas"
-          data-testid="icon-new-canvas"
-          data-side={side}
-        >
-          <Layers size={16} />
-        </button>
-      )}
+      <NewDocumentMenu
+        canvasEnabled={canvasEnabled}
+        side={side}
+        onCreateText={() => handleNewTab(side === "right")}
+        onCreateCanvas={() => void handleNewCanvas(side === "right")}
+        onCreateFromClipboard={() => void handleNewTabFromPaste(side === "right")}
+        onOpenTools={onShowTabletSelector}
+      />
       <button
         onClick={() => handleNewTabFromPaste(side === "right")}
         className="px-2 py-1 text-main flex items-center h-8"

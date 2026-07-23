@@ -77,6 +77,9 @@ export const getCanvasClipboardPlainText = (
           return item.source;
         case "image":
           return item.altText ? `[Image: ${item.altText}]` : "[Image]";
+        case "link":
+        case "video":
+          return item.canonicalUrl;
       }
     })
     .join("\n\n");

@@ -80,4 +80,27 @@ describe("Canvas clipboard format", () => {
       "Notes\n\nconst answer = 42;",
     );
   });
+
+  it("uses canonical URLs as the fallback for link and video cards", () => {
+    expect(
+      getCanvasClipboardPlainText([
+        {
+          ...textItem,
+          id: "link-1",
+          type: "link",
+          canonicalUrl: "https://example.com/docs",
+          hostname: "example.com",
+        },
+        {
+          ...textItem,
+          id: "video-1",
+          type: "video",
+          canonicalUrl: "https://vimeo.com/76979871",
+          hostname: "vimeo.com",
+          provider: "vimeo",
+          videoId: "76979871",
+        },
+      ]),
+    ).toBe("https://example.com/docs\n\nhttps://vimeo.com/76979871");
+  });
 });

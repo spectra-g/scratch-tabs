@@ -8,6 +8,8 @@ import type {
   CanvasSettings,
   CanvasViewport,
 } from "../types";
+import { canonicalizeCanvasUrl } from "./canvasUrl";
+import { parseCanvasVideoUrl } from "./canvasVideoProviders";
 
 const DEFAULT_VIEWPORT: CanvasViewport = { x: 0, y: 0, zoom: 1 };
 const DEFAULT_SETTINGS: CanvasSettings = {
@@ -103,7 +105,9 @@ export const parseCanvasItem = (value: unknown): CanvasItem => {
   if (
     value.type !== "text" &&
     value.type !== "code" &&
-    value.type !== "image"
+    value.type !== "image" &&
+    value.type !== "link" &&
+    value.type !== "video"
   ) {
     throw new Error(
       `Invalid Canvas schema: unsupported item type ${String(value.type)}`,
@@ -164,6 +168,45 @@ export const parseCanvasItem = (value: unknown): CanvasItem => {
       assetId: requireString(value, "assetId"),
       altText: value.altText,
       objectFit,
+    };
+  }
+
+  if (value.type === "link") {
+    const canonicalUrl = requireString(value, "canonicalUrl");
+    const parsed = canonicalizeCanvasUrl(canonicalUrl);
+    const hostname = requireString(value, "hostname");
+    if (
+      !parsed ||
+      parsed.canonicalUrl !== canonicalUrl ||
+      parsed.hostname !== hostname
+    ) {
+      throw new Error("Invalid Canvas schema: link URL is not canonical");
+    }
+    return { ...base, type: "link", canonicalUrl, hostname };
+  }
+
+  if (value.type === "video") {
+    const canonicalUrl = requireString(value, "canonicalUrl");
+    const parsedUrl = canonicalizeCanvasUrl(canonicalUrl);
+    const hostname = requireString(value, "hostname");
+    const video = parseCanvasVideoUrl(canonicalUrl);
+    if (
+      !parsedUrl ||
+      parsedUrl.canonicalUrl !== canonicalUrl ||
+      parsedUrl.hostname !== hostname ||
+      !video ||
+      video.provider !== value.provider ||
+      video.videoId !== value.videoId
+    ) {
+      throw new Error("Invalid Canvas schema: video provider data is invalid");
+    }
+    return {
+      ...base,
+      type: "video",
+      canonicalUrl,
+      hostname,
+      provider: video.provider,
+      videoId: video.videoId,
     };
   }
 

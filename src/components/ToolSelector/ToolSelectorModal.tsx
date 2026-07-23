@@ -16,10 +16,11 @@ export const ToolSelectorModal: React.FC<ToolSelectorModalProps> = ({
 }) => {
     const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [results, setResults] = useState<{
+        documents: ToolItem[];
         tablets: ToolItem[];
         smartViews: ToolItem[];
         formats: ToolItem[];
-    }>({ tablets: [], smartViews: [], formats: [] });
+    }>({ documents: [], tablets: [], smartViews: [], formats: [] });
     const [recentItems, setRecentItems] = useState<ToolItem[]>([]);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const searchInputRef = useRef<HTMLInputElement>(null);
@@ -32,7 +33,7 @@ export const ToolSelectorModal: React.FC<ToolSelectorModalProps> = ({
             setRecentItems(recent);
 
             const searchResults = await toolService.search(searchQuery);
-            setResults(searchResults);
+            setResults({ documents: [], ...searchResults });
 
             // Auto-select first item when searching or on mount
             setSelectedIndex(0);
@@ -66,6 +67,10 @@ export const ToolSelectorModal: React.FC<ToolSelectorModalProps> = ({
                 sections.push({ startIndex: items.length, count: recentItems.length, layout: 'grid', gridColumns: 5 });
                 items.push(...recentItems);
             }
+            if (results.documents.length > 0) {
+                sections.push({ startIndex: items.length, count: results.documents.length, layout: 'list' });
+                items.push(...results.documents);
+            }
             // Tablets section (list)
             if (results.tablets.length > 0) {
                 sections.push({ startIndex: items.length, count: results.tablets.length, layout: 'list' });
@@ -83,6 +88,10 @@ export const ToolSelectorModal: React.FC<ToolSelectorModalProps> = ({
             }
         } else {
             // Search results (all list layout)
+            if (results.documents.length > 0) {
+                sections.push({ startIndex: items.length, count: results.documents.length, layout: 'list' });
+                items.push(...results.documents);
+            }
             if (results.tablets.length > 0) {
                 sections.push({ startIndex: items.length, count: results.tablets.length, layout: 'list' });
                 items.push(...results.tablets);
@@ -281,17 +290,19 @@ export const ToolSelectorModal: React.FC<ToolSelectorModalProps> = ({
                     {searchQuery === '' ? (
                         <>
                             {renderSection('Recently Used', recentItems, 'grid')}
+                            {renderSection('Documents', results.documents, 'list')}
                             {renderSection('Tablets', results.tablets, 'list')}
                             {renderSection('Smart Views', results.smartViews, 'list')}
                             {renderSection('Formats', results.formats, 'list')}
                         </>
                     ) : (
                         <>
+                            {renderSection('Documents', results.documents, 'list')}
                             {renderSection('Tablets', results.tablets, 'list')}
                             {renderSection('Smart Views', results.smartViews, 'list')}
                             {renderSection('Formats', results.formats, 'list')}
 
-                            {results.tablets.length === 0 && results.smartViews.length === 0 && results.formats.length === 0 && (
+                            {results.documents.length === 0 && results.tablets.length === 0 && results.smartViews.length === 0 && results.formats.length === 0 && (
                                 <div className="flex flex-col items-center justify-center py-20 text-center">
                                     <div className="w-20 h-20 bg-gradient-to-br from-surface-secondary to-surface-raised rounded-full flex items-center justify-center mb-6 shadow-inner">
                                         <Search size={40} className="text-muted/50" />

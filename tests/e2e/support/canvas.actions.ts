@@ -7,6 +7,16 @@ const ONE_PIXEL_PNG_BASE64 =
 interface BrowserMonacoEditor {
   getDomNode(): HTMLElement | null;
   setValue(value: string): void;
+  getModel(): {
+    getLineCount(): number;
+    getLineMaxColumn(lineNumber: number): number;
+  } | null;
+  setSelection(selection: {
+    startLineNumber: number;
+    startColumn: number;
+    endLineNumber: number;
+    endColumn: number;
+  }): void;
 }
 
 interface BrowserMonacoWindow extends Window {
@@ -104,9 +114,164 @@ export class CanvasActions {
   }
 
   async createCanvas() {
+    const trigger = this.page.getByTestId("new-document-menu-trigger").first();
+    await expect(trigger).toBeVisible();
+    await trigger.click();
     const button = this.page.getByTestId("icon-new-canvas");
     await expect(button).toBeVisible();
     await button.click();
+  }
+
+  async createCanvasFromToolSelector() {
+    await this.page.getByTestId("icon-new-tools").first().click();
+    const selector = this.page.getByRole("dialog", { name: "Tool Selector" });
+    await expect(selector).toBeVisible();
+    const canvas = selector
+      .getByRole("button")
+      .filter({ hasText: "Canvas" })
+      .first();
+    await expect(canvas).toBeVisible();
+    await canvas.click();
+    await expect(this.page.getByTestId("canvas-flow")).toBeVisible();
+  }
+
+  async createCanvasFromEmptyWorkspace() {
+    const scratchClose = this.page
+      .getByTestId("tab-Scratch 1")
+      .getByRole("button", { name: "Close tab Scratch 1" });
+    await expect(scratchClose).toBeVisible();
+    await scratchClose.click();
+
+    const welcome = this.page.getByTestId("tab-Welcome");
+    await welcome.click();
+    await welcome
+      .getByRole("button", { name: "Close tab Welcome" })
+      .click();
+    const confirmation = this.page.getByTestId("confirmation-dialog");
+    await expect(confirmation).toBeVisible();
+    await confirmation.getByRole("button", { name: "Confirm" }).click();
+
+    const emptyState = this.page.getByTestId("workspace-empty-state");
+    await expect(emptyState).toBeVisible();
+    const canvasAction = this.page.getByTestId("new-canvas-action");
+    await expect(canvasAction).toBeVisible();
+    await canvasAction.click();
+    await expect(this.page.getByTestId("canvas-flow")).toBeVisible();
+  }
+
+  async createCanvasFromDirectRoute() {
+    const baseUrl = process.env.BASE_URL ?? "http://localhost:5173";
+    await this.page.goto(`${baseUrl}/canvas`);
+    await expect(this.page.getByTestId("canvas-flow")).toBeVisible();
+    await expect(this.page).toHaveURL(/\/canvas$/);
+  }
+
+  async expectPrimaryNewTabStillCreatesText() {
+    const newTab = this.page.getByTestId("icon-new-tab").first();
+    await newTab.click();
+    await expect(
+      this.page.locator('[data-testid="tab-Scratch 1"][aria-selected="true"]'),
+    ).toBeVisible();
+    await expect(this.page.locator(".monaco-editor").first()).toBeVisible();
+  }
+
+  private async setActiveEditorContent(
+    content: string,
+    selectedLine?: number,
+  ) {
+    await expect(this.page.locator(".monaco-editor").first()).toBeVisible();
+    await this.page.evaluate(
+      ({ value, line }) => {
+        const editors = (
+          window as BrowserMonacoWindow
+        ).monaco?.editor.getEditors() ?? [];
+        const editor =
+          editors.find((candidate) => {
+            const node = candidate.getDomNode();
+            return !!node && node.getClientRects().length > 0;
+          }) ?? editors[editors.length - 1];
+        if (!editor) throw new Error("Active Monaco editor was not found");
+        editor.setValue(value);
+        if (line !== undefined) {
+          const model = editor.getModel();
+          if (!model) throw new Error("Active Monaco model was not found");
+          editor.setSelection({
+            startLineNumber: line,
+            startColumn: 1,
+            endLineNumber: line,
+            endColumn: model.getLineMaxColumn(line),
+          });
+        }
+      },
+      { value: content, line: selectedLine },
+    );
+  }
+
+  private async openActiveTabContextMenu() {
+    const activeTab = this.page
+      .locator('[data-testid^="tab-"][aria-selected="true"][data-side="left"]')
+      .first();
+    await expect(activeTab).toBeVisible();
+    await activeTab.click({ button: "right" });
+  }
+
+  async sendFullTabToNewCanvas() {
+    await this.setActiveEditorContent('{"sent":"full tab"}');
+    await this.openActiveTabContextMenu();
+    await this.page
+      .getByRole("button", { name: "Send tab to Canvas...", exact: true })
+      .click();
+    await this.page.getByTestId("send-to-new-canvas").click();
+    await expect(
+      this.page.locator('[data-item-type="code"]').filter({
+        hasText: '"sent": "full tab"',
+      }),
+    ).toBeVisible();
+  }
+
+  async sendSelectedUrlToExistingCanvas() {
+    await this.page.getByTestId("tab-Scratch 1").click();
+    await this.setActiveEditorContent(
+      "prefix\nhttps://docs.example.com/canvas-selection\nsuffix",
+      2,
+    );
+    await this.openActiveTabContextMenu();
+    await this.page
+      .getByRole("button", {
+        name: "Send selection to Canvas...",
+        exact: true,
+      })
+      .click();
+    const dialog = this.page.getByTestId("send-to-canvas-dialog");
+    await dialog.getByRole("button", { name: /Canvas 1/ }).click();
+    const link = this.page.locator('[data-item-type="link"]').filter({
+      hasText: "docs.example.com",
+    });
+    await expect(link).toBeVisible();
+  }
+
+  async sendImageTabToExistingCanvas() {
+    await this.page.getByTestId("tab-Scratch 1").click();
+    await this.setActiveEditorContent(
+      `data:image/png;base64,${ONE_PIXEL_PNG_BASE64}`,
+    );
+    await this.openActiveTabContextMenu();
+    await this.page
+      .getByRole("button", { name: "Send tab to Canvas...", exact: true })
+      .click();
+    const dialog = this.page.getByTestId("send-to-canvas-dialog");
+    await dialog.getByRole("button", { name: /Canvas 1/ }).click();
+    await expect(
+      this.page.locator('[data-item-type="image"]').first(),
+    ).toBeVisible();
+  }
+
+  async expectSentCanvasContentAfterReload() {
+    await this.waitForSceneSave();
+    await this.page.reload();
+    await expect(this.page.locator('[data-item-type="code"]').first()).toBeVisible();
+    await expect(this.page.locator('[data-item-type="link"]').first()).toBeVisible();
+    await expect(this.page.locator('[data-item-type="image"]').first()).toBeVisible();
   }
 
   async duplicateCanvasTab(title: string) {
@@ -145,6 +310,14 @@ export class CanvasActions {
 
   private imageCard() {
     return this.page.locator('[data-item-type="image"]').first();
+  }
+
+  private linkCard() {
+    return this.page.locator('[data-item-type="link"]').first();
+  }
+
+  private videoCard() {
+    return this.page.locator('[data-item-type="video"]').first();
   }
 
   private async readBounds(card: ReturnType<Page["locator"]>) {
@@ -261,6 +434,128 @@ export class CanvasActions {
     await this.dispatchTextPaste('{"pasted":true}');
     await expect(this.codeCard()).toBeVisible();
     await this.waitForSceneSave();
+  }
+
+  async pasteNormalUrl() {
+    await this.markPendingSceneChange();
+    await this.dispatchTextPaste("https://example.com/docs?mode=offline#intro");
+    await expect(this.linkCard()).toHaveAttribute(
+      "data-canonical-url",
+      "https://example.com/docs?mode=offline",
+    );
+  }
+
+  async reloadWithLinkedHostUnavailable() {
+    await this.page.route("https://example.com/**", (route) => route.abort());
+    await this.page.reload();
+    await expect(this.page.getByTestId("canvas-flow")).toBeVisible();
+  }
+
+  async expectRestoredLinkAndActions() {
+    const card = this.linkCard();
+    await expect(card).toHaveAttribute("data-hostname", "example.com");
+    await expect(card).toContainText("https://example.com/docs?mode=offline");
+
+    await this.page.evaluate(() => {
+      const browserWindow = window as Window & {
+        __canvasOpenedUrl?: string;
+      };
+      browserWindow.open = ((url?: string | URL) => {
+        browserWindow.__canvasOpenedUrl = String(url);
+        return null;
+      }) as typeof window.open;
+    });
+    await card.getByTestId("canvas-url-open").click();
+    expect(
+      await this.page.evaluate(
+        () =>
+          (window as Window & { __canvasOpenedUrl?: string }).__canvasOpenedUrl,
+      ),
+    ).toBe("https://example.com/docs?mode=offline");
+
+    await card.getByTestId("canvas-url-copy").click();
+    await expect(card.getByTestId("canvas-url-copy")).toHaveAccessibleName(
+      "Copied URL",
+    );
+    expect(await this.page.evaluate(() => navigator.clipboard.readText())).toBe(
+      "https://example.com/docs?mode=offline",
+    );
+  }
+
+  async pasteRecognizedAndUnrecognizedVideoUrls() {
+    await this.dispatchTextPaste(
+      "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    );
+    await expect(this.videoCard()).toBeVisible();
+    await this.dispatchTextPaste(
+      "https://youtube.com.evil.example/watch?v=dQw4w9WgXcQ",
+    );
+    await expect(this.linkCard()).toBeVisible();
+  }
+
+  async pasteRecognizedVideoUrl() {
+    await this.dispatchTextPaste(
+      "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    );
+    await expect(this.videoCard()).toHaveAttribute(
+      "data-video-provider",
+      "youtube",
+    );
+  }
+
+  async expectVideoClassification() {
+    await expect(this.videoCard()).toHaveAttribute(
+      "data-video-id",
+      "dQw4w9WgXcQ",
+    );
+    await expect(this.linkCard()).toHaveAttribute(
+      "data-hostname",
+      "youtube.com.evil.example",
+    );
+  }
+
+  async expectNoVideoIframe() {
+    await expect(
+      this.page.getByTestId("canvas-video-iframe"),
+    ).not.toBeAttached();
+  }
+
+  async playCanvasVideo() {
+    await this.videoCard().getByTestId("canvas-video-play").click();
+  }
+
+  async expectRestrictedVideoIframe() {
+    const iframe = this.page.getByTestId("canvas-video-iframe");
+    await expect(iframe).toHaveCount(1);
+    await expect(iframe).toHaveAttribute(
+      "src",
+      "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1",
+    );
+    await expect(iframe).toHaveAttribute(
+      "referrerpolicy",
+      "strict-origin-when-cross-origin",
+    );
+    await expect(iframe).toHaveAttribute(
+      "sandbox",
+      "allow-scripts allow-same-origin allow-presentation",
+    );
+  }
+
+  async stopAndReplayCanvasVideo() {
+    await this.videoCard().getByTestId("canvas-video-stop").click();
+    await this.expectNoVideoIframe();
+    await this.videoCard().getByTestId("canvas-video-play").click();
+    await expect(this.page.getByTestId("canvas-video-iframe")).toHaveCount(1);
+  }
+
+  async pasteUnsafeUrlScheme() {
+    await this.dispatchTextPaste("javascript:alert(1)");
+  }
+
+  async expectNoUnsafeLink() {
+    await expect(this.linkCard()).toHaveCount(0);
+    await expect(this.videoCard()).toHaveCount(0);
+    await expect(this.textCardContaining("javascript:alert(1)")).toHaveCount(1);
   }
 
   async expectPastedTextAndJsonCards() {
@@ -595,6 +890,44 @@ export class CanvasActions {
     await this.page.getByTestId("canvas-code-format").click();
     await this.page.getByTestId("canvas-code-wrap").click();
     await this.page.getByTestId("canvas-code-collapse").click();
+  }
+
+  async collapseCodeCard() {
+    await this.page.getByTestId("canvas-code-collapse").click();
+    await expect(this.codeCard()).toHaveAttribute("data-collapsed", "true");
+  }
+
+  async dragCollapsedCodeCardByHeader() {
+    const card = this.codeCard();
+    const before = await this.readBounds(card);
+    const header = card.getByTestId("canvas-code-drag-handle");
+    const bounds = await header.boundingBox();
+    expect(bounds).toBeTruthy();
+
+    await this.markPendingSceneChange();
+    await this.page.mouse.move(bounds!.x + 20, bounds!.y + bounds!.height / 2);
+    await this.page.mouse.down();
+    await this.page.mouse.move(
+      bounds!.x + 140,
+      bounds!.y + bounds!.height / 2 + 80,
+      { steps: 8 },
+    );
+    await this.page.mouse.up();
+
+    this.operationBounds = {
+      before,
+      after: await this.readBounds(card),
+    };
+  }
+
+  async expectCodeCardMoved() {
+    expect(this.operationBounds).toBeTruthy();
+    expect(this.operationBounds!.after.x).not.toBe(
+      this.operationBounds!.before.x,
+    );
+    expect(this.operationBounds!.after.y).not.toBe(
+      this.operationBounds!.before.y,
+    );
   }
 
   async expectFormattedCodeCardAfterReload() {

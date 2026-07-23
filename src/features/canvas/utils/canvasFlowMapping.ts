@@ -4,7 +4,9 @@ import type {
   CanvasEdge,
   CanvasImageItem,
   CanvasItem,
+  CanvasLinkItem,
   CanvasTextItem,
+  CanvasVideoItem,
 } from "../types";
 import { getCanvasItemAccessibleLabel } from "./canvasAccessibility";
 
@@ -26,13 +28,29 @@ export type CanvasImageNodeData = {
   isFocused: boolean;
 };
 
+export type CanvasLinkNodeData = {
+  item: CanvasLinkItem;
+  isEditing: boolean;
+  isFocused: boolean;
+};
+
+export type CanvasVideoNodeData = {
+  item: CanvasVideoItem;
+  isEditing: boolean;
+  isFocused: boolean;
+};
+
 export type CanvasTextFlowNode = Node<CanvasTextNodeData, "text">;
 export type CanvasCodeFlowNode = Node<CanvasCodeNodeData, "code">;
 export type CanvasImageFlowNode = Node<CanvasImageNodeData, "image">;
+export type CanvasLinkFlowNode = Node<CanvasLinkNodeData, "link">;
+export type CanvasVideoFlowNode = Node<CanvasVideoNodeData, "video">;
 export type CanvasFlowNode =
   | CanvasTextFlowNode
   | CanvasCodeFlowNode
-  | CanvasImageFlowNode;
+  | CanvasImageFlowNode
+  | CanvasLinkFlowNode
+  | CanvasVideoFlowNode;
 
 export const canvasItemToFlowNode = (
   item: CanvasItem,
@@ -66,6 +84,18 @@ export const canvasItemToFlowNode = (
       return {
         ...common,
         type: "image",
+        data: { item: { ...item }, ...interaction },
+      };
+    case "link":
+      return {
+        ...common,
+        type: "link",
+        data: { item: { ...item }, ...interaction },
+      };
+    case "video":
+      return {
+        ...common,
+        type: "video",
         data: { item: { ...item }, ...interaction },
       };
     case "text":

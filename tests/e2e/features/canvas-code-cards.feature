@@ -21,6 +21,12 @@ Feature: Canvas code cards
     When I add a Canvas code card containing "<!DOCTYPE html><html><body><strong>Safe text</strong></body></html>"
     Then the Canvas code card should use "html" and render markup as text
 
+  Scenario: Move a collapsed code card by its header
+    When I add a Canvas code card containing "{\"movable\":true}"
+    And I collapse the Canvas code card
+    And I drag the collapsed Canvas code card by its header
+    Then the Canvas code card should move
+
   Scenario: Open a code card in an independent text tab
     When I add a Canvas code card containing "{\"source\":\"canvas\"}"
     And I open the Canvas code card in a text tab

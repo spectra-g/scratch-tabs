@@ -6,6 +6,7 @@ import { EmptyStateActionCard } from "./EmptyStateActionCard";
 import { useFileImport } from "../../hooks/useFileImport";
 import { ToolSelectorModal } from "../ToolSelector";
 import { toolService, ToolItem } from "../../services/toolService";
+import { useCanvasFeatureEnabled } from "../../features/canvas/hooks/useCanvasFeatureEnabled";
 
 /**
  * WorkspaceEmptyState
@@ -19,10 +20,16 @@ import { toolService, ToolItem } from "../../services/toolService";
  * Following the "empty folder" UX pattern - workspaces persist when empty.
  */
 export const WorkspaceEmptyState: React.FC = () => {
-  const { handleNewTab, handleNewTabFromPaste, handleNewPopulatedTab } = useRootStore();
+  const {
+    handleNewTab,
+    handleNewCanvas,
+    handleNewTabFromPaste,
+    handleNewPopulatedTab,
+  } = useRootStore();
   const { activeWorkspaceId, workspaces } = useWorkspaceStore();
   const containerRef = useRef<HTMLDivElement>(null);
   const [showToolSelector, setShowToolSelector] = useState(false);
+  const canvasEnabled = useCanvasFeatureEnabled();
 
   // Memoize workspace lookup to avoid unnecessary recomputation on render.
   const currentWorkspace = useMemo(
@@ -56,6 +63,10 @@ export const WorkspaceEmptyState: React.FC = () => {
     handleNewTabFromPaste(false);
   }, [handleNewTabFromPaste]);
 
+  const handleNewCanvasClick = useCallback(() => {
+    void handleNewCanvas(false);
+  }, [handleNewCanvas]);
+
   const handleDoubleClick = useCallback(() => {
     handleNewTab(false);
   }, [handleNewTab]);
@@ -82,10 +93,11 @@ export const WorkspaceEmptyState: React.FC = () => {
         side: 'left',
         activeWorkspaceId: activeWorkspaceId || '',
         addTab: (tabData) => handleNewPopulatedTab(tabData),
+        createCanvas: (isRight) => handleNewCanvas(isRight),
       });
       setShowToolSelector(false);
     },
-    [handleNewPopulatedTab, activeWorkspaceId]
+    [handleNewCanvas, handleNewPopulatedTab, activeWorkspaceId]
   );
 
   // Keyboard handler for "/" key to open tool selector
@@ -128,7 +140,7 @@ export const WorkspaceEmptyState: React.FC = () => {
       </p>
 
       {/* Action Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-2xl">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 w-full max-w-4xl">
         <EmptyStateActionCard
           label="New Tab"
           description="Empty Scratch Tab"
@@ -137,6 +149,16 @@ export const WorkspaceEmptyState: React.FC = () => {
           onClick={handleNewTabClick}
           testId="new-tab-action"
         />
+        {canvasEnabled && (
+          <EmptyStateActionCard
+            label="New Canvas"
+            description="Spatial workspace"
+            icon="canvas"
+            colorScheme="primary"
+            onClick={handleNewCanvasClick}
+            testId="new-canvas-action"
+          />
+        )}
         <EmptyStateActionCard
           label="Paste"
           description="From Clipboard"

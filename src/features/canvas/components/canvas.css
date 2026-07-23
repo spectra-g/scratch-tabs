@@ -27,20 +27,26 @@
 
 .canvas-flow-root .react-flow__node-text,
 .canvas-flow-root .react-flow__node-code,
-.canvas-flow-root .react-flow__node-image {
+.canvas-flow-root .react-flow__node-image,
+.canvas-flow-root .react-flow__node-link,
+.canvas-flow-root .react-flow__node-video {
   border-radius: 0.5rem;
 }
 
 .canvas-flow-root .react-flow__node-text.selected .canvas-text-node,
 .canvas-flow-root .react-flow__node-code.selected .canvas-code-node,
-.canvas-flow-root .react-flow__node-image.selected .canvas-image-node {
+.canvas-flow-root .react-flow__node-image.selected .canvas-image-node,
+.canvas-flow-root .react-flow__node-link.selected .canvas-link-node,
+.canvas-flow-root .react-flow__node-video.selected .canvas-video-node {
   border-color: rgb(var(--color-primary));
   box-shadow: 0 0 0 2px rgb(var(--color-primary) / 0.28);
 }
 
 .canvas-flow-root .canvas-text-node[data-focused="true"]:focus-visible,
 .canvas-flow-root .canvas-code-node[data-focused="true"]:focus-visible,
-.canvas-flow-root .canvas-image-node[data-focused="true"]:focus-visible {
+.canvas-flow-root .canvas-image-node[data-focused="true"]:focus-visible,
+.canvas-flow-root .canvas-link-node[data-focused="true"]:focus-visible,
+.canvas-flow-root .canvas-video-node[data-focused="true"]:focus-visible {
   border-color: rgb(var(--color-text-main));
   outline: 3px solid rgb(var(--color-surface));
   box-shadow:

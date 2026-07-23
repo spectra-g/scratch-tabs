@@ -1,10 +1,10 @@
 import { tabletMetadata } from '../tablets/tabletMetadata';
 import { smartViewRegistry } from '../views/registry';
 import { formatRegistry } from '../formats/registry';
-import { FileCode, Eye, Tablet } from '../components/Icons';
+import { FileCode, Eye, Layers, Tablet } from '../components/Icons';
 import { getRecentTools, addRecentTool } from '../db';
 
-export type ToolType = 'tablet' | 'smartview' | 'format';
+export type ToolType = 'document' | 'tablet' | 'smartview' | 'format';
 
 export interface ToolItem {
     id: string;
@@ -22,6 +22,7 @@ export interface ToolExecutionContext {
     addTab: (tabData: any, isRightSide: boolean) => void;
     updateTab?: (tabId: string, updates: any) => void;
     activeTabId?: string;
+    createCanvas?: (isRightSide: boolean) => Promise<string | undefined>;
 }
 
 class ToolService {
@@ -29,6 +30,19 @@ class ToolService {
      * Get all available tools
      */
     async getAllTools(): Promise<ToolItem[]> {
+        const { getCanvasFeatureEnabled } = await import(
+            "../features/canvas/utils/canvasFeatureFlag"
+        );
+        const documents: ToolItem[] = (await getCanvasFeatureEnabled())
+            ? [{
+                id: 'canvas',
+                type: 'document',
+                label: 'Canvas',
+                description: 'Create a spatial Canvas document',
+                icon: Layers,
+                keywords: ['canvas', 'board', 'spatial', 'document'],
+            }]
+            : [];
         const tablets: ToolItem[] = tabletMetadata.map(tablet => ({
             id: tablet.id,
             type: 'tablet',
@@ -58,7 +72,7 @@ class ToolService {
             keywords: [format.id, ...format.extensions, format.name.toLowerCase()],
         }));
 
-        return [...tablets, ...smartViews, ...formats];
+        return [...documents, ...tablets, ...smartViews, ...formats];
     }
 
     /**
@@ -68,12 +82,14 @@ class ToolService {
         tablets: ToolItem[];
         smartViews: ToolItem[];
         formats: ToolItem[];
+        documents: ToolItem[];
     }> {
         const normalizedQuery = query.toLowerCase().trim();
         const allTools = await this.getAllTools();
 
         if (!normalizedQuery) {
             return {
+                documents: allTools.filter(t => t.type === 'document'),
                 tablets: allTools.filter(t => t.type === 'tablet'),
                 smartViews: allTools.filter(t => t.type === 'smartview'),
                 formats: allTools.filter(t => t.type === 'format'),
@@ -97,6 +113,7 @@ class ToolService {
         const sortedItems = scoredItems.map(res => res.item);
 
         return {
+            documents: sortedItems.filter(t => t.type === 'document'),
             tablets: sortedItems.filter(t => t.type === 'tablet'),
             smartViews: sortedItems.filter(t => t.type === 'smartview'),
             formats: sortedItems.filter(t => t.type === 'format'),
@@ -110,10 +127,15 @@ class ToolService {
         // Record usage
         await addRecentTool(this.getGlobalId(tool));
 
-        const { side, activeWorkspaceId, addTab, updateTab, activeTabId } = context;
+        const { side, activeWorkspaceId, addTab, updateTab, activeTabId, createCanvas } = context;
         const isRightSide = side === 'right';
 
-        if (tool.type === 'tablet') {
+        if (tool.type === 'document') {
+            if (tool.id !== 'canvas' || !createCanvas) {
+                throw new Error(`Document tool ${tool.id} is not available`);
+            }
+            await createCanvas(isRightSide);
+        } else if (tool.type === 'tablet') {
             const { dynamicTabletRegistry: tabletRegistry } = await import("../tablets/dynamicRegistry");
             const tablet = await tabletRegistry.getById(tool.id);
             if (tablet) {

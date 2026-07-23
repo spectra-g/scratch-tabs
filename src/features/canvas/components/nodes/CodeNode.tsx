@@ -140,7 +140,10 @@ const CodeNodeComponent = ({
         />
       ) : (
         <>
-          <header className="nodrag flex min-h-9 items-center justify-between gap-2 border-b border-base px-2">
+          <header
+            className="flex min-h-9 cursor-grab items-center justify-between gap-2 border-b border-base px-2 active:cursor-grabbing"
+            data-testid="canvas-code-drag-handle"
+          >
             <span
               className="truncate text-[11px] font-semibold uppercase tracking-wide text-muted"
               data-testid="canvas-code-language"

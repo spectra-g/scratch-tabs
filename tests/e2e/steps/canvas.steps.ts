@@ -28,6 +28,55 @@ When("I create a new Canvas", async function (this: E2EWorld) {
 });
 
 When(
+  "I verify the primary plus still creates a text tab",
+  async function (this: E2EWorld) {
+    await this.canvas.expectPrimaryNewTabStillCreatesText();
+  },
+);
+
+When(
+  "I create a Canvas from the Tool Selector",
+  async function (this: E2EWorld) {
+    await this.canvas.createCanvasFromToolSelector();
+  },
+);
+
+When(
+  "I create a Canvas from the empty workspace action",
+  async function (this: E2EWorld) {
+    await this.canvas.createCanvasFromEmptyWorkspace();
+  },
+);
+
+When(
+  "I send the full tab to a new Canvas",
+  async function (this: E2EWorld) {
+    await this.canvas.sendFullTabToNewCanvas();
+  },
+);
+
+When(
+  "I send a selected URL to the existing Canvas",
+  async function (this: E2EWorld) {
+    await this.canvas.sendSelectedUrlToExistingCanvas();
+  },
+);
+
+When(
+  "I send an image tab to the existing Canvas",
+  async function (this: E2EWorld) {
+    await this.canvas.sendImageTabToExistingCanvas();
+  },
+);
+
+When(
+  "I open the direct Canvas route",
+  async function (this: E2EWorld) {
+    await this.canvas.createCanvasFromDirectRoute();
+  },
+);
+
+When(
   "I duplicate the Canvas tab {string}",
   async function (this: E2EWorld, title: string) {
     await this.canvas.duplicateCanvasTab(title);
@@ -77,6 +126,49 @@ When(
   },
 );
 
+When("I paste a normal URL into the Canvas", async function (this: E2EWorld) {
+  await this.canvas.pasteNormalUrl();
+});
+
+When(
+  "I reload the Canvas with the linked host unavailable",
+  async function (this: E2EWorld) {
+    await this.canvas.reloadWithLinkedHostUnavailable();
+  },
+);
+
+When(
+  "I paste recognized and unrecognized video URLs into the Canvas",
+  async function (this: E2EWorld) {
+    await this.canvas.pasteRecognizedAndUnrecognizedVideoUrls();
+  },
+);
+
+When(
+  "I paste a recognized video URL into the Canvas",
+  async function (this: E2EWorld) {
+    await this.canvas.pasteRecognizedVideoUrl();
+  },
+);
+
+When("I play the Canvas video", async function (this: E2EWorld) {
+  await this.canvas.playCanvasVideo();
+});
+
+When(
+  "I stop and replay the Canvas video",
+  async function (this: E2EWorld) {
+    await this.canvas.stopAndReplayCanvasVideo();
+  },
+);
+
+When(
+  "I paste an unsafe URL scheme into the Canvas",
+  async function (this: E2EWorld) {
+    await this.canvas.pasteUnsafeUrlScheme();
+  },
+);
+
 When(
   "I drop an image and code file onto the Canvas",
   async function (this: E2EWorld) {
@@ -121,6 +213,27 @@ When(
   "I format, wrap, and collapse the Canvas code card",
   async function (this: E2EWorld) {
     await this.canvas.formatAndConfigureCodeCard();
+  },
+);
+
+When(
+  "I collapse the Canvas code card",
+  async function (this: E2EWorld) {
+    await this.canvas.collapseCodeCard();
+  },
+);
+
+When(
+  "I drag the collapsed Canvas code card by its header",
+  async function (this: E2EWorld) {
+    await this.canvas.dragCollapsedCodeCardByHeader();
+  },
+);
+
+Then(
+  "the Canvas code card should move",
+  async function (this: E2EWorld) {
+    await this.canvas.expectCodeCardMoved();
   },
 );
 
@@ -349,6 +462,13 @@ Then("I should see an empty Canvas", async function (this: E2EWorld) {
   await this.canvas.expectEmptyCanvas();
 });
 
+Then(
+  "the sent Canvas content should survive reload",
+  async function (this: E2EWorld) {
+    await this.canvas.expectSentCanvasContentAfterReload();
+  },
+);
+
 Then("the Canvas should be saved locally", async function (this: E2EWorld) {
   await this.canvas.expectSavedLocally();
 });
@@ -420,6 +540,41 @@ Then(
   "the pasted content should become text and JSON cards",
   async function (this: E2EWorld) {
     await this.canvas.expectPastedTextAndJsonCards();
+  },
+);
+
+Then(
+  "the Canvas link should retain its URL hostname and actions",
+  async function (this: E2EWorld) {
+    await this.canvas.expectRestoredLinkAndActions();
+  },
+);
+
+Then(
+  "the recognized URL should be a video card and the unknown URL a link card",
+  async function (this: E2EWorld) {
+    await this.canvas.expectVideoClassification();
+  },
+);
+
+Then(
+  "no Canvas video iframe should exist",
+  async function (this: E2EWorld) {
+    await this.canvas.expectNoVideoIframe();
+  },
+);
+
+Then(
+  "one policy-restricted Canvas video iframe should exist",
+  async function (this: E2EWorld) {
+    await this.canvas.expectRestrictedVideoIframe();
+  },
+);
+
+Then(
+  "no unsafe Canvas link should be created",
+  async function (this: E2EWorld) {
+    await this.canvas.expectNoUnsafeLink();
   },
 );
 

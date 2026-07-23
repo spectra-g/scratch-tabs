@@ -106,7 +106,9 @@ describe("Canvas editing controls", () => {
     expect(screen.getByText("Cut selected cards")).toBeInTheDocument();
     expect(screen.getByText("Cmd/Ctrl+V")).toBeInTheDocument();
     expect(
-      screen.getByText("Paste cards or external content"),
+      screen.getByText(
+        "Paste cards or external content (Text, Images, Links, Videos)",
+      ),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("canvas-close-shortcut-help"));
     expect(onClose).toHaveBeenCalledTimes(1);

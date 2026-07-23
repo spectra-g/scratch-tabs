@@ -100,6 +100,34 @@ describe("Canvas schemas", () => {
         altText: "Architecture diagram",
         objectFit: "contain",
       },
+      {
+        id: "item-5",
+        type: "link",
+        x: 600,
+        y: 500,
+        width: 360,
+        height: 180,
+        zIndex: 6,
+        createdAt: 132,
+        updatedAt: 133,
+        canonicalUrl: "https://example.com/docs",
+        hostname: "example.com",
+      },
+      {
+        id: "item-6",
+        type: "video",
+        x: 1000,
+        y: 500,
+        width: 480,
+        height: 300,
+        zIndex: 7,
+        createdAt: 134,
+        updatedAt: 135,
+        canonicalUrl: "https://vimeo.com/76979871",
+        hostname: "vimeo.com",
+        provider: "vimeo",
+        videoId: "76979871",
+      },
     ];
     document.edges = [
       { id: "edge-1", sourceItemId: "item-1", targetItemId: "item-2" },
@@ -190,6 +218,50 @@ describe("Canvas schemas", () => {
         items: [{ ...codeItem, expandedHeight: -1 }],
       }),
     ).toThrow("expandedHeight must be positive");
+  });
+
+  it("rejects non-canonical links and tampered video provider data", () => {
+    const valid = createEmptyCanvasDocument({
+      id: "document-1",
+      tabId: "tab-1",
+      workspaceId: "workspace-1",
+      now: 123,
+    });
+    const base = {
+      id: "url-1",
+      x: 0,
+      y: 0,
+      width: 360,
+      height: 180,
+      zIndex: 1,
+      createdAt: 1,
+      updatedAt: 1,
+      canonicalUrl: "https://example.com/",
+      hostname: "example.com",
+    };
+
+    expect(() =>
+      parseCanvasDocument({
+        ...valid,
+        items: [{ ...base, type: "link", canonicalUrl: "javascript:alert(1)" }],
+      }),
+    ).toThrow("link URL is not canonical");
+    expect(() =>
+      parseCanvasDocument({
+        ...valid,
+        items: [
+          {
+            ...base,
+            type: "video",
+            canonicalUrl:
+              "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            hostname: "www.youtube.com",
+            provider: "vimeo",
+            videoId: "dQw4w9WgXcQ",
+          },
+        ],
+      }),
+    ).toThrow("video provider data is invalid");
   });
 
   it("rejects unsupported and malformed documents", () => {

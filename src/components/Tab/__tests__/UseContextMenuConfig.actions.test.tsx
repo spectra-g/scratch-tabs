@@ -3,12 +3,17 @@ import { useContextMenuConfig } from '../UseContextMenuConfig';
 import { useTabsStore } from '../../../stores/tabsStore';
 import { Tab } from '../../../types';
 
+const mockCanvasFeatureEnabled = jest.fn(() => false);
+
 // Mock dependencies
 jest.mock('../../../stores/tabsStore');
 jest.mock('../../../stores/splitViewStore');
 jest.mock('../../../stores/rootStore');
 jest.mock('../../../stores/macroStore');
 jest.mock('../../../services/modelManager');
+jest.mock('../../../features/canvas/hooks/useCanvasFeatureEnabled', () => ({
+  useCanvasFeatureEnabled: () => mockCanvasFeatureEnabled(),
+}));
 
 // Import store types for proper mocking
 import { useSplitViewStore } from '../../../stores/splitViewStore';
@@ -45,6 +50,7 @@ describe('UseContextMenuConfig - Actions and Structure', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockCanvasFeatureEnabled.mockReturnValue(false);
 
     mockUseTabsStore.mockReturnValue({
       tabs: [mockTab, mockTabletTab],
@@ -251,6 +257,26 @@ describe('UseContextMenuConfig - Actions and Structure', () => {
 
     expect(pipelineItem).toBeDefined();
     expect(pipelineItem?.label).toBe('Transformation Pipeline');
+  });
+
+  it('shows Canvas actions for text tabs and disables unavailable sources', () => {
+    mockCanvasFeatureEnabled.mockReturnValue(true);
+
+    const { result } = renderHook(() =>
+      useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
+    );
+
+    const sendTab = result.current.menuItems.find(
+      item => item.id === 'sendTabToCanvas'
+    );
+    const sendSelection = result.current.menuItems.find(
+      item => item.id === 'sendSelectionToCanvas'
+    );
+
+    expect(sendTab).toBeDefined();
+    expect(sendTab?.disabled).toBe(false);
+    expect(sendSelection).toBeDefined();
+    expect(sendSelection?.disabled).toBe(true);
   });
 
   it('should include Macro Recording menu item after Transformation Pipeline', () => {

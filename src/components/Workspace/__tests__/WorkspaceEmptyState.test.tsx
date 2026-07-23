@@ -10,6 +10,9 @@ import { useFileImport } from '../../../hooks/useFileImport';
 jest.mock('../../../stores/rootStore');
 jest.mock('../../../stores/workspaceStore');
 jest.mock('../../../hooks/useFileImport');
+jest.mock('../../../features/canvas/hooks/useCanvasFeatureEnabled', () => ({
+  useCanvasFeatureEnabled: () => true,
+}));
 jest.mock('../../ToolSelector', () => ({
   ToolSelectorModal: ({ isOpen, onClose }: any) =>
     isOpen ? <div data-testid="tool-selector-modal" onClick={onClose}>Tool Selector</div> : null
@@ -23,6 +26,7 @@ jest.mock('../../../services/toolService', () => ({
 describe('WorkspaceEmptyState', () => {
   const mockHandleNewTab = jest.fn();
   const mockHandleNewTabFromPaste = jest.fn();
+  const mockHandleNewCanvas = jest.fn();
   const mockHandleNewPopulatedTab = jest.fn();
   const mockOpenFileDialog = jest.fn();
 
@@ -50,6 +54,7 @@ describe('WorkspaceEmptyState', () => {
     (useRootStore as any).mockReturnValue({
       handleNewTab: mockHandleNewTab,
       handleNewTabFromPaste: mockHandleNewTabFromPaste,
+      handleNewCanvas: mockHandleNewCanvas,
       handleNewPopulatedTab: mockHandleNewPopulatedTab,
     });
 
@@ -84,10 +89,11 @@ describe('WorkspaceEmptyState', () => {
       expect(screen.getByText('Workspace is empty')).toBeInTheDocument();
     });
 
-    it('should render all three action cards', () => {
+    it('should render all four action cards', () => {
       render(<WorkspaceEmptyState />);
 
       expect(screen.getByTestId('new-tab-action')).toBeInTheDocument();
+      expect(screen.getByTestId('new-canvas-action')).toBeInTheDocument();
       expect(screen.getByTestId('paste-action')).toBeInTheDocument();
       expect(screen.getByTestId('open-file-action')).toBeInTheDocument();
     });
@@ -97,6 +103,8 @@ describe('WorkspaceEmptyState', () => {
 
       expect(screen.getByText('New Tab')).toBeInTheDocument();
       expect(screen.getByText('Empty Scratch Tab')).toBeInTheDocument();
+      expect(screen.getByText('New Canvas')).toBeInTheDocument();
+      expect(screen.getByText('Spatial workspace')).toBeInTheDocument();
       expect(screen.getByText('Paste')).toBeInTheDocument();
       expect(screen.getByText('From Clipboard')).toBeInTheDocument();
       expect(screen.getByText('Open File')).toBeInTheDocument();
@@ -138,6 +146,14 @@ describe('WorkspaceEmptyState', () => {
 
       expect(mockHandleNewTabFromPaste).toHaveBeenCalledTimes(1);
       expect(mockHandleNewTabFromPaste).toHaveBeenCalledWith(false);
+    });
+
+    it('should call handleNewCanvas when clicking New Canvas action', () => {
+      render(<WorkspaceEmptyState />);
+
+      fireEvent.click(screen.getByTestId('new-canvas-action'));
+
+      expect(mockHandleNewCanvas).toHaveBeenCalledWith(false);
     });
 
     it('should call openFileDialog when clicking Open File action', () => {
@@ -190,7 +206,7 @@ describe('WorkspaceEmptyState', () => {
       render(<WorkspaceEmptyState />);
 
       const buttons = screen.getAllByRole('button');
-      expect(buttons).toHaveLength(3);
+      expect(buttons).toHaveLength(4);
     });
   });
 });

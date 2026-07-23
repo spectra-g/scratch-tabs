@@ -3,13 +3,25 @@ import {
   DEFAULT_CODE_ITEM_WIDTH,
   DEFAULT_IMAGE_ITEM_MAX_HEIGHT,
   DEFAULT_IMAGE_ITEM_MAX_WIDTH,
+  DEFAULT_LINK_ITEM_HEIGHT,
+  DEFAULT_LINK_ITEM_WIDTH,
   MIN_IMAGE_ITEM_HEIGHT,
   MIN_IMAGE_ITEM_WIDTH,
   DEFAULT_TEXT_ITEM_HEIGHT,
   DEFAULT_TEXT_ITEM_WIDTH,
+  DEFAULT_VIDEO_ITEM_HEIGHT,
+  DEFAULT_VIDEO_ITEM_WIDTH,
 } from "../constants";
 import { detectFormat, isAmbiguousFormat } from "../../../formats";
-import type { CanvasCodeItem, CanvasImageItem, CanvasTextItem } from "../types";
+import type {
+  CanvasCodeItem,
+  CanvasImageItem,
+  CanvasLinkItem,
+  CanvasTextItem,
+  CanvasVideoItem,
+} from "../types";
+import type { CanvasVideoMatch } from "./canvasVideoProviders";
+import type { CanonicalCanvasUrl } from "./canvasUrl";
 
 export interface CanvasPoint {
   x: number;
@@ -143,4 +155,62 @@ export const createImageCanvasItem = ({
   assetId,
   altText,
   objectFit: "contain",
+});
+
+export const createLinkCanvasItem = ({
+  position,
+  zIndex,
+  canonicalUrl,
+  hostname,
+  now = Date.now(),
+  id = crypto.randomUUID(),
+}: {
+  position: CanvasPoint;
+  zIndex: number;
+  canonicalUrl: string;
+  hostname: string;
+  now?: number;
+  id?: string;
+}): CanvasLinkItem => ({
+  id,
+  type: "link",
+  x: position.x,
+  y: position.y,
+  width: DEFAULT_LINK_ITEM_WIDTH,
+  height: DEFAULT_LINK_ITEM_HEIGHT,
+  zIndex,
+  createdAt: now,
+  updatedAt: now,
+  canonicalUrl,
+  hostname,
+});
+
+export const createVideoCanvasItem = ({
+  position,
+  zIndex,
+  url,
+  video,
+  now = Date.now(),
+  id = crypto.randomUUID(),
+}: {
+  position: CanvasPoint;
+  zIndex: number;
+  url: CanonicalCanvasUrl;
+  video: CanvasVideoMatch;
+  now?: number;
+  id?: string;
+}): CanvasVideoItem => ({
+  id,
+  type: "video",
+  x: position.x,
+  y: position.y,
+  width: DEFAULT_VIDEO_ITEM_WIDTH,
+  height: DEFAULT_VIDEO_ITEM_HEIGHT,
+  zIndex,
+  createdAt: now,
+  updatedAt: now,
+  canonicalUrl: url.canonicalUrl,
+  hostname: url.hostname,
+  provider: video.provider,
+  videoId: video.videoId,
 });

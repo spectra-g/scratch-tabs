@@ -27,6 +27,7 @@ import {
   Download,
   Play,
   Sparkles,
+  Send,
 } from "../Icons";
 import { FormatSelector } from "./FormatSelector";
 import { formatRegistry } from "../../formats";
@@ -42,6 +43,12 @@ import {
   CloseSubmenu,
 } from "./ContextMenuSubmenus";
 import { OpenInSubmenu } from "./OpenInSubmenu";
+import { useCanvasFeatureEnabled } from "../../features/canvas/hooks/useCanvasFeatureEnabled";
+import type { CanvasSendSource } from "../../features/canvas/utils/canvasSendSource";
+import { createCanvasSendSourceFromTab } from "../../features/canvas/utils/canvasSendSource";
+import { getCanvasEditorSelection } from "../../features/canvas/utils/canvasEditorSelection";
+import { useActiveEditorStore } from "../../stores/activeEditorStore";
+import { getTabContentKind } from "../../utils/tabContentKind";
 
 // Helper function to get the confirmation button text based on action type
 const getConfirmButtonText = (type: string | null): string => {
@@ -72,6 +79,11 @@ export interface UseContextMenuConfigReturn {
     tabId: string;
     onClose: () => void;
   } | null;
+  canvasSendDialogProps: {
+    source: CanvasSendSource;
+    side: "left" | "right";
+    onClose: () => void;
+  } | null;
   tabletModalOpen: boolean;
   onOpenTabletModal: () => void;
   onSelectTool: (item: ToolItem) => Promise<void>;
@@ -95,6 +107,7 @@ export const useContextMenuConfig = (
   const { activeWorkspaceId } = useWorkspaceStore();
   const { setForceShowToolbar } = useMacroStore();
   const { summarizeTextWithModal, ai } = useAIStore();
+  const canvasEnabled = useCanvasFeatureEnabled();
 
   const [confirmationState, setConfirmationState] = useState<{
     type: "close" | "closeAllExcept" | "closeTabsToLeft" | "closeTabsToRight";
@@ -105,6 +118,8 @@ export const useContextMenuConfig = (
   const [splitModalState, setSplitModalState] = useState<{ tabId: string } | null>(null);
   const [shareModalState, setShareModalState] = useState<{ tabId: string } | null>(null);
   const [tabletModalOpen, setTabletModalOpen] = useState(false);
+  const [canvasSendSource, setCanvasSendSource] =
+    useState<CanvasSendSource | null>(null);
   const { openModal: openPipelineModal } = usePipelineStore();
 
   const tab = tabsStore.tabs.find((t: any) => t.id === tabId);
@@ -127,6 +142,16 @@ export const useContextMenuConfig = (
   const isPinned = tab?.isPinned || false;
   const canDownload = !!tab && !tab.isTablet;
   const canRename = !!tab;
+  const canSendToCanvas =
+    canvasEnabled && !!tab && getTabContentKind(tab) === "text";
+  const hasCanvasTabContent =
+    !!tab && !!(modelManager.getContent(tab.id) ?? tab.content);
+  const activeEditorStore = useActiveEditorStore.getState();
+  const hasCanvasSelection = !!getCanvasEditorSelection(
+    isRightSide
+      ? activeEditorStore.activeRightEditor
+      : activeEditorStore.activeLeftEditor,
+  );
 
 
   const history = isRightSide
@@ -308,6 +333,34 @@ Add any other context about the problem here.
     closeContextMenu();
   };
 
+  const handleSendTabToCanvas = () => {
+    if (!tab) return;
+    const source = createCanvasSendSourceFromTab(
+      tab,
+      modelManager.getContent(tab.id),
+    );
+    if (source) setCanvasSendSource(source);
+  };
+
+  const getSelectedText = () => {
+    const editors = useActiveEditorStore.getState();
+    return getCanvasEditorSelection(
+      isRightSide ? editors.activeRightEditor : editors.activeLeftEditor,
+    );
+  };
+
+  const handleSendSelectionToCanvas = () => {
+    const selectedText = getSelectedText();
+    if (selectedText) {
+      setCanvasSendSource({ kind: "text", text: selectedText });
+    }
+  };
+
+  const handleCloseCanvasSendDialog = () => {
+    setCanvasSendSource(null);
+    closeContextMenu();
+  };
+
 
 
   const handleOpenSplitModal = () => {
@@ -338,6 +391,7 @@ Add any other context about the problem here.
       side: isRightSide ? 'right' : 'left',
       activeWorkspaceId: activeWorkspaceId || 'default',
       addTab: (tabData, isRight) => rootStore.addTab(tabData, isRight),
+      createCanvas: (isRight) => rootStore.handleNewCanvas(isRight),
     });
     setTabletModalOpen(false);
     closeContextMenu();
@@ -514,6 +568,22 @@ Add any other context about the problem here.
       action: handleCopyContent,
       condition: !!tab && !tab.isTablet && !tab.isRich,
     },
+    {
+      id: "sendTabToCanvas",
+      label: "Send tab to Canvas...",
+      icon: Send,
+      action: handleSendTabToCanvas,
+      condition: canSendToCanvas,
+      disabled: !hasCanvasTabContent,
+    },
+    {
+      id: "sendSelectionToCanvas",
+      label: "Send selection to Canvas...",
+      icon: Send,
+      action: handleSendSelectionToCanvas,
+      condition: canSendToCanvas,
+      disabled: !hasCanvasSelection,
+    },
     // Separator
     { id: "sep-3", isSeparator: true },
     // 10. Organize
@@ -647,6 +717,13 @@ Add any other context about the problem here.
         tabId: shareModalState.tabId,
         onClose: handleCloseShareModal,
       }
+      : null,
+    canvasSendDialogProps: canvasSendSource
+      ? {
+          source: canvasSendSource,
+          side: isRightSide ? "right" : "left",
+          onClose: handleCloseCanvasSendDialog,
+        }
       : null,
     tabletModalOpen,
     onOpenTabletModal: handleOpenTabletModal,

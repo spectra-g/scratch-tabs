@@ -11,7 +11,9 @@ export interface CanvasEdge {
   targetItemId: string;
 }
 
-export type CanvasItemType = "text" | "code" | "image";
+export type CanvasVideoProvider = "youtube" | "vimeo";
+
+export type CanvasItemType = "text" | "code" | "image" | "link" | "video";
 
 export interface CanvasItemBase {
   id: string;
@@ -49,7 +51,26 @@ export interface CanvasImageItem extends CanvasItemBase {
   objectFit: "contain" | "cover";
 }
 
-export type CanvasItem = CanvasTextItem | CanvasCodeItem | CanvasImageItem;
+export interface CanvasLinkItem extends CanvasItemBase {
+  type: "link";
+  canonicalUrl: string;
+  hostname: string;
+}
+
+export interface CanvasVideoItem extends CanvasItemBase {
+  type: "video";
+  canonicalUrl: string;
+  hostname: string;
+  provider: CanvasVideoProvider;
+  videoId: string;
+}
+
+export type CanvasItem =
+  | CanvasTextItem
+  | CanvasCodeItem
+  | CanvasImageItem
+  | CanvasLinkItem
+  | CanvasVideoItem;
 
 export interface CanvasDocument {
   id: string;

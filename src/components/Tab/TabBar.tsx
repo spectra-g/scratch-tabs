@@ -50,6 +50,7 @@ interface TabBarProps {
 
 interface TooltipContent {
   title: string;
+  documentType?: "Canvas";
   language?: string;
   lineCount?: number;
   dateCreated: number;
@@ -338,6 +339,9 @@ export const TabBar: React.FC<TabBarProps> = ({
       dateCreated: tab.dateCreated || Date.now(),
       lastModified: tab.lastModified || Date.now(),
     };
+    if (getTabContentKind(tab) === "canvas") {
+      content.documentType = "Canvas";
+    }
 
     if (getTabContentKind(tab) === "text") {
       content.lineCount = getTabLineCount(tab.content);
@@ -595,6 +599,8 @@ export const TabBar: React.FC<TabBarProps> = ({
       side,
       activeWorkspaceId: activeWorkspaceId || "default",
       addTab: (tabData, isRight) => addTab(tabData, isRight),
+      createCanvas: (isRight) =>
+        useRootStore.getState().handleNewCanvas(isRight),
     });
     setShowToolSelector(false);
   };

@@ -24,6 +24,46 @@ describe("Canvas clipboard and drop classification", () => {
     });
   });
 
+  it("classifies standalone URLs after complete JSON and before code detection", () => {
+    expect(classifyCanvasText(" HTTPS://Example.COM:443/docs#intro ")).toEqual({
+      kind: "link",
+      canonicalUrl: "https://example.com/docs",
+      hostname: "example.com",
+    });
+    expect(
+      classifyCanvasText(
+        "https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=30",
+      ),
+    ).toEqual({
+      kind: "video",
+      canonicalUrl:
+        "https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=30",
+      hostname: "www.youtube.com",
+      provider: "youtube",
+      videoId: "dQw4w9WgXcQ",
+    });
+  });
+
+  it("keeps unknown and deceptive video-like URLs as link cards", () => {
+    expect(
+      classifyCanvasText(
+        "https://youtube.com.evil.example/watch?v=dQw4w9WgXcQ",
+      ),
+    ).toEqual({
+      kind: "link",
+      canonicalUrl:
+        "https://youtube.com.evil.example/watch?v=dQw4w9WgXcQ",
+      hostname: "youtube.com.evil.example",
+    });
+  });
+
+  it("does not create links from non-HTTP(S) schemes", () => {
+    expect(classifyCanvasText("javascript:alert(1)")).toEqual({
+      kind: "text",
+      text: "javascript:alert(1)",
+    });
+  });
+
   it("uses a known file extension for code even when the snippet is short", async () => {
     const file = new File(["select 1"], "query.sql", {
       type: "text/plain",

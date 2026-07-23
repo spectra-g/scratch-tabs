@@ -58,6 +58,18 @@ describe("CanvasIngestService", () => {
         language: "json",
         languageLocked: true,
       },
+      {
+        kind: "link",
+        canonicalUrl: "https://example.com/",
+        hostname: "example.com",
+      },
+      {
+        kind: "video",
+        canonicalUrl: "https://vimeo.com/76979871",
+        hostname: "vimeo.com",
+        provider: "vimeo",
+        videoId: "76979871",
+      },
     ]);
     const service = new CanvasIngestService(
       manager as unknown as CanvasDocumentManager,
@@ -71,11 +83,19 @@ describe("CanvasIngestService", () => {
       { kind: "text", text: "ignored by classifier stub" },
     ]);
 
-    expect(items.map((item) => item.type)).toEqual(["image", "text", "code"]);
+    expect(items.map((item) => item.type)).toEqual([
+      "image",
+      "text",
+      "code",
+      "link",
+      "video",
+    ]);
     expect(items.map(({ x, y, zIndex }) => ({ x, y, zIndex }))).toEqual([
       { x: 100, y: 80, zIndex: 4 },
-      { x: 612, y: 80, zIndex: 5 },
-      { x: 100, y: 292, zIndex: 6 },
+      { x: 492, y: 80, zIndex: 5 },
+      { x: 1004, y: 80, zIndex: 6 },
+      { x: 100, y: 432, zIndex: 7 },
+      { x: 492, y: 432, zIndex: 8 },
     ]);
     expect(manager.addItemsWithAssets).toHaveBeenCalledTimes(1);
     expect(manager.addItemsWithAssets).toHaveBeenCalledWith(

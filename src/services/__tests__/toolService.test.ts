@@ -40,6 +40,9 @@ jest.mock('../../db', () => ({
     getRecentTools: jest.fn().mockResolvedValue([]),
     addRecentTool: jest.fn().mockResolvedValue(undefined),
 }));
+jest.mock('../../features/canvas/utils/canvasFeatureFlag', () => ({
+    getCanvasFeatureEnabled: jest.fn().mockResolvedValue(true),
+}));
 
 describe('ToolService', () => {
     beforeEach(() => {
@@ -49,7 +52,8 @@ describe('ToolService', () => {
     describe('getAllTools', () => {
         it('should aggregate all tools from registries', async () => {
             const tools = await toolService.getAllTools();
-            expect(tools.length).toBe(4); // 2 tablets + 1 view + 1 format
+            expect(tools.length).toBe(5); // 1 document + 2 tablets + 1 view + 1 format
+            expect(tools.some((t: any) => t.type === 'document')).toBe(true);
             expect(tools.some((t: any) => t.type === 'tablet')).toBe(true);
             expect(tools.some((t: any) => t.type === 'smartview')).toBe(true);
             expect(tools.some((t: any) => t.type === 'format')).toBe(true);
@@ -79,6 +83,7 @@ describe('ToolService', () => {
         it('should return all items grouped when query is empty', async () => {
             const results = await toolService.search('');
             expect(results.tablets.length).toBe(2);
+            expect(results.documents.length).toBe(1);
             expect(results.smartViews.length).toBe(1);
             expect(results.formats.length).toBe(1);
         });
@@ -114,6 +119,21 @@ describe('ToolService', () => {
 
             expect(addRecentTool).toHaveBeenCalledWith('smartview:view1');
             expect(mockContext.updateTab).toHaveBeenCalledWith('tab1', { activeViewId: 'view1' });
+        });
+
+        it('should create a Canvas through the document action port', async () => {
+            const tools = await toolService.getAllTools();
+            const canvasTool = tools.find(t => t.type === 'document')!;
+            const createCanvas = jest.fn().mockResolvedValue('canvas-1');
+
+            await toolService.executeTool(canvasTool, {
+                ...mockContext,
+                side: 'right',
+                createCanvas,
+            });
+
+            expect(addRecentTool).toHaveBeenCalledWith('document:canvas');
+            expect(createCanvas).toHaveBeenCalledWith(true);
         });
     });
 

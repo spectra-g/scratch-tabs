@@ -580,6 +580,8 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
         side,
         activeWorkspaceId: activeTab?.workspaceId || "default",
         addTab: (tabData, isRight) => useRootStore.getState().addTab(tabData, isRight),
+        createCanvas: (isRight) =>
+          useRootStore.getState().handleNewCanvas(isRight),
         updateTab: updateTabState,
         activeTabId: activeTabId
       });
