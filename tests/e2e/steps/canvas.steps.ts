@@ -64,6 +64,46 @@ When(
 );
 
 When(
+  "I paste plain text and complete JSON into the Canvas",
+  async function (this: E2EWorld) {
+    await this.canvas.pastePlainTextAndJson();
+  },
+);
+
+When(
+  "I drop an image and code file onto the Canvas",
+  async function (this: E2EWorld) {
+    await this.canvas.dropImageAndCodeFileOnCanvas();
+  },
+);
+
+When(
+  "I paste multiple inputs at a known Canvas pointer position",
+  async function (this: E2EWorld) {
+    await this.canvas.pasteMultipleInputsAtKnownPointer();
+  },
+);
+
+When("I copy the Canvas selection", async function (this: E2EWorld) {
+  await this.canvas.copyCanvasSelection();
+});
+
+When("I cut the Canvas selection", async function (this: E2EWorld) {
+  await this.canvas.cutCanvasSelection();
+});
+
+When("I paste the Canvas selection", async function (this: E2EWorld) {
+  await this.canvas.pasteCanvasSelection();
+});
+
+When(
+  "I paste natively while editing the Canvas card",
+  async function (this: E2EWorld) {
+    await this.canvas.pasteNativelyWhileEditingCanvasCard();
+  },
+);
+
+When(
   "I remove the Canvas image asset from local storage",
   async function (this: E2EWorld) {
     await this.canvas.removeImageAssetFromStorage();
@@ -338,6 +378,27 @@ Then(
   "the formatted Canvas code and settings should be restored",
   async function (this: E2EWorld) {
     await this.canvas.expectFormattedCodeCardAfterReload();
+  },
+);
+
+Then(
+  "the pasted content should become text and JSON cards",
+  async function (this: E2EWorld) {
+    await this.canvas.expectPastedTextAndJsonCards();
+  },
+);
+
+Then(
+  "the dropped files should become Canvas cards without creating tabs",
+  async function (this: E2EWorld) {
+    await this.canvas.expectDroppedFilesStayedInCanvas();
+  },
+);
+
+Then(
+  "the pasted cards should be deterministically placed and selected",
+  async function (this: E2EWorld) {
+    await this.canvas.expectKnownPointerPlacement();
   },
 );
 

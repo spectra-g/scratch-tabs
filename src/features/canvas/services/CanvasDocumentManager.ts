@@ -134,7 +134,24 @@ export class CanvasDocumentManager {
     item: CanvasImageItem,
     asset: CanvasAssetRecord,
   ): Promise<CanvasDocument> {
-    return this.persistImageMutation(tabId, asset, (items) => [...items, item]);
+    return this.persistAssetMutation(tabId, [asset], (items) => [
+      ...items,
+      item,
+    ]);
+  }
+
+  async addItemsWithAssets(
+    tabId: string,
+    items: readonly CanvasItem[],
+    assets: readonly CanvasAssetRecord[],
+  ): Promise<CanvasDocument> {
+    if (items.length === 0) {
+      throw new Error("Canvas ingestion did not produce any cards");
+    }
+    return this.persistAssetMutation(tabId, assets, (currentItems) => [
+      ...currentItems,
+      ...items,
+    ]);
   }
 
   async replaceImage(
@@ -143,7 +160,7 @@ export class CanvasDocumentManager {
     asset: CanvasAssetRecord,
   ): Promise<CanvasDocument> {
     const updatedAt = this.now();
-    return this.persistImageMutation(tabId, asset, (items) => {
+    return this.persistAssetMutation(tabId, [asset], (items) => {
       let found = false;
       const nextItems = items.map((item) => {
         if (item.id !== itemId || item.type !== "image") return item;
@@ -159,9 +176,9 @@ export class CanvasDocumentManager {
     });
   }
 
-  private async persistImageMutation(
+  private async persistAssetMutation(
     tabId: string,
-    asset: CanvasAssetRecord,
+    assets: readonly CanvasAssetRecord[],
     updateItems: (items: CanvasItem[]) => CanvasItem[],
   ): Promise<CanvasDocument> {
     await this.flush(tabId);
@@ -170,9 +187,12 @@ export class CanvasDocumentManager {
     if (!queue) throw new Error(`Canvas save queue ${tabId} is not active`);
 
     const savedAt = this.now();
+    const nextItems = updateItems(active.document.items).map((item) => ({
+      ...item,
+    }));
     const documentToSave: CanvasDocument = {
       ...active.document,
-      items: updateItems(active.document.items).map((item) => ({ ...item })),
+      items: nextItems,
       edges: active.document.edges.map((edge) => ({ ...edge })),
       settings: { ...active.document.settings },
       revision: active.document.revision + 1,
@@ -183,10 +203,10 @@ export class CanvasDocumentManager {
       revision: active.document.revision,
     });
 
-    const savePromise = this.imagePersistence.saveDocumentWithAsset(
-      documentToSave,
-      asset,
-    );
+    const savePromise =
+      assets.length === 1
+        ? this.imagePersistence.saveDocumentWithAsset(documentToSave, assets[0])
+        : this.imagePersistence.saveDocumentWithAssets(documentToSave, assets);
     queue.savePromise = savePromise;
     try {
       await savePromise;

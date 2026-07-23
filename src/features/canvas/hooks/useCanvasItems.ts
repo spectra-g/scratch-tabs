@@ -504,6 +504,26 @@ export const useCanvasItems = (
     [applyItems, currentSnapshot, imageOperations, recordHistory],
   );
 
+  const acceptIngestedItems = useCallback(
+    (ingestedItems: readonly CanvasItem[]) => {
+      if (ingestedItems.length === 0) return;
+      const ingestedIds = new Set(ingestedItems.map((item) => item.id));
+      recordHistory(currentSnapshot());
+      applyItems([...itemsRef.current, ...ingestedItems], {
+        editingItemId: null,
+        selectedIds: ingestedIds,
+        focusedItemId: ingestedItems[0].id,
+        persist: false,
+      });
+    },
+    [applyItems, currentSnapshot, recordHistory],
+  );
+
+  const getSelectedItems = useCallback(() => {
+    const selectedIds = selectedItemIds();
+    return itemsRef.current.filter((item) => selectedIds.has(item.id));
+  }, [selectedItemIds]);
+
   const replaceImage = useCallback(
     async (itemId: string, file: File) => {
       if (!imageOperations)
@@ -842,6 +862,8 @@ export const useCanvasItems = (
     createTextItem,
     createCodeItem,
     createImageItem,
+    acceptIngestedItems,
+    getSelectedItems,
     deleteSelection,
     duplicateSelection,
     selectAll,

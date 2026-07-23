@@ -54,7 +54,10 @@ class MockFileReader {
 }
 
 beforeAll(() => {
-  (global as any).FileReader = MockFileReader;
+  Object.defineProperty(globalThis, "FileReader", {
+    configurable: true,
+    value: MockFileReader,
+  });
   // jsdom defines crypto but omits randomUUID — polyfill it for the component
   if (!global.crypto.randomUUID) {
     Object.defineProperty(global.crypto, "randomUUID", {
@@ -75,12 +78,12 @@ const dropFile = (file: File) => {
     createReader: () => ({ readEntries: () => {} }),
   };
 
-  const event = new Event("drop") as any;
-  event.preventDefault = jest.fn();
-  event.stopPropagation = jest.fn();
-  event.dataTransfer = {
-    items: [{ kind: "file", webkitGetAsEntry: () => entry }],
-  };
+  const event = new Event("drop");
+  Object.defineProperty(event, "dataTransfer", {
+    value: {
+      items: [{ kind: "file", webkitGetAsEntry: () => entry }],
+    },
+  });
 
   document.dispatchEvent(event);
 };
@@ -92,7 +95,9 @@ describe("DragDropOverlay file reading", () => {
     render(<DragDropOverlay />);
 
     const file = new File(["(binary)"], "photo.png", { type: "image/png" });
-    await act(async () => { dropFile(file); });
+    await act(async () => {
+      dropFile(file);
+    });
 
     await waitFor(() => expect(mockHandleNewPopulatedTab).toHaveBeenCalled());
 
@@ -100,7 +105,7 @@ describe("DragDropOverlay file reading", () => {
     expect(mockReadAsText).not.toHaveBeenCalled();
     expect(mockHandleNewPopulatedTab).toHaveBeenCalledWith(
       expect.objectContaining({ content: "data:image/png;base64,abc123" }),
-      false
+      false,
     );
   });
 
@@ -108,7 +113,9 @@ describe("DragDropOverlay file reading", () => {
     render(<DragDropOverlay />);
 
     const file = new File(["hello"], "notes.txt", { type: "text/plain" });
-    await act(async () => { dropFile(file); });
+    await act(async () => {
+      dropFile(file);
+    });
 
     await waitFor(() => expect(mockHandleNewPopulatedTab).toHaveBeenCalled());
 
@@ -116,7 +123,31 @@ describe("DragDropOverlay file reading", () => {
     expect(mockReadAsDataURL).not.toHaveBeenCalled();
     expect(mockHandleNewPopulatedTab).toHaveBeenCalledWith(
       expect.objectContaining({ content: "plain text content" }),
-      false
+      false,
     );
+  });
+
+  it("ignores drops whose event path contains a Canvas drop zone", async () => {
+    render(<DragDropOverlay />);
+    const dropZone = document.createElement("div");
+    dropZone.dataset.canvasDropZone = "true";
+    document.body.appendChild(dropZone);
+    const file = new File(["hello"], "notes.txt", { type: "text/plain" });
+    const event = new Event("drop", { bubbles: true, cancelable: true });
+    Object.defineProperty(event, "dataTransfer", {
+      value: {
+        items: [{ kind: "file", webkitGetAsEntry: () => null }],
+        files: [file],
+      },
+    });
+
+    await act(async () => {
+      dropZone.dispatchEvent(event);
+      await Promise.resolve();
+    });
+
+    expect(mockHandleNewPopulatedTab).not.toHaveBeenCalled();
+    expect(mockReadAsText).not.toHaveBeenCalled();
+    dropZone.remove();
   });
 });

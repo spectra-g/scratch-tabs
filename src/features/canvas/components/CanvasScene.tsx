@@ -22,6 +22,9 @@ import {
   type CanvasImageOperations,
 } from "../hooks/useCanvasItems";
 import { useCanvasKeyboardShortcuts } from "../hooks/useCanvasKeyboardShortcuts";
+import { useCanvasClipboard } from "../hooks/useCanvasClipboard";
+import { useCanvasDrop } from "../hooks/useCanvasDrop";
+import { useCanvasIngest } from "../hooks/useCanvasIngest";
 import { useSpatialNavigation } from "../hooks/useSpatialNavigation";
 import type { CanvasItem, CanvasSaveStatus } from "../types";
 import {
@@ -91,6 +94,25 @@ export const CanvasScene = ({
     tab.id,
     imageOperations,
   );
+  const canvasIngest = useCanvasIngest({
+    rootRef,
+    viewportRef,
+    tab,
+    items: canvasItems.items,
+    acceptIngestedItems: canvasItems.acceptIngestedItems,
+  });
+  const canvasDrop = useCanvasDrop({
+    rememberPointer: canvasIngest.rememberPointer,
+    ingestInputs: canvasIngest.ingestInputs,
+  });
+  const canvasClipboard = useCanvasClipboard({
+    workspaceId: tab.workspaceId,
+    interactionState: canvasItems.interactionState,
+    getSelectedItems: canvasItems.getSelectedItems,
+    deleteSelection: canvasItems.deleteSelection,
+    ingestInputs: canvasIngest.ingestInputs,
+    ingestClipboard: canvasIngest.ingestClipboard,
+  });
   const backgroundVariant =
     background === "grid" ? BackgroundVariant.Lines : BackgroundVariant.Dots;
 
@@ -284,6 +306,7 @@ export const CanvasScene = ({
       className="canvas-flow-root h-full w-full bg-canvas text-main"
       data-testid="canvas-flow"
       data-canvas-document-id={tab.documentId}
+      data-canvas-drop-zone="true"
       data-canvas-mode={canvasItems.interactionState.mode}
       data-focused-item-id={canvasItems.focusedItemId ?? ""}
       data-edge-direction={spatialNavigation.edgeDirection ?? ""}
@@ -301,6 +324,12 @@ export const CanvasScene = ({
       onFocus={spatialNavigation.handleRootFocus}
       onKeyDown={keyboardShortcuts.handleKeyDown}
       onKeyUp={keyboardShortcuts.handleKeyUp}
+      onPointerMove={canvasDrop.handlePointerMove}
+      onDragOver={canvasDrop.handleDragOver}
+      onDrop={canvasDrop.handleDrop}
+      onCopy={canvasClipboard.handleCopy}
+      onCut={canvasClipboard.handleCut}
+      onPaste={canvasClipboard.handlePaste}
     >
       <CanvasNodeInteractionContext.Provider value={canvasItems.interaction}>
         <ReactFlow<CanvasFlowNode>
@@ -398,7 +427,7 @@ export const CanvasScene = ({
             />
           </Panel>
           {canvasItems.selectedCount > 0 && (
-            <Panel position="top-center">
+            <Panel position="top-right">
               <CanvasSelectionToolbar
                 selectedCount={canvasItems.selectedCount}
                 onDuplicate={canvasItems.duplicateSelection}
@@ -425,13 +454,15 @@ export const CanvasScene = ({
           )}
         </ReactFlow>
       </CanvasNodeInteractionContext.Provider>
-      {imageError && (
+      {(imageError || canvasIngest.error) && (
         <div
           className="absolute left-1/2 top-20 z-20 max-w-md -translate-x-1/2 rounded border border-danger/40 bg-surface px-4 py-3 text-sm text-danger shadow"
           role="alert"
-          data-testid="canvas-image-error"
+          data-testid={
+            imageError ? "canvas-image-error" : "canvas-ingest-error"
+          }
         >
-          {imageError}
+          {imageError ?? canvasIngest.error}
         </div>
       )}
       {contextMenuPosition && canvasItems.selectedCount > 0 && (

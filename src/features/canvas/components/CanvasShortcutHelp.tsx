@@ -18,6 +18,9 @@ const sections = [
     heading: "Manipulation",
     rows: [
       ["Cmd/Ctrl+A", "Select all cards"],
+      ["Cmd/Ctrl+C", "Copy selected cards"],
+      ["Cmd/Ctrl+X", "Cut selected cards"],
+      ["Cmd/Ctrl+V", "Paste cards or external content"],
       ["Cmd/Ctrl+D", "Duplicate selected cards"],
       ["Delete / Backspace", "Delete selected cards"],
       ["Alt+Arrow", "Nudge by one grid unit"],
@@ -91,14 +94,6 @@ export const CanvasShortcutHelp = ({ onClose }: CanvasShortcutHelpProps) => (
             </dl>
           </section>
         ))}
-      </div>
-
-      <div
-        className="mt-4 rounded-lg border border-base bg-canvas px-3 py-2 text-xs text-muted"
-        data-testid="canvas-clipboard-shortcuts-unavailable"
-      >
-        Cmd/Ctrl+C, X, and V are unavailable for Canvas cards until Canvas
-        clipboard support is added.
       </div>
     </section>
   </div>

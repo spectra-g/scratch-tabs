@@ -90,6 +90,7 @@ const imageAsset: CanvasAssetRecord = {
 const createImagePersistence =
   (): jest.Mocked<CanvasImagePersistenceRepositoryContract> => ({
     saveDocumentWithAsset: jest.fn().mockResolvedValue(undefined),
+    saveDocumentWithAssets: jest.fn().mockResolvedValue(undefined),
   });
 
 describe("CanvasDocumentManager", () => {
@@ -255,6 +256,58 @@ describe("CanvasDocumentManager", () => {
     await expect(
       manager.addImage(canvasTab.id, imageItem, imageAsset),
     ).rejects.toThrow("IndexedDB transaction failed");
+    expect(await manager.hasContent(canvasTab.id)).toBe(false);
+    await manager.release(canvasTab.id);
+  });
+
+  it("persists mixed ingested cards and assets in one transaction", async () => {
+    const repository = createRepository();
+    const imagePersistence = createImagePersistence();
+    const manager = new CanvasDocumentManager(
+      repository,
+      () => 5_000,
+      imagePersistence,
+    );
+    await manager.acquire(canvasTab);
+    const pastedText = textItem("pasted");
+
+    const saved = await manager.addItemsWithAssets(
+      canvasTab.id,
+      [imageItem, pastedText],
+      [imageAsset],
+    );
+
+    expect(imagePersistence.saveDocumentWithAsset).toHaveBeenCalledWith(
+      expect.objectContaining({
+        revision: 1,
+        items: [imageItem, pastedText],
+      }),
+      imageAsset,
+    );
+    expect(saved.items).toEqual([imageItem, pastedText]);
+    await manager.release(canvasTab.id);
+  });
+
+  it("does not expose any mixed ingested cards when persistence fails", async () => {
+    const repository = createRepository();
+    const imagePersistence = createImagePersistence();
+    imagePersistence.saveDocumentWithAssets.mockRejectedValue(
+      new Error("transaction rolled back"),
+    );
+    const manager = new CanvasDocumentManager(
+      repository,
+      () => 5_000,
+      imagePersistence,
+    );
+    await manager.acquire(canvasTab);
+
+    await expect(
+      manager.addItemsWithAssets(
+        canvasTab.id,
+        [textItem("one"), textItem("two")],
+        [],
+      ),
+    ).rejects.toThrow("transaction rolled back");
     expect(await manager.hasContent(canvasTab.id)).toBe(false);
     await manager.release(canvasTab.id);
   });

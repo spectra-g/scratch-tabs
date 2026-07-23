@@ -8,6 +8,10 @@ export interface CanvasImagePersistenceRepositoryContract {
     document: CanvasDocument,
     asset: CanvasAssetRecord,
   ): Promise<void>;
+  saveDocumentWithAssets(
+    document: CanvasDocument,
+    assets: readonly CanvasAssetRecord[],
+  ): Promise<void>;
 }
 
 export class CanvasImagePersistenceRepository implements CanvasImagePersistenceRepositoryContract {
@@ -15,10 +19,27 @@ export class CanvasImagePersistenceRepository implements CanvasImagePersistenceR
     document: CanvasDocument,
     asset: CanvasAssetRecord,
   ): Promise<void> {
+    return this.saveDocumentWithAssets(document, [asset]);
+  }
+
+  async saveDocumentWithAssets(
+    document: CanvasDocument,
+    assets: readonly CanvasAssetRecord[],
+  ): Promise<void> {
     const parsedDocument = parseCanvasDocument(document);
-    const parsedAsset = parseCanvasAssetRecord(asset);
-    if (parsedDocument.workspaceId !== parsedAsset.workspaceId) {
-      throw new Error("Canvas image asset belongs to a different workspace");
+    const parsedAssets = assets.map(parseCanvasAssetRecord);
+    if (
+      parsedAssets.some(
+        (asset) => parsedDocument.workspaceId !== asset.workspaceId,
+      )
+    ) {
+      throw new Error("Canvas image assets belong to a different workspace");
+    }
+    if (
+      new Set(parsedAssets.map((asset) => asset.id)).size !==
+      parsedAssets.length
+    ) {
+      throw new Error("Canvas image asset IDs must be unique");
     }
 
     await db.transaction(
@@ -27,7 +48,9 @@ export class CanvasImagePersistenceRepository implements CanvasImagePersistenceR
       db.canvasAssets,
       db.tabs,
       async () => {
-        await db.canvasAssets.add(parsedAsset);
+        if (parsedAssets.length > 0) {
+          await db.canvasAssets.bulkAdd(parsedAssets);
+        }
         await db.canvasDocuments.put(parsedDocument);
         await db.tabs.update(parsedDocument.tabId, {
           lastModified: parsedDocument.updatedAt,

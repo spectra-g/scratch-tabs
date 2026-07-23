@@ -68,6 +68,41 @@ describe("useCanvasItems", () => {
     expect(result.current.items).toHaveLength(1);
   });
 
+  it("accepts a persisted ingestion batch as one selected undo step", () => {
+    const persistItems = jest.fn();
+    const existing = makeItem("existing");
+    const pasted = [
+      makeItem("pasted-one", { x: 400 }),
+      makeItem("pasted-two", { x: 720 }),
+    ];
+    const { result } = renderHook(() =>
+      useCanvasItems([existing], persistItems),
+    );
+
+    act(() => result.current.acceptIngestedItems(pasted));
+
+    expect(result.current.items.map(({ id }) => id)).toEqual([
+      "existing",
+      "pasted-one",
+      "pasted-two",
+    ]);
+    expect(result.current.interactionState.selectedItemIds).toEqual([
+      "pasted-one",
+      "pasted-two",
+    ]);
+    expect(result.current.focusedItemId).toBe("pasted-one");
+    expect(persistItems).not.toHaveBeenCalled();
+
+    act(() => result.current.undo());
+    expect(result.current.items).toEqual([existing]);
+    act(() => result.current.redo());
+    expect(result.current.items.map(({ id }) => id)).toEqual([
+      "existing",
+      "pasted-one",
+      "pasted-two",
+    ]);
+  });
+
   it("keeps transient group movement local and records one completed operation", () => {
     const persistItems = jest.fn();
     const items = [makeItem("one"), makeItem("two", { zIndex: 2 })];
@@ -221,9 +256,7 @@ describe("useCanvasItems", () => {
       height: 40,
       expandedHeight: 360,
     });
-    const { result } = renderHook(() =>
-      useCanvasItems([item], jest.fn()),
-    );
+    const { result } = renderHook(() => useCanvasItems([item], jest.fn()));
 
     act(() => result.current.beginEditing(item.id));
 

@@ -93,16 +93,21 @@ describe("Canvas editing controls", () => {
     expect(screen.getByTestId("canvas-redo")).toBeDisabled();
   });
 
-  it("marks clipboard shortcuts as unavailable in shortcut help", () => {
+  it("lists the available clipboard shortcuts in shortcut help", () => {
     const onClose = jest.fn();
     render(<CanvasShortcutHelp onClose={onClose} />);
 
     expect(screen.getByRole("dialog")).toHaveAccessibleName(
       "Canvas keyboard shortcuts",
     );
+    expect(screen.getByText("Cmd/Ctrl+C")).toBeInTheDocument();
+    expect(screen.getByText("Copy selected cards")).toBeInTheDocument();
+    expect(screen.getByText("Cmd/Ctrl+X")).toBeInTheDocument();
+    expect(screen.getByText("Cut selected cards")).toBeInTheDocument();
+    expect(screen.getByText("Cmd/Ctrl+V")).toBeInTheDocument();
     expect(
-      screen.getByTestId("canvas-clipboard-shortcuts-unavailable"),
-    ).toHaveTextContent("Cmd/Ctrl+C, X, and V are unavailable");
+      screen.getByText("Paste cards or external content"),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("canvas-close-shortcut-help"));
     expect(onClose).toHaveBeenCalledTimes(1);
   });

@@ -96,7 +96,7 @@ const parseCanvasItemBase = (value: Record<string, unknown>) => {
   };
 };
 
-const parseCanvasItem = (value: unknown): CanvasItem => {
+export const parseCanvasItem = (value: unknown): CanvasItem => {
   if (!isRecord(value)) {
     throw new Error("Invalid Canvas schema: item must be an object");
   }

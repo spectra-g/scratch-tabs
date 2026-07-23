@@ -51,6 +51,9 @@ export class CanvasActions {
   private shortcutEditingGuardCompleted = false;
   private openedCodeSource: string | null = null;
   private imageAssetId: string | null = null;
+  private tabsBeforeCanvasDrop: string[] = [];
+  private knownPasteAnchor: { x: number; y: number } | null = null;
+  private canvasClipboardData: Record<string, string> | null = null;
 
   constructor(private page: Page) {}
 
@@ -215,6 +218,234 @@ export class CanvasActions {
     await editor.fill(source);
     await editor.press("Control+Enter");
     await expect(this.codeCard()).toHaveAttribute("data-editing", "false");
+  }
+
+  private async dispatchTextPaste(text: string) {
+    await this.page.getByTestId("canvas-flow").focus();
+    await this.page.getByTestId("canvas-flow").evaluate((root, value) => {
+      const transfer = new DataTransfer();
+      transfer.setData("text/plain", value);
+      root.dispatchEvent(
+        new ClipboardEvent("paste", {
+          bubbles: true,
+          cancelable: true,
+          clipboardData: transfer,
+        }),
+      );
+    }, text);
+  }
+
+  async pastePlainTextAndJson() {
+    await this.markPendingSceneChange();
+    await this.dispatchTextPaste("A plain pasted note");
+    await expect(this.textCardContaining("A plain pasted note")).toBeVisible();
+    await this.waitForSceneSave();
+
+    await this.markPendingSceneChange();
+    await this.dispatchTextPaste('{"pasted":true}');
+    await expect(this.codeCard()).toBeVisible();
+    await this.waitForSceneSave();
+  }
+
+  async expectPastedTextAndJsonCards() {
+    await expect(this.textCardContaining("A plain pasted note")).toHaveCount(1);
+    await expect(this.codeCard()).toHaveAttribute("data-language", "json");
+    await expect(this.page.getByTestId("canvas-code-preview")).toHaveText(
+      '{\n  "pasted": true\n}',
+    );
+  }
+
+  async dropImageAndCodeFileOnCanvas() {
+    await expect(this.page.getByTestId("tab-Canvas 1")).toBeVisible();
+    this.tabsBeforeCanvasDrop = await this.page
+      .locator('[data-testid^="tab-"][aria-selected]')
+      .evaluateAll((tabs) =>
+        tabs.map((tab) => tab.getAttribute("data-testid") ?? ""),
+      );
+    await this.markPendingSceneChange();
+    await this.page.getByTestId("canvas-flow").evaluate((root, pngBase64) => {
+      const binary = atob(pngBase64);
+      const bytes = Uint8Array.from(binary, (character) =>
+        character.charCodeAt(0),
+      );
+      const transfer = new DataTransfer();
+      transfer.items.add(
+        new File([bytes], "dropped.png", { type: "image/png" }),
+      );
+      transfer.items.add(
+        new File(["const dropped = true;"], "dropped.js", {
+          type: "text/javascript",
+        }),
+      );
+      const bounds = root.getBoundingClientRect();
+      root.dispatchEvent(
+        new DragEvent("dragover", {
+          bubbles: true,
+          cancelable: true,
+          dataTransfer: transfer,
+          clientX: bounds.left + 100,
+          clientY: bounds.top + 100,
+        }),
+      );
+      root.dispatchEvent(
+        new DragEvent("drop", {
+          bubbles: true,
+          cancelable: true,
+          dataTransfer: transfer,
+          clientX: bounds.left + 100,
+          clientY: bounds.top + 100,
+        }),
+      );
+    }, ONE_PIXEL_PNG_BASE64);
+    await expect(this.imageCard()).toHaveAttribute(
+      "data-asset-status",
+      "ready",
+    );
+    await expect(this.codeCard()).toBeVisible();
+    await this.waitForSceneSave();
+  }
+
+  async expectDroppedFilesStayedInCanvas() {
+    await expect(this.imageCard()).toHaveCount(1);
+    await expect(this.codeCard()).toHaveCount(1);
+    await expect(this.page.getByTestId("canvas-code-preview")).toContainText(
+      "const dropped = true;",
+    );
+    const tabsAfterDrop = await this.page
+      .locator('[data-testid^="tab-"][aria-selected]')
+      .evaluateAll((tabs) =>
+        tabs.map((tab) => tab.getAttribute("data-testid") ?? ""),
+      );
+    expect(tabsAfterDrop).toEqual(this.tabsBeforeCanvasDrop);
+  }
+
+  async pasteMultipleInputsAtKnownPointer() {
+    const canvas = this.page.getByTestId("canvas-flow");
+    const bounds = await canvas.boundingBox();
+    expect(bounds).toBeTruthy();
+    const clientPoint = { x: bounds!.x + 100, y: bounds!.y + 100 };
+    await this.page.mouse.move(clientPoint.x, clientPoint.y);
+    const viewport = {
+      x: Number(await canvas.getAttribute("data-canvas-viewport-x")),
+      y: Number(await canvas.getAttribute("data-canvas-viewport-y")),
+      zoom: Number(await canvas.getAttribute("data-canvas-zoom")),
+    };
+    this.knownPasteAnchor = {
+      x: (clientPoint.x - bounds!.x - viewport.x) / viewport.zoom,
+      y: (clientPoint.y - bounds!.y - viewport.y) / viewport.zoom,
+    };
+
+    await this.markPendingSceneChange();
+    await canvas.evaluate((root) => {
+      const transfer = new DataTransfer();
+      transfer.items.add(
+        new File(["select * from users;"], "users.sql", {
+          type: "text/plain",
+        }),
+      );
+      transfer.setData("text/plain", "Pointer note");
+      root.dispatchEvent(
+        new ClipboardEvent("paste", {
+          bubbles: true,
+          cancelable: true,
+          clipboardData: transfer,
+        }),
+      );
+    });
+    await expect(
+      this.page.locator('[data-item-id][aria-selected="true"]'),
+    ).toHaveCount(2);
+    await this.waitForSceneSave();
+  }
+
+  async expectKnownPointerPlacement() {
+    expect(this.knownPasteAnchor).toBeTruthy();
+    const selected = this.page.locator('[data-item-id][aria-selected="true"]');
+    const first = await this.readBounds(selected.nth(0));
+    const second = await this.readBounds(selected.nth(1));
+    expect(first.x).toBeCloseTo(this.knownPasteAnchor!.x, 3);
+    expect(first.y).toBeCloseTo(this.knownPasteAnchor!.y, 3);
+    expect(second.x).toBeCloseTo(first.x + first.width + 32, 3);
+    expect(second.y).toBeCloseTo(first.y, 3);
+    await expect(selected.nth(0)).toHaveAttribute("data-item-type", "code");
+    await expect(selected.nth(1)).toHaveAttribute("data-item-type", "text");
+  }
+
+  async copyCanvasSelection() {
+    const canvas = this.page.getByTestId("canvas-flow");
+    const copied = await canvas.evaluate((root) => {
+      const transfer = new DataTransfer();
+      root.dispatchEvent(
+        new ClipboardEvent("copy", {
+          bubbles: true,
+          cancelable: true,
+          clipboardData: transfer,
+        }),
+      );
+      return Object.fromEntries(
+        Array.from(transfer.types, (type) => [type, transfer.getData(type)]),
+      );
+    });
+    expect(copied["application/x-scratch-tabs-canvas+json"]).toBeTruthy();
+    expect(copied["text/plain"]).toContain("Clipboard one");
+    await expect(this.page.locator("[data-item-id]")).toHaveCount(2);
+  }
+
+  async cutCanvasSelection() {
+    const canvas = this.page.getByTestId("canvas-flow");
+    await this.markPendingSceneChange();
+    this.canvasClipboardData = await canvas.evaluate((root) => {
+      const transfer = new DataTransfer();
+      root.dispatchEvent(
+        new ClipboardEvent("cut", {
+          bubbles: true,
+          cancelable: true,
+          clipboardData: transfer,
+        }),
+      );
+      return Object.fromEntries(
+        Array.from(transfer.types, (type) => [type, transfer.getData(type)]),
+      );
+    });
+    await expect(this.page.locator("[data-item-id]")).toHaveCount(0);
+  }
+
+  async pasteCanvasSelection() {
+    expect(this.canvasClipboardData).toBeTruthy();
+    const canvas = this.page.getByTestId("canvas-flow");
+    await canvas.evaluate((root, clipboardData) => {
+      const transfer = new DataTransfer();
+      Object.entries(clipboardData!).forEach(([type, value]) =>
+        transfer.setData(type, value),
+      );
+      root.dispatchEvent(
+        new ClipboardEvent("paste", {
+          bubbles: true,
+          cancelable: true,
+          clipboardData: transfer,
+        }),
+      );
+    }, this.canvasClipboardData);
+    await expect(this.page.locator("[data-item-id]")).toHaveCount(2);
+    await expect(
+      this.page.locator('[data-item-id][aria-selected="true"]'),
+    ).toHaveCount(2);
+  }
+
+  async pasteNativelyWhileEditingCanvasCard() {
+    const card = this.textCardContaining("Clipboard one").first();
+    await card.dblclick();
+    const editor = this.page.getByTestId("canvas-text-editor");
+    await expect(editor).toBeFocused();
+    await this.page
+      .context()
+      .grantPermissions(["clipboard-read", "clipboard-write"]);
+    await this.page.evaluate(() =>
+      navigator.clipboard.writeText(" native paste"),
+    );
+    await editor.press("End");
+    await editor.press(await this.primaryShortcut("v"));
+    await expect(editor).toHaveValue("Clipboard one native paste");
   }
 
   async addImageCard() {

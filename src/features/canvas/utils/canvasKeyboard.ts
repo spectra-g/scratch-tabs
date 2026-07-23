@@ -136,8 +136,8 @@ export const getCanvasKeyboardCommand = (
     if (lowerKey === "d" && !event.shiftKey) return { type: "duplicate" };
     if (lowerKey === "a" && !event.shiftKey) return { type: "select-all" };
 
-    // Canvas-aware clipboard data is added in Increment 9. Let the browser own
-    // these commands until then instead of partially intercepting them.
+    // ClipboardEvent handlers own Canvas copy/cut/paste so the browser can
+    // provide both custom Canvas data and a plain-text fallback.
     if (["c", "x", "v"].includes(lowerKey)) return null;
   }
 

@@ -70,7 +70,7 @@ describe("Canvas keyboard command mapping", () => {
     expect(getCanvasNudgeDelta("left", 100)).toEqual({ x: -100, y: 0 });
   });
 
-  it("leaves clipboard shortcuts to the browser until Canvas clipboard support exists", () => {
+  it("leaves clipboard shortcuts to Canvas ClipboardEvent handlers", () => {
     for (const key of ["c", "x", "v"]) {
       expect(
         getCanvasKeyboardCommand(keyEvent(key, { ctrlKey: true }), "other"),
