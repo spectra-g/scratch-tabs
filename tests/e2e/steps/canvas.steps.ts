@@ -27,6 +27,70 @@ When("I create a new Canvas", async function (this: E2EWorld) {
   await this.canvas.createCanvas();
 });
 
+When("I open the Canvas in a second window", async function (this: E2EWorld) {
+  await this.canvasConflict.openInSecondWindow();
+});
+
+When(
+  "I save {string} in the first Canvas window",
+  async function (this: E2EWorld, text: string) {
+    await this.canvasConflict.saveInFirstWindow(text);
+  },
+);
+
+When(
+  "I edit {string} in the second Canvas window",
+  async function (this: E2EWorld, text: string) {
+    await this.canvasConflict.editInSecondWindow(text);
+  },
+);
+
+Then(
+  "the second Canvas window should warn about unsaved conflicting work",
+  async function (this: E2EWorld) {
+    await this.canvasConflict.expectConflictWarning();
+  },
+);
+
+When(
+  "I reload the saved Canvas version in the second window",
+  async function (this: E2EWorld) {
+    await this.canvasConflict.reloadSavedVersion();
+  },
+);
+
+Then(
+  "the second Canvas window should contain {string} but not {string}",
+  async function (this: E2EWorld, saved: string, discarded: string) {
+    await this.canvasConflict.expectOnlyText(saved, discarded);
+  },
+);
+
+When(
+  "I take over the Canvas from the second window",
+  async function (this: E2EWorld) {
+    await this.canvasConflict.takeOverFromSecondWindow();
+  },
+);
+
+When("I reload both Canvas windows", async function (this: E2EWorld) {
+  await this.canvasConflict.reloadBothWindows();
+});
+
+Then(
+  "both Canvas windows should contain {string}",
+  async function (this: E2EWorld, text: string) {
+    await this.canvasConflict.expectBothWindowsContain(text);
+  },
+);
+
+Then(
+  "Canvas revision broadcasts should contain identifiers only",
+  async function (this: E2EWorld) {
+    await this.canvasConflict.expectMetadataOnlyBroadcasts();
+  },
+);
+
 When(
   "I verify the primary plus still creates a text tab",
   async function (this: E2EWorld) {

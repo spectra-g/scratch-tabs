@@ -2,6 +2,8 @@ import type { Tab } from "../../../../types";
 import { CanvasDocumentManager } from "../CanvasDocumentManager";
 import type { CanvasDocumentRepositoryContract } from "../CanvasDocumentRepository";
 import type { CanvasImagePersistenceRepositoryContract } from "../CanvasImagePersistenceRepository";
+import type { CanvasRevisionChannelContract } from "../CanvasRevisionChannel";
+import { CanvasRevisionConflictError } from "../CanvasRevisionConflict";
 import {
   createDefaultCanvasSession,
   createEmptyCanvasDocument,
@@ -43,6 +45,10 @@ const createRepository = (): jest.Mocked<CanvasDocumentRepositoryContract> => ({
   }),
   hasContent: jest.fn().mockResolvedValue(false),
   saveDocument: jest.fn().mockResolvedValue(undefined),
+  takeOverDocument: jest.fn().mockImplementation(async (candidate) => ({
+    ...candidate,
+    revision: candidate.revision + 1,
+  })),
   getSession: jest.fn().mockResolvedValue(undefined),
   saveSession: jest.fn().mockResolvedValue(undefined),
   removeWithTab: jest.fn().mockResolvedValue(undefined),
@@ -91,7 +97,49 @@ const createImagePersistence =
   (): jest.Mocked<CanvasImagePersistenceRepositoryContract> => ({
     saveDocumentWithAsset: jest.fn().mockResolvedValue(undefined),
     saveDocumentWithAssets: jest.fn().mockResolvedValue(undefined),
+    takeOverDocumentWithAssets: jest
+      .fn()
+      .mockImplementation(async (candidate) => ({
+        ...candidate,
+        revision: candidate.revision + 1,
+      })),
   });
+
+const revisionChannel: CanvasRevisionChannelContract = {
+  publish: jest.fn(),
+  subscribe: jest.fn(() => () => undefined),
+};
+
+class TestRevisionChannel implements CanvasRevisionChannelContract {
+  readonly published: Array<{
+    tabId: string;
+    documentId: string;
+    revision: number;
+  }> = [];
+  private readonly listeners = new Set<
+    (message: { tabId: string; documentId: string; revision: number }) => void
+  >();
+
+  publish(message: {
+    tabId: string;
+    documentId: string;
+    revision: number;
+  }): void {
+    this.published.push(message);
+    this.listeners.forEach((listener) => listener(message));
+  }
+
+  subscribe(
+    listener: (message: {
+      tabId: string;
+      documentId: string;
+      revision: number;
+    }) => void,
+  ): () => void {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+}
 
 describe("CanvasDocumentManager", () => {
   it("loads a document once while it has multiple active consumers", async () => {
@@ -160,7 +208,13 @@ describe("CanvasDocumentManager", () => {
     jest.useFakeTimers();
     let now = 1_000;
     const repository = createRepository();
-    const manager = new CanvasDocumentManager(repository, () => now);
+    const manager = new CanvasDocumentManager(
+      repository,
+      () => now,
+      createImagePersistence(),
+      undefined,
+      revisionChannel,
+    );
     const saveStates: string[] = [];
     manager.subscribe(canvasTab.id, (state) => saveStates.push(state.status));
     await manager.acquire(canvasTab);
@@ -177,7 +231,7 @@ describe("CanvasDocumentManager", () => {
         items: [expect.objectContaining({ text: "latest" })],
         searchText: "latest",
       }),
-      true,
+      { expectedRevision: 0, updateParentTabModified: true },
     );
 
     now = 1_500;
@@ -186,7 +240,7 @@ describe("CanvasDocumentManager", () => {
 
     expect(repository.saveDocument).toHaveBeenLastCalledWith(
       expect.objectContaining({ revision: 2 }),
-      false,
+      { expectedRevision: 1, updateParentTabModified: false },
     );
     expect(saveStates).toEqual([
       "saving",
@@ -203,7 +257,13 @@ describe("CanvasDocumentManager", () => {
   it("flushes a pending scene immediately", async () => {
     jest.useFakeTimers();
     const repository = createRepository();
-    const manager = new CanvasDocumentManager(repository, () => 5_000);
+    const manager = new CanvasDocumentManager(
+      repository,
+      () => 5_000,
+      createImagePersistence(),
+      undefined,
+      revisionChannel,
+    );
     await manager.acquire(canvasTab);
     manager.setItems(canvasTab.id, [textItem("flush me")]);
 
@@ -238,6 +298,7 @@ describe("CanvasDocumentManager", () => {
         updatedAt: 5_000,
       }),
       imageAsset,
+      0,
     );
     expect(saved.items).toEqual([imageItem]);
     expect(await manager.hasContent(canvasTab.id)).toBe(true);
@@ -287,6 +348,7 @@ describe("CanvasDocumentManager", () => {
         items: [imageItem, pastedText],
       }),
       imageAsset,
+      0,
     );
     expect(saved.items).toEqual([imageItem, pastedText]);
     await manager.release(canvasTab.id);
@@ -349,7 +411,7 @@ describe("CanvasDocumentManager", () => {
         revision: 2,
         items: [textItem("concurrent edit"), imageItem],
       }),
-      false,
+      { expectedRevision: 1, updateParentTabModified: false },
     );
     await manager.release(canvasTab.id);
   });
@@ -419,7 +481,7 @@ describe("CanvasDocumentManager", () => {
       expect.objectContaining({
         items: [expect.objectContaining({ text: "dispose safely" })],
       }),
-      true,
+      { expectedRevision: 0, updateParentTabModified: true },
     );
   });
 
@@ -449,5 +511,132 @@ describe("CanvasDocumentManager", () => {
     await manager.saveViewport(canvasTab.id, { x: 5, y: 10, zoom: 2 });
     expect(repository.saveSession).toHaveBeenCalledTimes(1);
     await manager.release(canvasTab.id);
+  });
+
+  it("reloads or takes over stale local work with monotonic revisions", async () => {
+    let stored = {
+      ...document,
+      items: [],
+      edges: [],
+      settings: { ...document.settings },
+    };
+    const repository = createRepository();
+    repository.getByTabId.mockImplementation(async () => ({
+      ...stored,
+      items: stored.items.map((item) => ({ ...item })),
+    }));
+    repository.saveDocument.mockImplementation(async (candidate, options) => {
+      if (stored.revision !== options.expectedRevision) {
+        throw new CanvasRevisionConflictError(
+          options.expectedRevision,
+          stored.revision,
+        );
+      }
+      stored = {
+        ...candidate,
+        items: candidate.items.map((item) => ({ ...item })),
+      };
+    });
+    repository.takeOverDocument.mockImplementation(async (candidate) => {
+      stored = {
+        ...candidate,
+        items: candidate.items.map((item) => ({ ...item })),
+        revision: stored.revision + 1,
+      };
+      return stored;
+    });
+    const channel = new TestRevisionChannel();
+    let now = 1_000;
+    const firstWindow = new CanvasDocumentManager(
+      repository,
+      () => now,
+      createImagePersistence(),
+      undefined,
+      channel,
+    );
+    const secondWindow = new CanvasDocumentManager(
+      repository,
+      () => now,
+      createImagePersistence(),
+      undefined,
+      channel,
+    );
+    const secondStates: string[] = [];
+    secondWindow.subscribe(canvasTab.id, (state) =>
+      secondStates.push(state.status),
+    );
+    await Promise.all([
+      firstWindow.acquire(canvasTab),
+      secondWindow.acquire(canvasTab),
+    ]);
+
+    firstWindow.setItems(canvasTab.id, [textItem("first window")]);
+    await firstWindow.flush(canvasTab.id);
+    secondWindow.setItems(canvasTab.id, [textItem("stale local")]);
+
+    expect(secondStates.at(-1)).toBe("conflict");
+    const reloaded = await secondWindow.reloadAfterConflict(canvasTab.id);
+    expect(reloaded.document.items).toEqual([
+      expect.objectContaining({ text: "first window" }),
+    ]);
+    expect(reloaded.document.revision).toBe(1);
+
+    now = 2_000;
+    firstWindow.setItems(canvasTab.id, [textItem("newer remote")]);
+    await firstWindow.flush(canvasTab.id);
+    secondWindow.setItems(canvasTab.id, [textItem("chosen local")]);
+    const takenOver = await secondWindow.takeOverAfterConflict(canvasTab.id);
+
+    expect(takenOver.document.revision).toBe(3);
+    expect(stored.items).toEqual([
+      expect.objectContaining({ text: "chosen local" }),
+    ]);
+    expect(channel.published).toEqual([
+      { tabId: "tab-1", documentId: "tab-1", revision: 1 },
+      { tabId: "tab-1", documentId: "tab-1", revision: 2 },
+      { tabId: "tab-1", documentId: "tab-1", revision: 3 },
+    ]);
+  });
+
+  it("isolates a conflict so unrelated Canvas documents keep saving", async () => {
+    const repository = createRepository();
+    repository.getByTabId.mockImplementation(async (tabId) => ({
+      ...document,
+      id: tabId,
+      tabId,
+      items: [],
+      edges: [],
+      settings: { ...document.settings },
+    }));
+    const channel = new TestRevisionChannel();
+    const manager = new CanvasDocumentManager(
+      repository,
+      () => 5_000,
+      createImagePersistence(),
+      undefined,
+      channel,
+    );
+    const secondTab = {
+      ...canvasTab,
+      id: "tab-2",
+      documentId: "tab-2",
+    };
+    await Promise.all([manager.acquire(canvasTab), manager.acquire(secondTab)]);
+
+    manager.setItems(canvasTab.id, [textItem("conflicting")]);
+    channel.publish({
+      tabId: canvasTab.id,
+      documentId: canvasTab.documentId!,
+      revision: 4,
+    });
+    manager.setItems(secondTab.id, [
+      { ...textItem("independent"), id: "item-2" },
+    ]);
+    await manager.flush(secondTab.id);
+
+    expect(repository.saveDocument).toHaveBeenCalledTimes(1);
+    expect(repository.saveDocument.mock.calls[0][0]).toEqual(
+      expect.objectContaining({ tabId: "tab-2", revision: 1 }),
+    );
   });
 });

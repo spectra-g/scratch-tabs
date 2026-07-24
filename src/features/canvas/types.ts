@@ -126,13 +126,19 @@ export interface ActiveCanvasDocument {
   session: CanvasSessionRecord;
 }
 
-export type CanvasSaveStatus = "loading" | "saved" | "saving" | "error";
+export type CanvasSaveStatus =
+  | "loading"
+  | "saved"
+  | "saving"
+  | "conflict"
+  | "error";
 
 export interface CanvasDocumentSaveState {
   status: CanvasSaveStatus;
   revision: number;
   error?: string;
   lastModified?: number;
+  remoteRevision?: number;
 }
 
 export type CanvasInteractionMode = "navigation" | "editing";

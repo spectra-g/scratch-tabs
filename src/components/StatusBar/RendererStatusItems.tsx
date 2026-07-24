@@ -18,11 +18,13 @@ export const RendererStatusItems = ({
   const saveText = contribution.save
     ? contribution.save.state === "saving"
       ? "Saving..."
-      : contribution.save.state === "error"
-        ? contribution.save.error || "Save failed"
-        : contribution.save.state === "loading"
-          ? "Loading..."
-          : "Saved"
+      : contribution.save.state === "conflict"
+        ? "Save conflict"
+        : contribution.save.state === "error"
+          ? contribution.save.error || "Save failed"
+          : contribution.save.state === "loading"
+            ? "Loading..."
+            : "Saved"
     : null;
 
   return (

@@ -40,6 +40,7 @@ import {
 } from "./CanvasContextMenu";
 import { CanvasSelectionToolbar } from "./CanvasSelectionToolbar";
 import { CanvasShortcutHelp } from "./CanvasShortcutHelp";
+import { CanvasConflictNotice } from "./CanvasConflictNotice";
 import { CanvasNodeInteractionContext } from "./nodes/CanvasNodeInteractionContext";
 import { TextNode } from "./nodes/TextNode";
 import { CodeNode } from "./nodes/CodeNode";
@@ -68,9 +69,13 @@ interface CanvasSceneProps {
   status: CanvasSaveStatus;
   revision: number;
   error: string | null;
+  remoteRevision: number | null;
+  isResolvingConflict: boolean;
   updateItems: (items: CanvasItem[]) => void;
   imageOperations: CanvasImageOperations;
   saveViewport: (viewport: Viewport) => Promise<void>;
+  onReloadConflict: () => void;
+  onTakeOverConflict: () => void;
 }
 
 export const CanvasScene = ({
@@ -82,9 +87,13 @@ export const CanvasScene = ({
   status,
   revision,
   error,
+  remoteRevision,
+  isResolvingConflict,
   updateItems,
   imageOperations,
   saveViewport,
+  onReloadConflict,
+  onTakeOverConflict,
 }: CanvasSceneProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef(viewport);
@@ -370,6 +379,14 @@ export const CanvasScene = ({
       onCut={canvasClipboard.handleCut}
       onPaste={canvasClipboard.handlePaste}
     >
+      {status === "conflict" && remoteRevision !== null && (
+        <CanvasConflictNotice
+          remoteRevision={remoteRevision}
+          isResolving={isResolvingConflict}
+          onReload={onReloadConflict}
+          onTakeOver={onTakeOverConflict}
+        />
+      )}
       <CanvasNodeInteractionContext.Provider value={canvasItems.interaction}>
         <ReactFlow<CanvasFlowNode>
           nodes={canvasItems.nodes}

@@ -26,6 +26,17 @@ import {
   canvasSearchIndexer,
   type CanvasSearchIndexer,
 } from "./CanvasSearchIndexer";
+import {
+  canvasRevisionChannel,
+  type CanvasRevisionChannelContract,
+  type CanvasRevisionMessage,
+} from "./CanvasRevisionChannel";
+import { CanvasRevisionConflictError } from "./CanvasRevisionConflict";
+
+interface CanvasConflict {
+  storedRevision: number;
+  pendingAssets: CanvasAssetRecord[];
+}
 
 interface DocumentSaveQueue {
   dirtyVersion: number;
@@ -33,6 +44,8 @@ interface DocumentSaveQueue {
   timer?: ReturnType<typeof setTimeout>;
   savePromise?: Promise<void>;
   lastParentTabUpdate: number | null;
+  latestKnownRevision: number;
+  conflict?: CanvasConflict;
 }
 
 type SaveStateListener = (state: CanvasDocumentSaveState) => void;
@@ -56,7 +69,15 @@ export class CanvasDocumentManager {
     private readonly now: () => number = Date.now,
     private readonly imagePersistence: CanvasImagePersistenceRepositoryContract = canvasImagePersistenceRepository,
     private readonly searchIndexer: CanvasSearchIndexer = canvasSearchIndexer,
-  ) {}
+    revisionChannel: CanvasRevisionChannelContract = canvasRevisionChannel,
+  ) {
+    revisionChannel.subscribe((message) =>
+      this.handleExternalRevision(message),
+    );
+    this.revisionChannel = revisionChannel;
+  }
+
+  private readonly revisionChannel: CanvasRevisionChannelContract;
 
   async create(tab: Tab): Promise<CanvasDocument> {
     return this.repository.createWithTab(tab);
@@ -119,6 +140,7 @@ export class CanvasDocumentManager {
       dirtyVersion: 0,
       savedVersion: 0,
       lastParentTabUpdate: document.revision === 0 ? null : document.updatedAt,
+      latestKnownRevision: document.revision,
     });
     return active;
   }
@@ -213,15 +235,33 @@ export class CanvasDocumentManager {
       revision: active.document.revision + 1,
       updatedAt: savedAt,
     };
+    if (queue.conflict) {
+      active.document = {
+        ...documentToSave,
+        revision: active.document.revision,
+      };
+      queue.dirtyVersion += 1;
+      this.enterConflict(tabId, queue.conflict.storedRevision, assets);
+      return active.document;
+    }
     this.notify(tabId, {
       status: "saving",
       revision: active.document.revision,
     });
 
+    const expectedRevision = active.document.revision;
     const savePromise =
       assets.length === 1
-        ? this.imagePersistence.saveDocumentWithAsset(documentToSave, assets[0])
-        : this.imagePersistence.saveDocumentWithAssets(documentToSave, assets);
+        ? this.imagePersistence.saveDocumentWithAsset(
+            documentToSave,
+            assets[0],
+            expectedRevision,
+          )
+        : this.imagePersistence.saveDocumentWithAssets(
+            documentToSave,
+            assets,
+            expectedRevision,
+          );
     queue.savePromise = savePromise;
     try {
       await savePromise;
@@ -233,14 +273,25 @@ export class CanvasDocumentManager {
         updatedAt: Math.max(active.document.updatedAt, savedAt),
       };
       queue.lastParentTabUpdate = savedAt;
+      queue.latestKnownRevision = documentToSave.revision;
       const hasPendingChanges = queue.dirtyVersion > queue.savedVersion;
       this.notify(tabId, {
         status: hasPendingChanges ? "saving" : "saved",
         revision: documentToSave.revision,
         lastModified: savedAt,
       });
+      this.publishRevision(documentToSave);
       return active.document;
     } catch (error) {
+      if (error instanceof CanvasRevisionConflictError) {
+        active.document = {
+          ...documentToSave,
+          revision: expectedRevision,
+        };
+        queue.dirtyVersion += 1;
+        this.enterConflict(tabId, error.storedRevision, assets);
+        return active.document;
+      }
       this.notify(tabId, {
         status: "error",
         revision: active.document.revision,
@@ -252,7 +303,11 @@ export class CanvasDocumentManager {
       throw error;
     } finally {
       if (queue.savePromise === savePromise) queue.savePromise = undefined;
-      if (queue.dirtyVersion > queue.savedVersion && !queue.timer) {
+      if (
+        queue.dirtyVersion > queue.savedVersion &&
+        !queue.timer &&
+        !queue.conflict
+      ) {
         queue.timer = setTimeout(() => {
           queue.timer = undefined;
           void this.persistLatestDocument(tabId).catch(() => undefined);
@@ -275,6 +330,14 @@ export class CanvasDocumentManager {
     if (!queue) throw new Error(`Canvas save queue ${tabId} is not active`);
 
     queue.dirtyVersion += 1;
+    if (queue.latestKnownRevision > active.document.revision) {
+      this.enterConflict(tabId, queue.latestKnownRevision);
+      return;
+    }
+    if (queue.conflict) {
+      this.notifyConflict(tabId, queue);
+      return;
+    }
     if (queue.timer) clearTimeout(queue.timer);
     queue.timer = setTimeout(() => {
       queue.timer = undefined;
@@ -289,7 +352,14 @@ export class CanvasDocumentManager {
   private async persistLatestDocument(tabId: string): Promise<void> {
     const queue = this.documentSaveQueues.get(tabId);
     const active = this.activeDocuments.get(tabId);
-    if (!queue || !active || queue.dirtyVersion === queue.savedVersion) return;
+    if (
+      !queue ||
+      !active ||
+      queue.dirtyVersion === queue.savedVersion ||
+      queue.conflict
+    ) {
+      return;
+    }
     if (queue.savePromise) return queue.savePromise;
 
     this.searchIndexer.flush(tabId);
@@ -308,7 +378,10 @@ export class CanvasDocumentManager {
       savedAt - queue.lastParentTabUpdate >= CANVAS_TAB_MODIFIED_THROTTLE_MS;
 
     const savePromise = this.repository
-      .saveDocument(documentToSave, updateParentTab)
+      .saveDocument(documentToSave, {
+        expectedRevision: active.document.revision,
+        updateParentTabModified: updateParentTab,
+      })
       .then(() => {
         const latest = this.activeDocuments.get(tabId);
         if (!latest) return;
@@ -318,6 +391,7 @@ export class CanvasDocumentManager {
           updatedAt: Math.max(latest.document.updatedAt, savedAt),
         };
         queue.savedVersion = versionBeingSaved;
+        queue.latestKnownRevision = documentToSave.revision;
         if (updateParentTab) queue.lastParentTabUpdate = savedAt;
         const hasPendingChanges = queue.dirtyVersion > versionBeingSaved;
         this.notify(tabId, {
@@ -325,8 +399,13 @@ export class CanvasDocumentManager {
           revision: latest.document.revision,
           ...(updateParentTab ? { lastModified: savedAt } : {}),
         });
+        this.publishRevision(documentToSave);
       })
       .catch((error: unknown) => {
+        if (error instanceof CanvasRevisionConflictError) {
+          this.enterConflict(tabId, error.storedRevision);
+          return;
+        }
         this.notify(tabId, {
           status: "error",
           revision: active.document.revision,
@@ -339,7 +418,11 @@ export class CanvasDocumentManager {
       })
       .finally(() => {
         if (queue.savePromise === savePromise) queue.savePromise = undefined;
-        if (queue.dirtyVersion > versionBeingSaved && !queue.timer) {
+        if (
+          queue.dirtyVersion > versionBeingSaved &&
+          !queue.timer &&
+          !queue.conflict
+        ) {
           queue.timer = setTimeout(() => {
             queue.timer = undefined;
             void this.persistLatestDocument(tabId).catch(() => undefined);
@@ -354,8 +437,148 @@ export class CanvasDocumentManager {
     this.saveStateListeners.get(tabId)?.forEach((listener) => listener(state));
   }
 
+  private publishRevision(document: CanvasDocument): void {
+    this.revisionChannel.publish({
+      tabId: document.tabId,
+      documentId: document.id,
+      revision: document.revision,
+    });
+  }
+
+  private handleExternalRevision(message: CanvasRevisionMessage): void {
+    const active = this.activeDocuments.get(message.tabId);
+    const queue = this.documentSaveQueues.get(message.tabId);
+    if (
+      !active ||
+      !queue ||
+      active.document.id !== message.documentId ||
+      message.revision <= active.document.revision
+    ) {
+      return;
+    }
+
+    queue.latestKnownRevision = Math.max(
+      queue.latestKnownRevision,
+      message.revision,
+    );
+    if (queue.dirtyVersion > queue.savedVersion) {
+      this.enterConflict(message.tabId, queue.latestKnownRevision);
+    }
+  }
+
+  private enterConflict(
+    tabId: string,
+    storedRevision: number,
+    pendingAssets: readonly CanvasAssetRecord[] = [],
+  ): void {
+    const queue = this.documentSaveQueues.get(tabId);
+    if (!queue) return;
+    if (queue.timer) {
+      clearTimeout(queue.timer);
+      queue.timer = undefined;
+    }
+    queue.latestKnownRevision = Math.max(
+      queue.latestKnownRevision,
+      storedRevision,
+    );
+    queue.conflict = {
+      storedRevision: queue.latestKnownRevision,
+      pendingAssets: [
+        ...(queue.conflict?.pendingAssets ?? []),
+        ...pendingAssets,
+      ],
+    };
+    this.notifyConflict(tabId, queue);
+  }
+
+  private notifyConflict(tabId: string, queue: DocumentSaveQueue): void {
+    const active = this.activeDocuments.get(tabId);
+    if (!active || !queue.conflict) return;
+    this.notify(tabId, {
+      status: "conflict",
+      revision: active.document.revision,
+      remoteRevision: queue.conflict.storedRevision,
+    });
+  }
+
   async save(tabId: string): Promise<void> {
     await this.flush(tabId);
+  }
+
+  async reloadAfterConflict(tabId: string): Promise<ActiveCanvasDocument> {
+    const active = this.requireActive(tabId);
+    const queue = this.documentSaveQueues.get(tabId);
+    if (!queue?.conflict) {
+      throw new Error("This Canvas does not have a revision conflict");
+    }
+    await queue.savePromise;
+    const stored = await this.repository.getByTabId(tabId);
+    if (!stored || stored.id !== active.document.id) {
+      throw new Error("The saved Canvas version is no longer available");
+    }
+
+    this.searchIndexer.cancel(tabId);
+    active.document = {
+      ...stored,
+      items: stored.items.map((item) => ({ ...item })),
+      edges: stored.edges.map((edge) => ({ ...edge })),
+      settings: { ...stored.settings },
+    };
+    queue.dirtyVersion = 0;
+    queue.savedVersion = 0;
+    queue.latestKnownRevision = stored.revision;
+    queue.conflict = undefined;
+    queue.lastParentTabUpdate = stored.revision === 0 ? null : stored.updatedAt;
+    this.notify(tabId, {
+      status: "saved",
+      revision: stored.revision,
+      lastModified: stored.updatedAt,
+    });
+    return active;
+  }
+
+  async takeOverAfterConflict(tabId: string): Promise<ActiveCanvasDocument> {
+    const active = this.requireActive(tabId);
+    const queue = this.documentSaveQueues.get(tabId);
+    if (!queue?.conflict) {
+      throw new Error("This Canvas does not have a revision conflict");
+    }
+    await queue.savePromise;
+    const savedAt = this.now();
+    const localDocument: CanvasDocument = {
+      ...active.document,
+      items: active.document.items.map((item) => ({ ...item })),
+      edges: active.document.edges.map((edge) => ({ ...edge })),
+      settings: { ...active.document.settings },
+      searchText: buildCanvasSearchText(active.document.items),
+      updatedAt: savedAt,
+    };
+    const pendingAssets = queue.conflict.pendingAssets;
+    const saved =
+      pendingAssets.length > 0
+        ? await this.imagePersistence.takeOverDocumentWithAssets(
+            localDocument,
+            pendingAssets,
+          )
+        : await this.repository.takeOverDocument(localDocument, true);
+
+    active.document = {
+      ...saved,
+      items: saved.items.map((item) => ({ ...item })),
+      edges: saved.edges.map((edge) => ({ ...edge })),
+      settings: { ...saved.settings },
+    };
+    queue.savedVersion = queue.dirtyVersion;
+    queue.latestKnownRevision = saved.revision;
+    queue.conflict = undefined;
+    queue.lastParentTabUpdate = savedAt;
+    this.notify(tabId, {
+      status: "saved",
+      revision: saved.revision,
+      lastModified: savedAt,
+    });
+    this.publishRevision(saved);
+    return active;
   }
 
   async hasContent(tabId: string): Promise<boolean> {
@@ -406,7 +629,11 @@ export class CanvasDocumentManager {
       queue.timer = undefined;
     }
     await queue?.savePromise;
-    while (queue && queue.dirtyVersion > queue.savedVersion) {
+    while (
+      queue &&
+      !queue.conflict &&
+      queue.dirtyVersion > queue.savedVersion
+    ) {
       await queue.savePromise;
       await this.persistLatestDocument(tabId);
       if (queue.timer) {
@@ -434,6 +661,7 @@ export class CanvasDocumentManager {
     await this.loadingDocuments.get(tabId);
     if ((this.referenceCounts.get(tabId) ?? 0) > 0) return;
     await this.flush(tabId);
+    if (this.documentSaveQueues.get(tabId)?.conflict) return;
     this.searchIndexer.cancel(tabId);
     this.activeDocuments.delete(tabId);
     this.documentSaveQueues.delete(tabId);

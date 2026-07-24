@@ -16,6 +16,9 @@ export const useCanvasDocument = (tab: Tab) => {
   const [status, setStatus] = useState<CanvasSaveStatus>("loading");
   const [revision, setRevision] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [remoteRevision, setRemoteRevision] = useState<number | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [isResolvingConflict, setIsResolvingConflict] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -26,6 +29,11 @@ export const useCanvasDocument = (tab: Tab) => {
       setStatus(saveState.status);
       setRevision(saveState.revision);
       setError(saveState.error ?? null);
+      setRemoteRevision(
+        saveState.status === "conflict"
+          ? (saveState.remoteRevision ?? saveState.revision)
+          : null,
+      );
       if (saveState.lastModified !== undefined) {
         useRootStore.getState().updateTabState(tabId, {
           lastModified: saveState.lastModified,
@@ -61,6 +69,7 @@ export const useCanvasDocument = (tab: Tab) => {
         });
         setRevision(loaded.document.revision);
         setStatus("saved");
+        setRemoteRevision(null);
       })
       .catch((loadError: unknown) => {
         if (!isMounted) return;
@@ -119,12 +128,71 @@ export const useCanvasDocument = (tab: Tab) => {
     [tabId],
   );
 
+  const reloadAfterConflict = useCallback(async () => {
+    setIsResolvingConflict(true);
+    setError(null);
+    try {
+      const loaded = await canvasDocumentManager.reloadAfterConflict(tabId);
+      setActiveDocument({
+        document: {
+          ...loaded.document,
+          items: loaded.document.items.map((item) => ({ ...item })),
+        },
+        session: {
+          ...loaded.session,
+          viewport: { ...loaded.session.viewport },
+        },
+      });
+      setReloadKey((current) => current + 1);
+    } catch (reloadError) {
+      setError(
+        reloadError instanceof Error
+          ? reloadError.message
+          : "Unable to reload this Canvas",
+      );
+    } finally {
+      setIsResolvingConflict(false);
+    }
+  }, [tabId]);
+
+  const takeOverAfterConflict = useCallback(async () => {
+    setIsResolvingConflict(true);
+    setError(null);
+    try {
+      const saved = await canvasDocumentManager.takeOverAfterConflict(tabId);
+      setActiveDocument((current) =>
+        current
+          ? {
+              ...current,
+              document: {
+                ...saved.document,
+                items: saved.document.items.map((item) => ({ ...item })),
+              },
+            }
+          : current,
+      );
+    } catch (takeOverError) {
+      setError(
+        takeOverError instanceof Error
+          ? takeOverError.message
+          : "Unable to take over this Canvas",
+      );
+    } finally {
+      setIsResolvingConflict(false);
+    }
+  }, [tabId]);
+
   return {
     activeDocument,
     status,
     revision,
     error,
+    remoteRevision,
+    reloadKey,
+    isResolvingConflict,
     saveViewport,
     updateItems,
+    reloadAfterConflict,
+    takeOverAfterConflict,
   };
 };

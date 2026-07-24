@@ -10,6 +10,15 @@ import {
   parseCanvasDocument,
   parseCanvasSession,
 } from "../utils/canvasSchemas";
+import {
+  assertCanvasRevision,
+  createCanvasTakeOverDocument,
+} from "./CanvasRevisionConflict";
+
+export interface CanvasDocumentSaveOptions {
+  expectedRevision: number;
+  updateParentTabModified?: boolean;
+}
 
 export interface CanvasDocumentRepositoryContract {
   createWithTab(tab: Tab): Promise<CanvasDocument>;
@@ -17,8 +26,12 @@ export interface CanvasDocumentRepositoryContract {
   hasContent(tabId: string): Promise<boolean>;
   saveDocument(
     document: CanvasDocument,
-    updateParentTabModified?: boolean,
+    options: CanvasDocumentSaveOptions,
   ): Promise<void>;
+  takeOverDocument(
+    document: CanvasDocument,
+    updateParentTabModified?: boolean,
+  ): Promise<CanvasDocument>;
   getSession(tabId: string): Promise<CanvasSessionRecord | undefined>;
   saveSession(session: CanvasSessionRecord): Promise<void>;
   removeWithTab(tab: Tab): Promise<void>;
@@ -77,20 +90,51 @@ export class CanvasDocumentRepository
 
   async saveDocument(
     document: CanvasDocument,
-    updateParentTabModified = false,
+    options: CanvasDocumentSaveOptions,
   ): Promise<void> {
     const parsedDocument = parseCanvasDocument(document);
-    if (!updateParentTabModified) {
+    const tables = options.updateParentTabModified
+      ? [db.canvasDocuments, db.tabs]
+      : [db.canvasDocuments];
+    await db.transaction("rw", tables, async () => {
+      const stored = await db.canvasDocuments.get(parsedDocument.id);
+      assertCanvasRevision(stored, parsedDocument, options.expectedRevision);
       await db.canvasDocuments.put(parsedDocument);
-      return;
-    }
-
-    await db.transaction("rw", db.canvasDocuments, db.tabs, async () => {
-      await db.canvasDocuments.put(parsedDocument);
-      await db.tabs.update(parsedDocument.tabId, {
-        lastModified: parsedDocument.updatedAt,
-      });
+      if (options.updateParentTabModified) {
+        await db.tabs.update(parsedDocument.tabId, {
+          lastModified: parsedDocument.updatedAt,
+        });
+      }
     });
+  }
+
+  async takeOverDocument(
+    document: CanvasDocument,
+    updateParentTabModified = false,
+  ): Promise<CanvasDocument> {
+    let savedDocument: CanvasDocument | undefined;
+    const tables = updateParentTabModified
+      ? [db.canvasDocuments, db.tabs]
+      : [db.canvasDocuments];
+    await db.transaction("rw", tables, async () => {
+      const stored = await db.canvasDocuments.get(document.id);
+      if (!stored) {
+        throw new Error(`Canvas document ${document.id} no longer exists`);
+      }
+      savedDocument = parseCanvasDocument(
+        createCanvasTakeOverDocument(document, parseCanvasDocument(stored)),
+      );
+      await db.canvasDocuments.put(savedDocument);
+      if (updateParentTabModified) {
+        await db.tabs.update(savedDocument.tabId, {
+          lastModified: savedDocument.updatedAt,
+        });
+      }
+    });
+    if (!savedDocument) {
+      throw new Error("Canvas take-over transaction did not complete");
+    }
+    return savedDocument;
   }
 
   async getSession(tabId: string): Promise<CanvasSessionRecord | undefined> {

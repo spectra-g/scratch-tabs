@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 export interface RendererSaveStatus {
-  state: "loading" | "saved" | "saving" | "error";
+  state: "loading" | "saved" | "saving" | "conflict" | "error";
   revision: number;
   scopeLabel: string;
   error?: string;

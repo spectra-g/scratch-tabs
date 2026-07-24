@@ -37,4 +37,22 @@ describe("RendererStatusItems", () => {
     );
     expect(screen.getByText("Canvas")).toBeInTheDocument();
   });
+
+  it("reports a Canvas revision conflict distinctly from a save failure", () => {
+    useRendererStatusStore.getState().setContribution("conflicting-canvas", {
+      label: "Canvas",
+      save: { state: "conflict", revision: 2, scopeLabel: "Local only" },
+    });
+
+    render(
+      <RendererStatusItems
+        tabId="conflicting-canvas"
+        fallbackLabel="Canvas"
+      />,
+    );
+
+    expect(screen.getByTestId("canvas-save-status")).toHaveTextContent(
+      "Save conflict",
+    );
+  });
 });

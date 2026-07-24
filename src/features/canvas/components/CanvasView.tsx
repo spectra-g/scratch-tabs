@@ -12,8 +12,19 @@ interface CanvasViewProps {
 
 const CanvasView = ({ tab }: CanvasViewProps) => {
   const imageOperations = useCanvasImageOperations(tab);
-  const { activeDocument, status, revision, error, saveViewport, updateItems } =
-    useCanvasDocument(tab);
+  const {
+    activeDocument,
+    status,
+    revision,
+    error,
+    remoteRevision,
+    reloadKey,
+    isResolvingConflict,
+    saveViewport,
+    updateItems,
+    reloadAfterConflict,
+    takeOverAfterConflict,
+  } = useCanvasDocument(tab);
 
   if (status === "error" && !activeDocument) {
     return (
@@ -40,7 +51,7 @@ const CanvasView = ({ tab }: CanvasViewProps) => {
 
   return (
     <CanvasScene
-      key={activeDocument.document.id}
+      key={`${activeDocument.document.id}:${reloadKey}`}
       tab={tab}
       initialItems={activeDocument.document.items}
       edges={canvasEdgesToFlowEdges(activeDocument.document.edges)}
@@ -49,9 +60,13 @@ const CanvasView = ({ tab }: CanvasViewProps) => {
       status={status}
       revision={revision}
       error={error}
+      remoteRevision={remoteRevision}
+      isResolvingConflict={isResolvingConflict}
       updateItems={updateItems}
       imageOperations={imageOperations}
       saveViewport={saveViewport}
+      onReloadConflict={() => void reloadAfterConflict()}
+      onTakeOverConflict={() => void takeOverAfterConflict()}
     />
   );
 };
