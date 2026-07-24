@@ -58,5 +58,5 @@ export interface DataReconcileStateData {
   sourceAId?: string;
   sourceBId?: string;
   options: ReconcileOptions;
-  selectedResult: "inBoth" | "changed" | "onlyA" | "onlyB";
+  selectedResult: "aInB" | "aNotInB" | "bInA" | "bNotInA" | "changed";
 }

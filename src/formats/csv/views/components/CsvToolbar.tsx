@@ -14,7 +14,6 @@ import {
   Code,
   ChevronDown,
   Search,
-  GitCompare,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -78,7 +77,7 @@ interface CsvToolbarProps {
   columnCount: number;
   diagnostics: CsvDiagnostic[];
   isValid: boolean;
-  onCompareTab: () => void;
+  onReconcileTab: () => void;
 }
 
 export const CsvToolbar: React.FC<CsvToolbarProps> = ({
@@ -116,7 +115,7 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
   columnCount,
   diagnostics,
   isValid,
-  onCompareTab,
+  onReconcileTab,
 }) => {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [sqlTableName, setSqlTableName] = useState("my_table");
@@ -256,13 +255,13 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
         <div className="w-px h-6 bg-element mx-2" />
 
         <button
-          onClick={onCompareTab}
-          title="Compare this CSV tab with another tab"
+          onClick={onReconcileTab}
+          title="Reconcile this CSV tab with another tab"
           className="flex items-center space-x-1 px-3 py-2 rounded hover:bg-element-hover"
-          data-testid="csv-compare-tab"
+          data-testid="csv-reconcile-tab"
         >
-          <GitCompare size={16} />
-          <span className="text-sm">Compare tab</span>
+          <Database size={16} />
+          <span className="text-sm">Reconcile data</span>
         </button>
 
         <div className="w-px h-6 bg-element mx-2" />

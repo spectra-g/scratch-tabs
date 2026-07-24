@@ -1,6 +1,7 @@
 import { ImageFormatModule } from "../index";
 import {
   estimateDecodedBytes,
+  imageDataUriToFile,
   imageMimeTypeToExtension,
   parseImageDataUri,
 } from "../utils/dataUri";
@@ -43,6 +44,23 @@ describe("image data URI detection", () => {
     expect(imageMimeTypeToExtension("image/jpeg")).toBe("jpg");
     expect(imageMimeTypeToExtension("image/svg+xml")).toBe("svg");
     expect(imageMimeTypeToExtension("image/png")).toBe("png");
+  });
+
+  it("converts a data URI into a named image file", async () => {
+    const file = imageDataUriToFile(
+      "data:image/png;base64,SGVsbG8=",
+    );
+
+    expect(file).toBeInstanceOf(File);
+    expect(file).toMatchObject({
+      name: "pasted-image.png",
+      type: "image/png",
+      size: 5,
+    });
+  });
+
+  it("rejects invalid image data when creating a file", () => {
+    expect(imageDataUriToFile("data:image/png;base64,invalid")).toBeNull();
   });
 
   it("estimates decoded bytes from base64 padding", () => {

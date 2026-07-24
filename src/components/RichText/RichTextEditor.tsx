@@ -6,11 +6,9 @@ import { RichTextToolbar } from './components/RichTextToolbar';
 import { InlineSearchBar } from './components/InlineSearchBar';
 import { LinkBubbleMenu } from './components/LinkBubbleMenu';
 import { TableContextMenu, Position } from './components/TableContextMenu';
-import { UpgradeConfirmationModal } from './components/UpgradeConfirmationModal';
 import { ImportCodeModal } from './components/ImportCodeModal';
 import { DateCreatedHeader } from './components/DateCreatedHeader';
 import { Tab } from '../../types';
-import { useClipboardStore } from '../../stores/clipboardStore';
 
 interface RichTextEditorProps {
   tab: Tab;
@@ -22,16 +20,13 @@ interface RichTextEditorProps {
 export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   tab,
   onContentChange,
-  onUpgradeToRich,
   className = '',
 }) => {
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showSearchBar, setShowSearchBar] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showTableContextMenu, setShowTableContextMenu] = useState(false);
   const [tableContextMenuPosition, setTableContextMenuPosition] = useState<Position>({ x: 0, y: 0 });
   const editorContainerRef = useRef<HTMLDivElement>(null);
-  const { pendingImageData, setPendingImageData } = useClipboardStore();
 
   const handleTableContextMenu = (event: MouseEvent) => {
     setTableContextMenuPosition({ x: event.clientX, y: event.clientY });
@@ -64,17 +59,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   // Set up table-specific keyboard shortcuts
   useTableKeyboardShortcuts({ editor });
-
-  const handleUpgradeConfirm = () => {
-    setShowUpgradeModal(false);
-    if (onUpgradeToRich) {
-      onUpgradeToRich();
-    }
-  };
-
-  const handleUpgradeCancel = () => {
-    setShowUpgradeModal(false);
-  };
 
   const getBackgroundTextureClass = () => {
     const backgroundTexture = tab.richContent?.attrs?.backgroundTexture;
@@ -141,12 +125,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           />
         )}
 
-        {/* Upgrade Confirmation Modal */}
-        <UpgradeConfirmationModal
-          isOpen={showUpgradeModal}
-          onConfirm={handleUpgradeConfirm}
-          onCancel={handleUpgradeCancel}
-        />
       </div>
 
       {/* Import Code Modal */}

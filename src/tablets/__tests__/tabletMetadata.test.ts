@@ -136,7 +136,7 @@ describe('Tablet Metadata Actions', () => {
       const actions = metadata?.getActionsForContext?.({ source: 'editor-tab', tab, content: tab.content, side: 'right' }) ?? [];
 
       expect(actions).toHaveLength(1);
-      expect(actions[0].label).toBe('Compare with another tab…');
+      expect(actions[0].label).toBe('Reconcile data with another tab…');
       actions[0].action();
       expect(mockTabletActionService.handleAction).toHaveBeenCalledWith(expect.objectContaining({
         targetTablet: 'datareconcile', action: 'new-tab', payload: { sourceAId: tab.id, csvMode: true },

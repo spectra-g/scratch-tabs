@@ -42,7 +42,7 @@ describe("CsvTableViewer", () => {
       <CsvTableViewer content={sampleCsv} onContentChange={mockOnContentChange} tabId="customers" isActive={true} side="right" />,
     );
 
-    fireEvent.click(screen.getByTestId("csv-compare-tab"));
+    fireEvent.click(screen.getByTestId("csv-reconcile-tab"));
     expect(tabletActionService.handleAction).toHaveBeenCalledWith({
       targetTablet: "datareconcile",
       action: "new-tab",
