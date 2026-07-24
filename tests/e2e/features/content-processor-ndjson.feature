@@ -12,7 +12,7 @@ Feature: NDJSON content processing
       sdvsdv2025-08-01T10 : 15:42.110Z {"event":"api_call","user_id":123,"endpoint":"/api/data","status":200}
       xcvdsvsdvsdvs {"event":"logout","user_id":123}
       """
-    And I click the icon for "New tab with contents from clipboard"
+    And I create a new tab from the document menu and clipboard
     Then the "Welcome" tab should exist and not be active
     And the "Scratch 1" tab should be active
     And each line should be valid JSON

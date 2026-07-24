@@ -1,28 +1,33 @@
-import { db, StorageProviderFactory } from "../../db";
-import { Workspace, Tab, SplitViewState } from "../../types";
+import { StorageProviderFactory } from "../../db";
+import type { SplitViewState } from "../../types";
+import { createWorkspaceArchive, readWorkspaceArchive } from "./archiveCodec";
 import {
-  ExportFileContent,
-  ExportData,
-  ImportProcessSummary,
-  ImportSummaryItem,
-} from "./types";
+  canvasExportCollector,
+  type CanvasExportCollectorContract,
+} from "./canvasExportCollector";
 import {
-  stableStringifyDataBlock,
-  generateSha256,
-  createZipArchive,
-  triggerDownload,
-  readZipArchive,
-  generateExportFilename,
-} from "./utils";
+  workspaceExportFlushCoordinator,
+  type ExportFlushCoordinator,
+} from "./exportFlushCoordinator";
+import { buildWorkspaceImportPlan } from "./importPlanner";
+import type { ExportData, ImportProcessSummary } from "./types";
+import { generateExportFilename, triggerDownload } from "./utils";
+import {
+  WorkspaceImportRepository,
+  type WorkspaceImportRepositoryContract,
+} from "./WorkspaceImportRepository";
 
-const EXPORT_FORMAT_VERSION = "1.1.0";
+type Storage = ReturnType<typeof StorageProviderFactory.getProvider>;
 
 export class ImportExportService {
-  private storage: ReturnType<typeof StorageProviderFactory.getProvider>;
-
-  constructor() {
-    this.storage = StorageProviderFactory.getProvider();
-  }
+  constructor(
+    private readonly storage: Storage = StorageProviderFactory.getProvider(),
+    private readonly flushCoordinator: ExportFlushCoordinator = workspaceExportFlushCoordinator,
+    private readonly canvasCollector: CanvasExportCollectorContract = canvasExportCollector,
+    private readonly importRepository: WorkspaceImportRepositoryContract = new WorkspaceImportRepository(
+      storage,
+    ),
+  ) {}
 
   async exportWorkspaces(workspaceIds: string[]): Promise<void> {
     if (workspaceIds.length === 0) {
@@ -31,46 +36,19 @@ export class ImportExportService {
     }
 
     try {
-      const dataToExport: ExportData = {
-        workspaces: [],
-        tabs: [],
-        splitViews: [],
-      };
-
-      for (const id of workspaceIds) {
-        const workspace = await this.storage.getWorkspace(id);
-        if (workspace) {
-          dataToExport.workspaces.push(workspace);
-          const tabs = await this.storage.getTabsByWorkspace(id);
-          dataToExport.tabs.push(...tabs);
-          const splitViewRecord =
-            await this.storage.getSplitViewByWorkspace(id);
-          if (splitViewRecord) {
-            dataToExport.splitViews.push(
-              splitViewRecord as unknown as SplitViewState,
-            );
-          }
-        }
-      }
-
-      if (dataToExport.workspaces.length === 0) {
+      await this.flushCoordinator.flush();
+      const data = await this.collectWorkspaceData(workspaceIds);
+      if (data.workspaces.length === 0) {
         alert("No data found for selected workspaces.");
         return;
       }
-
-      const exportFileContent: ExportFileContent = {
-        exportFormatVersion: EXPORT_FORMAT_VERSION,
-        exportedAt: new Date().toISOString(),
-        data: dataToExport,
-      };
-
-      const jsonDataString = JSON.stringify(exportFileContent, null, 2);
-      const dataBlockString = stableStringifyDataBlock(dataToExport);
-      const checksum = await generateSha256(dataBlockString);
-
-      const zipBlob = await createZipArchive(jsonDataString, checksum);
-      const filename = generateExportFilename();
-      triggerDownload(zipBlob, filename);
+      const canvas = await this.canvasCollector.collect(data.tabs);
+      const zipBlob = await createWorkspaceArchive(
+        data,
+        canvas.documents,
+        canvas.assets,
+      );
+      triggerDownload(zipBlob, generateExportFilename());
     } catch (error) {
       alert(
         `Export failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -78,232 +56,70 @@ export class ImportExportService {
     }
   }
 
+  private async collectWorkspaceData(
+    workspaceIds: readonly string[],
+  ): Promise<ExportData> {
+    const data: ExportData = {
+      workspaces: [],
+      tabs: [],
+      splitViews: [],
+    };
+    const selectedIds = new Set(workspaceIds);
+
+    for (const id of selectedIds) {
+      const workspace = await this.storage.getWorkspace(id);
+      if (!workspace) continue;
+      data.workspaces.push(workspace);
+      data.tabs.push(...(await this.storage.getTabsByWorkspace(id)));
+      const splitView = await this.storage.getSplitViewByWorkspace(id);
+      if (splitView) {
+        data.splitViews.push(splitView as unknown as SplitViewState);
+      }
+    }
+    return data;
+  }
+
   async importWorkspaces(file: File): Promise<ImportProcessSummary> {
     const summary: ImportProcessSummary = {
       importedWorkspaces: [],
       errors: [],
+      canvasErrors: [],
     };
 
-    const {
-      jsonDataString,
-      checksumString,
-      error: unzipError,
-    } = await readZipArchive(file);
-
-    if (unzipError) {
-      summary.errors.push(unzipError);
-      return summary;
-    }
-    if (!jsonDataString || !checksumString) {
-      const missingFileError = "Extracted data or checksum is missing.";
-      summary.errors.push(missingFileError);
-      return summary;
-    }
-
-    let parsedFileContent: ExportFileContent;
+    let archive;
     try {
-      parsedFileContent = JSON.parse(jsonDataString) as ExportFileContent;
-    } catch (e) {
-      const parseError =
-        "Failed to parse export-data.json. The file might be corrupted.";
-      summary.errors.push(parseError);
-      return summary;
-    }
-
-    if (parsedFileContent.exportFormatVersion !== EXPORT_FORMAT_VERSION) {
-      const versionMismatchError = `Incompatible export format version. Expected ${EXPORT_FORMAT_VERSION}, got ${parsedFileContent.exportFormatVersion}.`;
-      summary.errors.push(versionMismatchError);
-    }
-
-    const dataBlockStringForChecksum = stableStringifyDataBlock(
-      parsedFileContent.data,
-    );
-    const calculatedChecksum = await generateSha256(dataBlockStringForChecksum);
-
-    if (calculatedChecksum !== checksumString.trim()) {
-      const checksumError =
-        "File integrity check failed. The file may be corrupted or modified. Import aborted.";
-      summary.errors.push(checksumError);
-      return summary;
-    }
-
-    const {
-      workspaces: importedWorkspaces,
-      tabs: importedTabs,
-      splitViews: importedSplitViewsUnsafe,
-    } = parsedFileContent.data;
-    const importedSplitViews: SplitViewState[] =
-      importedSplitViewsUnsafe as SplitViewState[];
-
-    const existingWorkspaces = await this.storage.getWorkspaces();
-    const existingWorkspaceIds = new Set(existingWorkspaces.map((ws) => ws.id));
-    const allDbTabs = await this.storage.getTabs();
-    const existingTabIds = new Set(allDbTabs.map((t) => t.id));
-
-    // Calculate the maximum displayOrder for migration
-    const maxDisplayOrder = existingWorkspaces.reduce((max, ws) => {
-      return Math.max(max, ws.displayOrder ?? 0);
-    }, 0);
-
-    const existingSplitViewIds = new Set<string>();
-    for (const ws of existingWorkspaces) {
-      const svRecord = await this.storage.getSplitViewByWorkspace(ws.id);
-      if (svRecord) existingSplitViewIds.add(svRecord.id);
-    }
-
-    const workspacesToSave: Workspace[] = [];
-    const tabsToSave: Tab[] = [];
-    const splitViewsToSave: SplitViewState[] = [];
-    const idRemap: Record<string, string> = {};
-
-    for (let i = 0; i < importedWorkspaces.length; i++) {
-      let impWs = importedWorkspaces[i];
-      const originalImportedWorkspaceId = impWs.id;
-      let currentDbWorkspaceId = originalImportedWorkspaceId;
-      let finalName = impWs.name;
-      const summaryItem: ImportSummaryItem = {
-        name: impWs.name,
-        tabCount: 0,
-        status: "imported",
-      };
-
-      if (existingWorkspaceIds.has(originalImportedWorkspaceId)) {
-        const newId = crypto.randomUUID();
-        idRemap[originalImportedWorkspaceId] = newId;
-        currentDbWorkspaceId = newId;
-        finalName = `${impWs.name} (Imported ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()})`;
-        impWs = { ...impWs, id: currentDbWorkspaceId, name: finalName };
-        summaryItem.status = "merged";
-        summaryItem.reason = `Original ID ${originalImportedWorkspaceId.substring(0, 8)}... conflicted. Renamed and assigned new ID.`;
-      }
-
-      // Migration: Ensure imported workspaces have displayOrder
-      // Assign sequential displayOrder values starting after existing workspaces
-      impWs.lastAccessed = Date.now();
-      if (impWs.displayOrder === undefined) {
-        impWs.displayOrder = maxDisplayOrder + i + 1;
-      }
-
-      workspacesToSave.push(impWs);
-      summaryItem.name = finalName;
-
-      const workspaceTabsFromImportFile = importedTabs.filter(
-        (t) => t.workspaceId === originalImportedWorkspaceId,
-      );
-
-      for (const impTab of workspaceTabsFromImportFile) {
-        const originalTabId = impTab.id;
-        let finalTabId = impTab.id;
-        if (
-          idRemap[originalImportedWorkspaceId] ||
-          existingTabIds.has(originalTabId)
-        ) {
-          finalTabId = crypto.randomUUID();
-          idRemap[originalTabId] = finalTabId;
-        }
-        tabsToSave.push({
-          ...impTab,
-          id: finalTabId,
-          workspaceId: currentDbWorkspaceId,
-        });
-        summaryItem.tabCount++;
-      }
-
-      const workspaceSplitViewFromImportFile = importedSplitViews.find(
-        (sv) => sv.workspaceId === originalImportedWorkspaceId,
-      );
-      if (workspaceSplitViewFromImportFile) {
-        const originalSplitViewId = workspaceSplitViewFromImportFile.id;
-        let finalSplitViewId = originalSplitViewId;
-
-        if (
-          idRemap[originalImportedWorkspaceId] ||
-          existingSplitViewIds.has(originalSplitViewId)
-        ) {
-          finalSplitViewId = crypto.randomUUID();
-          idRemap[originalSplitViewId] = finalSplitViewId;
-        }
-
-        const mapTabId = (tabId: string | null | undefined): string | null => {
-          if (!tabId) return null;
-          const mapped = idRemap[tabId] || tabId;
-          return mapped;
-        };
-        const mapTabIdArray = (tabIds: string[]): string[] => {
-          const mapped = tabIds.map((tid) => idRemap[tid] || tid);
-          return mapped;
-        };
-
-        const splitViewToSave: SplitViewState = {
-          ...workspaceSplitViewFromImportFile,
-          id: finalSplitViewId,
-          workspaceId: currentDbWorkspaceId,
-          activeLeftTabId: mapTabId(
-            workspaceSplitViewFromImportFile.activeLeftTabId,
-          ),
-          activeRightTabId: mapTabId(
-            workspaceSplitViewFromImportFile.activeRightTabId,
-          ),
-          leftTabs: mapTabIdArray(
-            workspaceSplitViewFromImportFile.leftTabs || [],
-          ),
-          rightTabs: mapTabIdArray(
-            workspaceSplitViewFromImportFile.rightTabs || [],
-          ),
-          leftTabHistory: mapTabIdArray(
-            workspaceSplitViewFromImportFile.leftTabHistory || [],
-          ),
-          rightTabHistory: mapTabIdArray(
-            workspaceSplitViewFromImportFile.rightTabHistory || [],
-          ),
-        };
-        splitViewsToSave.push(splitViewToSave);
-      }
-      summary.importedWorkspaces.push(summaryItem);
-    }
-
-    try {
-      await db.transaction(
-        "rw",
-        db.workspaces,
-        db.tabs,
-        db.splitView,
-        async () => {
-          if (workspacesToSave.length > 0)
-            await db.workspaces.bulkPut(workspacesToSave);
-          await db.tabs.bulkPut(
-            tabsToSave.map((t) => ({
-              ...t,
-              dateCreated: t.dateCreated || Date.now(),
-              lastModified: t.lastModified || Date.now(),
-              content: t.content || "", // Ensure content is always a string
-              richContent: t.richContent ? JSON.stringify(t.richContent) : undefined,
-            })),
-          );
-
-          const recordsToSaveToDb = splitViewsToSave.map((svs) => ({
-            id: svs.id,
-            isSplit: svs.isSplit,
-            leftTabs: svs.leftTabs,
-            rightTabs: svs.rightTabs,
-            activeLeftTabId: svs.activeLeftTabId,
-            activeRightTabId: svs.activeRightTabId,
-            activeSide: svs.activeSide,
-            splitRatio: svs.splitRatio,
-            lastModified: Date.now(),
-            workspaceId: svs.workspaceId,
-            leftTabHistory: svs.leftTabHistory || [],
-            rightTabHistory: svs.rightTabHistory || [],
-          }));
-          if (recordsToSaveToDb.length > 0)
-            await db.splitView.bulkPut(recordsToSaveToDb);
-        },
-      );
-      // Remove the loadWorkspaces call to prevent modal state interference
-      // await useWorkspaceStore.getState().loadWorkspaces();
-    } catch (dbError) {
+      archive = await readWorkspaceArchive(file);
+    } catch (error) {
       summary.errors.push(
-        `Failed to save imported data to the database: ${dbError instanceof Error ? dbError.message : String(dbError)}`,
+        error instanceof Error ? error.message : String(error),
+      );
+      return summary;
+    }
+
+    if (archive.data.workspaces.length === 0) {
+      summary.errors.push("The archive contains no workspaces.");
+      return summary;
+    }
+
+    try {
+      const existing = await this.importRepository.readExistingIds();
+      const plan = buildWorkspaceImportPlan({
+        data: archive.data,
+        canvasDocuments: archive.canvasDocuments,
+        canvasAssets: archive.canvasAssets,
+        existing,
+        initialCanvasErrors: archive.canvasErrors,
+      });
+
+      await this.importRepository.save(plan);
+
+      summary.importedWorkspaces = plan.summaries;
+      summary.canvasErrors = plan.canvasErrors;
+    } catch (error) {
+      summary.errors.push(
+        `Failed to import workspace data: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
       );
     }
 

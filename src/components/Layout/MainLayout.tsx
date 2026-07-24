@@ -33,6 +33,7 @@ import { getTabsInVisualOrder } from "../../utils/diffModalHelpers";
 import { Sidebar } from "./Sidebar";
 import { Menu } from "../Icons";
 import { useSidebarStore } from "../../stores/sidebarStore";
+import { useCanvasLifecycleFlush } from "../../hooks/useCanvasLifecycleFlush";
 
 
 const MainLayout: React.FC = () => {
@@ -83,6 +84,7 @@ const MainLayout: React.FC = () => {
 
   // Set up periodic auto-save (extracted to hook)
   useAutoSave();
+  useCanvasLifecycleFlush();
 
   // Set up keyboard shortcuts with close confirmation (extracted to hook)
   const {

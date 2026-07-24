@@ -4,7 +4,7 @@ Feature: Tab context menu
     Given I am on the homepage
 
   Scenario: Tablet context menu items
-    When I click the icon for "New tablet"
+    When I open the Tool Selector from the document menu
     And I select "Calculator" from the tablet selector
     And I right-click the "Calculator" tab
     Then the context menu should not show "Share" option
@@ -12,7 +12,7 @@ Feature: Tab context menu
     And the context menu should not show "Transformations" option
 
   Scenario: Rename a tab using context menu
-    When I click the icon for "New tab with contents from clipboard"
+    When I create a new tab from the document menu and clipboard
     Then the "Scratch 1" tab should be active
     When I right-click the "Scratch 1" tab
     And I select "Rename" from the "Organize" submenu
@@ -22,12 +22,12 @@ Feature: Tab context menu
     Then the "My Custom Tab" tab should be active
 
   Scenario: Copy content using context menu
-    When I click the icon for "New tab with contents from clipboard"
+    When I create a new tab from the document menu and clipboard
     Then the "Scratch 1" tab should be active
     When I type "Hello World! This is my test content." into the editor
     And I right-click the "Scratch 1" tab
     And I select "Copy Content" from the context menu
-    When I click the icon for "New tab with contents from clipboard"
+    When I create a new tab from the document menu and clipboard
     Then the "Scratch 2" tab should be active
     And the active editor content should contain "Hello World! This is my test content."
 
@@ -46,7 +46,7 @@ Feature: Tab context menu
     And the status bar language should be "Markdown"
 
   Scenario: Duplicate tab using context menu
-    When I click the icon for "New tab with contents from clipboard"
+    When I create a new tab from the document menu and clipboard
     Then the "Scratch 1" tab should be active
     When I type "Original tab content for duplication test" into the editor
     And I right-click the "Scratch 1" tab

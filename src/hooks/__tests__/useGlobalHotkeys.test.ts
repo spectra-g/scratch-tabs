@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import { useGlobalHotkeys } from '../useGlobalHotkeys';
 import { usePersistenceStore } from '../../stores/persistenceStore';
 import { useSearchStore } from '../../stores/searchStore';
@@ -129,7 +129,7 @@ describe('useGlobalHotkeys', () => {
   });
 
   describe('Tab close shortcut (Ctrl+W)', () => {
-    it('should show confirmation when closing tab with content', () => {
+    it('should show confirmation when closing tab with content', async () => {
       renderUseGlobalHotkeys();
 
       const event = new KeyboardEvent('keydown', {
@@ -140,11 +140,13 @@ describe('useGlobalHotkeys', () => {
 
       window.dispatchEvent(event);
 
-      expect(mockOnKeyboardCloseConfirmation).toHaveBeenCalledWith('tab-1', 'Test Tab');
+      await waitFor(() =>
+        expect(mockOnKeyboardCloseConfirmation).toHaveBeenCalledWith('tab-1', 'Test Tab'),
+      );
       expect(mockOnTabClose).not.toHaveBeenCalled();
     });
 
-    it('should close tab directly when it has no content', () => {
+    it('should close tab directly when it has no content', async () => {
       // Mock active tab to be the empty one
       (useSplitViewStore as any).getState = () => ({
         splitView: {
@@ -164,11 +166,13 @@ describe('useGlobalHotkeys', () => {
 
       window.dispatchEvent(event);
 
-      expect(mockOnTabClose).toHaveBeenCalledWith('tab-2');
+      await waitFor(() =>
+        expect(mockOnTabClose).toHaveBeenCalledWith('tab-2'),
+      );
       expect(mockOnKeyboardCloseConfirmation).not.toHaveBeenCalled();
     });
 
-    it('should show confirmation for tablet tabs', () => {
+    it('should show confirmation for tablet tabs', async () => {
       // Mock active tab to be the tablet
       (useSplitViewStore as any).getState = () => ({
         splitView: {
@@ -188,10 +192,12 @@ describe('useGlobalHotkeys', () => {
 
       window.dispatchEvent(event);
 
-      expect(mockOnKeyboardCloseConfirmation).toHaveBeenCalledWith('tablet-tab', 'Tablet Tab');
+      await waitFor(() =>
+        expect(mockOnKeyboardCloseConfirmation).toHaveBeenCalledWith('tablet-tab', 'Tablet Tab'),
+      );
     });
 
-    it('should use right side tab when activeSide is right', () => {
+    it('should use right side tab when activeSide is right', async () => {
       (useSplitViewStore as any).getState = () => ({
         splitView: {
           activeSide: 'right',
@@ -210,7 +216,9 @@ describe('useGlobalHotkeys', () => {
 
       window.dispatchEvent(event);
 
-      expect(mockOnTabClose).toHaveBeenCalledWith('tab-2');
+      await waitFor(() =>
+        expect(mockOnTabClose).toHaveBeenCalledWith('tab-2'),
+      );
     });
 
     it('should not close when Cmd+W (Mac-style) is pressed', () => {

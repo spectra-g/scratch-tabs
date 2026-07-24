@@ -15,12 +15,36 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.43.0';
+export const APP_VERSION = '1.44.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.43.0",
+    "version": "1.44.0",
     "type": "latest",
+    "date": "2026-07-24",
+    "headline": "Spatial Canvas",
+    "summary": "Arrange code, notes, images, links, and videos on a local-first infinite canvas.",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Mixed content:** Add text, code and JSON, local images, links, and click-to-load YouTube or Vimeo cards",
+          "**Spatial controls:** Pan, zoom, resize, multi-select, layer, duplicate, undo, redo, and navigate by keyboard",
+          "**Fast capture:** Paste or drop content, or send a tab or selection to a new or existing Canvas"
+        ]
+      },
+      {
+        "name": "Local-First Workspace",
+        "changes": [
+          "**Private persistence:** Canvas documents and images stay in local IndexedDB and work offline",
+          "**Workspace integration:** Search cards, use split view, and preserve Canvas content through workspace import and export"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.43.0",
+    "type": "release",
     "date": "2026-07-17",
     "headline": "Data Reconcile Tablet",
     "summary": "Compare rows across two tabs with whole-line or CSV key-column matching, then open or copy the results without changing either source.",

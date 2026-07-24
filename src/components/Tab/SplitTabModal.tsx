@@ -262,7 +262,7 @@ export const SplitTabModal: React.FC<SplitTabModalProps> = ({
 
     // Remove original tab if not keeping it
     if (!config.keepOriginal && tab) {
-      rootStore.removeTab(tab.id);
+      await rootStore.removeTab(tab.id);
     }
 
     onClose();

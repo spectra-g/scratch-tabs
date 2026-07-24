@@ -1,10 +1,11 @@
 import React, { useCallback, useRef, useEffect } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { Pin, Calculator, Type, File, FileCode, FileText, Edit } from "../Icons";
+import { Pin, Calculator, Type, File, FileCode, FileText, Edit, Layers } from "../Icons";
 import { clsx } from "clsx";
 import { useSidebarStore } from "../../stores/sidebarStore";
 import { useRootStore } from "../../stores/rootStore";
+import type { TabContentKind } from "../../types";
 
 export interface SidebarDraggableTabProps {
   id: string;
@@ -15,6 +16,7 @@ export interface SidebarDraggableTabProps {
   isPinned?: boolean;
   isTablet?: boolean;
   isRich?: boolean;
+  contentKind?: TabContentKind;
   style?: React.CSSProperties;
   onClick: () => void;
   onContextMenu: (e: React.MouseEvent) => void;
@@ -30,6 +32,7 @@ export const SidebarDraggableTab: React.FC<SidebarDraggableTabProps> = ({
   isPinned,
   isTablet,
   isRich,
+  contentKind,
   style: externalStyle,
   onClick,
   onContextMenu,
@@ -136,7 +139,7 @@ export const SidebarDraggableTab: React.FC<SidebarDraggableTabProps> = ({
       aria-selected={isActive}
     >
       <span className="mr-1.5 opacity-70 pointer-events-none">
-        <TabIcon language={language} isTablet={isTablet} />
+        <TabIcon language={language} isTablet={isTablet} contentKind={contentKind} />
       </span>
       <div className="flex-1 flex items-center min-w-0">
         {isEditing ? (
@@ -183,7 +186,8 @@ export const SidebarDraggableTab: React.FC<SidebarDraggableTabProps> = ({
 };
 
 // TabIcon component (same as in Sidebar.tsx)
-const TabIcon: React.FC<{ language: string; isTablet?: boolean }> = ({ language, isTablet }) => {
+const TabIcon: React.FC<{ language: string; isTablet?: boolean; contentKind?: TabContentKind }> = ({ language, isTablet, contentKind }) => {
+  if (contentKind === "canvas") return <Layers size={12} />;
   if (isTablet) return <Calculator size={12} />;
 
   switch (language.toLowerCase()) {

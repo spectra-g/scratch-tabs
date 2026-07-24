@@ -11,6 +11,10 @@ export interface SearchResult {
   matchIndex: number; // Start index of the match within the lineText
   matchLength: number; // Length of the match
   tabContent: string;
+  resultKind?: "tab" | "canvas-item";
+  canvasItemId?: string;
+  canvasItemType?: string;
+  itemLabel?: string;
 }
 
 export interface SearchOptions {
@@ -56,7 +60,7 @@ const MAX_HISTORY = 20;
 
 export const useSearchStore = create<SearchState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       isOpen: false,
       query: "",
       results: [],

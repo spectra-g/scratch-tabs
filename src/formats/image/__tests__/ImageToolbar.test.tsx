@@ -24,7 +24,7 @@ const defaultProps = {
   onUndo: noop,
   onRedo: noop,
   onResetEdits: noop,
-  onExport: (_: ImageExportFormat) => {},
+  onExport: () => {},
   onCopyImage: noop,
   onDownloadOriginal: noop,
   onOpenPalette: noop,
@@ -48,5 +48,18 @@ describe("ImageToolbar", () => {
   it("renders the Download original button", () => {
     render(<ImageToolbar {...defaultProps} />);
     expect(screen.getByRole("button", { name: "Download original" })).toBeInTheDocument();
+  });
+
+  it("exposes Send to Canvas only when the action is available", () => {
+    const onSendCanvas = jest.fn();
+    const { rerender } = render(
+      <ImageToolbar {...defaultProps} onSendCanvas={onSendCanvas} />,
+    );
+
+    fireEvent.click(screen.getByTestId("image-send-to-canvas"));
+    expect(onSendCanvas).toHaveBeenCalledTimes(1);
+
+    rerender(<ImageToolbar {...defaultProps} />);
+    expect(screen.queryByTestId("image-send-to-canvas")).not.toBeInTheDocument();
   });
 });

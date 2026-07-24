@@ -1,20 +1,19 @@
-import { Plus, ClipboardPlus, Extension } from "../Icons";
+import { Plus } from "../Icons";
 import { useRootStore } from "../../stores";
+import { NewDocumentMenu } from "./NewDocumentMenu";
 
 interface TabActionsProps {
   side?: "left" | "right";
   onShowTabletSelector: () => void;
-  tabletButtonRef?: React.RefObject<HTMLButtonElement>;
   newTabButtonRef?: React.RefObject<HTMLButtonElement>;
 }
 
 export const TabActions: React.FC<TabActionsProps> = ({
   side = "left",
   onShowTabletSelector,
-  tabletButtonRef,
   newTabButtonRef,
 }) => {
-  const { handleNewTab, handleNewTabFromPaste } = useRootStore();
+  const { handleNewTab, handleNewTabFromPaste, handleNewCanvas } = useRootStore();
 
   return (
     <div className="flex items-center">
@@ -28,25 +27,13 @@ export const TabActions: React.FC<TabActionsProps> = ({
       >
         <Plus size={16} />
       </button>
-      <button
-        onClick={() => handleNewTabFromPaste(side === "right")}
-        className="px-2 py-1 text-main flex items-center h-8"
-        title="New tab with contents from clipboard"
-        data-testid="icon-new-tab-from-clipboard"
-        data-side={side}
-      >
-        <ClipboardPlus size={16} />
-      </button>
-      <button
-        ref={tabletButtonRef}
-        onClick={onShowTabletSelector}
-        className="px-2 py-1 text-main flex items-center h-8"
-        title="Open tool selector (/)"
-        data-testid="icon-new-tools"
-        data-side={side}
-      >
-        <Extension size={16} />
-      </button>
+      <NewDocumentMenu
+        side={side}
+        onCreateText={() => handleNewTab(side === "right")}
+        onCreateCanvas={() => void handleNewCanvas(side === "right")}
+        onCreateFromClipboard={() => void handleNewTabFromPaste(side === "right")}
+        onOpenTools={onShowTabletSelector}
+      />
     </div>
   );
 };

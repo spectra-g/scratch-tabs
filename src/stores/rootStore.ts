@@ -19,6 +19,8 @@ import { useQueryPanelStore } from "../formats/json/stores/useQueryPanelStore";
 import { contentProcessingService } from "../services/contentProcessing";
 import { navigationService } from "../services/navigationService";
 import { SidebarTabInfo } from "../types";
+import { getTabContentKind } from "../utils/tabContentKind";
+import { tabDocumentAdapterResolver } from "../services/tabDocumentAdapter";
 
 const _updateStoredTabAccessed = (
   storage: StorageProvider,
@@ -54,8 +56,9 @@ interface RootStore {
   handleNewPopulatedTab: (tab: Partial<Tab>, toRightSide?: boolean) => Promise<string | undefined>;
   addBackgroundTab: (tab: Tab, toRightSide?: boolean) => void;
   handleNewTab: (isRightSide: boolean, content?: string) => Promise<string | undefined>;
+  handleNewCanvas: (isRightSide: boolean) => Promise<string | undefined>;
   handleNewTabFromPaste: (isRightSide: boolean) => Promise<string | undefined>;
-  removeTab: (id: string) => void;
+  removeTab: (id: string) => Promise<void>;
   setActiveTab: (id: string) => void;
   updateTabContent: (id: string, content: string) => void;
   updateTabLanguage: (id: string, language: string, lock?: boolean) => void;
@@ -72,11 +75,14 @@ interface RootStore {
   setActiveRightTab: (id: string) => void;
   setActiveSide: (side: "left" | "right") => void;
   setSplitRatio: (ratio: number) => void;
-  closeTabsToLeft: (tabId: string, isRightSide: boolean) => void;
-  closeTabsToRight: (tabId: string, isRightSide: boolean) => void;
-  closeAllExcept: (tabId: string, isRightSide: boolean) => void;
-  duplicateTab: (tabId: string, isRightSide: boolean) => string;
-  duplicateAndSplitTab: (tabId: string) => string;
+  closeTabsToLeft: (tabId: string, isRightSide: boolean) => Promise<void>;
+  closeTabsToRight: (tabId: string, isRightSide: boolean) => Promise<void>;
+  closeAllExcept: (tabId: string, isRightSide: boolean) => Promise<void>;
+  duplicateTab: (
+    tabId: string,
+    isRightSide: boolean,
+  ) => Promise<string>;
+  duplicateAndSplitTab: (tabId: string) => Promise<string>;
 
   groupTabsByType: (isRightSide: boolean) => void;
   canAddNewTab: (toRightSide?: boolean) => boolean;
@@ -161,6 +167,8 @@ const _broadcastMetadataUpdate = async (workspaceId: string): Promise<void> => {
       language: t.language,
       isTablet: t.isTablet,
       isRich: t.isRich,
+      contentKind: t.contentKind,
+      documentId: t.documentId,
       isPinned: t.isPinned,
       lastModified: t.lastModified,
       lastAccessed: t.lastAccessed,
@@ -239,6 +247,8 @@ export const useRootStore = create<RootStore>((set, get) => {
       language: partialInputTab.language || language,
       languageLocked: partialInputTab.languageLocked ?? languageLocked,
       isRich: partialInputTab.isRich ?? false,
+      contentKind: partialInputTab.contentKind,
+      documentId: partialInputTab.documentId,
       workspaceId: workspaceId,
       dateCreated: partialInputTab.dateCreated || now,
       lastModified: now,
@@ -253,6 +263,23 @@ export const useRootStore = create<RootStore>((set, get) => {
       previewMode: partialInputTab.previewMode || false,
     };
     return finalTab;
+  };
+
+  const _findTabForLifecycle = async (tabId: string): Promise<Tab | undefined> => {
+    const activeTab = useTabsStore.getState().tabs.find((tab) => tab.id === tabId);
+    if (activeTab) return activeTab;
+
+    const activeWorkspaceId = useWorkspaceStore.getState().activeWorkspaceId;
+    const inactiveWorkspaceIds = (useWorkspaceStore
+      .getState()
+      .workspaces ?? []).map((workspace) => workspace.id)
+      .filter((workspaceId) => workspaceId !== activeWorkspaceId);
+    const workspaceTabs = await Promise.all(
+      inactiveWorkspaceIds.map((workspaceId) =>
+        storage.getTabsByWorkspace(workspaceId),
+      ),
+    );
+    return workspaceTabs.flat().find((tab) => tab.id === tabId);
   };
 
   return {
@@ -365,6 +392,50 @@ export const useRootStore = create<RootStore>((set, get) => {
       return newTabObject.id;
     },
 
+    handleNewCanvas: async (isRightSide) => {
+      const ensuredWorkspaceId = await useWorkspaceStore
+        .getState()
+        .ensureWorkspace();
+      if (!ensuredWorkspaceId) return undefined;
+
+      useSidebarStore.getState().expandWorkspace(ensuredWorkspaceId);
+
+      const canvasCount = useTabsStore
+        .getState()
+        .tabs.filter(
+          (tab) =>
+            tab.workspaceId === ensuredWorkspaceId &&
+            getTabContentKind(tab) === "canvas",
+        ).length;
+      const tabId = crypto.randomUUID();
+      const canvasTab = _createFinalTabObject(
+        {
+          id: tabId,
+          title: `Canvas ${canvasCount + 1}`,
+          contentKind: "canvas",
+          documentId: tabId,
+          content: "",
+          language: "plaintext",
+          languageLocked: true,
+        },
+        ensuredWorkspaceId,
+        { defaultTitle: `Canvas ${canvasCount + 1}` },
+      );
+
+      const { canvasDocumentManager } = await import(
+        "../features/canvas/services/CanvasDocumentManager"
+      );
+      await canvasDocumentManager.create(canvasTab);
+      get().addTab(canvasTab, isRightSide);
+
+      await storage.saveSplitViewNow({
+        ...useSplitViewStore.getState().splitView,
+        lastModified: Date.now(),
+      });
+
+      return tabId;
+    },
+
     handleNewTabFromPaste: async (isRightSide) => {
       try {
         const imageDataUrl = await _extractImageFromClipboard();
@@ -392,28 +463,63 @@ export const useRootStore = create<RootStore>((set, get) => {
       }
     },
 
-    removeTab: (id) => {
-      const tabToRemove = useTabsStore.getState().tabs.find((t) => t.id === id);
+    removeTab: async (id) => {
+      const tabToRemove = await _findTabForLifecycle(id);
       if (!tabToRemove) return;
 
-      modelManager.dispose(id);
+      const isCanvas = getTabContentKind(tabToRemove) === "canvas";
+      const activeWorkspaceId =
+        useWorkspaceStore.getState().activeWorkspaceId;
+      const isActiveWorkspace =
+        tabToRemove.workspaceId === activeWorkspaceId;
+      const adapter = await tabDocumentAdapterResolver.resolve(tabToRemove);
 
-      // Clean up query panel state for JSON tabs
-      useQueryPanelStore.getState().removePanelState(id);
+      await adapter.remove(tabToRemove);
 
-      useSplitViewStore.getState().removeTabFromSide(id);
-      useTabsStore.getState().removeTab(id);
-      storage
-        .deleteTab(id)
-        .catch((err) => console.error("Failed to delete tab from DB:", err));
+      if (isActiveWorkspace) {
+        if (!isCanvas) modelManager.dispose(id);
+        useQueryPanelStore.getState().removePanelState(id);
+        useSplitViewStore.getState().removeTabFromSide(id);
+        useTabsStore.getState().removeTab(id);
 
-      broadcastManager.broadcastWorkspaceState(
-        useSplitViewStore.getState().splitView.workspaceId,
-        {
-          tabs: useTabsStore.getState().tabs,
-          splitView: useSplitViewStore.getState().splitView,
-        },
-      );
+        broadcastManager.broadcastWorkspaceState(
+          useSplitViewStore.getState().splitView.workspaceId,
+          {
+            tabs: useTabsStore.getState().tabs,
+            splitView: useSplitViewStore.getState().splitView,
+          },
+        );
+      } else {
+        const splitView = await storage.getSplitViewByWorkspace(
+          tabToRemove.workspaceId,
+        );
+        if (splitView) {
+          splitView.leftTabs = splitView.leftTabs.filter(
+            (tabId) => tabId !== id,
+          );
+          splitView.rightTabs = splitView.rightTabs.filter(
+            (tabId) => tabId !== id,
+          );
+          splitView.leftTabHistory = (splitView.leftTabHistory ?? []).filter(
+            (tabId) => tabId !== id,
+          );
+          splitView.rightTabHistory = (splitView.rightTabHistory ?? []).filter(
+            (tabId) => tabId !== id,
+          );
+          if (splitView.activeLeftTabId === id) {
+            splitView.activeLeftTabId = splitView.leftTabs[0] ?? null;
+          }
+          if (splitView.activeRightTabId === id) {
+            splitView.activeRightTabId = splitView.rightTabs[0] ?? null;
+          }
+          splitView.lastModified = Date.now();
+          await storage.saveSplitViewNow(splitView);
+        }
+        await useSidebarStore
+          .getState()
+          .refreshWorkspaceMetadata(tabToRemove.workspaceId);
+        await _broadcastMetadataUpdate(tabToRemove.workspaceId);
+      }
     },
 
     setActiveTab: (id) => {
@@ -550,7 +656,7 @@ export const useRootStore = create<RootStore>((set, get) => {
     setSplitRatio: (ratio) => useSplitViewStore.getState().setSplitRatio(ratio),
 
     // Bulk tab operations (delegate to splitViewStore)
-    closeTabsToLeft: (tabId, isRightSide) => {
+    closeTabsToLeft: async (tabId, isRightSide) => {
       const tabsToClose = useSplitViewStore.getState().getTabsToLeft(tabId, isRightSide);
       const { tabs } = useTabsStore.getState();
       const isPinnedTab = (id: string) => tabs.find(t => t.id === id)?.isPinned || false;
@@ -559,9 +665,13 @@ export const useRootStore = create<RootStore>((set, get) => {
       useSplitViewStore.getState().closeTabsToLeftRespectingPins(tabId, isRightSide, isPinnedTab);
 
       // Remove only unpinned tabs from data store
-      tabsToClose.filter(id => !isPinnedTab(id)).forEach(id => get().removeTab(id));
+      await Promise.all(
+        tabsToClose
+          .filter((id) => !isPinnedTab(id))
+          .map((id) => get().removeTab(id)),
+      );
     },
-    closeTabsToRight: (tabId, isRightSide) => {
+    closeTabsToRight: async (tabId, isRightSide) => {
       const tabsToClose = useSplitViewStore.getState().getTabsToRight(tabId, isRightSide);
       const { tabs } = useTabsStore.getState();
       const isPinnedTab = (id: string) => tabs.find(t => t.id === id)?.isPinned || false;
@@ -570,9 +680,13 @@ export const useRootStore = create<RootStore>((set, get) => {
       useSplitViewStore.getState().closeTabsToRightRespectingPins(tabId, isRightSide, isPinnedTab);
 
       // Remove only unpinned tabs from data store
-      tabsToClose.filter(id => !isPinnedTab(id)).forEach(id => get().removeTab(id));
+      await Promise.all(
+        tabsToClose
+          .filter((id) => !isPinnedTab(id))
+          .map((id) => get().removeTab(id)),
+      );
     },
-    closeAllExcept: (tabId, isRightSide) => {
+    closeAllExcept: async (tabId, isRightSide) => {
       const tabsToClose = useSplitViewStore.getState().getAllExcept(tabId, isRightSide);
       const { tabs } = useTabsStore.getState();
       const isPinnedTab = (id: string) => tabs.find(t => t.id === id)?.isPinned || false;
@@ -581,34 +695,74 @@ export const useRootStore = create<RootStore>((set, get) => {
       useSplitViewStore.getState().closeAllExceptRespectingPins(tabId, isRightSide, isPinnedTab);
 
       // Remove only unpinned tabs from data store
-      tabsToClose.filter(id => !isPinnedTab(id)).forEach(id => get().removeTab(id));
-    },
-    duplicateTab: (tabId, isRightSide = false) => {
-      // Default to left if side not specified
-      const newTabId = useTabsStore.getState().duplicateTab(tabId);
-      if (!newTabId) return "";
-      useSplitViewStore.getState().addTabToSide(newTabId, isRightSide, undefined, tabId);
-      // Activate the new tab
-      const { setActiveLeftTab, setActiveRightTab } =
-        useSplitViewStore.getState();
-      if (isRightSide) {
-        setActiveRightTab(newTabId);
-      } else {
-        setActiveLeftTab(newTabId);
-      }
-      broadcastManager.broadcastWorkspaceState(
-        useSplitViewStore.getState().splitView.workspaceId,
-        {
-          tabs: useTabsStore.getState().tabs,
-          splitView: useSplitViewStore.getState().splitView,
-        },
+      await Promise.all(
+        tabsToClose
+          .filter((id) => !isPinnedTab(id))
+          .map((id) => get().removeTab(id)),
       );
-      return newTabId;
     },
-    duplicateAndSplitTab: (tabId) => {
-      const newTabId = get().duplicateTab(tabId, true); // Duplicate to right side
+    duplicateTab: async (tabId, isRightSide = false) => {
+      const source = await _findTabForLifecycle(tabId);
+      if (!source) return "";
+
+      const adapter = await tabDocumentAdapterResolver.resolve(source);
+      const duplicate = await adapter.duplicate(source, source.workspaceId);
+      const activeWorkspaceId =
+        useWorkspaceStore.getState().activeWorkspaceId;
+
+      if (duplicate.workspaceId === activeWorkspaceId) {
+        useTabsStore.getState().addTab(duplicate);
+        useSplitViewStore
+          .getState()
+          .addTabToSide(duplicate.id, isRightSide, undefined, tabId);
+        const { setActiveLeftTab, setActiveRightTab } =
+          useSplitViewStore.getState();
+        if (isRightSide) {
+          setActiveRightTab(duplicate.id);
+        } else {
+          setActiveLeftTab(duplicate.id);
+        }
+        broadcastManager.broadcastWorkspaceState(
+          useSplitViewStore.getState().splitView.workspaceId,
+          {
+            tabs: useTabsStore.getState().tabs,
+            splitView: useSplitViewStore.getState().splitView,
+          },
+        );
+      } else {
+        const splitView = await storage.getSplitViewByWorkspace(
+          duplicate.workspaceId,
+        );
+        if (splitView) {
+          splitView.leftTabs = [
+            ...splitView.leftTabs.filter((id) => id !== duplicate.id),
+            duplicate.id,
+          ];
+          splitView.activeLeftTabId = duplicate.id;
+          splitView.leftTabHistory = [
+            ...(splitView.leftTabHistory ?? []).filter(
+              (id) => id !== duplicate.id,
+            ),
+            duplicate.id,
+          ];
+          splitView.lastModified = Date.now();
+          await storage.saveSplitViewNow(splitView);
+        }
+        await useSidebarStore
+          .getState()
+          .refreshWorkspaceMetadata(duplicate.workspaceId);
+        await _broadcastMetadataUpdate(duplicate.workspaceId);
+      }
+
+      incrementSetting("tabs.created.total").catch((err) =>
+        console.error("Failed to increment tab counter:", err),
+      );
+      return duplicate.id;
+    },
+    duplicateAndSplitTab: async (tabId) => {
+      const newTabId = await get().duplicateTab(tabId, true);
       if (!newTabId) return "";
-      get().splitScreen(tabId, newTabId); // Split with original on left, new on right
+      get().splitScreen(tabId, newTabId);
       broadcastManager.broadcastWorkspaceState(
         useSplitViewStore.getState().splitView.workspaceId,
         {
@@ -740,24 +894,15 @@ export const useRootStore = create<RootStore>((set, get) => {
           throw new Error(`Tab ${tabId} not found in source workspace`);
         }
 
-        // Step 2: Create updated tab with new workspaceId
-        const updatedTab: Tab = {
-          ...fullTab,
-          workspaceId: targetWorkspaceId,
-          lastModified: Date.now()
-        };
+        // Persist document ownership before changing in-memory workspace state.
+        const adapter = await tabDocumentAdapterResolver.resolve(fullTab);
+        const updatedTab = await adapter.move(fullTab, targetWorkspaceId);
 
-        // Step 3: Add to target workspace
+        // Add to target workspace.
         if (targetWorkspaceId === activeWorkspaceId) {
-          // Target is active workspace - add to store AND IndexedDB
           useTabsStore.getState().addTab(updatedTab);
-          // Add to split view (left side by default)
           useSplitViewStore.getState().addTabToSide(updatedTab.id, false, updatedTab.id);
 
-          // CRITICAL: Persist to IndexedDB immediately (don't rely on debounced save)
-          await storage.saveTabNow(updatedTab);
-
-          // Broadcast the change
           broadcastManager.broadcastWorkspaceState(
             targetWorkspaceId,
             {
@@ -766,13 +911,8 @@ export const useRootStore = create<RootStore>((set, get) => {
             }
           );
         } else {
-          // Target is inactive workspace - save to IndexedDB AND update split view
-          await storage.saveTabNow(updatedTab);
-
-          // CRITICAL FIX: Update the split view for the inactive workspace
           const targetSplitView = await storage.getSplitViewByWorkspace(targetWorkspaceId);
           if (targetSplitView) {
-            // Add tab to left side (default)
             targetSplitView.leftTabs = [
               ...targetSplitView.leftTabs.filter(id => id !== updatedTab.id),
               updatedTab.id,
@@ -791,21 +931,20 @@ export const useRootStore = create<RootStore>((set, get) => {
             await storage.saveSplitViewNow(targetSplitView);
           }
 
-          // Refresh sidebar metadata for target workspace
           await useSidebarStore.getState().refreshWorkspaceMetadata(targetWorkspaceId);
-          // Broadcast metadata update for cross-window sync
           await _broadcastMetadataUpdate(targetWorkspaceId);
         }
 
-        // Step 4: Remove from source workspace
+        // Remove the old workspace placement. The adapter has already updated
+        // the single persisted tab record.
         if (sourceWorkspaceId === activeWorkspaceId) {
-          // Source is active workspace - remove from store
-          modelManager.dispose(tabId);
+          if (getTabContentKind(fullTab) !== "canvas") {
+            modelManager.dispose(tabId);
+          }
           useQueryPanelStore.getState().removePanelState(tabId);
           useSplitViewStore.getState().removeTabFromSide(tabId);
           useTabsStore.getState().removeTab(tabId);
 
-          // Broadcast the change
           broadcastManager.broadcastWorkspaceState(
             sourceWorkspaceId,
             {
@@ -814,18 +953,12 @@ export const useRootStore = create<RootStore>((set, get) => {
             }
           );
         } else {
-          // Source is inactive workspace - delete from IndexedDB AND update split view
-          await storage.deleteTab(tabId);
-
-          // CRITICAL FIX: Update the split view for the inactive workspace to remove the tab
           const sourceSplitView = await storage.getSplitViewByWorkspace(sourceWorkspaceId);
           if (sourceSplitView) {
-            // Remove tab from both left and right sides
             sourceSplitView.leftTabs = sourceSplitView.leftTabs.filter(id => id !== tabId);
             sourceSplitView.rightTabs = sourceSplitView.rightTabs.filter(id => id !== tabId);
             sourceSplitView.lastModified = Date.now();
 
-            // Clear active tab IDs if they reference the removed tab
             if (sourceSplitView.activeLeftTabId === tabId) {
               sourceSplitView.activeLeftTabId = sourceSplitView.leftTabs[0] || null;
             }
@@ -836,9 +969,7 @@ export const useRootStore = create<RootStore>((set, get) => {
             await storage.saveSplitViewNow(sourceSplitView);
           }
 
-          // Refresh sidebar metadata for source workspace
           await useSidebarStore.getState().refreshWorkspaceMetadata(sourceWorkspaceId);
-          // Broadcast metadata update for cross-window sync
           await _broadcastMetadataUpdate(sourceWorkspaceId);
         }
       } catch (error) {

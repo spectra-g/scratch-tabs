@@ -67,10 +67,11 @@ export const SidebarTabContextMenu: React.FC<SidebarTabContextMenuProps> = ({
         onClose();
     };
 
-    const handleDuplicate = () => {
+    const handleDuplicate = async () => {
         // Duplicate on the left side by default when called from sidebar
-        duplicateTab(tabId, false);
+        const duplication = duplicateTab(tabId, false);
         onClose();
+        await duplication;
     };
 
     const handlePin = () => {
@@ -83,8 +84,8 @@ export const SidebarTabContextMenu: React.FC<SidebarTabContextMenuProps> = ({
         // Don't call onClose() here - keep component mounted for dialog
     };
 
-    const handleDeleteConfirm = () => {
-        removeTab(tabId);
+    const handleDeleteConfirm = async () => {
+        await removeTab(tabId);
         setConfirmDelete(false);
         onClose();
     };

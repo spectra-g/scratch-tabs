@@ -3,8 +3,26 @@ config:
   max_versions: 100  # Maximum number of versions to display
 
 releases:
-  - version: "1.43.0"
+  - version: "1.44.0"
     type: "latest"
+    draft: false
+    date: "2026-07-24"
+    headline: "Spatial Canvas"
+    summary: "Arrange code, notes, images, links, and videos on a local-first infinite canvas."
+    description: "Spatial Canvas is a desktop workspace for keeping related developer context together."
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**Mixed content:** Add text, code and JSON, local images, links, and click-to-load YouTube or Vimeo cards"
+          - "**Spatial controls:** Pan, zoom, resize, multi-select, layer, duplicate, undo, redo, and navigate by keyboard"
+          - "**Fast capture:** Paste or drop content, or send a tab or selection to a new or existing Canvas"
+      - name: "🔒 Local-First Workspace"
+        changes:
+          - "**Private persistence:** Canvas documents and images stay in local IndexedDB and work offline"
+          - "**Workspace integration:** Search cards, use split view, and preserve Canvas content through workspace import and export"
+
+  - version: "1.43.0"
+    type: "release"
     draft: false
     date: "2026-07-17"
     headline: "Data Reconcile Tablet"

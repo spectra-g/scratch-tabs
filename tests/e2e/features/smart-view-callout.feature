@@ -14,7 +14,7 @@ Feature: Smart View Callout Notification
         "source": "paste button"
       }
       """
-    And I click the icon for "New tab with contents from clipboard"
+    And I create a new tab from the document menu and clipboard
     Then the status bar language should be "JSON"
     And I should see the smart view callout
     And the smart view callout message should contain "JSON Detected"
@@ -27,7 +27,7 @@ Feature: Smart View Callout Notification
         "price": 999.99
       }
       """
-    And I click the icon for "New tab with contents from clipboard"
+    And I create a new tab from the document menu and clipboard
     Then I should see the smart view callout
     When I click the smart view callout switch button
     Then I should not see the smart view callout
@@ -41,7 +41,7 @@ Feature: Smart View Callout Notification
         "role": "admin"
       }
       """
-    And I click the icon for "New tab with contents from clipboard"
+    And I create a new tab from the document menu and clipboard
     Then I should see the smart view callout
     When I click the smart view callout dismiss button
     Then I should not see the smart view callout
@@ -53,7 +53,7 @@ Feature: Smart View Callout Notification
         "timeout": "test"
       }
       """
-    And I click the icon for "New tab with contents from clipboard"
+    And I create a new tab from the document menu and clipboard
     Then I should see the smart view callout
     When I wait for 16 seconds
     Then I should not see the smart view callout
@@ -65,7 +65,7 @@ Feature: Smart View Callout Notification
       John,30,New York
       Jane,25,London
       """
-    And I click the icon for "New tab with contents from clipboard"
+    And I create a new tab from the document menu and clipboard
     Then the status bar language should be "CSV / TSV"
     And I should see the smart view callout
     And the smart view callout message should contain "CSV / TSV Detected"

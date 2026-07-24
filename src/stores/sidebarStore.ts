@@ -199,6 +199,8 @@ export const useSidebarStore = create<SidebarState>((set, get) => {
                     language: t.language,
                     isTablet: t.isTablet,
                     isRich: t.isRich,
+                    contentKind: t.contentKind,
+                    documentId: t.documentId,
                     isPinned: t.isPinned,
                     lastModified: t.lastModified,
                     lastAccessed: t.lastAccessed,

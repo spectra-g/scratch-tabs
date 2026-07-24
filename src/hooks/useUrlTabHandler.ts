@@ -7,6 +7,7 @@ import { useWorkspaceStore } from "../stores/workspaceStore";
 import { Tab } from "../types";
 import { formatRegistry } from "../formats/registry";
 import { tabletMetadata } from "../tablets/tabletMetadata";
+import { getTabContentKind } from "../utils/tabContentKind";
 
 // Helper function to convert a label to URL identifier format
 const labelToUrlIdentifier = (label: string): string => {
@@ -18,8 +19,9 @@ const labelToUrlIdentifier = (label: string): string => {
  * Converts to lowercase, replaces problematic characters with hyphens, collapses multiple hyphens,
  * and trims leading/trailing hyphens.
  */
-const generateUrlIdentifier = (tab: Tab | undefined): string => {
+export const generateUrlIdentifier = (tab: Tab | undefined): string => {
   if (!tab) return "";
+  if (getTabContentKind(tab) === "canvas") return "canvas";
 
   // For tablets, use the label converted to URL format
   if (tab.isTablet) {
@@ -241,15 +243,21 @@ export const useUrlTabHandler = () => {
     } else if (urlIdentifierParam) {
       // No existing tab found, create a new one
       const { activeWorkspaceId } = useWorkspaceStore.getState();
-      if (activeWorkspaceId) {
-        createNewTabFromUrl(urlIdentifierParam, activeWorkspaceId)
+      const currentSplitView = useSplitViewStore.getState().splitView;
+      const shouldAddToRight =
+        currentSplitView?.isSplit &&
+        currentSplitView?.activeSide === "right";
+      if (urlIdentifierParam === "canvas") {
+        useRootStore
+          .getState()
+          .handleNewCanvas(!!shouldAddToRight)
+          .catch((error) => {
+            console.error("[useUrlTabHandler] Failed to create Canvas:", error);
+          });
+      } else if (activeWorkspaceId) {
+          createNewTabFromUrl(urlIdentifierParam, activeWorkspaceId)
           .then((newTab) => {
             // Determine which side to add the tab based on current split view state
-            const currentSplitView = useSplitViewStore.getState().splitView;
-            const shouldAddToRight =
-              currentSplitView?.isSplit &&
-              currentSplitView?.activeSide === "right";
-
             const {
               addTab,
               setActiveLeftTab,
@@ -405,6 +413,8 @@ export const handleInitialUrl = async () => {
         setActiveLeftTab(existingTab.id);
         setActiveSide("left");
       }
+    } else if (urlIdentifier === "canvas") {
+      await useRootStore.getState().handleNewCanvas(false);
     } else if (activeWorkspaceId && urlIdentifier) {
       // If no tab exists for this URL, create a new one.
       // createNewTabFromUrl will correctly handle language, tablet, or plaintext.

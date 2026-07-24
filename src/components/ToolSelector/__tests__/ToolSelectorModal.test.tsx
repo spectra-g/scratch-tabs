@@ -54,6 +54,22 @@ describe('ToolSelectorModal', () => {
         }, { timeout: 2000 });
     });
 
+    it('renders Canvas in the Documents category', async () => {
+        (toolService.search as jest.Mock).mockResolvedValueOnce({
+            documents: [
+                { id: 'canvas', type: 'document', label: 'Canvas', icon: () => null },
+            ],
+            tablets: [],
+            smartViews: [],
+            formats: [],
+        });
+
+        render(<ToolSelectorModal onSelect={mockOnSelect} onClose={mockOnClose} />);
+
+        expect(await screen.findByText('Documents')).toBeInTheDocument();
+        expect(screen.getByText('Canvas')).toBeInTheDocument();
+    });
+
     it('handles keyboard navigation', async () => {
         render(<ToolSelectorModal onSelect={mockOnSelect} onClose={mockOnClose} />);
 

@@ -53,6 +53,36 @@ interface FileSystemDirectoryReader {
   ) => void;
 }
 
+const readAllDirectoryEntries = async (
+  directoryEntry: FileSystemDirectoryEntry,
+): Promise<File[]> => {
+  const directoryReader = directoryEntry.createReader();
+  const allEntries: FileSystemEntry[] = [];
+
+  let currentBatch: FileSystemEntry[];
+  do {
+    currentBatch = await new Promise<FileSystemEntry[]>((resolve, reject) => {
+      directoryReader.readEntries(resolve, reject);
+    });
+    allEntries.push(...currentBatch);
+  } while (currentBatch.length > 0);
+
+  const files: File[] = [];
+  for (const entry of allEntries) {
+    if (entry.isFile) {
+      const file = await new Promise<File>((resolve, reject) => {
+        (entry as FileSystemFileEntry).file(resolve, reject);
+      });
+      files.push(file);
+    } else if (entry.isDirectory) {
+      files.push(
+        ...(await readAllDirectoryEntries(entry as FileSystemDirectoryEntry)),
+      );
+    }
+  }
+  return files;
+};
+
 const detectLanguageFromFileName = (fileName: string): string => {
   if (!fileName) return "plaintext";
 
@@ -71,23 +101,40 @@ const handleWorkspaceImport = async (file: File): Promise<void> => {
   try {
     const service = new ImportExportService();
     const importResult = await service.importWorkspaces(file);
-    
+
     if (importResult.errors.length > 0) {
       const errorMessage = importResult.errors.join("\n");
       alert(`Import encountered errors:\n${errorMessage}`);
     }
-    
+
     if (importResult.importedWorkspaces.length > 0) {
       const importedCount = importResult.importedWorkspaces.length;
-      alert(`Successfully imported ${importedCount} workspace${importedCount === 1 ? "" : "s"}! Reloading page...`);
+      alert(
+        `Successfully imported ${importedCount} workspace${importedCount === 1 ? "" : "s"}! Reloading page...`,
+      );
       window.location.reload();
     } else if (importResult.errors.length === 0) {
-      alert("No workspaces were imported. The file might have been empty or contained no new data.");
+      alert(
+        "No workspaces were imported. The file might have been empty or contained no new data.",
+      );
     }
   } catch (error) {
-    alert(`Import failed: ${error instanceof Error ? error.message : String(error)}`);
+    alert(
+      `Import failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 };
+
+const isCanvasDropZoneEvent = (
+  event: Pick<DragEvent, "composedPath">,
+): boolean =>
+  event
+    .composedPath()
+    .some(
+      (target) =>
+        target instanceof HTMLElement &&
+        target.dataset.canvasDropZone === "true",
+    );
 
 const DragDropOverlay: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
@@ -95,59 +142,6 @@ const DragDropOverlay: React.FC = () => {
   const { handleNewPopulatedTab } = useRootStore();
   const { splitView } = useSplitViewStore();
   const { isImportModalActive, isGlobalDragDropSuppressed } = useModalStore();
-
-  const readAllDirectoryEntries = async (
-    directoryEntry: FileSystemDirectoryEntry,
-  ): Promise<File[]> => {
-    const directoryReader = directoryEntry.createReader();
-    let allEntries: FileSystemEntry[] = [];
-
-    const readBatch = (): Promise<FileSystemEntry[]> => {
-      return new Promise((resolve, reject) => {
-        directoryReader.readEntries(
-          (entries) => {
-            if (entries.length) {
-              allEntries = allEntries.concat(entries);
-              // Recursively call readBatch if more entries might exist (though typically readEntries gets all in one go for smaller dirs)
-              // For simplicity here, we assume one call is enough for most cases,
-              // but a more robust solution might loop until entries.length is 0.
-              // However, the common pattern is to just process what you get.
-              // If entries.length is 0, it means no more entries.
-              resolve(entries);
-            } else {
-              resolve([]); // No more entries
-            }
-          },
-          (err) => reject(err),
-        );
-      });
-    };
-
-    // Read all entries in the current directory
-    // A more robust loop for readEntries if it returns batches:
-    let currentBatch = await readBatch();
-    while (currentBatch.length > 0) {
-      // allEntries is already populated by the side effect in readBatch
-      currentBatch = await readBatch(); // Try to read more
-    }
-
-    const files: File[] = [];
-    for (const entry of allEntries) {
-      if (entry.isFile) {
-        const file = await new Promise<File>((resolve, reject) => {
-          (entry as FileSystemFileEntry).file(resolve, reject);
-        });
-        files.push(file);
-      } else if (entry.isDirectory) {
-        // Recursively read subdirectories
-        const subFiles = await readAllDirectoryEntries(
-          entry as FileSystemDirectoryEntry,
-        );
-        files.push(...subFiles);
-      }
-    }
-    return files;
-  };
 
   const processDroppedItem = useCallback(async (item: DataTransferItem) => {
     const entry = item.webkitGetAsEntry() as FileSystemEntry | null;
@@ -161,10 +155,14 @@ const DragDropOverlay: React.FC = () => {
       return readAllDirectoryEntries(entry as FileSystemDirectoryEntry);
     }
     return [];
-  }, []); // readAllDirectoryEntries is defined outside, so it's stable
+  }, []);
 
   useEffect(() => {
     const handleDragOver = (e: DragEvent) => {
+      if (isCanvasDropZoneEvent(e)) {
+        setIsDragging(false);
+        return;
+      }
       // Always prevent default to allow drops to work properly
       e.preventDefault();
 
@@ -197,6 +195,10 @@ const DragDropOverlay: React.FC = () => {
     };
 
     const handleDragLeave = (e: DragEvent) => {
+      if (isCanvasDropZoneEvent(e)) {
+        setIsDragging(false);
+        return;
+      }
       // Don't show UI if suppressed, but don't block the event
       if (isImportModalActive || isGlobalDragDropSuppressed) {
         return;
@@ -214,11 +216,19 @@ const DragDropOverlay: React.FC = () => {
     };
 
     const handleDrop = async (e: DragEvent) => {
+      if (isCanvasDropZoneEvent(e)) {
+        setIsDragging(false);
+        return;
+      }
       // Always prevent default to allow drop to work
       e.preventDefault();
 
       // If suppressed, don't process the drop or stop propagation (let local handlers work)
-      if (isImportModalActive || isGlobalDragDropSuppressed || !e.dataTransfer?.items) {
+      if (
+        isImportModalActive ||
+        isGlobalDragDropSuppressed ||
+        !e.dataTransfer?.items
+      ) {
         setIsDragging(false);
         return;
       }
@@ -243,8 +253,12 @@ const DragDropOverlay: React.FC = () => {
 
         if (allFiles.length > 0) {
           // Check if any files are .scratch files
-          const scratchFiles = allFiles.filter(file => file.name.endsWith('.scratch'));
-          const regularFiles = allFiles.filter(file => !file.name.endsWith('.scratch'));
+          const scratchFiles = allFiles.filter((file) =>
+            file.name.endsWith(".scratch"),
+          );
+          const regularFiles = allFiles.filter(
+            (file) => !file.name.endsWith(".scratch"),
+          );
 
           // Handle .scratch files as workspace imports
           for (const scratchFile of scratchFiles) {
@@ -253,7 +267,10 @@ const DragDropOverlay: React.FC = () => {
               // Only process one .scratch file at a time, then reload
               return;
             } catch (error) {
-              console.error(`Error importing workspace from ${scratchFile.name}:`, error);
+              console.error(
+                `Error importing workspace from ${scratchFile.name}:`,
+                error,
+              );
             }
           }
 
@@ -285,7 +302,10 @@ const DragDropOverlay: React.FC = () => {
                   toRightSide,
                 );
               } catch (fileReadError) {
-                console.error(`Error reading file ${file.name}:`, fileReadError);
+                console.error(
+                  `Error reading file ${file.name}:`,
+                  fileReadError,
+                );
               }
             }
           }
@@ -314,7 +334,11 @@ const DragDropOverlay: React.FC = () => {
     processDroppedItem,
   ]);
 
-  if (isImportModalActive || isGlobalDragDropSuppressed || (!isDragging && !isProcessingDrop)) {
+  if (
+    isImportModalActive ||
+    isGlobalDragDropSuppressed ||
+    (!isDragging && !isProcessingDrop)
+  ) {
     return null;
   }
 

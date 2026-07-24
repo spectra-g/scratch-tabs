@@ -92,7 +92,7 @@ Feature: Tab Sharing
     And the share modal should show the tab title "My Custom Tab"
 
   Scenario: Cannot share a tablet
-    When I click the icon for "New tablet"
+    When I open the Tool Selector from the document menu
     And I select "Calculator" from the tablet selector
     And I right-click the "Calculator" tab
     Then the context menu should not show "Share" option

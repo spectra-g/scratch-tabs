@@ -1,5 +1,10 @@
 import Dexie from "dexie";
 import { Tab, Workspace, WorkspaceLink, SplitViewRecord } from "../types";
+import type {
+  CanvasAssetRecord,
+  CanvasDocument,
+  CanvasSessionRecord,
+} from "../features/canvas/types";
 
 interface TabRecord {
   id: string;
@@ -11,6 +16,8 @@ interface TabRecord {
   isTablet?: boolean;
   tabletState?: string;
   isRich?: boolean;
+  contentKind?: Tab["contentKind"];
+  documentId?: string;
   lastModified: number;
   lastAccessed?: number;
   dateCreated: number;
@@ -54,6 +61,9 @@ export class ScratchTabsDB extends Dexie {
   workspaces!: Dexie.Table<WorkspaceRecord>;
   settings!: Dexie.Table<SettingsRecord>;
   pipelines!: Dexie.Table<PipelineRecord>;
+  canvasDocuments!: Dexie.Table<CanvasDocument>;
+  canvasAssets!: Dexie.Table<CanvasAssetRecord>;
+  canvasSessions!: Dexie.Table<CanvasSessionRecord>;
 
   constructor() {
     super("ScratchTabsDB");
@@ -108,6 +118,19 @@ export class ScratchTabsDB extends Dexie {
         pipelines: "id, name, lastUsedAt, lastModified, isFavorite",
       })
       .upgrade((tx) => this.upgradeToV6(tx));
+
+    // Version 7: Store Canvas scenes, binary assets, and viewport sessions
+    // separately from lightweight tab metadata.
+    this.version(7).stores({
+      tabs: "id, workspaceId, lastModified, lastAccessed",
+      splitView: "id, workspaceId, lastModified",
+      workspaces: "id, lastAccessed, displayOrder",
+      settings: "key",
+      pipelines: "id, name, lastUsedAt, lastModified, isFavorite",
+      canvasDocuments: "id, tabId, workspaceId, updatedAt",
+      canvasAssets: "id, workspaceId, sha256, createdAt",
+      canvasSessions: "tabId, updatedAt",
+    });
   }
 
   private async upgradeToV2(tx: any): Promise<void> {
@@ -415,7 +438,15 @@ export class IndexedDBStorage implements StorageProvider {
           db.workspaces,
           db.tabs,
           db.splitView,
+          db.canvasDocuments,
+          db.canvasAssets,
+          db.canvasSessions,
           async () => {
+            const canvasDocuments = await db.canvasDocuments
+              .where("workspaceId")
+              .equals(id)
+              .toArray();
+
             // 1. Delete tabs associated with the workspace
             // This will delete all tab records where the 'workspaceId' property equals the given 'id'.
             await db.tabs.where("workspaceId").equals(id).delete();
@@ -425,7 +456,22 @@ export class IndexedDBStorage implements StorageProvider {
             // This will delete all splitView records where the 'workspaceId' property equals the given 'id'.
             await db.splitView.where("workspaceId").equals(id).delete();
 
-            // 3. Delete the workspace itself
+            // 3. Delete Canvas scenes, their viewport sessions, and assets.
+            // Assets are workspace-scoped, so removing all of them is safe when
+            // the complete workspace is being deleted.
+            const canvasTabIds = [
+              ...new Set(canvasDocuments.map((document) => document.tabId)),
+            ];
+            if (canvasTabIds.length > 0) {
+              await db.canvasSessions.bulkDelete(canvasTabIds);
+            }
+            await db.canvasDocuments
+              .where("workspaceId")
+              .equals(id)
+              .delete();
+            await db.canvasAssets.where("workspaceId").equals(id).delete();
+
+            // 4. Delete the workspace itself
             // This is done last; if any of the above deletions fail, the transaction
             // will roll back, and the workspace will not be deleted either.
             await db.workspaces.delete(id);

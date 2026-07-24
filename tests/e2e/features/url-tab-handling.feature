@@ -14,10 +14,10 @@ Feature: URL Tab Handling
       Content for Scratch 2
       This is some test content for the second tab.
       """
-    When I click the icon for "New tablet"
+    When I open the Tool Selector from the document menu
     And I select "Calculator" from the tablet selector
     And I wait for the tablet to be ready
-    When I click the icon for "New tablet"
+    When I open the Tool Selector from the document menu
     And I select "Password Generator" from the tablet selector
     And I wait for the tablet to be ready
     When I click the "Scratch 2" tab

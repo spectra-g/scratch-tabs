@@ -1,8 +1,8 @@
 import React from "react";
-import { Plus, Upload, File } from "../Icons";
+import { Plus, Upload, File, Layers } from "../Icons";
 import type { LucideProps } from "lucide-react";
 
-type IconType = "plus" | "upload" | "file";
+type IconType = "plus" | "upload" | "file" | "canvas";
 type ColorScheme = "primary" | "info" | "warning";
 
 interface EmptyStateActionCardProps {
@@ -24,6 +24,7 @@ const iconMap: Record<IconType, React.ComponentType<LucideProps>> = {
   plus: Plus,
   upload: Upload,
   file: File,
+  canvas: Layers,
 };
 
 const colorSchemeMap: Record<ColorScheme, { bg: string; hoverBg: string; border: string; iconBg: string; iconHoverBg: string; iconColor: string }> = {

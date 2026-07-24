@@ -9,6 +9,7 @@ import {
   Redo2,
   RotateCcw,
   RotateCw,
+  Send,
   Undo2,
   ZoomIn,
   ZoomOut,
@@ -38,6 +39,7 @@ interface ImageToolbarProps {
   onDownloadOriginal: () => void;
   onOpenPalette: () => void;
   onSendPalette: () => void;
+  onSendCanvas?: () => void;
   onBackgroundChange: (background: "checkerboard" | "dark" | "light" | "transparent") => void;
 }
 
@@ -69,6 +71,7 @@ export const ImageToolbar: React.FC<ImageToolbarProps> = ({
   onDownloadOriginal,
   onOpenPalette,
   onSendPalette,
+  onSendCanvas,
   onBackgroundChange,
 }) => (
   <div className="flex min-h-12 items-center gap-2 border-b border-base bg-surface px-3">
@@ -132,6 +135,16 @@ export const ImageToolbar: React.FC<ImageToolbarProps> = ({
         <Palette size={15} />
       </button>
       <button className={textButton} onClick={onSendPalette}>Send Palette</button>
+      {onSendCanvas && (
+        <button
+          className={textButton}
+          onClick={onSendCanvas}
+          data-testid="image-send-to-canvas"
+        >
+          <Send size={14} />
+          Send to Canvas
+        </button>
+      )}
       <button className={iconButton} onClick={onCopyImage} aria-label="Copy image" title="Copy image to clipboard">
         <Copy size={15} />
       </button>

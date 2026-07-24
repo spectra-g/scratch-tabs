@@ -6,6 +6,7 @@ import { formatRegistry, getPotentialFormatMatches } from "../../formats";
 import { getFormatStatusItem } from "./FormatStatusItems";
 import { getTabContentForLanguageDetection } from "../../utils/formatDetectionUtils";
 import type { PopupMenuItem } from "./types";
+import { getTabContentKind } from "../../utils/tabContentKind";
 
 interface CursorPosition {
   lineNumber: number;
@@ -92,6 +93,7 @@ export function useStatusBarLogic({
 }: UseStatusBarLogicParams): UseStatusBarLogicResult {
   // Tablet label state (async resolution)
   const [tabletLabel, setTabletLabel] = useState("");
+  const contentKind = activeTab ? getTabContentKind(activeTab) : null;
 
   // Get the tablet label if this is a tablet tab
   useEffect(() => {
@@ -119,15 +121,15 @@ export function useStatusBarLogic({
 
   // Memoize content sample for status bar items
   const contentSample = useMemo(() => {
-    if (!activeTab || activeTab.isTablet || activeTab.isRich) {
+    if (!activeTab || contentKind !== "text") {
       return "";
     }
     return getTabContentForLanguageDetection(activeTab);
-  }, [activeTab?.id, activeTab?.content, activeTab?.isTablet, activeTab?.isRich]);
+  }, [activeTab?.id, activeTab?.content, contentKind]);
 
   // Generate status bar items based on format
   const statusBarItems = useMemo((): StatusBarItem[] => {
-    if (!activeTab || activeTab.isTablet || activeTab.isRich) {
+    if (!activeTab || contentKind !== "text") {
       return [];
     }
 
@@ -147,17 +149,17 @@ export function useStatusBarLogic({
     }
 
     return [];
-  }, [activeTab?.language, activeTab?.id]);
+  }, [activeTab?.language, activeTab?.id, contentKind]);
 
   // Language for format options menu
   const languageForOptions = useMemo(() => {
-    if (!activeTab || activeTab.isTablet || activeTab.isRich) return null;
+    if (!activeTab || contentKind !== "text") return null;
     return activeTab.language;
-  }, [activeTab?.language, activeTab?.isTablet, activeTab?.isRich]);
+  }, [activeTab?.language, contentKind]);
 
   // Compute display label and dot indicator
   const { displayLabel, showDotIndicator } = useMemo(() => {
-    if (!activeTab || activeTab.isTablet || activeTab.isRich) {
+    if (!activeTab || contentKind !== "text") {
       return { displayLabel: "Plaintext", showDotIndicator: false };
     }
 
@@ -197,12 +199,12 @@ export function useStatusBarLogic({
     }
 
     return { displayLabel: label, showDotIndicator: showDot };
-  }, [activeTab?.language, activeTab?.languageLocked, activeTab?.isTablet, activeTab?.isRich, contentSample]);
+  }, [activeTab?.language, activeTab?.languageLocked, contentKind, contentSample]);
 
   // Function to get popup languages - optimized to only detect when popup is open
   const getPopupLanguages = useCallback(
     (isPopupOpen: boolean): PopupMenuItem[] => {
-      if (!activeTab || activeTab.isTablet || activeTab.isRich) return [];
+      if (!activeTab || contentKind !== "text") return [];
 
       const allLangs = formatRegistry
         .getAll()
@@ -284,7 +286,7 @@ export function useStatusBarLogic({
 
       return popupList;
     },
-    [activeTab, contentSample]
+    [activeTab, contentKind, contentSample]
   );
 
   return {

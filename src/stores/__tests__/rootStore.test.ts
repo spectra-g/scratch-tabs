@@ -10,6 +10,19 @@ const mockStorageProvider = {
   getSplitViewByWorkspace: jest.fn().mockResolvedValue(null),
 };
 
+const mockTabDocumentAdapter = {
+  hasContent: jest.fn(),
+  duplicate: jest.fn(),
+  remove: jest.fn().mockResolvedValue(undefined),
+  move: jest.fn(),
+};
+
+jest.mock("../../services/tabDocumentAdapter", () => ({
+  tabDocumentAdapterResolver: {
+    resolve: jest.fn().mockResolvedValue(mockTabDocumentAdapter),
+  },
+}));
+
 // Mock dependencies
 jest.mock("../tabsStore", () => ({
   useTabsStore: {
@@ -198,12 +211,12 @@ describe("RootStore - Pinned Tabs Protection", () => {
     rootStore = useRootStore.getState();
   });
 
-  it("should protect pinned tabs when closing all other tabs", () => {
+  it("should protect pinned tabs when closing all other tabs", async () => {
     // Setup: Split view store returns tabs that would be closed
     splitViewStoreMock.getAllExcept.mockReturnValue(["welcome", "scratch1", "scratch2"]);
     
     // Execute: Close all other tabs except scratch3
-    rootStore.closeAllExcept("scratch3", false);
+    await rootStore.closeAllExcept("scratch3", false);
 
     // Verify: Only unpinned tabs should be removed from data store
     expect(tabsStoreMock.removeTab).toHaveBeenCalledTimes(1);
@@ -219,12 +232,12 @@ describe("RootStore - Pinned Tabs Protection", () => {
     );
   });
 
-  it("should protect pinned tabs when closing tabs to the left", () => {
+  it("should protect pinned tabs when closing tabs to the left", async () => {
     // Setup: Split view store returns tabs that would be closed  
     splitViewStoreMock.getTabsToLeft = jest.fn().mockReturnValue(["welcome", "scratch1"]);
     
     // Execute: Close tabs to the left of scratch2
-    rootStore.closeTabsToLeft("scratch2", false);
+    await rootStore.closeTabsToLeft("scratch2", false);
 
     // Verify: No pinned tabs should be removed from data store
     expect(tabsStoreMock.removeTab).not.toHaveBeenCalled();
@@ -237,12 +250,12 @@ describe("RootStore - Pinned Tabs Protection", () => {
     );
   });
 
-  it("should protect pinned tabs when closing tabs to the right", () => {
+  it("should protect pinned tabs when closing tabs to the right", async () => {
     // Setup: Split view store returns tabs that would be closed
     splitViewStoreMock.getTabsToRight = jest.fn().mockReturnValue(["scratch2", "scratch3"]);
     
     // Execute: Close tabs to the right of scratch1
-    rootStore.closeTabsToRight("scratch1", false);
+    await rootStore.closeTabsToRight("scratch1", false);
 
     // Verify: Only unpinned tabs should be removed from data store
     expect(tabsStoreMock.removeTab).toHaveBeenCalledTimes(2);
@@ -310,6 +323,7 @@ describe("RootStore - Pinned Tabs Protection", () => {
 
     (Date.now as jest.Mock).mockRestore();
   });
+
 });
 
 describe("RootStore - duplicateTab insertion position", () => {
@@ -320,10 +334,26 @@ describe("RootStore - duplicateTab insertion position", () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    tabsStoreMock = {
-      tabs: [],
-      duplicateTab: jest.fn().mockReturnValue("new-tab-id"),
+    const sourceTab = {
+      id: "tab-b",
+      title: "Source",
+      content: "content",
+      language: "plaintext",
+      languageLocked: false,
+      cursorPosition: { lineNumber: 1, column: 1 },
+      dateCreated: 1,
+      lastModified: 1,
+      workspaceId: "workspace1",
     };
+    tabsStoreMock = {
+      tabs: [sourceTab],
+      addTab: jest.fn(),
+    };
+    mockTabDocumentAdapter.duplicate.mockResolvedValue({
+      ...sourceTab,
+      id: "new-tab-id",
+      title: "Source (Copy)",
+    });
 
     splitViewStoreMock = {
       splitView: {
@@ -346,8 +376,8 @@ describe("RootStore - duplicateTab insertion position", () => {
     rootStore = useRootStore.getState();
   });
 
-  it("calls addTabToSide with source tab as insertAfterId", () => {
-    rootStore.duplicateTab("tab-b", false);
+  it("calls addTabToSide with source tab as insertAfterId", async () => {
+    await rootStore.duplicateTab("tab-b", false);
 
     expect(splitViewStoreMock.addTabToSide).toHaveBeenCalledWith(
       "new-tab-id",
@@ -357,8 +387,8 @@ describe("RootStore - duplicateTab insertion position", () => {
     );
   });
 
-  it("passes isRightSide=true to addTabToSide when duplicating on right", () => {
-    rootStore.duplicateTab("tab-b", true);
+  it("passes isRightSide=true to addTabToSide when duplicating on right", async () => {
+    await rootStore.duplicateTab("tab-b", true);
 
     expect(splitViewStoreMock.addTabToSide).toHaveBeenCalledWith(
       "new-tab-id",
@@ -368,14 +398,13 @@ describe("RootStore - duplicateTab insertion position", () => {
     );
   });
 
-  it("activates the new tab after duplication", () => {
-    rootStore.duplicateTab("tab-b", false);
+  it("activates the new tab after duplication", async () => {
+    await rootStore.duplicateTab("tab-b", false);
     expect(splitViewStoreMock.setActiveLeftTab).toHaveBeenCalledWith("new-tab-id");
   });
 
-  it("returns empty string when source tab does not exist", () => {
-    tabsStoreMock.duplicateTab.mockReturnValue("");
-    const result = rootStore.duplicateTab("nonexistent", false);
+  it("returns empty string when source tab does not exist", async () => {
+    const result = await rootStore.duplicateTab("nonexistent", false);
     expect(result).toBe("");
     expect(splitViewStoreMock.addTabToSide).not.toHaveBeenCalled();
   });

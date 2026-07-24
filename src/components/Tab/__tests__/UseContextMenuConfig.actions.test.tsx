@@ -45,7 +45,6 @@ describe('UseContextMenuConfig - Actions and Structure', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-
     mockUseTabsStore.mockReturnValue({
       tabs: [mockTab, mockTabletTab],
     } as any);
@@ -251,6 +250,24 @@ describe('UseContextMenuConfig - Actions and Structure', () => {
 
     expect(pipelineItem).toBeDefined();
     expect(pipelineItem?.label).toBe('Transformation Pipeline');
+  });
+
+  it('shows Canvas actions for text tabs and disables unavailable sources', () => {
+    const { result } = renderHook(() =>
+      useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
+    );
+
+    const sendTab = result.current.menuItems.find(
+      item => item.id === 'sendTabToCanvas'
+    );
+    const sendSelection = result.current.menuItems.find(
+      item => item.id === 'sendSelectionToCanvas'
+    );
+
+    expect(sendTab).toBeDefined();
+    expect(sendTab?.disabled).toBe(false);
+    expect(sendSelection).toBeDefined();
+    expect(sendSelection?.disabled).toBe(true);
   });
 
   it('should include Macro Recording menu item after Transformation Pipeline', () => {

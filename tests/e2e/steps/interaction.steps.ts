@@ -11,6 +11,17 @@ When('I click the icon for "{string}"', async function (iconTestId) {
   await this.navigation.clickIcon(iconTestId);
 });
 
+When(
+  "I create a new tab from the document menu and clipboard",
+  async function () {
+    await this.navigation.createTabFromClipboardMenu();
+  },
+);
+
+When("I open the Tool Selector from the document menu", async function () {
+  await this.navigation.openToolSelectorFromDocumentMenu();
+});
+
 When('I click the icon for {string} on the {string} side', async function (iconTestId, side) {
   await this.navigation.clickIcon(iconTestId, side);
 });

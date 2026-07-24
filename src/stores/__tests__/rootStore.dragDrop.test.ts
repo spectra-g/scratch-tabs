@@ -208,8 +208,9 @@ describe("RootStore - Drag and Drop", () => {
             // Verify tab was added to split view
             expect(addTabToSideMock).toHaveBeenCalledWith("tab1", false, "tab1");
 
-            // Verify tab was deleted from source
-            expect(mockStorageProvider.deleteTab).toHaveBeenCalledWith("tab1");
+            // A move updates the single persisted tab record; deleting by the
+            // same ID here would remove it from the target workspace too.
+            expect(mockStorageProvider.deleteTab).not.toHaveBeenCalled();
 
             // NEW: Verify source workspace split view was updated to remove the tab
             expect(mockStorageProvider.saveSplitViewNow).toHaveBeenCalledWith(
@@ -389,8 +390,7 @@ describe("RootStore - Drag and Drop", () => {
                 })
             );
 
-            // Verify tab was deleted from source
-            expect(mockStorageProvider.deleteTab).toHaveBeenCalledWith("tab1");
+            expect(mockStorageProvider.deleteTab).not.toHaveBeenCalled();
 
             // Verify source workspace split view was updated to remove the tab
             expect(mockStorageProvider.saveSplitViewNow).toHaveBeenCalledWith(

@@ -11,6 +11,8 @@ import { imageMimeTypeToExtension } from "../utils/dataUri";
 import { ImageToolbar } from "./ImageToolbar";
 import { ImageStage } from "./ImageStage";
 import { ImageInspector } from "./ImageInspector";
+import { SendToCanvasDialog } from "../../../features/canvas/components/SendToCanvasDialog";
+import type { CanvasSendSource } from "../../../features/canvas/utils/canvasSendSource";
 
 type PreviewBackground = "checkerboard" | "dark" | "light" | "transparent";
 
@@ -43,6 +45,8 @@ export const ImageSmartView: React.FC<SmartViewProps> = ({
   const [selection, setSelection] = useState<DOMRect | null>(null);
   const [showEdited, setShowEdited] = useState(true);
   const [notice, setNotice] = useState<string | null>(null);
+  const [canvasSendSource, setCanvasSendSource] =
+    useState<CanvasSendSource | null>(null);
 
   const renderedRef = useRef(rendered);
   const isModifiedRef = useRef(isModified);
@@ -155,6 +159,14 @@ export const ImageSmartView: React.FC<SmartViewProps> = ({
         onDownloadOriginal={() => parsed && downloadDataUri(content.trim(), makeImageFileName(sourceTitle, imageMimeTypeToExtension(parsed.mimeType)))}
         onOpenPalette={() => sendToPalette({ initialColors: rendered.palette })}
         onSendPalette={() => sendToPalette({ initialColors: rendered.palette })}
+        onSendCanvas={() =>
+          setCanvasSendSource({
+            kind: "image-data-uri",
+            dataUri:
+              showEdited && rendered.dataUri ? rendered.dataUri : content.trim(),
+            fileName: makeImageFileName(sourceTitle, "png"),
+          })
+        }
         onBackgroundChange={setBackground}
       />
 
@@ -250,6 +262,13 @@ export const ImageSmartView: React.FC<SmartViewProps> = ({
         <span>{selection ? `${Math.round(selection.width)} x ${Math.round(selection.height)} selected` : "No selection"}</span>
         <span>{isModified ? `${edits.length} edit${edits.length === 1 ? "" : "s"}` : "Original"}</span>
       </footer>
+      {canvasSendSource && (
+        <SendToCanvasDialog
+          source={canvasSendSource}
+          side={side}
+          onClose={() => setCanvasSendSource(null)}
+        />
+      )}
     </div>
   );
 };

@@ -133,7 +133,10 @@ After(async function (params: any) {
   if (this.share) {
     await this.share.cleanup();
   }
+  if (this.canvasConflict) {
+    await this.canvasConflict.cleanup();
+  }
 
   await this.page.close();
   await this.context.close();
-}); 
+});

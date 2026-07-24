@@ -5,7 +5,7 @@ Feature: Json content processing
 
   Scenario: Clean and format stringified json
     When I set clipboard content to ""{\"name\":\"John Doe\",\"age\":30,\"isStudent\":false,\"courses\":[{\"id\":1,\"name\":\"History\"},{\"id\":2,\"name\":\"Math\"}]}""
-    And I click the icon for "New tab with contents from clipboard"
+    And I create a new tab from the document menu and clipboard
     Then the "Welcome" tab should exist and not be active
     And the "Scratch 1" tab should be active
     And the editor content should not be on a single line

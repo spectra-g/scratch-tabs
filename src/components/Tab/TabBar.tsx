@@ -30,6 +30,7 @@ import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 import { KeyboardSensor } from "@dnd-kit/core";
 import { SortableTabList } from "./SortableTabList";
 import { NEW_TAB_PREFIX } from "../../constants";
+import { getTabContentKind } from "../../utils/tabContentKind";
 
 // Constants for scroll behavior
 const SCROLL_SAVE_DEBOUNCE_MS = 300;
@@ -49,6 +50,7 @@ interface TabBarProps {
 
 interface TooltipContent {
   title: string;
+  documentType?: "Canvas";
   language?: string;
   lineCount?: number;
   dateCreated: number;
@@ -101,7 +103,6 @@ export const TabBar: React.FC<TabBarProps> = ({
 
   const inputRef = useRef<HTMLInputElement>(null);
   const tabBarRef = useRef<HTMLDivElement>(null);
-  const tabletButtonRef = useRef<HTMLButtonElement>(null);
   const newTabButtonRef = useRef<HTMLButtonElement>(null);
   const tabsWrapperRef = useRef<HTMLDivElement>(null);
   const tabsContainerRef = useRef<HTMLDivElement>(null);
@@ -151,7 +152,7 @@ export const TabBar: React.FC<TabBarProps> = ({
   };
 
   const tabLineCounts = tabs
-    .filter((tab) => tab.isTablet != true)
+    .filter((tab) => getTabContentKind(tab) === "text")
     .map((tab) => getTabLineCount(tab.content));
   const maxLineCount = Math.max(...tabLineCounts, 1);
 
@@ -337,8 +338,11 @@ export const TabBar: React.FC<TabBarProps> = ({
       dateCreated: tab.dateCreated || Date.now(),
       lastModified: tab.lastModified || Date.now(),
     };
+    if (getTabContentKind(tab) === "canvas") {
+      content.documentType = "Canvas";
+    }
 
-    if (!tab.isTablet) {
+    if (getTabContentKind(tab) === "text") {
       content.lineCount = getTabLineCount(tab.content);
 
       try {
@@ -594,6 +598,8 @@ export const TabBar: React.FC<TabBarProps> = ({
       side,
       activeWorkspaceId: activeWorkspaceId || "default",
       addTab: (tabData, isRight) => addTab(tabData, isRight),
+      createCanvas: (isRight) =>
+        useRootStore.getState().handleNewCanvas(isRight),
     });
     setShowToolSelector(false);
   };
@@ -602,8 +608,8 @@ export const TabBar: React.FC<TabBarProps> = ({
   const pinnedTabs = visibleTabs.filter((tab) => tab.isPinned);
   const unpinnedTabs = visibleTabs.filter((tab) => !tab.isPinned);
 
-  const handleTabClose = (tabId: string) => {
-    removeTab(tabId);
+  const handleTabClose = async (tabId: string) => {
+    await removeTab(tabId);
 
     if (hoveredTabId === tabId) {
       setTooltipVisible(false);
@@ -719,7 +725,6 @@ export const TabBar: React.FC<TabBarProps> = ({
             side={side}
             onShowTabletSelector={() => setShowToolSelector(!showToolSelector)}
             newTabButtonRef={newTabButtonRef}
-            tabletButtonRef={tabletButtonRef}
           />
           {/* Only show WorkspaceSwitcher and HamburgerMenu on the right side when split, or on the left when not split */}
           {(isRightSide ? splitView.isSplit : !splitView.isSplit) && (

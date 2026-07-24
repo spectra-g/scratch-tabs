@@ -7,6 +7,7 @@ import { WorkspaceEmptyState } from "../Workspace/WorkspaceEmptyState";
 import type { Tab } from "../../types";
 import type { SmartView } from "../../views/registry";
 import type * as Monaco from "monaco-editor";
+import { getTabContentKind } from "../../utils/tabContentKind";
 
 // Lazy load the RichTextEditor component with auto-reload on chunk errors
 const RichTextEditor = lazyWithReload(
@@ -15,6 +16,14 @@ const RichTextEditor = lazyWithReload(
       default: module.RichTextEditor,
     })),
   "RichTextEditor"
+);
+
+const CanvasRenderer = lazyWithReload(
+  () =>
+    import("../../features/canvas").then((module) => ({
+      default: module.CanvasRenderer,
+    })),
+  "CanvasRenderer",
 );
 
 const RichTextLoadingFallback = () => (
@@ -93,6 +102,19 @@ const RENDERER_CONFIG: RendererConfig[] = [
     render: () => <WorkspaceEmptyState />,
   },
   {
+    id: "canvas",
+    condition: (ctx) =>
+      ctx.activeTab !== null && getTabContentKind(ctx.activeTab) === "canvas",
+    render: (ctx) => {
+      if (!ctx.activeTab) return null;
+      return (
+        <Suspense fallback={<div className="h-full bg-canvas" />}>
+          <CanvasRenderer key={ctx.activeTab.id} tab={ctx.activeTab} />
+        </Suspense>
+      );
+    },
+  },
+  {
     id: "replacement-view",
     condition: (ctx) => ctx.shouldShowReplacementView && ctx.extendedView !== null,
     render: (ctx) => {
@@ -114,7 +136,9 @@ const RENDERER_CONFIG: RendererConfig[] = [
   },
   {
     id: "rich-text",
-    condition: (ctx) => ctx.activeTab?.isRich === true,
+    condition: (ctx) =>
+      ctx.activeTab !== null &&
+      getTabContentKind(ctx.activeTab) === "rich-text",
     render: (ctx) => {
       const { activeTab, onRichContentChange, onUpgradeToRich } = ctx;
       if (!activeTab) return null;
@@ -132,7 +156,8 @@ const RENDERER_CONFIG: RendererConfig[] = [
   },
   {
     id: "tablet",
-    condition: (ctx) => ctx.activeTab?.isTablet === true,
+    condition: (ctx) =>
+      ctx.activeTab !== null && getTabContentKind(ctx.activeTab) === "tablet",
     render: (ctx) => {
       const { activeTab, onTabletStateChange } = ctx;
       if (!activeTab) return null;

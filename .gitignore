@@ -33,3 +33,4 @@ coverage
 /coverage/
 /reports/
 /.claude/settings.local.json
+/.codex/config.toml

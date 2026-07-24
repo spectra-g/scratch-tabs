@@ -20,9 +20,7 @@ export class NavigationActions {
 
   async clickIcon(iconName: string, side: 'left' | 'right' = 'left') {
     const iconTestIdMap: { [key: string]: string } = {
-      'New tab': 'icon-new-tab',
-      'New tab with contents from clipboard': 'icon-new-tab-from-clipboard',
-      'New tablet': 'icon-new-tools'
+      'New tab': 'icon-new-tab'
     };
 
     const testId = iconTestIdMap[iconName] || `icon-${iconName.toLowerCase().replace(/\s+/g, '-')}`;
@@ -37,6 +35,34 @@ export class NavigationActions {
 
     await expect(locator).toBeVisible();
     await locator.click();
+  }
+
+  async selectNewDocumentOption(
+    optionTestId: "new-document-clipboard" | "new-document-tool",
+    side: "left" | "right" = "left",
+  ) {
+    const splitViewExists = await this.page
+      .locator('[data-editor-pane-side="right"]')
+      .isVisible();
+    const trigger = splitViewExists
+      ? this.page.locator(
+          `[data-testid="new-document-menu-trigger"][data-side="${side}"]`,
+        )
+      : this.page.getByTestId("new-document-menu-trigger").first();
+
+    await expect(trigger).toBeVisible();
+    await trigger.click();
+    const option = this.page.getByTestId(optionTestId);
+    await expect(option).toBeVisible();
+    await option.click();
+  }
+
+  async createTabFromClipboardMenu() {
+    await this.selectNewDocumentOption("new-document-clipboard");
+  }
+
+  async openToolSelectorFromDocumentMenu() {
+    await this.selectNewDocumentOption("new-document-tool");
   }
 
   async doubleClickOnPage() {

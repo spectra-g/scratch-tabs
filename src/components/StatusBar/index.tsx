@@ -12,6 +12,8 @@ import { FontSizeControls } from "./FontSizeControls";
 import { RichTextControls } from "./RichTextControls";
 import { useActiveEditorStore } from "../../stores/activeEditorStore";
 import { useCursorPosition, useStatusBarLogic } from "./useStatusBarLogic";
+import { getTabContentKind } from "../../utils/tabContentKind";
+import { RendererStatusItems } from "./RendererStatusItems";
 
 interface StatusBarProps {
   activeTab: Tab;
@@ -48,19 +50,23 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   const { toggleSearch } = useSearchStore();
   const [showLanguagePopup, setShowLanguagePopup] = useState(false);
   const languageLabelRef = useRef<HTMLDivElement>(null);
+  const contentKind = getTabContentKind(activeTab);
+  const showRichTextControls =
+    !isInSmartView &&
+    (contentKind === "text" || contentKind === "rich-text");
 
   const showAIIcon =
     (!splitView.isSplit && side === "left") ||
     (splitView.isSplit && side === "right");
 
   const FormatOptionsMenu =
-    activeTab && !activeTab.isTablet && !activeTab.isRich
+    contentKind === "text"
       ? getFormatOptionsMenu(languageForOptions || 'plaintext', editor)
       : null;
 
   // Handle opening the language popup
   const handleOpenLanguagePopup = () => {
-    if (!activeTab.isTablet && !activeTab.isRich) {
+    if (contentKind === "text") {
       // Always ensure we close any existing popup before opening a new one
       setShowLanguagePopup(false);
 
@@ -73,7 +79,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
 
   // Handle selecting a language from the popup
   const handleSelectLanguage = (languageId: string) => {
-    if (activeTab && !activeTab.isTablet && !activeTab.isRich) {
+    if (activeTab && contentKind === "text") {
       updateTabLanguage(activeTab.id, languageId, true); // Lock the language
     }
     setShowLanguagePopup(false);
@@ -82,6 +88,10 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   // Render the language section - logic extracted to useStatusBarLogic hook
   const renderLanguageSection = () => {
     if (!activeTab) return null;
+
+    if (contentKind === "canvas") {
+      return <RendererStatusItems tabId={activeTab.id} fallbackLabel="Canvas" />;
+    }
 
     if (activeTab.isTablet) {
       return <span className="capitalize">{tabletLabel}</span>;
@@ -128,17 +138,17 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       <div className="flex items-center space-x-4">
         {activeTab && (
           <>
-            {!activeTab.isTablet && !activeTab.isRich && (
+            {contentKind === "text" && (
               <span>
                 Ln {realTimeCursorPosition.lineNumber}, Col{" "}
                 {realTimeCursorPosition.column}
               </span>
             )}
-            {!activeTab.isTablet && !activeTab.isRich && (
+            {contentKind === "text" && (
               <div className="h-4 border-l border-gray-400 dark:border-gray-600"></div>
             )}
             {/* Only show language/format info when NOT in rich text mode */}
-            {!activeTab.isRich && (
+            {contentKind !== "rich-text" && (
               <div className="p-0.5 flex items-center space-x-2">
                 {renderLanguageSection()}
 
@@ -165,7 +175,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       <div className="flex items-center space-x-3">
         {/* Group 1: Font Size */}
         <div className="flex items-center">
-          {!activeTab?.isRich && (
+          {contentKind !== "rich-text" && contentKind !== "canvas" && (
             <FontSizeControls
               editor={editor}
               isTablet={activeTab?.isTablet || false}
@@ -173,7 +183,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
             />
           )}
 
-          {!activeTab?.isTablet && !isInSmartView && (
+          {showRichTextControls && (
             <RichTextControls activeTab={activeTab} />
           )}
         </div>
