@@ -7,11 +7,6 @@ const shouldAnalyzeBundle = process.env.ANALYZE === "true";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  define: {
-    __VITE_ENABLE_CANVAS__: JSON.stringify(
-      process.env.VITE_ENABLE_CANVAS ?? "",
-    ),
-  },
   plugins: [
     react(),
     VitePWA({

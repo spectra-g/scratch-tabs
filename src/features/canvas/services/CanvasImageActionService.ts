@@ -29,17 +29,24 @@ export class CanvasImageActionService {
   }
 
   async copy(assetId: string): Promise<void> {
-    const asset = await this.requireAsset(assetId);
     if (!navigator.clipboard?.write || typeof ClipboardItem === "undefined") {
       throw new Error("Image copying is not supported by this browser.");
     }
-    const clipboardBlob =
-      asset.mimeType === "image/png"
-        ? asset.blob
-        : await rasterizeCanvasImageToPng(asset.blob);
+
+    // Start the clipboard write while the click's user activation is still
+    // available. ClipboardItem accepts a Blob promise, so IndexedDB lookup and
+    // optional rasterization can finish without forfeiting that activation.
+    const clipboardBlob = this.prepareClipboardBlob(assetId);
     await navigator.clipboard.write([
       new ClipboardItem({ "image/png": clipboardBlob }),
     ]);
+  }
+
+  private async prepareClipboardBlob(assetId: string): Promise<Blob> {
+    const asset = await this.requireAsset(assetId);
+    return asset.mimeType === "image/png"
+      ? asset.blob
+      : rasterizeCanvasImageToPng(asset.blob);
   }
 
   async download(assetId: string): Promise<void> {

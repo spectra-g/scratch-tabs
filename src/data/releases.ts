@@ -15,12 +15,44 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.43.0';
+export const APP_VERSION = '1.44.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.43.0",
+    "version": "1.44.0",
     "type": "latest",
+    "date": "2026-07-24",
+    "headline": "Spatial Canvas",
+    "summary": "Arrange text, code, images, links, and videos on a durable local-first spatial workspace with keyboard navigation, search, and workspace lifecycle support.",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Mixed local boards:** Arrange text, JSON and code, local images, links, and click-to-load YouTube or Vimeo cards",
+          "**Keyboard-first navigation:** Traverse cards spatially with Arrow keys or in reading order with Tab, then edit, move, duplicate, layer, delete, undo, and redo without a mouse",
+          "**Workspace integration:** Create and send content to Canvas, search individual cards, use split view, and preserve boards through tab lifecycle and workspace import or export"
+        ]
+      },
+      {
+        "name": "Privacy and Resilience",
+        "changes": [
+          "**Local-first persistence:** Canvas scenes and image blobs stay in IndexedDB and remain separate from normal tab content",
+          "**Explicit network loading:** Link cards do not fetch preview metadata, and video embeds load only after Play is selected",
+          "**Recoverable saves:** Storage failures keep local unsaved changes visible, report the error clearly, and provide an explicit retry"
+        ]
+      },
+      {
+        "name": "Performance and Accessibility",
+        "changes": [
+          "**Large-board rendering:** Large scenes render visible cards on demand while retaining deterministic document coordinates and navigation",
+          "**Accessible interaction:** Roving focus, high-contrast focus rings, content-derived card labels, live navigation announcements, and shortcut help support keyboard and screen-reader workflows"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.43.0",
+    "type": "release",
     "date": "2026-07-17",
     "headline": "Data Reconcile Tablet",
     "summary": "Compare rows across two tabs with whole-line or CSV key-column matching, then open or copy the results without changing either source.",

@@ -279,6 +279,50 @@ describe("CanvasDocumentManager", () => {
     jest.useRealTimers();
   });
 
+  it("keeps failed writes unsaved until an explicit retry succeeds", async () => {
+    jest.useFakeTimers();
+    const repository = createRepository();
+    repository.saveDocument.mockRejectedValueOnce(
+      new DOMException("Storage quota exceeded", "QuotaExceededError"),
+    );
+    const manager = new CanvasDocumentManager(
+      repository,
+      () => 5_000,
+      createImagePersistence(),
+      undefined,
+      revisionChannel,
+    );
+    const states: Array<{ status: string; revision: number }> = [];
+    manager.subscribe(canvasTab.id, ({ status, revision }) =>
+      states.push({ status, revision }),
+    );
+    await manager.acquire(canvasTab);
+
+    manager.setItems(canvasTab.id, [textItem("keep this locally")]);
+    await jest.advanceTimersByTimeAsync(500);
+
+    expect(repository.saveDocument).toHaveBeenCalledTimes(1);
+    expect(states.at(-1)).toEqual({ status: "error", revision: 0 });
+    await jest.advanceTimersByTimeAsync(2_000);
+    expect(repository.saveDocument).toHaveBeenCalledTimes(1);
+
+    repository.saveDocument.mockResolvedValue(undefined);
+    await manager.retrySave(canvasTab.id);
+
+    expect(repository.saveDocument).toHaveBeenCalledTimes(2);
+    expect(repository.saveDocument).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        revision: 1,
+        items: [expect.objectContaining({ text: "keep this locally" })],
+      }),
+      { expectedRevision: 0, updateParentTabModified: true },
+    );
+    expect(states.at(-1)).toEqual({ status: "saved", revision: 1 });
+
+    await manager.release(canvasTab.id);
+    jest.useRealTimers();
+  });
+
   it("persists an image asset and document as one completed operation", async () => {
     const repository = createRepository();
     const imagePersistence = createImagePersistence();

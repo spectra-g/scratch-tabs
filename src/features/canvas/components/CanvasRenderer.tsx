@@ -1,4 +1,4 @@
-import React, { Suspense, useLayoutEffect, useRef, useState } from "react";
+import { Suspense, useLayoutEffect, useRef, useState } from "react";
 import type { Tab } from "../../../types";
 import { useIsMobile } from "../../../hooks/useIsMobile";
 import { useRootStore } from "../../../stores/rootStore";
@@ -6,8 +6,10 @@ import { useTabsStore } from "../../../stores/tabsStore";
 import { MIN_CANVAS_PANE_WIDTH } from "../constants";
 import { resolveCanvasPaneWidth } from "../utils/canvasPaneWidth";
 import { DesktopOnlyCanvasNotice } from "./DesktopOnlyCanvasNotice";
+import { CanvasErrorBoundary } from "./CanvasErrorBoundary";
+import { lazyWithReload } from "../../../utils/chunkLoadUtils";
 
-const CanvasView = React.lazy(() => import("./CanvasView"));
+const CanvasView = lazyWithReload(() => import("./CanvasView"), "canvas");
 
 interface CanvasRendererProps {
   tab: Tab;
@@ -65,15 +67,20 @@ export const CanvasRenderer = ({ tab }: CanvasRendererProps) => {
           }
         />
       ) : (
-        <Suspense
-          fallback={
-            <div className="flex h-full items-center justify-center bg-canvas text-sm text-muted">
-              Loading Canvas...
-            </div>
-          }
+        <CanvasErrorBoundary
+          onClose={() => useRootStore.getState().removeTab(tab.id)}
+          onReload={() => window.location.reload()}
         >
-          <CanvasView tab={tab} />
-        </Suspense>
+          <Suspense
+            fallback={
+              <div className="flex h-full items-center justify-center bg-canvas text-sm text-muted">
+                Loading Canvas...
+              </div>
+            }
+          >
+            <CanvasView tab={tab} />
+          </Suspense>
+        </CanvasErrorBoundary>
       )}
     </div>
   );

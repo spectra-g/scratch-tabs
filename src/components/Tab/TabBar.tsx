@@ -103,7 +103,6 @@ export const TabBar: React.FC<TabBarProps> = ({
 
   const inputRef = useRef<HTMLInputElement>(null);
   const tabBarRef = useRef<HTMLDivElement>(null);
-  const tabletButtonRef = useRef<HTMLButtonElement>(null);
   const newTabButtonRef = useRef<HTMLButtonElement>(null);
   const tabsWrapperRef = useRef<HTMLDivElement>(null);
   const tabsContainerRef = useRef<HTMLDivElement>(null);
@@ -726,7 +725,6 @@ export const TabBar: React.FC<TabBarProps> = ({
             side={side}
             onShowTabletSelector={() => setShowToolSelector(!showToolSelector)}
             newTabButtonRef={newTabButtonRef}
-            tabletButtonRef={tabletButtonRef}
           />
           {/* Only show WorkspaceSwitcher and HamburgerMenu on the right side when split, or on the left when not split */}
           {(isRightSide ? splitView.isSplit : !splitView.isSplit) && (

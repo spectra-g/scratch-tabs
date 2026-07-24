@@ -19,6 +19,7 @@ export const useCanvasDocument = (tab: Tab) => {
   const [remoteRevision, setRemoteRevision] = useState<number | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [isResolvingConflict, setIsResolvingConflict] = useState(false);
+  const [isRetryingSave, setIsRetryingSave] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -182,6 +183,23 @@ export const useCanvasDocument = (tab: Tab) => {
     }
   }, [tabId]);
 
+  const retrySave = useCallback(async () => {
+    setIsRetryingSave(true);
+    setError(null);
+    try {
+      await canvasDocumentManager.retrySave(tabId);
+    } catch (retryError) {
+      setStatus("error");
+      setError(
+        retryError instanceof Error
+          ? retryError.message
+          : "Unable to save this Canvas",
+      );
+    } finally {
+      setIsRetryingSave(false);
+    }
+  }, [tabId]);
+
   return {
     activeDocument,
     status,
@@ -190,9 +208,11 @@ export const useCanvasDocument = (tab: Tab) => {
     remoteRevision,
     reloadKey,
     isResolvingConflict,
+    isRetryingSave,
     saveViewport,
     updateItems,
     reloadAfterConflict,
     takeOverAfterConflict,
+    retrySave,
   };
 };

@@ -1,6 +1,5 @@
 export const CANVAS_SCHEMA_VERSION = 1;
 export const MIN_CANVAS_PANE_WIDTH = 640;
-export const CANVAS_FEATURE_SETTING_KEY = "features.canvas.enabled";
 export const CANVAS_DOCUMENT_SAVE_DEBOUNCE_MS = 500;
 export const CANVAS_TAB_MODIFIED_THROTTLE_MS = 2000;
 export const DEFAULT_TEXT_ITEM_WIDTH = 280;
@@ -50,3 +49,4 @@ export const CANVAS_INGEST_VIEWPORT_PADDING = 24;
 export const CANVAS_TEXT_FILE_MAX_BYTES = 5 * 1024 * 1024;
 export const CANVAS_CLIPBOARD_MIME = "application/x-scratch-tabs-canvas+json";
 export const CANVAS_CLIPBOARD_VERSION = 1;
+export const CANVAS_VISIBLE_ELEMENTS_THRESHOLD = 200;

@@ -1,6 +1,4 @@
 import { expect, Page } from "@playwright/test";
-
-const CANVAS_FEATURE_SETTING_KEY = "features.canvas.enabled";
 const ONE_PIXEL_PNG_BASE64 =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
 
@@ -78,28 +76,6 @@ export class CanvasActions {
   async enableFeature() {
     await this.page.goto(process.env.BASE_URL ?? "http://localhost:5173/");
     await expect(this.page.getByText("SCRATCH_TABS")).toBeVisible();
-    await this.page.evaluate(async (settingKey) => {
-      const database = await new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open("ScratchTabsDB");
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
-
-      try {
-        const transaction = database.transaction("settings", "readwrite");
-        transaction.objectStore("settings").put({
-          key: settingKey,
-          value: "true",
-        });
-        await new Promise<void>((resolve, reject) => {
-          transaction.oncomplete = () => resolve();
-          transaction.onerror = () => reject(transaction.error);
-          transaction.onabort = () => reject(transaction.error);
-        });
-      } finally {
-        database.close();
-      }
-    }, CANVAS_FEATURE_SETTING_KEY);
   }
 
   async useDesktopViewport() {
@@ -123,8 +99,20 @@ export class CanvasActions {
     await button.click();
   }
 
+  async createCanvasWithKeyboard() {
+    const trigger = this.page.getByTestId("new-document-menu-trigger").first();
+    await trigger.focus();
+    await this.page.keyboard.press("Enter");
+    const canvasChoice = this.page.getByRole("menuitem", { name: "Canvas" });
+    await expect(canvasChoice).toBeVisible();
+    await canvasChoice.focus();
+    await this.page.keyboard.press("Enter");
+    await expect(this.page.getByTestId("canvas-flow")).toBeVisible();
+  }
+
   async createCanvasFromToolSelector() {
-    await this.page.getByTestId("icon-new-tools").first().click();
+    await this.page.getByTestId("new-document-menu-trigger").first().click();
+    await this.page.getByTestId("new-document-tool").click();
     const selector = this.page.getByRole("dialog", { name: "Tool Selector" });
     await expect(selector).toBeVisible();
     const canvas = selector
@@ -270,6 +258,8 @@ export class CanvasActions {
   async expectSentCanvasContentAfterReload() {
     await this.waitForSceneSave();
     await this.page.reload();
+    await this.page.getByTestId("tab-Canvas 1").click();
+    await expect(this.page.getByTestId("canvas-flow")).toBeVisible();
     await expect(this.page.locator('[data-item-type="code"]').first()).toBeVisible();
     await expect(this.page.locator('[data-item-type="link"]').first()).toBeVisible();
     await expect(this.page.locator('[data-item-type="image"]').first()).toBeVisible();
@@ -1077,6 +1067,23 @@ export class CanvasActions {
     this.imageAssetId = await card.getAttribute("data-asset-id");
   }
 
+  async copyImageCard() {
+    const copyButton = this.page.getByTestId("canvas-image-copy");
+    await expect(copyButton).toHaveAccessibleName("Copy image");
+    await copyButton.click();
+  }
+
+  async expectImageCopyFeedback() {
+    const copyButton = this.page.getByTestId("canvas-image-copy");
+    await expect(copyButton).toHaveAccessibleName("Copied image");
+    await expect(copyButton.locator(".text-success")).toBeVisible();
+    await this.page.waitForTimeout(1500);
+    await expect(copyButton).toHaveAccessibleName("Copied image");
+    await expect(copyButton).toHaveAccessibleName("Copy image", {
+      timeout: 1500,
+    });
+  }
+
   async chooseUnsupportedImage() {
     await this.page.getByTestId("canvas-image-input").setInputFiles({
       name: "not-an-image.txt",
@@ -1837,8 +1844,12 @@ export class CanvasActions {
     const help = this.page.getByTestId("canvas-shortcut-help");
     await expect(help).toBeVisible();
     await expect(
-      this.page.getByTestId("canvas-clipboard-shortcuts-unavailable"),
-    ).toContainText("Cmd/Ctrl+C, X, and V are unavailable");
+      help.getByText("Copy selected cards"),
+    ).toBeVisible();
+    await expect(help.getByText("Cut selected cards")).toBeVisible();
+    await expect(
+      help.getByText(/Paste cards or external content/),
+    ).toBeVisible();
     await this.page.keyboard.press("Escape");
     await expect(help).not.toBeAttached();
     await expect(
@@ -2048,5 +2059,118 @@ export class CanvasActions {
     }, documentId);
 
     expect(exists).toBe(false);
+  }
+
+  async completeKeyboardReleaseWorkflow() {
+    await this.createCanvasWithKeyboard();
+    await this.createTwoCardsWithKeyboard();
+    await this.selectAllCardsWithKeyboard();
+    await this.nudgeSelectionWithKeyboard();
+    await this.duplicateSelectionWithKeyboard();
+    await expect(this.page.locator("[data-item-id]")).toHaveCount(4);
+    await this.deleteSelectionWithKeyboard();
+    await expect(this.page.locator("[data-item-id]")).toHaveCount(2);
+    await this.undoWithKeyboard();
+    await expect(this.page.locator("[data-item-id]")).toHaveCount(4);
+    await this.redoWithKeyboard();
+    await expect(this.page.locator("[data-item-id]")).toHaveCount(2);
+    await this.waitForSceneSave();
+    await this.page.reload();
+  }
+
+  async expectKeyboardReleaseWorkflowRestored() {
+    const canvas = this.page.getByTestId("canvas-flow");
+    await expect(canvas).toBeVisible();
+    await expect(this.textCardContaining("Keyboard first")).toBeVisible();
+    await expect(this.textCardContaining("Keyboard second")).toBeVisible();
+    await canvas.focus();
+    await expect(
+      this.page.locator('[data-item-id][data-focused="true"]'),
+    ).toBeFocused();
+
+    const instructionsId = await canvas.getAttribute("aria-describedby");
+    expect(instructionsId).toBeTruthy();
+    await expect(this.page.locator(`#${instructionsId}`)).toContainText(
+      "Use Arrow keys to move between cards",
+    );
+  }
+
+  async createMixedReleaseBoard() {
+    await this.createSearchableCanvasCards();
+    await this.page.reload();
+    await expect(this.page.getByTestId("canvas-flow")).toBeVisible();
+    await this.page.context().setOffline(true);
+  }
+
+  async expectMixedReleaseBoardOffline() {
+    await expect(this.textCard()).toBeVisible();
+    await expect(this.codeCard()).toBeVisible();
+    await expect(this.imageCard()).toHaveAttribute("data-asset-status", "ready");
+    await expect(this.linkCard()).toBeVisible();
+    await expect(this.linkCard()).toHaveAttribute(
+      "data-hostname",
+      "example.com",
+    );
+    await expect(this.videoCard()).toBeVisible();
+    await expect(this.page.getByTestId("canvas-video-iframe")).toHaveCount(0);
+  }
+
+  async exhaustQuotaForNextSceneSave(text: string) {
+    await this.page.evaluate(() => {
+      const nativePut = IDBObjectStore.prototype.put;
+      IDBObjectStore.prototype.put = function (value, key) {
+        if (this.name === "canvasDocuments") {
+          IDBObjectStore.prototype.put = nativePut;
+          throw new DOMException(
+            "Storage quota exceeded",
+            "QuotaExceededError",
+          );
+        }
+        return key === undefined
+          ? nativePut.call(this, value)
+          : nativePut.call(this, value, key);
+      };
+    });
+    await this.addTextCard(text);
+  }
+
+  async expectFailedSaveAndRetry() {
+    const status = this.saveStatus();
+    await expect(status).toHaveAttribute("data-save-state", "error");
+    await expect(status).toHaveAttribute(
+      "data-save-revision",
+      String(this.pendingSaveRevision),
+    );
+    await expect(this.page.getByTestId("canvas-save-error")).toContainText(
+      "unsaved changes",
+    );
+
+    await this.page.getByTestId("canvas-save-retry").click();
+    await expect(status).toHaveAttribute("data-save-state", "saved");
+    await expect
+      .poll(async () => Number(await status.getAttribute("data-save-revision")))
+      .toBeGreaterThan(this.pendingSaveRevision);
+    await expect(this.page.getByTestId("canvas-save-error")).not.toBeAttached();
+  }
+
+  async verifySplitShortcutIsolationAndNarrowFallback() {
+    const leftCard = this.pane("left").locator("[data-item-id]").first();
+    const rightCard = this.pane("right").locator("[data-item-id]").first();
+    const leftBefore = await this.readBounds(leftCard);
+    const rightBefore = await this.readBounds(rightCard);
+
+    await leftCard.focus();
+    await this.page.keyboard.press("Alt+ArrowRight");
+
+    const leftAfter = await this.readBounds(leftCard);
+    const rightAfter = await this.readBounds(rightCard);
+    expect(leftAfter.x).toBe(leftBefore.x + 10);
+    expect(rightAfter).toEqual(rightBefore);
+
+    await this.useNarrowViewport();
+    await expect(
+      this.page.getByTestId("canvas-desktop-only-notice"),
+    ).toHaveCount(2);
+    await expect(this.page.getByTestId("canvas-flow")).toHaveCount(0);
   }
 }

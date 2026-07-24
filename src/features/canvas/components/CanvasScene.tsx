@@ -33,6 +33,7 @@ import {
   getViewportToRevealCanvasBounds,
 } from "../utils/canvasCoordinates";
 import type { CanvasFlowNode } from "../utils/canvasFlowMapping";
+import { shouldRenderOnlyVisibleCanvasItems } from "../utils/canvasPerformance";
 import { CanvasToolbar } from "./CanvasToolbar";
 import {
   CanvasContextMenu,
@@ -41,6 +42,7 @@ import {
 import { CanvasSelectionToolbar } from "./CanvasSelectionToolbar";
 import { CanvasShortcutHelp } from "./CanvasShortcutHelp";
 import { CanvasConflictNotice } from "./CanvasConflictNotice";
+import { CanvasSaveErrorNotice } from "./CanvasSaveErrorNotice";
 import { CanvasNodeInteractionContext } from "./nodes/CanvasNodeInteractionContext";
 import { TextNode } from "./nodes/TextNode";
 import { CodeNode } from "./nodes/CodeNode";
@@ -71,11 +73,13 @@ interface CanvasSceneProps {
   error: string | null;
   remoteRevision: number | null;
   isResolvingConflict: boolean;
+  isRetryingSave: boolean;
   updateItems: (items: CanvasItem[]) => void;
   imageOperations: CanvasImageOperations;
   saveViewport: (viewport: Viewport) => Promise<void>;
   onReloadConflict: () => void;
   onTakeOverConflict: () => void;
+  onRetrySave: () => void;
 }
 
 export const CanvasScene = ({
@@ -89,12 +93,15 @@ export const CanvasScene = ({
   error,
   remoteRevision,
   isResolvingConflict,
+  isRetryingSave,
   updateItems,
   imageOperations,
   saveViewport,
   onReloadConflict,
   onTakeOverConflict,
+  onRetrySave,
 }: CanvasSceneProps) => {
+  const keyboardInstructionsId = `canvas-keyboard-instructions-${tab.id}`;
   const rootRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef(viewport);
   const flowInstanceRef = useRef<ReactFlowInstance<CanvasFlowNode> | null>(
@@ -369,6 +376,7 @@ export const CanvasScene = ({
       tabIndex={canvasItems.focusedItemId === null ? 0 : -1}
       role="application"
       aria-label={`${tab.title} Canvas`}
+      aria-describedby={keyboardInstructionsId}
       onFocus={spatialNavigation.handleRootFocus}
       onKeyDown={keyboardShortcuts.handleKeyDown}
       onKeyUp={keyboardShortcuts.handleKeyUp}
@@ -379,12 +387,24 @@ export const CanvasScene = ({
       onCut={canvasClipboard.handleCut}
       onPaste={canvasClipboard.handlePaste}
     >
+      <p id={keyboardInstructionsId} className="sr-only">
+        Use Arrow keys to move between cards, Tab and Shift+Tab for spatial
+        reading order, Enter to edit a card, and question mark for all Canvas
+        keyboard shortcuts.
+      </p>
       {status === "conflict" && remoteRevision !== null && (
         <CanvasConflictNotice
           remoteRevision={remoteRevision}
           isResolving={isResolvingConflict}
           onReload={onReloadConflict}
           onTakeOver={onTakeOverConflict}
+        />
+      )}
+      {status === "error" && error && (
+        <CanvasSaveErrorNotice
+          error={error}
+          isRetrying={isRetryingSave}
+          onRetry={onRetrySave}
         />
       )}
       <CanvasNodeInteractionContext.Provider value={canvasItems.interaction}>
@@ -406,6 +426,9 @@ export const CanvasScene = ({
           nodesFocusable={false}
           edgesFocusable={false}
           disableKeyboardA11y
+          onlyRenderVisibleElements={shouldRenderOnlyVisibleCanvasItems(
+            canvasItems.items.length,
+          )}
           autoPanOnNodeFocus={false}
           deleteKeyCode={null}
           onInit={(instance) => {

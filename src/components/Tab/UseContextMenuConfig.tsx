@@ -43,7 +43,6 @@ import {
   CloseSubmenu,
 } from "./ContextMenuSubmenus";
 import { OpenInSubmenu } from "./OpenInSubmenu";
-import { useCanvasFeatureEnabled } from "../../features/canvas/hooks/useCanvasFeatureEnabled";
 import type { CanvasSendSource } from "../../features/canvas/utils/canvasSendSource";
 import { createCanvasSendSourceFromTab } from "../../features/canvas/utils/canvasSendSource";
 import { getCanvasEditorSelection } from "../../features/canvas/utils/canvasEditorSelection";
@@ -107,7 +106,6 @@ export const useContextMenuConfig = (
   const { activeWorkspaceId } = useWorkspaceStore();
   const { setForceShowToolbar } = useMacroStore();
   const { summarizeTextWithModal, ai } = useAIStore();
-  const canvasEnabled = useCanvasFeatureEnabled();
 
   const [confirmationState, setConfirmationState] = useState<{
     type: "close" | "closeAllExcept" | "closeTabsToLeft" | "closeTabsToRight";
@@ -142,8 +140,7 @@ export const useContextMenuConfig = (
   const isPinned = tab?.isPinned || false;
   const canDownload = !!tab && !tab.isTablet;
   const canRename = !!tab;
-  const canSendToCanvas =
-    canvasEnabled && !!tab && getTabContentKind(tab) === "text";
+  const canSendToCanvas = !!tab && getTabContentKind(tab) === "text";
   const hasCanvasTabContent =
     !!tab && !!(modelManager.getContent(tab.id) ?? tab.content);
   const activeEditorStore = useActiveEditorStore.getState();

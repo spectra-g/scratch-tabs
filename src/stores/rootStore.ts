@@ -393,11 +393,6 @@ export const useRootStore = create<RootStore>((set, get) => {
     },
 
     handleNewCanvas: async (isRightSide) => {
-      const { getCanvasFeatureEnabled } = await import(
-        "../features/canvas/utils/canvasFeatureFlag"
-      );
-      if (!(await getCanvasFeatureEnabled())) return undefined;
-
       const ensuredWorkspaceId = await useWorkspaceStore
         .getState()
         .ensureWorkspace();

@@ -9,7 +9,7 @@ Feature: Tablets Smoke Tests
 
   Scenario: Calculator tablet loads successfully
     When I click the icon for "New tab"
-    And I click the icon for "New tablet"
+    And I open the Tool Selector from the document menu
     And I select "Calculator" from the tablet selector
     And I wait for the tablet to be ready
     Then the "Calculator" tab should exist on the page
@@ -19,7 +19,7 @@ Feature: Tablets Smoke Tests
 
   Scenario: UUID Generator tablet loads and generates UUIDs
     When I click the icon for "New tab"
-    And I click the icon for "New tablet"
+    And I open the Tool Selector from the document menu
     And I select "UUID Generator" from the tablet selector
     And I wait for the tablet to be ready
     Then the "UUID Generator" tab should exist on the page
@@ -31,7 +31,7 @@ Feature: Tablets Smoke Tests
 
   Scenario: Base64 tablet loads and encodes text
     When I click the icon for "New tab"
-    And I click the icon for "New tablet"
+    And I open the Tool Selector from the document menu
     When I click on Base64 tool card in selector
     And I wait for the page to stabilize
     Then I should see the Base64 encoder interface
@@ -40,7 +40,7 @@ Feature: Tablets Smoke Tests
 
   Scenario: Password Generator tablet loads and generates passwords
     When I click the icon for "New tab"
-    And I click the icon for "New tablet"
+    And I open the Tool Selector from the document menu
     And I select "Password Generator" from the tablet selector
     And I wait for the tablet to be ready
     Then the "Password Generator" tab should exist on the page
@@ -51,7 +51,7 @@ Feature: Tablets Smoke Tests
 
   Scenario: Lorem Ipsum Generator tablet loads and generates text
     When I click the icon for "New tab"
-    And I click the icon for "New tablet"
+    And I open the Tool Selector from the document menu
     And I select "Lorem Ipsum Generator" from the tablet selector
     And I wait for the tablet to be ready
     Then the "Lorem Ipsum Generator" tab should exist on the page
@@ -60,7 +60,7 @@ Feature: Tablets Smoke Tests
 
   Scenario: Cron Expression Builder tablet loads and parses expressions
     When I click the icon for "New tab"
-    And I click the icon for "New tablet"
+    And I open the Tool Selector from the document menu
     And I select "Cron Expression Builder" from the tablet selector
     And I wait for the tablet to be ready
     Then the "Cron Expression Builder" tab should exist on the page
@@ -69,7 +69,7 @@ Feature: Tablets Smoke Tests
 
   Scenario: Word Count tablet loads and counts text
     When I click the icon for "New tab"
-    And I click the icon for "New tablet"
+    And I open the Tool Selector from the document menu
     And I select "Word Count" from the tablet selector
     And I wait for the tablet to be ready
     Then the "Word Count" tab should exist on the page
@@ -79,7 +79,7 @@ Feature: Tablets Smoke Tests
 
   Scenario: URL Parser tablet loads and parses URLs
     When I click the icon for "New tab"
-    And I click the icon for "New tablet"
+    And I open the Tool Selector from the document menu
     And I select "URL Parser" from the tablet selector
     And I wait for the tablet to be ready
     Then the "URL Parser" tab should exist on the page
@@ -90,7 +90,7 @@ Feature: Tablets Smoke Tests
 
   Scenario: Checksum tablet loads and calculates hashes
     When I click the icon for "New tab"
-    And I click the icon for "New tablet"
+    And I open the Tool Selector from the document menu
     And I select "Checksum" from the tablet selector
     And I wait for the tablet to be ready
     Then the "Checksum" tab should exist on the page
@@ -100,7 +100,7 @@ Feature: Tablets Smoke Tests
 
   Scenario: Colour Palette tablet loads and generates colors
     When I click the icon for "New tab"
-    And I click the icon for "New tablet"
+    And I open the Tool Selector from the document menu
     And I select "Colour Palette" from the tablet selector
     And I wait for the tablet to be ready
     Then the "Colour Palette" tab should exist on the page
@@ -109,7 +109,7 @@ Feature: Tablets Smoke Tests
 
   Scenario: Converter tablet loads with conversion sections
     When I click the icon for "New tab"
-    And I click the icon for "New tablet"
+    And I open the Tool Selector from the document menu
     And I select "Converter" from the tablet selector
     And I wait for the tablet to be ready
     Then the "Converter" tab should exist on the page
@@ -118,7 +118,7 @@ Feature: Tablets Smoke Tests
 
   Scenario: Date & Time tablet loads and shows current time
     When I click the icon for "New tab"
-    And I click the icon for "New tablet"
+    And I open the Tool Selector from the document menu
     And I select "Date & Time" from the tablet selector
     And I wait for the tablet to be ready
     Then the "Date & Time" tab should exist on the page
@@ -127,7 +127,7 @@ Feature: Tablets Smoke Tests
 
   Scenario: QR Code Generator tablet loads and generates a QR code
     When I click the icon for "New tab"
-    And I click the icon for "New tablet"
+    And I open the Tool Selector from the document menu
     And I select "QR Code Generator" from the tablet selector
     And I wait for the tablet to be ready
     Then the "QR Code Generator" tab should exist on the page
@@ -138,7 +138,7 @@ Feature: Tablets Smoke Tests
 
   Scenario: TOTP 2FA Generator tablet loads and shows codes
     When I click the icon for "New tab"
-    And I click the icon for "New tablet"
+    And I open the Tool Selector from the document menu
     And I select "TOTP 2FA Generator" from the tablet selector
     And I wait for the tablet to be ready
     Then the "TOTP 2FA Generator" tab should exist on the page
@@ -152,7 +152,7 @@ Feature: Tablets Smoke Tests
 
   Scenario: Hex Viewer tablet loads and displays hex grid
     When I click the icon for "New tab"
-    And I click the icon for "New tablet"
+    And I open the Tool Selector from the document menu
     And I select "Hex Viewer / Binary Inspector" from the tablet selector
     And I wait for the tablet to be ready
     Then the "Hex Viewer / Binary Inspector" tab should exist on the page
@@ -162,7 +162,7 @@ Feature: Tablets Smoke Tests
 
   Scenario: Secret Scanner tablet detects and redacts a GitHub token
     When I click the icon for "New tab"
-    And I click the icon for "New tablet"
+    And I open the Tool Selector from the document menu
     And I select "Secret Scanner" from the tablet selector
     And I wait for the tablet to be ready
     Then the "Secret Scanner" tab should exist on the page
@@ -174,7 +174,7 @@ Feature: Tablets Smoke Tests
 
   Scenario: Webhook HMAC Verifier tablet validates a GitHub signature
     When I click the icon for "New tab"
-    And I click the icon for "New tablet"
+    And I open the Tool Selector from the document menu
     And I select "Webhook HMAC Verifier" from the tablet selector
     And I wait for the tablet to be ready
     Then the "Webhook HMAC Verifier" tab should exist on the page
@@ -185,7 +185,7 @@ Feature: Tablets Smoke Tests
 
   Scenario: Emoji as Data tablet loads and displays emojis
     When I click the icon for "New tab"
-    And I click the icon for "New tablet"
+    And I open the Tool Selector from the document menu
     And I select "Emoji as Data" from the tablet selector
     And I wait for the tablet to be ready
     Then the "Emoji as Data" tab should exist on the page

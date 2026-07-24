@@ -22,6 +22,11 @@ Feature: Canvas image cards
     And I replace the Canvas image
     Then I can open the replacement in the Image Smart View
 
+  Scenario: Copy an image with durable success feedback
+    When I add an image through the Canvas file chooser
+    And I copy the Canvas image
+    Then the Canvas image copy should show two-second success feedback
+
   Scenario: Reject an unsupported image without creating a card
     When I choose an unsupported file for a Canvas image
     Then I should see a Canvas image error and no image card

@@ -30,19 +30,14 @@ class ToolService {
      * Get all available tools
      */
     async getAllTools(): Promise<ToolItem[]> {
-        const { getCanvasFeatureEnabled } = await import(
-            "../features/canvas/utils/canvasFeatureFlag"
-        );
-        const documents: ToolItem[] = (await getCanvasFeatureEnabled())
-            ? [{
-                id: 'canvas',
-                type: 'document',
-                label: 'Canvas',
-                description: 'Create a spatial Canvas document',
-                icon: Layers,
-                keywords: ['canvas', 'board', 'spatial', 'document'],
-            }]
-            : [];
+        const documents: ToolItem[] = [{
+            id: 'canvas',
+            type: 'document',
+            label: 'Canvas',
+            description: 'Create a spatial Canvas document',
+            icon: Layers,
+            keywords: ['canvas', 'board', 'spatial', 'document'],
+        }];
         const tablets: ToolItem[] = tabletMetadata.map(tablet => ({
             id: tablet.id,
             type: 'tablet',

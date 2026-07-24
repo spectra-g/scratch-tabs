@@ -79,14 +79,9 @@ jest.mock("../../services/modelManager", () => ({
   },
 }));
 
-jest.mock("../../features/canvas/utils/canvasFeatureFlag", () => ({
-  getCanvasFeatureEnabled: jest.fn().mockResolvedValue(false),
-}));
-
 import { useTabsStore } from "../tabsStore";
 import { useSplitViewStore } from "../splitViewStore";
 import { useRootStore } from "../rootStore";
-import { getCanvasFeatureEnabled } from "../../features/canvas/utils/canvasFeatureFlag";
 
 describe("RootStore - Pinned Tabs Protection", () => {
   let tabsStoreMock: any;
@@ -329,16 +324,6 @@ describe("RootStore - Pinned Tabs Protection", () => {
     (Date.now as jest.Mock).mockRestore();
   });
 
-  it("should not create a Canvas when its feature setting is disabled", async () => {
-    const ensureWorkspace = jest.fn();
-    workspaceStoreMock.ensureWorkspace = ensureWorkspace;
-    (getCanvasFeatureEnabled as jest.Mock).mockResolvedValue(false);
-
-    await expect(rootStore.handleNewCanvas(false)).resolves.toBeUndefined();
-
-    expect(getCanvasFeatureEnabled).toHaveBeenCalledTimes(1);
-    expect(ensureWorkspace).not.toHaveBeenCalled();
-  });
 });
 
 describe("RootStore - duplicateTab insertion position", () => {

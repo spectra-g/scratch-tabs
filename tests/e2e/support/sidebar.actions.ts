@@ -127,6 +127,9 @@ export class SidebarActions {
     const tab = this.page.locator('[data-testid^="sidebar-tab-"]').filter({ hasText: tabTitle }).first();
     await expect(tab).toBeVisible();
     await tab.click();
+    await expect(
+      this.page.locator(`[data-testid="tab-${tabTitle}"][aria-selected="true"]`).first(),
+    ).toBeVisible();
   }
 
   /**

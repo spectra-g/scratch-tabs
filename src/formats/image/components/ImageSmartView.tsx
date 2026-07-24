@@ -11,7 +11,6 @@ import { imageMimeTypeToExtension } from "../utils/dataUri";
 import { ImageToolbar } from "./ImageToolbar";
 import { ImageStage } from "./ImageStage";
 import { ImageInspector } from "./ImageInspector";
-import { useCanvasFeatureEnabled } from "../../../features/canvas/hooks/useCanvasFeatureEnabled";
 import { SendToCanvasDialog } from "../../../features/canvas/components/SendToCanvasDialog";
 import type { CanvasSendSource } from "../../../features/canvas/utils/canvasSendSource";
 
@@ -48,7 +47,6 @@ export const ImageSmartView: React.FC<SmartViewProps> = ({
   const [notice, setNotice] = useState<string | null>(null);
   const [canvasSendSource, setCanvasSendSource] =
     useState<CanvasSendSource | null>(null);
-  const canvasEnabled = useCanvasFeatureEnabled();
 
   const renderedRef = useRef(rendered);
   const isModifiedRef = useRef(isModified);
@@ -161,18 +159,13 @@ export const ImageSmartView: React.FC<SmartViewProps> = ({
         onDownloadOriginal={() => parsed && downloadDataUri(content.trim(), makeImageFileName(sourceTitle, imageMimeTypeToExtension(parsed.mimeType)))}
         onOpenPalette={() => sendToPalette({ initialColors: rendered.palette })}
         onSendPalette={() => sendToPalette({ initialColors: rendered.palette })}
-        onSendCanvas={
-          canvasEnabled
-            ? () =>
-                setCanvasSendSource({
-                  kind: "image-data-uri",
-                  dataUri:
-                    showEdited && rendered.dataUri
-                      ? rendered.dataUri
-                      : content.trim(),
-                  fileName: makeImageFileName(sourceTitle, "png"),
-                })
-            : undefined
+        onSendCanvas={() =>
+          setCanvasSendSource({
+            kind: "image-data-uri",
+            dataUri:
+              showEdited && rendered.dataUri ? rendered.dataUri : content.trim(),
+            fileName: makeImageFileName(sourceTitle, "png"),
+          })
         }
         onBackgroundChange={setBackground}
       />

@@ -42,13 +42,56 @@ describe("CanvasImageActionService", () => {
 
     await service.copy(asset.id);
 
-    expect(clipboardItem).toHaveBeenCalledWith({ "image/png": asset.blob });
+    const clipboardBlob = clipboardItem.mock.calls[0][0]["image/png"];
+    expect(clipboardBlob).toBeInstanceOf(Promise);
+    await expect(clipboardBlob).resolves.toBe(asset.blob);
     expect(write).toHaveBeenCalledWith([
-      { contents: { "image/png": asset.blob } },
+      { contents: { "image/png": clipboardBlob } },
     ]);
   });
 
-  it("reports a missing asset instead of running an action", async () => {
+  it("starts the clipboard write before asynchronous asset loading completes", async () => {
+    let resolveAsset!: (value: CanvasAssetRecord) => void;
+    const assetPromise = new Promise<CanvasAssetRecord>((resolve) => {
+      resolveAsset = resolve;
+    });
+    const repository: CanvasAssetRepositoryContract = {
+      get: jest.fn().mockReturnValue(assetPromise),
+    };
+    const clipboardItem = jest.fn((contents) => ({ contents }));
+    Object.defineProperty(globalThis, "ClipboardItem", {
+      configurable: true,
+      value: clipboardItem,
+    });
+    const write = jest.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { write },
+    });
+
+    const copyPromise = new CanvasImageActionService(repository).copy(asset.id);
+
+    expect(write).toHaveBeenCalledTimes(1);
+    resolveAsset(asset);
+    await copyPromise;
+    await expect(
+      clipboardItem.mock.calls[0][0]["image/png"],
+    ).resolves.toBe(asset.blob);
+  });
+
+  it("reports a missing asset through the clipboard write", async () => {
+    const clipboardItem = jest.fn((contents) => ({ contents }));
+    Object.defineProperty(globalThis, "ClipboardItem", {
+      configurable: true,
+      value: clipboardItem,
+    });
+    const write = jest.fn(async ([item]) => {
+      await item.contents["image/png"];
+    });
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { write },
+    });
     const service = new CanvasImageActionService({
       get: jest.fn().mockResolvedValue(undefined),
     });

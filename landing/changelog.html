@@ -130,25 +130,52 @@
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
 
-        <!-- Version 1.43.0 -->
+        <!-- Version 1.44.0 -->
         <div class="changelog-entry latest">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-white">V1.43.0</h2>
+              <h2 class="text-2xl font-bold text-white">V1.44.0</h2>
               <span class="badge latest">LATEST</span>
             </div>
-            <span class="text-gray-500 text-xs font-mono">07/17/2026</span>
+            <span class="text-gray-500 text-xs font-mono">07/24/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">DATA RECONCILE TABLET</h3>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">SPATIAL CANVAS</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">Data Reconcile brings two-tab comparison to Scratch Tabs for text and CSV data. Match rows independently of order, filter inputs with regex scopes, normalise values, inspect changed CSV fields, and create cleaned copies when needed.</p>
+            <p class="mb-4">Spatial Canvas adds an infinite desktop workspace for arranging mixed developer content while keeping documents and image assets in local IndexedDB storage. Canvas participates in search, split view, workspace import and export, offline use, and keyboard-first editing.</p>
 
             <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
             <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Data Reconcile tablet:</strong> Compare whole lines or CSV rows across two tabs, preserving duplicate occurrences and keeping source tabs unchanged</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>CSV key matching:</strong> Pair different header names between sources, surface changed fields, and create cleaned copies or result tabs</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Fast entry points:</strong> Start a comparison from the tab context menu or directly from the CSV table toolbar</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Mixed local boards:</strong> Arrange text, JSON and code, local images, links, and click-to-load YouTube or Vimeo cards</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Keyboard-first navigation:</strong> Traverse cards spatially with Arrow keys or in reading order with Tab, then edit, move, duplicate, layer, delete, undo, and redo without a mouse</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Workspace integration:</strong> Create and send content to Canvas, search individual cards, use split view, and preserve boards through tab lifecycle and workspace import or export</span></li>
             </ul>
+
+            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># privacy_and_resilience</h4>
+            <ul class="space-y-2 mb-6">
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Local-first persistence:</strong> Canvas scenes and image blobs stay in IndexedDB and remain separate from normal tab content</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Explicit network loading:</strong> Link cards do not fetch preview metadata, and video embeds load only after Play is selected</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Recoverable saves:</strong> Storage failures keep local unsaved changes visible, report the error clearly, and provide an explicit retry</span></li>
+            </ul>
+
+            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># performance_and_accessibility</h4>
+            <ul class="space-y-2 mb-6">
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Large-board rendering:</strong> Large scenes render visible cards on demand while retaining deterministic document coordinates and navigation</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Accessible interaction:</strong> Roving focus, high-contrast focus rings, content-derived card labels, live navigation announcements, and shortcut help support keyboard and screen-reader workflows</span></li>
+            </ul>
+          </div>
+        </div>
+        <!-- Version 1.43.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.43.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">07/17/2026</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">DATA RECONCILE TABLET</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p>Compare rows across two tabs with whole-line or CSV key-column matching, then open or copy the results without changing either source.</p>
           </div>
         </div>
         <!-- Version 1.42.0 -->
@@ -906,7 +933,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.43.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.44.0</span>
         </div>
 
         <div class="flex space-x-8">

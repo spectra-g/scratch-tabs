@@ -8,6 +8,55 @@ Given(
   },
 );
 
+When(
+  "I complete the Canvas release workflow using only the keyboard",
+  async function (this: E2EWorld) {
+    await this.canvas.completeKeyboardReleaseWorkflow();
+  },
+);
+
+Then(
+  "the keyboard Canvas workflow should be restored accessibly",
+  async function (this: E2EWorld) {
+    await this.canvas.expectKeyboardReleaseWorkflowRestored();
+  },
+);
+
+When(
+  "I create and reload a mixed Canvas release board offline",
+  async function (this: E2EWorld) {
+    await this.canvas.createMixedReleaseBoard();
+  },
+);
+
+Then(
+  "every mixed Canvas card should remain usable offline",
+  async function (this: E2EWorld) {
+    await this.canvas.expectMixedReleaseBoardOffline();
+  },
+);
+
+When(
+  "I exhaust storage while saving Canvas text {string}",
+  async function (this: E2EWorld, text: string) {
+    await this.canvas.exhaustQuotaForNextSceneSave(text);
+  },
+);
+
+Then(
+  "the Canvas should show unsaved state and recover when I retry",
+  async function (this: E2EWorld) {
+    await this.canvas.expectFailedSaveAndRetry();
+  },
+);
+
+Then(
+  "split Canvas shortcuts and narrow fallbacks should remain isolated",
+  async function (this: E2EWorld) {
+    await this.canvas.verifySplitShortcutIsolationAndNarrowFallback();
+  },
+);
+
 Given("I am using a Canvas desktop viewport", async function (this: E2EWorld) {
   await this.canvas.useDesktopViewport();
 });
@@ -175,6 +224,17 @@ When(
 When("I replace the Canvas image", async function (this: E2EWorld) {
   await this.canvas.replaceImageCard();
 });
+
+When("I copy the Canvas image", async function (this: E2EWorld) {
+  await this.canvas.copyImageCard();
+});
+
+Then(
+  "the Canvas image copy should show two-second success feedback",
+  async function (this: E2EWorld) {
+    await this.canvas.expectImageCopyFeedback();
+  },
+);
 
 When(
   "I choose an unsupported file for a Canvas image",

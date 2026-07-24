@@ -3,17 +3,12 @@ import { useContextMenuConfig } from '../UseContextMenuConfig';
 import { useTabsStore } from '../../../stores/tabsStore';
 import { Tab } from '../../../types';
 
-const mockCanvasFeatureEnabled = jest.fn(() => false);
-
 // Mock dependencies
 jest.mock('../../../stores/tabsStore');
 jest.mock('../../../stores/splitViewStore');
 jest.mock('../../../stores/rootStore');
 jest.mock('../../../stores/macroStore');
 jest.mock('../../../services/modelManager');
-jest.mock('../../../features/canvas/hooks/useCanvasFeatureEnabled', () => ({
-  useCanvasFeatureEnabled: () => mockCanvasFeatureEnabled(),
-}));
 
 // Import store types for proper mocking
 import { useSplitViewStore } from '../../../stores/splitViewStore';
@@ -50,8 +45,6 @@ describe('UseContextMenuConfig - Actions and Structure', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockCanvasFeatureEnabled.mockReturnValue(false);
-
     mockUseTabsStore.mockReturnValue({
       tabs: [mockTab, mockTabletTab],
     } as any);
@@ -260,8 +253,6 @@ describe('UseContextMenuConfig - Actions and Structure', () => {
   });
 
   it('shows Canvas actions for text tabs and disables unavailable sources', () => {
-    mockCanvasFeatureEnabled.mockReturnValue(true);
-
     const { result } = renderHook(() =>
       useContextMenuConfig('test-tab-id', false, mockCloseContextMenu)
     );

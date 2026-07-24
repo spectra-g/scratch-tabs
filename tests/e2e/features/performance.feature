@@ -5,7 +5,7 @@ Feature: Performance and Language Detection
 
   Scenario: Handle large JSON file and verify language detection
     When I generate a 1.5MB JSON file and set it to clipboard
-    And I click the icon for "New tab with contents from clipboard"
+    And I create a new tab from the document menu and clipboard
     Then the "Welcome" tab should exist and not be active
     And the "Scratch 1" tab should be active
     And the first 10 lines of the editor should contain JSON content

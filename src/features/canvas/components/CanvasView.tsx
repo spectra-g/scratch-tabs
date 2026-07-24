@@ -20,10 +20,12 @@ const CanvasView = ({ tab }: CanvasViewProps) => {
     remoteRevision,
     reloadKey,
     isResolvingConflict,
+    isRetryingSave,
     saveViewport,
     updateItems,
     reloadAfterConflict,
     takeOverAfterConflict,
+    retrySave,
   } = useCanvasDocument(tab);
 
   if (status === "error" && !activeDocument) {
@@ -62,11 +64,13 @@ const CanvasView = ({ tab }: CanvasViewProps) => {
       error={error}
       remoteRevision={remoteRevision}
       isResolvingConflict={isResolvingConflict}
+      isRetryingSave={isRetryingSave}
       updateItems={updateItems}
       imageOperations={imageOperations}
       saveViewport={saveViewport}
       onReloadConflict={() => void reloadAfterConflict()}
       onTakeOverConflict={() => void takeOverAfterConflict()}
+      onRetrySave={() => void retrySave()}
     />
   );
 };

@@ -6,7 +6,6 @@ import { EmptyStateActionCard } from "./EmptyStateActionCard";
 import { useFileImport } from "../../hooks/useFileImport";
 import { ToolSelectorModal } from "../ToolSelector";
 import { toolService, ToolItem } from "../../services/toolService";
-import { useCanvasFeatureEnabled } from "../../features/canvas/hooks/useCanvasFeatureEnabled";
 
 /**
  * WorkspaceEmptyState
@@ -29,7 +28,6 @@ export const WorkspaceEmptyState: React.FC = () => {
   const { activeWorkspaceId, workspaces } = useWorkspaceStore();
   const containerRef = useRef<HTMLDivElement>(null);
   const [showToolSelector, setShowToolSelector] = useState(false);
-  const canvasEnabled = useCanvasFeatureEnabled();
 
   // Memoize workspace lookup to avoid unnecessary recomputation on render.
   const currentWorkspace = useMemo(
@@ -149,16 +147,14 @@ export const WorkspaceEmptyState: React.FC = () => {
           onClick={handleNewTabClick}
           testId="new-tab-action"
         />
-        {canvasEnabled && (
-          <EmptyStateActionCard
-            label="New Canvas"
-            description="Spatial workspace"
-            icon="canvas"
-            colorScheme="primary"
-            onClick={handleNewCanvasClick}
-            testId="new-canvas-action"
-          />
-        )}
+        <EmptyStateActionCard
+          label="New Canvas"
+          description="Spatial workspace"
+          icon="canvas"
+          colorScheme="primary"
+          onClick={handleNewCanvasClick}
+          testId="new-canvas-action"
+        />
         <EmptyStateActionCard
           label="Paste"
           description="From Clipboard"

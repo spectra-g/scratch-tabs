@@ -39,18 +39,6 @@ export class TabBarActions {
     await button.click();
   }
 
-  async clickNewTabFromPaste() {
-    // Use stable test ID instead of title
-    const button = this.page.locator('[data-testid="icon-new-tab-from-clipboard"]');
-    await button.click();
-  }
-
-  async clickNewTablet() {
-    // Use stable test ID instead of title
-    const button = this.page.locator('[data-testid="icon-new-tablet"]');
-    await button.click();
-  }
-
   async selectTablet(tabletName: string) {
     // Wait for the tool selector modal to appear using its accessible role and label
     const toolSelector = this.page.getByRole('dialog', { name: 'Tool Selector' });
@@ -182,4 +170,4 @@ export class TabBarActions {
     await expect(activeTab).toBeVisible();
     await activeTab.dblclick({ force: true });
   }
-} 
+}

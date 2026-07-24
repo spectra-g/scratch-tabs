@@ -3,7 +3,6 @@ import { NewDocumentMenu } from "../NewDocumentMenu";
 
 describe("NewDocumentMenu", () => {
   const props = {
-    canvasEnabled: true,
     onCreateText: jest.fn(),
     onCreateCanvas: jest.fn(),
     onCreateFromClipboard: jest.fn(),
@@ -56,10 +55,4 @@ describe("NewDocumentMenu", () => {
     expect(trigger).toHaveFocus();
   });
 
-  it("hides Canvas while its feature flag is disabled", () => {
-    render(<NewDocumentMenu {...props} canvasEnabled={false} />);
-    fireEvent.click(screen.getByRole("button", { name: "Choose document type" }));
-
-    expect(screen.queryByRole("menuitem", { name: "Canvas" })).not.toBeInTheDocument();
-  });
 });

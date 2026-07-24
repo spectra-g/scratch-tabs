@@ -282,6 +282,12 @@ describe("Canvas schemas", () => {
     expect(() => parseCanvasDocument({ ...valid, schemaVersion: 2 })).toThrow(
       "Unsupported Canvas schema version",
     );
+    expect(() => parseCanvasDocument({ ...valid, revision: -1 })).toThrow(
+      "revision must be a non-negative integer",
+    );
+    expect(() => parseCanvasDocument({ ...valid, revision: 1.5 })).toThrow(
+      "revision must be a non-negative integer",
+    );
     expect(() => parseCanvasDocument({ ...valid, items: [{}] })).toThrow(
       "unsupported item type",
     );
@@ -317,5 +323,13 @@ describe("Canvas schemas", () => {
       }),
     ).toThrow("references a missing item");
     expect(() => parseCanvasSession({})).toThrow("session and viewport");
+    expect(() =>
+      parseCanvasSession({
+        tabId: "tab-1",
+        viewport: { x: 0, y: 0, zoom: 0 },
+        lastTool: "select",
+        updatedAt: 1,
+      }),
+    ).toThrow("viewport zoom must be positive");
   });
 });

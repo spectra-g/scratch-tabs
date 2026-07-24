@@ -45,6 +45,19 @@ const requireNumber = (
   return value;
 };
 
+const requireNonNegativeInteger = (
+  record: Record<string, unknown>,
+  key: string,
+): number => {
+  const value = requireNumber(record, key);
+  if (!Number.isInteger(value) || value < 0) {
+    throw new Error(
+      `Invalid Canvas schema: ${key} must be a non-negative integer`,
+    );
+  }
+  return value;
+};
+
 const parseBackground = (value: unknown): CanvasBackground => {
   if (value === "dots" || value === "grid" || value === "none") return value;
   throw new Error("Invalid Canvas schema: unsupported background");
@@ -308,7 +321,7 @@ export const parseCanvasDocument = (value: unknown): CanvasDocument => {
     throw new Error("Invalid Canvas schema: document must be an object");
   }
 
-  const schemaVersion = requireNumber(value, "schemaVersion");
+  const schemaVersion = requireNonNegativeInteger(value, "schemaVersion");
   if (schemaVersion !== CANVAS_SCHEMA_VERSION) {
     throw new Error(`Unsupported Canvas schema version: ${schemaVersion}`);
   }
@@ -341,7 +354,7 @@ export const parseCanvasDocument = (value: unknown): CanvasDocument => {
     tabId: requireString(value, "tabId"),
     workspaceId: requireString(value, "workspaceId"),
     schemaVersion,
-    revision: requireNumber(value, "revision"),
+    revision: requireNonNegativeInteger(value, "revision"),
     items,
     edges,
     settings: {
@@ -360,12 +373,17 @@ export const parseCanvasSession = (value: unknown): CanvasSessionRecord => {
     );
   }
 
+  const zoom = requireNumber(value.viewport, "zoom");
+  if (zoom <= 0) {
+    throw new Error("Invalid Canvas schema: viewport zoom must be positive");
+  }
+
   return {
     tabId: requireString(value, "tabId"),
     viewport: {
       x: requireNumber(value.viewport, "x"),
       y: requireNumber(value.viewport, "y"),
-      zoom: requireNumber(value.viewport, "zoom"),
+      zoom,
     },
     lastTool: requireString(value, "lastTool"),
     updatedAt: requireNumber(value, "updatedAt"),

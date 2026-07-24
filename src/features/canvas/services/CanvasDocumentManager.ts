@@ -46,6 +46,7 @@ interface DocumentSaveQueue {
   lastParentTabUpdate: number | null;
   latestKnownRevision: number;
   conflict?: CanvasConflict;
+  saveError?: string;
 }
 
 type SaveStateListener = (state: CanvasDocumentSaveState) => void;
@@ -330,6 +331,7 @@ export class CanvasDocumentManager {
     if (!queue) throw new Error(`Canvas save queue ${tabId} is not active`);
 
     queue.dirtyVersion += 1;
+    queue.saveError = undefined;
     if (queue.latestKnownRevision > active.document.revision) {
       this.enterConflict(tabId, queue.latestKnownRevision);
       return;
@@ -392,6 +394,7 @@ export class CanvasDocumentManager {
         };
         queue.savedVersion = versionBeingSaved;
         queue.latestKnownRevision = documentToSave.revision;
+        queue.saveError = undefined;
         if (updateParentTab) queue.lastParentTabUpdate = savedAt;
         const hasPendingChanges = queue.dirtyVersion > versionBeingSaved;
         this.notify(tabId, {
@@ -406,13 +409,12 @@ export class CanvasDocumentManager {
           this.enterConflict(tabId, error.storedRevision);
           return;
         }
+        queue.saveError =
+          error instanceof Error ? error.message : "Unable to save this Canvas";
         this.notify(tabId, {
           status: "error",
           revision: active.document.revision,
-          error:
-            error instanceof Error
-              ? error.message
-              : "Unable to save this Canvas",
+          error: queue.saveError,
         });
         throw error;
       })
@@ -421,7 +423,8 @@ export class CanvasDocumentManager {
         if (
           queue.dirtyVersion > versionBeingSaved &&
           !queue.timer &&
-          !queue.conflict
+          !queue.conflict &&
+          !queue.saveError
         ) {
           queue.timer = setTimeout(() => {
             queue.timer = undefined;
@@ -505,6 +508,29 @@ export class CanvasDocumentManager {
     await this.flush(tabId);
   }
 
+  async retrySave(tabId: string): Promise<void> {
+    const active = this.requireActive(tabId);
+    const queue = this.documentSaveQueues.get(tabId);
+    if (!queue) throw new Error(`Canvas save queue ${tabId} is not active`);
+    if (queue.conflict) {
+      throw new Error("Resolve the Canvas revision conflict before retrying");
+    }
+
+    queue.saveError = undefined;
+    if (queue.dirtyVersion === queue.savedVersion) {
+      this.notify(tabId, {
+        status: "saved",
+        revision: active.document.revision,
+      });
+      return;
+    }
+    this.notify(tabId, {
+      status: "saving",
+      revision: active.document.revision,
+    });
+    await this.flush(tabId);
+  }
+
   async reloadAfterConflict(tabId: string): Promise<ActiveCanvasDocument> {
     const active = this.requireActive(tabId);
     const queue = this.documentSaveQueues.get(tabId);
@@ -528,6 +554,7 @@ export class CanvasDocumentManager {
     queue.savedVersion = 0;
     queue.latestKnownRevision = stored.revision;
     queue.conflict = undefined;
+    queue.saveError = undefined;
     queue.lastParentTabUpdate = stored.revision === 0 ? null : stored.updatedAt;
     this.notify(tabId, {
       status: "saved",
@@ -571,6 +598,7 @@ export class CanvasDocumentManager {
     queue.savedVersion = queue.dirtyVersion;
     queue.latestKnownRevision = saved.revision;
     queue.conflict = undefined;
+    queue.saveError = undefined;
     queue.lastParentTabUpdate = savedAt;
     this.notify(tabId, {
       status: "saved",

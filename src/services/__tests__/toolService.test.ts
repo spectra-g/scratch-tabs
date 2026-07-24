@@ -40,10 +40,6 @@ jest.mock('../../db', () => ({
     getRecentTools: jest.fn().mockResolvedValue([]),
     addRecentTool: jest.fn().mockResolvedValue(undefined),
 }));
-jest.mock('../../features/canvas/utils/canvasFeatureFlag', () => ({
-    getCanvasFeatureEnabled: jest.fn().mockResolvedValue(true),
-}));
-
 describe('ToolService', () => {
     beforeEach(() => {
         jest.clearAllMocks();

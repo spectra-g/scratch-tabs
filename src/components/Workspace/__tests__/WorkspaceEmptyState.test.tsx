@@ -10,9 +10,6 @@ import { useFileImport } from '../../../hooks/useFileImport';
 jest.mock('../../../stores/rootStore');
 jest.mock('../../../stores/workspaceStore');
 jest.mock('../../../hooks/useFileImport');
-jest.mock('../../../features/canvas/hooks/useCanvasFeatureEnabled', () => ({
-  useCanvasFeatureEnabled: () => true,
-}));
 jest.mock('../../ToolSelector', () => ({
   ToolSelectorModal: ({ isOpen, onClose }: any) =>
     isOpen ? <div data-testid="tool-selector-modal" onClick={onClose}>Tool Selector</div> : null

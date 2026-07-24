@@ -81,7 +81,6 @@ const HeroActionCard: React.FC<HeroActionCardProps> = ({
 export const WelcomeScreen: React.FC = () => {
   const { handleNewTab, handleNewCanvas, handleNewPopulatedTab } = useRootStore();
   const welcomeRef = useRef<HTMLDivElement>(null);
-  const tabletButtonRef = useRef<HTMLButtonElement>(null);
 
   const location = useLocation();
   const pathSegments = location.pathname.split("/").filter(Boolean);
@@ -293,7 +292,6 @@ export const WelcomeScreen: React.FC = () => {
       <div className="flex justify-end bg-surface h-8">
         <TabActions
           onShowTabletSelector={() => setShowToolSelector(true)}
-          tabletButtonRef={tabletButtonRef}
         />
       </div>
 
@@ -319,7 +317,7 @@ export const WelcomeScreen: React.FC = () => {
               />
               <h1 className="text-xl md:text-3xl font-mono font-medium text-main">SCRATCH_TABS</h1>
             </div>
-            <p className="text-muted text-xs md:text-sm font-mono mb-4 md:mb-6">// v1.43.0</p>
+            <p className="text-muted text-xs md:text-sm font-mono mb-4 md:mb-6">// v1.44.0</p>
 
             {/* Value Proposition */}
             <h2 className="text-lg md:text-2xl font-semibold text-main mb-2 md:mb-4">

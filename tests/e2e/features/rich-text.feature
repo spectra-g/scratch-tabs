@@ -45,7 +45,7 @@ Feature: Rich Text Editor
 
   Scenario: Image paste creates rich text tab with proper title and content
     When I set clipboard content to contain an image
-    And I click the icon for "New tab with contents from clipboard"
+    And I create a new tab from the document menu and clipboard
     Then the "Scratch 2" tab should be active
     And I should see the Rich Text editor is displayed
     And the Rich Text editor should contain an image

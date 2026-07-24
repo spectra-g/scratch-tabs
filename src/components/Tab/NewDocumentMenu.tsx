@@ -9,7 +9,6 @@ import {
 } from "../Icons";
 
 interface NewDocumentMenuProps {
-  canvasEnabled: boolean;
   onCreateText: () => void;
   onCreateCanvas: () => void;
   onCreateFromClipboard: () => void;
@@ -21,7 +20,6 @@ const MENU_WIDTH_PX = 208;
 const VIEWPORT_MARGIN_PX = 8;
 
 export const NewDocumentMenu = ({
-  canvasEnabled,
   onCreateText,
   onCreateCanvas,
   onCreateFromClipboard,
@@ -113,14 +111,12 @@ export const NewDocumentMenu = ({
             onClick={() => run(onCreateText)}
             testId="new-document-text"
           />
-          {canvasEnabled && (
-            <MenuButton
-              label="Canvas"
-              icon={Layers}
-              onClick={() => run(onCreateCanvas)}
-              testId="icon-new-canvas"
-            />
-          )}
+          <MenuButton
+            label="Canvas"
+            icon={Layers}
+            onClick={() => run(onCreateCanvas)}
+            testId="icon-new-canvas"
+          />
           <div className="my-1 border-t border-base" />
           <MenuButton
             label="From Clipboard"
