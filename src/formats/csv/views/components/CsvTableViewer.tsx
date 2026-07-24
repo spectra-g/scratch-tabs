@@ -1461,7 +1461,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
         columnCount={columns.length}
         diagnostics={diagnostics}
         isValid={isValid}
-        onCompareTab={() => tabletActionService.handleAction({
+        onReconcileTab={() => tabletActionService.handleAction({
           targetTablet: "datareconcile",
           action: "new-tab",
           payload: { sourceAId: tabId, csvMode: true },
