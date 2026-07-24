@@ -23,29 +23,21 @@ export const RELEASES: Release[] = [
     "type": "latest",
     "date": "2026-07-24",
     "headline": "Spatial Canvas",
-    "summary": "Arrange text, code, images, links, and videos on a durable local-first spatial workspace with keyboard navigation, search, and workspace lifecycle support.",
+    "summary": "Arrange code, notes, images, links, and videos on a local-first infinite canvas.",
     "categories": [
       {
         "name": "New Features",
         "changes": [
-          "**Mixed local boards:** Arrange text, JSON and code, local images, links, and click-to-load YouTube or Vimeo cards",
-          "**Keyboard-first navigation:** Traverse cards spatially with Arrow keys or in reading order with Tab, then edit, move, duplicate, layer, delete, undo, and redo without a mouse",
-          "**Workspace integration:** Create and send content to Canvas, search individual cards, use split view, and preserve boards through tab lifecycle and workspace import or export"
+          "**Mixed content:** Add text, code and JSON, local images, links, and click-to-load YouTube or Vimeo cards",
+          "**Spatial controls:** Pan, zoom, resize, multi-select, layer, duplicate, undo, redo, and navigate by keyboard",
+          "**Fast capture:** Paste or drop content, or send a tab or selection to a new or existing Canvas"
         ]
       },
       {
-        "name": "Privacy and Resilience",
+        "name": "Local-First Workspace",
         "changes": [
-          "**Local-first persistence:** Canvas scenes and image blobs stay in IndexedDB and remain separate from normal tab content",
-          "**Explicit network loading:** Link cards do not fetch preview metadata, and video embeds load only after Play is selected",
-          "**Recoverable saves:** Storage failures keep local unsaved changes visible, report the error clearly, and provide an explicit retry"
-        ]
-      },
-      {
-        "name": "Performance and Accessibility",
-        "changes": [
-          "**Large-board rendering:** Large scenes render visible cards on demand while retaining deterministic document coordinates and navigation",
-          "**Accessible interaction:** Roving focus, high-contrast focus rings, content-derived card labels, live navigation announcements, and shortcut help support keyboard and screen-reader workflows"
+          "**Private persistence:** Canvas documents and images stay in local IndexedDB and work offline",
+          "**Workspace integration:** Search cards, use split view, and preserve Canvas content through workspace import and export"
         ]
       }
     ]
