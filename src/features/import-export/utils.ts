@@ -20,8 +20,15 @@ export const stableStringifyDataBlock = (dataBlock: ExportData): string => {
 /**
  * Generates a SHA-256 checksum for a given string.
  */
-export async function generateSha256(str: string): Promise<string> {
-  const buffer = new TextEncoder().encode(str);
+export async function generateSha256(
+  value: string | Uint8Array | ArrayBuffer,
+): Promise<string> {
+  const buffer =
+    typeof value === "string"
+      ? new TextEncoder().encode(value)
+      : value instanceof Uint8Array
+        ? value
+        : new Uint8Array(value);
   const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -58,9 +65,7 @@ export function triggerDownload(blob: Blob, filename: string): void {
  * Reads and unzips a .scratch file.
  * Returns the content of export-data.json and checksum.sha256.
  */
-export async function readZipArchive(
-  file: File,
-): Promise<{
+export async function readZipArchive(file: File): Promise<{
   jsonDataString?: string;
   checksumString?: string;
   error?: string;

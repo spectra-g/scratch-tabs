@@ -119,9 +119,7 @@ export const ImportWorkspacesModal: React.FC<ImportWorkspacesModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-main">
-            Import Workspaces
-          </h2>
+          <h2 className="text-xl font-semibold text-main">Import Workspaces</h2>
           <button
             onClick={handleClose}
             className="icon-themed icon-themed-hover"
@@ -183,13 +181,29 @@ export const ImportWorkspacesModal: React.FC<ImportWorkspacesModalProps> = ({
                 </ul>
               </div>
             )}
+            {summary.canvasErrors.length > 0 && (
+              <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-md">
+                <h4 className="font-semibold text-yellow-300 mb-1 flex items-center">
+                  <AlertTriangle size={18} className="mr-2" />
+                  Canvas items skipped:
+                </h4>
+                <ul className="list-disc list-inside text-sm text-yellow-200 space-y-1">
+                  {summary.canvasErrors.map((err, idx) => (
+                    <li key={idx}>{err}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {summary.importedWorkspaces.length > 0 && (
               <div className="space-y-2">
                 <h4 className="font-semibold text-secondary mb-1">
                   Successfully Processed Workspaces:
                 </h4>
                 {summary.importedWorkspaces.map((item, idx) => (
-                  <div key={idx} className="p-3 bg-surface-highlight rounded-md">
+                  <div
+                    key={idx}
+                    className="p-3 bg-surface-highlight rounded-md"
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
                         <CheckCircle
@@ -205,6 +219,12 @@ export const ImportWorkspacesModal: React.FC<ImportWorkspacesModalProps> = ({
                     {item.status === "merged" && item.reason && (
                       <p className="text-xs text-yellow-400/80 mt-1 ml-6">
                         {item.reason}
+                      </p>
+                    )}
+                    {!!item.skippedCanvasCount && (
+                      <p className="text-xs text-yellow-400/80 mt-1 ml-6">
+                        {item.skippedCanvasCount} Canvas tab
+                        {item.skippedCanvasCount === 1 ? "" : "s"} skipped
                       </p>
                     )}
                   </div>
@@ -231,6 +251,6 @@ export const ImportWorkspacesModal: React.FC<ImportWorkspacesModalProps> = ({
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 };

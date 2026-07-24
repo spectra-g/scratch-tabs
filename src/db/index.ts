@@ -438,7 +438,15 @@ export class IndexedDBStorage implements StorageProvider {
           db.workspaces,
           db.tabs,
           db.splitView,
+          db.canvasDocuments,
+          db.canvasAssets,
+          db.canvasSessions,
           async () => {
+            const canvasDocuments = await db.canvasDocuments
+              .where("workspaceId")
+              .equals(id)
+              .toArray();
+
             // 1. Delete tabs associated with the workspace
             // This will delete all tab records where the 'workspaceId' property equals the given 'id'.
             await db.tabs.where("workspaceId").equals(id).delete();
@@ -448,7 +456,22 @@ export class IndexedDBStorage implements StorageProvider {
             // This will delete all splitView records where the 'workspaceId' property equals the given 'id'.
             await db.splitView.where("workspaceId").equals(id).delete();
 
-            // 3. Delete the workspace itself
+            // 3. Delete Canvas scenes, their viewport sessions, and assets.
+            // Assets are workspace-scoped, so removing all of them is safe when
+            // the complete workspace is being deleted.
+            const canvasTabIds = [
+              ...new Set(canvasDocuments.map((document) => document.tabId)),
+            ];
+            if (canvasTabIds.length > 0) {
+              await db.canvasSessions.bulkDelete(canvasTabIds);
+            }
+            await db.canvasDocuments
+              .where("workspaceId")
+              .equals(id)
+              .delete();
+            await db.canvasAssets.where("workspaceId").equals(id).delete();
+
+            // 4. Delete the workspace itself
             // This is done last; if any of the above deletions fail, the transaction
             // will roll back, and the workspace will not be deleted either.
             await db.workspaces.delete(id);

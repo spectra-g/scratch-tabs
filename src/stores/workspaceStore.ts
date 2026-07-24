@@ -388,6 +388,9 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => {
 
       set({ isLoading: true });
       try {
+        if (activeWorkspaceId === workspaceId) {
+          await canvasLifecycleCoordinator.flushActiveDocuments();
+        }
         await storage.deleteWorkspace(workspaceId);
 
         // If the deleted workspace was active, switch to another one
