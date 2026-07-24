@@ -15,7 +15,7 @@ interface UseImagePasteHandlerParams {
   setPendingImageCursorPosition: (
     position: Monaco.IPosition | null
   ) => void;
-  /** Callback to trigger upgrade modal */
+  /** Callback to show the image paste options */
   onShowUpgradeModal: () => void;
 }
 
@@ -25,7 +25,7 @@ interface UseImagePasteHandlerParams {
  * 1. Prevents default paste behavior
  * 2. Captures cursor position
  * 3. Converts image to data URL
- * 4. Triggers upgrade modal for rich text conversion
+ * 4. Shows the Monaco image paste options
  *
  * @param params - Configuration for the paste handler
  */

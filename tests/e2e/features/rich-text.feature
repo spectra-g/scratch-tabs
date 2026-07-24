@@ -57,14 +57,45 @@ Feature: Rich Text Editor
     Then the Monaco editor should contain "This is plain text content"
     When I set clipboard content to contain an image
     And I paste into the editor
-    Then I should see the rich text conversion modal with "Convert to Rich Text?" title
-    And the modal should contain "It looks like you've pasted an image"
-    When I click "Convert to Rich Text" in the modal
+    Then I should see the rich text conversion modal with "Paste image" title
+    And the modal should contain "How would you like to use this image?"
+    When I click "Paste in Rich Text" in the modal
     Then the modal should be dismissed
     And I should see the Rich Text editor is displayed
     And the Rich Text editor should contain an image
     And the Rich Text editor should contain the text "This is plain text content"
     And I should see the date created text with "now" time
+
+  Scenario: Paste image data into an empty Monaco tab
+    Given I am on a plain text editor tab
+    When I set clipboard content to contain an image
+    And I paste into the editor
+    Then the modal should contain "Paste as data URL"
+    When I click "Paste as data URL" in the modal
+    Then the modal should be dismissed
+    And I should see the Monaco editor is displayed
+    And the Monaco editor should contain "data:image/png;base64"
+    And the status bar language should be "Image"
+
+  Scenario: Paste image data into a new tab when Monaco has content
+    Given I am on a plain text editor tab
+    When I type "Keep this content" in the Monaco editor
+    And I set clipboard content to contain an image
+    And I paste into the editor
+    Then the modal should contain "Open data URL in new tab"
+    When I click "Open data URL in new tab" in the modal
+    Then the modal should be dismissed
+    And the "Pasted image data" tab should be active
+    And the Monaco editor should contain "data:image/png;base64"
+    And the status bar language should be "Image"
+
+  Scenario: Paste a Monaco image into Canvas
+    Given I am on a plain text editor tab
+    When I set clipboard content to contain an image
+    And I paste into the editor
+    And I click "Paste in Canvas" in the modal
+    Then the "Canvas 1" tab should be active
+    And the Canvas image and its dimensions should be restored
 
   Scenario: Rich text toolbar heading controls
     Given I am on a plain text editor tab

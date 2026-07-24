@@ -76,6 +76,26 @@ export function imageMimeTypeToExtension(mimeType: string): string {
   }
 }
 
+export function imageDataUriToFile(
+  dataUri: string,
+  baseName = "pasted-image",
+): File | null {
+  const parsed = parseImageDataUri(dataUri);
+  if (!parsed) return null;
+
+  const binary = atob(parsed.base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+
+  return new File(
+    [bytes],
+    `${baseName}.${imageMimeTypeToExtension(parsed.mimeType)}`,
+    { type: parsed.mimeType },
+  );
+}
+
 export function formatBytes(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes < 0) return "0 B";
   if (bytes < 1024) return `${bytes} B`;

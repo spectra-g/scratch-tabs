@@ -24,6 +24,7 @@ import { useCalloutStore } from "../../stores/calloutStore";
 import { SmartViewCalloutWidget } from "./SmartViewCalloutWidget";
 import { useThemeStore } from "../../stores/themeStore";
 import { useSidebarStore } from "../../stores/sidebarStore";
+import { imageDataUriToFile } from "../../formats/image/utils/dataUri";
 
 interface EditorInstanceProps {
   side: "left" | "right";
@@ -599,47 +600,88 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
 
 
 
-  // Upgrade modal handlers
-  const handleUpgradeConfirm = () => {
+  const clearPendingImage = () => {
+    const {
+      setPendingImageData,
+      setPendingImageCursorPosition,
+      setPendingImageCursorOffset,
+    } = useClipboardStore.getState();
+    setPendingImageData(null);
+    setPendingImageCursorPosition(null);
+    setPendingImageCursorOffset(null);
+  };
+
+  const closeImagePasteOptions = () => {
+    clearPendingImage();
+    setShowUpgradeModal(false);
+  };
+
+  const handlePasteInRichText = () => {
     setShowUpgradeModal(false);
     if (onUpgradeToRich) {
       onUpgradeToRich();
     }
   };
 
-  const handleUpgradeCancel = () => {
-    const { setPendingImageData, setPendingImageCursorPosition, setPendingImageCursorOffset } = useClipboardStore.getState();
-    setPendingImageData(null);
-    setPendingImageCursorPosition(null);
-    setPendingImageCursorOffset(null);
-    setShowUpgradeModal(false);
-  };
+  const isCurrentTabEmpty =
+    (modelManager.getContent(activeTabId) ?? activeTab?.content ?? "").trim() ===
+    "";
 
-  const handleOpenAsImageTab = () => {
-    const { pendingImageData, setPendingImageData, setPendingImageCursorPosition, setPendingImageCursorOffset } = useClipboardStore.getState();
-    if (pendingImageData) {
-      const { handleNewPopulatedTab } = useRootStore.getState();
-      handleNewPopulatedTab(
+  const handlePasteAsDataUrl = async () => {
+    const { pendingImageData } = useClipboardStore.getState();
+    if (!pendingImageData || !activeTab) return;
+
+    if (isCurrentTabEmpty) {
+      updateTabState(activeTab.id, {
+        content: pendingImageData,
+        language: "image",
+        languageLocked: true,
+        activeViewId: null,
+        lastModified: Date.now(),
+      });
+      modelManager.replaceModelContentWithUndo(activeTab.id, pendingImageData);
+      modelManager.updateModelLanguage(activeTab.id, "image");
+    } else {
+      await useRootStore.getState().handleNewPopulatedTab(
         {
           id: crypto.randomUUID(),
-          title: "image",
+          title: "Pasted image data",
           content: pendingImageData,
           language: "image",
           languageLocked: true,
           cursorPosition: { lineNumber: 1, column: 1 },
           dateCreated: Date.now(),
           lastModified: Date.now(),
-          workspaceId: activeTab?.workspaceId || "",
+          workspaceId: activeTab.workspaceId,
         },
         side === "right",
       );
     }
-    setPendingImageData(null);
-    setPendingImageCursorPosition(null);
-    setPendingImageCursorOffset(null);
+
+    clearPendingImage();
     setShowUpgradeModal(false);
   };
 
+  const handlePasteInCanvas = async () => {
+    const { pendingImageData } = useClipboardStore.getState();
+    if (!pendingImageData || !activeTab) return;
+
+    const imageFile = imageDataUriToFile(pendingImageData);
+    if (!imageFile) {
+      throw new Error("The pasted image data is invalid.");
+    }
+
+    const { canvasActionService } = await import(
+      "../../features/canvas/services/CanvasActionService"
+    );
+    await canvasActionService.send(
+      activeTab.workspaceId,
+      [{ kind: "file", file: imageFile }],
+      { kind: "new", side },
+    );
+    clearPendingImage();
+    setShowUpgradeModal(false);
+  };
 
   return (
     <div className="flex flex-col h-full w-full bg-surface">
@@ -686,9 +728,11 @@ export const EditorInstance: React.FC<EditorInstanceProps> = ({
       </div>
       <UpgradeConfirmationModal
         isOpen={showUpgradeModal}
-        onConfirm={handleUpgradeConfirm}
-        onCancel={handleUpgradeCancel}
-        onOpenAsImage={handleOpenAsImageTab}
+        isCurrentTabEmpty={isCurrentTabEmpty}
+        onPasteAsDataUrl={handlePasteAsDataUrl}
+        onPasteInRichText={handlePasteInRichText}
+        onPasteInCanvas={handlePasteInCanvas}
+        onCancel={closeImagePasteOptions}
       />
     </div>
   );

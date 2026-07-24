@@ -14,8 +14,11 @@ export interface BlockContextMenuProps {
 
 export interface UpgradeConfirmationModalProps {
   isOpen: boolean;
-  onConfirm: () => void;
   onCancel: () => void;
+  isCurrentTabEmpty: boolean;
+  onPasteAsDataUrl: () => void | Promise<void>;
+  onPasteInRichText: () => void | Promise<void>;
+  onPasteInCanvas: () => void | Promise<void>;
 }
 
 export interface EditorSearchBarProps {

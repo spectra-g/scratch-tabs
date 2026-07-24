@@ -112,6 +112,9 @@ jest.mock('../../../services/modelManager', () => ({
     setupInitialModel: jest.fn().mockResolvedValue(undefined),
     initialize: jest.fn().mockResolvedValue(undefined),
     get: jest.fn().mockResolvedValue({}),
+    getContent: jest.fn(),
+    replaceModelContentWithUndo: jest.fn(),
+    updateModelLanguage: jest.fn(),
     registerCursorPositionListener: jest.fn(),
   },
 }));
@@ -327,4 +330,4 @@ describe('EditorInstance - Font Size Support', () => {
       expect(screen.getByTestId('monaco-editor')).toBeInTheDocument();
     });
   });
-}); 
+});
