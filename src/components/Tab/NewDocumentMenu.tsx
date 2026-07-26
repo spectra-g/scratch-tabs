@@ -7,6 +7,7 @@ import {
   FileText,
   Layers,
 } from "../Icons";
+import { useCalloutStore } from "../../stores/calloutStore";
 
 interface NewDocumentMenuProps {
   onCreateText: () => void;
@@ -31,6 +32,7 @@ export const NewDocumentMenu = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const hideCallout = useCalloutStore((state) => state.hideCallout);
 
   useEffect(() => {
     if (!open) return;
@@ -86,7 +88,12 @@ export const NewDocumentMenu = ({
       <button
         ref={triggerRef}
         type="button"
-        onClick={() => setOpen((current) => !current)}
+        onClick={() => {
+          // The smart view callout renders in the editor's top-right corner and
+          // overlaps this menu, so clear it before opening.
+          if (!open) hideCallout();
+          setOpen(!open);
+        }}
         className="flex h-8 items-center px-1 text-main"
         title="More new document options"
         aria-label="Choose document type"

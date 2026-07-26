@@ -1,5 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { NewDocumentMenu } from "../NewDocumentMenu";
+import { useCalloutStore } from "../../../stores/calloutStore";
+import type { SmartView } from "../../../views/registry";
 
 describe("NewDocumentMenu", () => {
   const props = {
@@ -55,4 +57,14 @@ describe("NewDocumentMenu", () => {
     expect(trigger).toHaveFocus();
   });
 
+  it("hides the smart view callout when opening, since it overlaps the menu", () => {
+    useCalloutStore
+      .getState()
+      .showCallout("tab-1", { id: "json-tree" } as SmartView, "json");
+
+    render(<NewDocumentMenu {...props} />);
+    fireEvent.click(screen.getByRole("button", { name: "Choose document type" }));
+
+    expect(useCalloutStore.getState().isVisible).toBe(false);
+  });
 });
