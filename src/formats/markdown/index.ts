@@ -9,6 +9,7 @@ import MarkdownPreview from "./components/MarkdownPreview";
 import { SmartViewButtons } from "../../components/StatusBar/SmartViewButtons";
 import { StatusItemProps } from "../../components/StatusBar/types";
 import { getLineFromElement, getElementSelectorFromLine } from "./syncUtils";
+import { maskFencedCode } from "./fences";
 
 // Create the Markdown format module that implements the new interface
 export class MarkdownFormatModule implements FormatModule {
@@ -90,6 +91,11 @@ export class MarkdownFormatModule implements FormatModule {
 // Create and register the module
 const markdownModule = new MarkdownFormatModule();
 formatRegistry.register(markdownModule);
+
+// Fenced code is quoted content, not a statement about the document's own
+// format. Registering the mask here keeps that knowledge inside the Markdown
+// module - the registry only knows that masks exist, not what they do.
+formatRegistry.registerContentMask(maskFencedCode);
 
 // Register the smart view
 markdownModule.getSmartViews()?.forEach(view => {

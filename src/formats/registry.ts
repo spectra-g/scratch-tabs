@@ -1,4 +1,4 @@
-import { FormatModule, FormatRegistry, DetectionResult } from "./types";
+import { ContentMask, FormatModule, FormatRegistry } from "./types";
 
 /**
  * Implementation of the format registry
@@ -6,11 +6,33 @@ import { FormatModule, FormatRegistry, DetectionResult } from "./types";
  */
 class FormatRegistryImpl implements FormatRegistry {
   private modules: FormatModule[] = [];
+  private contentMasks: ContentMask[] = [];
 
   register(module: FormatModule): void {
     // Remove existing module with same ID if it exists
     this.modules = this.modules.filter((m) => m.id !== module.id);
     this.modules.push(module);
+  }
+
+  registerContentMask(mask: ContentMask): void {
+    if (!this.contentMasks.includes(mask)) this.contentMasks.push(mask);
+  }
+
+  /**
+   * Applied by callers before detection. It is deliberately not folded into
+   * the detect methods below: masking has to happen *before* content is sampled
+   * down to its first N lines, so that the line budget is spent on prose rather
+   * than on a long code block that will be discarded anyway.
+   */
+  applyContentMasks(content: string): string {
+    return this.contentMasks.reduce((masked, mask) => {
+      try {
+        return mask(masked);
+      } catch (error) {
+        console.warn("Error applying content mask:", error);
+        return masked;
+      }
+    }, content);
   }
 
   getAll(): FormatModule[] {

@@ -3,6 +3,7 @@
 import { BaseFormatDetector } from "./baseDetector";
 import { formatRegistry } from "./registry";
 import { DetectionResult, FormatModule  } from "./types";
+import { splitByFences as splitFences } from "./markdown/fences";
 
 const MAX_LINES_TO_ANALYZE_MD_FOR_YAML = 20;
 const MIN_MARKDOWN_FEATURES_FOR_CONFIDENCE = 2;
@@ -14,6 +15,79 @@ const YAML_DOC_START_REGEX = /^---\s*$/m;
 const YAML_DIRECTIVE_REGEX = /^%YAML\s+[\d.]+\s*$/m;
 
 const MARKDOWN_HEADER_REGEX = /^\s*#{1,6}\s+.+/; // No 'm' flag needed for line-by-line check
+
+/** `---`, `***`, `___` and their spaced variants. */
+const THEMATIC_BREAK_REGEX = /^\s*([-*_])(?:\s*\1){2,}\s*$/;
+
+// Formatting rules must never reach inside a fence: a shell sample containing
+// `# comment`, a diff containing `- removed`, or any indented source line would
+// otherwise be rewritten as if it were markdown.
+export { splitByFences } from "./markdown/fences";
+
+/**
+ * Normalises a single prose line.
+ *
+ * Each rule only fires when the separating space is genuinely missing. The
+ * previous implementation captured any existing space into the replacement and
+ * then added another, so `- Item` became `-  Item`; that extra column shifts a
+ * list's content offset and silently un-nests every child item under it.
+ */
+function formatProseLine(line: string): string {
+  if (THEMATIC_BREAK_REGEX.test(line)) return "---";
+
+  let out = line;
+  out = out.replace(/^(\s{0,3}#{1,6})([^\s#])/, "$1 $2");
+  out = out.replace(/^(\s*[-*+])([^\s])/, "$1 $2");
+  out = out.replace(/^(\s*\d+\.)([^\s])/, "$1 $2");
+  out = out.replace(/^(\s*[-*+]\s+\[[ xX]\])(\S)/, "$1 $2");
+  return out;
+}
+
+/** Formats prose lines and collapses runs of blank lines down to one. */
+function formatProseLines(lines: string[]): string[] {
+  const out: string[] = [];
+  let blankRun = 0;
+
+  for (const line of lines) {
+    const formatted = formatProseLine(line);
+    if (formatted.trim() === "") {
+      blankRun += 1;
+      if (blankRun > 1) continue;
+      out.push("");
+    } else {
+      blankRun = 0;
+      out.push(formatted);
+    }
+  }
+
+  return out;
+}
+
+/**
+ * Formats a markdown document, leaving fenced code blocks untouched.
+ */
+export function formatMarkdown(content: string): string {
+  const segments = splitFences(content);
+  const outLines: string[] = [];
+
+  segments.forEach((segment, index) => {
+    const lines = segment.code ? segment.lines : formatProseLines(segment.lines);
+
+    // Keep a blank line on either side of a fenced block, without ever
+    // inserting one *inside* it (the old rule padded the closing fence).
+    if (segment.code) {
+      const previous = outLines[outLines.length - 1];
+      if (previous !== undefined && previous.trim() !== "") outLines.push("");
+    } else if (index > 0 && segments[index - 1].code && lines[0]?.trim() !== "") {
+      outLines.push("");
+    }
+
+    outLines.push(...lines);
+  });
+
+  const formatted = outLines.join("\n").trim();
+  return content.endsWith("\n") && formatted !== "" ? `${formatted}\n` : formatted;
+}
 
 export class MarkdownFormatDetector extends BaseFormatDetector implements FormatModule
 {
@@ -365,41 +439,15 @@ That's all for this sample!`;
     monaco.languages.registerDocumentFormattingEditProvider("markdown", {
       provideDocumentFormattingEdits(model: any) {
         const content = model.getValue();
-        let formatted = content;
-        formatted = formatted.replace(/^(#{1,6})([^\s#])/gm, "$1 $2");
-        formatted = formatted.replace(/^(\s*[-*+]\s*)([^\s])/gm, "$1 $2");
-        formatted = formatted.replace(/^(\s*\d+\.\s*)([^\s])/gm, "$1 $2");
-        formatted = formatted.replace(
-          /^- \[( ?[xX]? ?)\]([^\s])/gim,
-          "- [$1] $2",
-        );
-        formatted = formatted.replace(/^- \[( ?[xX]? ?)\](\S)/gim, "- [$1] $2");
-        formatted = formatted.replace(/^\s*([-*_])\s*\1\s*\1\s*$/gm, "---");
-        formatted = formatted.replace(/\n{3,}/g, "\n\n");
-        formatted = formatted.replace(
-          /(\S)\n(```)/g,
-          (match: string, p1: string, p2: string) => {
-            if (p1.match(/^\s*$/)) return match;
-            return `${p1}\n\n${p2}`;
-          },
-        );
-        formatted = formatted.replace(
-          /(```)\n(\S)/g,
-          (match: string, p1: string, p2: string) => {
-            if (p2.match(/^\s*$/)) return match;
-            return `${p1}\n\n${p2}`;
-          },
-        );
+        const formatted = formatMarkdown(content);
 
-        let finalFormatted = formatted.trim();
-        if (content.endsWith("\n") && finalFormatted !== "") {
-          finalFormatted += "\n";
-        }
+        // Nothing to do - returning an empty edit list keeps the undo stack clean
+        if (formatted === content) return [];
 
         return [
           {
             range: model.getFullModelRange(),
-            text: finalFormatted,
+            text: formatted,
           },
         ];
       },

@@ -127,11 +127,17 @@ export const detectFormat = (content: string): string => {
  * Check if the content matches patterns that could be ambiguous between formats
  * Content is automatically sampled to first 100 lines for performance optimization
  */
-export const isAmbiguousFormat = (content: string): boolean => {
-  // Sample content for performance - detectors work with first N lines only
-  const sampledContent = sampleContentForDetection(content);
-  return formatRegistry.isAmbiguous(sampledContent);
-};
+export const isAmbiguousFormat = (content: string): boolean =>
+  formatRegistry.isAmbiguous(prepareForDetection(content));
+
+/**
+ * Prepare content for detection.
+ *
+ * Masking runs before sampling on purpose: a format's quoted regions should not
+ * consume the line budget that the first N lines of actual content need.
+ */
+const prepareForDetection = (content: string): string =>
+  sampleContentForDetection(formatRegistry.applyContentMasks(content));
 
 /**
  * Sample content to first N lines for performance optimization
@@ -170,10 +176,10 @@ export const getPotentialFormatMatches = (
   name: string;
   score: number;
 }> => {
-  // Sample content for performance - detectors work with first N lines only
-  const sampledContent = sampleContentForDetection(content);
-
-  const matches = formatRegistry.getPotentialMatches(sampledContent, limit);
+  const matches = formatRegistry.getPotentialMatches(
+    prepareForDetection(content),
+    limit,
+  );
 
   // Ensure we always have at least plaintext in the results
   if (matches.length === 0) {

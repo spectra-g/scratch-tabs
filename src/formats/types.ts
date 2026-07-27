@@ -178,11 +178,31 @@ export interface ShareStrategy {
 /**
  * Interface for format registry
  */
+/**
+ * Rewrites content so that regions one format merely *quotes* stop voting in
+ * detection. A Markdown fence says "here is some SQL", not "this document is
+ * SQL", but every detector sees the same raw text and scores on it regardless.
+ *
+ * The format that owns the quoting syntax supplies the mask, so the registry
+ * never has to know which formats have such regions or what they look like.
+ */
+export type ContentMask = (content: string) => string;
+
 export interface FormatRegistry {
   /**
    * Register a format module
    */
   register: (module: FormatModule) => void;
+
+  /**
+   * Register a content mask, applied before detection scores anything
+   */
+  registerContentMask: (mask: ContentMask) => void;
+
+  /**
+   * Run every registered content mask over `content`
+   */
+  applyContentMasks: (content: string) => string;
 
   /**
    * Get all registered format modules
