@@ -65,37 +65,28 @@ export default {
           keyword: 'rgb(var(--color-token-keyword) / <alpha-value>)',
         },
       },
-      typography: ({ theme }) => ({
+      typography: {
         DEFAULT: {
           css: {
-            '--tw-prose-body': theme('colors.main'),
-            '--tw-prose-headings': theme('colors.main'),
-            '--tw-prose-lead': theme('colors.secondary'),
-            '--tw-prose-links': theme('colors.primary'),
-            '--tw-prose-bold': theme('colors.main'),
-            '--tw-prose-counters': theme('colors.secondary'),
-            '--tw-prose-bullets': theme('colors.secondary'),
-            '--tw-prose-hr': theme('colors.border.base'),
-            '--tw-prose-quotes': theme('colors.main'),
-            '--tw-prose-quote-borders': theme('colors.border.base'),
-            '--tw-prose-captions': theme('colors.secondary'),
-            '--tw-prose-code': theme('colors.main'),
-            '--tw-prose-pre-code': theme('colors.main'),
-            '--tw-prose-pre-bg': theme('colors.surface.secondary'),
-            '--tw-prose-th-borders': theme('colors.border.base'),
-            '--tw-prose-td-borders': theme('colors.border.base'),
-            // Dark mode overrides are handled automatically if we use the same variables, 
-            // but prose-invert uses --tw-prose-invert-*.
-            // Since we are using CSS variables that switch values, we might not even need prose-invert 
-            // if we map --tw-prose-* to OUR variables.
-            // However, prose-invert sets --tw-prose-body to --tw-prose-invert-body.
-            // So we should map those too or just rely on our variables switching.
-            // If we map --tw-prose-body to theme('colors.main'), and colors.main uses var(--color-text-main),
-            // and var(--color-text-main) switches in .dark, then we don't need prose-invert class at all!
-            // We just need 'prose'.
+            '--tw-prose-body': 'rgb(var(--color-text-main))',
+            '--tw-prose-headings': 'rgb(var(--color-text-main))',
+            '--tw-prose-lead': 'rgb(var(--color-text-secondary))',
+            '--tw-prose-links': 'rgb(var(--color-primary))',
+            '--tw-prose-bold': 'rgb(var(--color-text-main))',
+            '--tw-prose-counters': 'rgb(var(--color-text-secondary))',
+            '--tw-prose-bullets': 'rgb(var(--color-text-secondary))',
+            '--tw-prose-hr': 'rgb(var(--color-border-base))',
+            '--tw-prose-quotes': 'rgb(var(--color-text-main))',
+            '--tw-prose-quote-borders': 'rgb(var(--color-border-base))',
+            '--tw-prose-captions': 'rgb(var(--color-text-secondary))',
+            '--tw-prose-code': 'rgb(var(--color-text-main))',
+            '--tw-prose-pre-code': 'rgb(var(--color-text-main))',
+            '--tw-prose-pre-bg': 'rgb(var(--color-surface-secondary))',
+            '--tw-prose-th-borders': 'rgb(var(--color-border-base))',
+            '--tw-prose-td-borders': 'rgb(var(--color-border-base))',
           },
         },
-      }),
+      },
     },
   },
   plugins: [

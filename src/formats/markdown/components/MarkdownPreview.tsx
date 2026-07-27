@@ -1,157 +1,320 @@
-import React, { useMemo } from "react";
-import ReactMarkdown from "react-markdown";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { calculateLineNumbers } from "../syncUtils";
+import type { Element, RootContent } from "hast";
+import {
+  AlertTriangle,
+  Check,
+  Copy,
+  Info,
+  MessageSquare,
+  ShieldAlert,
+  Sparkles,
+} from "../../../components/Icons";
+import { getCodeLanguage, getCodeText, srcLine } from "../nodeUtils";
+import { splitFrontmatter } from "../frontmatter";
+import { getLoadedHighlighter, highlightCode, loadHighlighter } from "../highlight";
+import { rehypeCallouts, rehypeHeadingIds, CALLOUT_KINDS } from "../rehypePlugins";
+import MarkdownOutline from "./MarkdownOutline";
+import { useOutline } from "../useOutline";
 
 interface MarkdownPreviewProps {
   content: string;
 }
 
-const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => {
-  // Calculate line numbers for sync
-  const lineNumbers = useMemo(() => calculateLineNumbers(content), [content]);
+/** Below this the centre column and the rail would start fighting for room. */
+const OUTLINE_MIN_WIDTH = 1040;
+/** Below this the page's gutters cost more room than the elevation is worth. */
+const PAPER_MIN_WIDTH = 600;
+/** One or two headings is a document, not something that needs navigation. */
+const OUTLINE_MIN_HEADINGS = 3;
 
-  // Counter for elements as they're rendered
-  const elementCounterRef = React.useRef(0);
+const CALLOUTS = {
+  note: { icon: Info, title: "Note" },
+  tip: { icon: Sparkles, title: "Tip" },
+  important: { icon: MessageSquare, title: "Important" },
+  warning: { icon: AlertTriangle, title: "Warning" },
+  caution: { icon: ShieldAlert, title: "Caution" },
+} as const;
 
-  // Reset counter when content changes
-  React.useEffect(() => {
-    elementCounterRef.current = 0;
-  }, [content]);
+type CalloutKind = keyof typeof CALLOUTS;
+
+const isCalloutKind = (value: unknown): value is CalloutKind =>
+  typeof value === "string" && (CALLOUT_KINDS as readonly string[]).includes(value);
+
+/** Re-renders once the on-demand grammar chunk has loaded. */
+function useHighlighterReady(): boolean {
+  const [ready, setReady] = useState(() => getLoadedHighlighter() !== null);
+
+  useEffect(() => {
+    if (ready) return;
+    let cancelled = false;
+    loadHighlighter().then((instance) => {
+      if (!cancelled && instance) setReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [ready]);
+
+  return ready;
+}
+
+/** lowlight emits only spans and text, so this covers its whole output. */
+function renderHighlighted(nodes: RootContent[]): React.ReactNode {
+  return nodes.map((node, index) => {
+    if (node.type === "text") return node.value;
+    if (node.type !== "element") return null;
+
+    const className = node.properties?.className;
+    return (
+      <span
+        key={index}
+        className={Array.isArray(className) ? className.join(" ") : undefined}
+      >
+        {renderHighlighted(node.children)}
+      </span>
+    );
+  });
+}
+
+const CodeBlock: React.FC<{
+  node?: Element;
+  children?: React.ReactNode;
+  lineOffset: number;
+}> = ({ node, children, lineOffset }) => {
+  const [copied, setCopied] = useState(false);
+  const language = getCodeLanguage(node);
+  const code = getCodeText(node);
+
+  const highlighterReady = useHighlighterReady();
+  const highlighted = useMemo(
+    // highlighterReady is what makes this recompute once the chunk lands
+    () => (highlighterReady ? highlightCode(code, language) : null),
+    [code, language, highlighterReady],
+  );
+
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Clipboard unavailable (permissions, insecure context) - leave the label as-is
+    }
+  }, [code]);
 
   return (
-    // Apply Tailwind's typography plugin classes for nice default styling.
-    // 'prose-invert' is for dark mode themes.
-    // Enhanced with Word Count tablet's superior table styling
-    // Remove default backticks from inline code
-    <div className="prose dark:prose-invert max-w-none p-0.5 text-sm [&>h1]:mb-2 [&>h2]:mb-2 [&>h3]:mb-2 [&>h4]:mb-2 [&>h5]:mb-2 [&>h6]:mb-2 [&>h1]:mt-4 [&>h2]:mt-3 [&>h3]:mt-3 [&>h4]:mt-2 [&>h5]:mt-2 [&>h6]:mt-2 [&_code]:before:content-none [&_code]:after:content-none">
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        components={{
-          // Enhanced table styling from Word Count tablet
-          table: ({ children }) => {
-            const lineNum = lineNumbers.get(elementCounterRef.current++);
-            return (
-              <div className="overflow-x-auto custom-scrollbar my-4" data-source-line={lineNum}>
-                <table className="w-full text-xs border-collapse border border-base">
-                  {children}
-                </table>
-              </div>
-            );
-          },
-          thead: ({ children }) => (
-            <thead className="bg-surface/50">
-              {children}
-            </thead>
-          ),
-          tbody: ({ children }) => (
-            <tbody>
-              {children}
-            </tbody>
-          ),
-          th: ({ children }) => (
-            <th className="border border-base px-2 py-1 text-left text-main font-medium">
-              {children}
-            </th>
-          ),
-          td: ({ children }) => (
-            <td className="border border-base px-2 py-1 text-main">
-              {children}
-            </td>
-          ),
-          tr: ({ children }) => (
-            <tr className="hover:bg-element-hover transition-colors">
-              {children}
-            </tr>
-          ),
-          // Headers with line numbers
-          h1: ({ children }) => {
-            const lineNum = lineNumbers.get(elementCounterRef.current++);
-            return <h1 data-source-line={lineNum}>{children}</h1>;
-          },
-          h2: ({ children }) => {
-            const lineNum = lineNumbers.get(elementCounterRef.current++);
-            return <h2 data-source-line={lineNum}>{children}</h2>;
-          },
-          h3: ({ children }) => {
-            const lineNum = lineNumbers.get(elementCounterRef.current++);
-            return <h3 data-source-line={lineNum}>{children}</h3>;
-          },
-          h4: ({ children }) => {
-            const lineNum = lineNumbers.get(elementCounterRef.current++);
-            return <h4 data-source-line={lineNum}>{children}</h4>;
-          },
-          h5: ({ children }) => {
-            const lineNum = lineNumbers.get(elementCounterRef.current++);
-            return <h5 data-source-line={lineNum}>{children}</h5>;
-          },
-          h6: ({ children }) => {
-            const lineNum = lineNumbers.get(elementCounterRef.current++);
-            return <h6 data-source-line={lineNum}>{children}</h6>;
-          },
-          // Code blocks
-          pre: ({ children }) => {
-            const lineNum = lineNumbers.get(elementCounterRef.current++);
-            return <pre data-source-line={lineNum}>{children}</pre>;
-          },
-          // Blockquotes
-          blockquote: ({ children }) => {
-            const lineNum = lineNumbers.get(elementCounterRef.current++);
-            return <blockquote data-source-line={lineNum}>{children}</blockquote>;
-          },
-          // Horizontal rules
-          hr: () => {
-            const lineNum = lineNumbers.get(elementCounterRef.current++);
-            return <hr data-source-line={lineNum} />;
-          },
-          // List items
-          li: ({ children }) => {
-            const lineNum = lineNumbers.get(elementCounterRef.current++);
-            return <li data-source-line={lineNum}>{children}</li>;
-          },
-          // Inline code and code blocks
-          code: ({ node, inline, className, children, ...props }: any) => {
-            const lineNum = lineNumbers.get(elementCounterRef.current++);
-
-            if (inline) {
-              // Inline code - render without backticks
-              return (
-                <code
-                  className="px-1.5 py-0.5 bg-element text-info rounded text-sm font-mono"
-                  {...props}
-                >
-                  {children}
-                </code>
-              );
-            }
-
-            // Code block
-            return (
-              <code className={className} data-source-line={lineNum} {...props}>
-                {children}
-              </code>
-            );
-          },
-          // Enhanced status icon rendering
-          p: ({ children }) => {
-            const lineNum = lineNumbers.get(elementCounterRef.current++);
-            if (typeof children === 'string') {
-              const processedContent = children
-                .replace(/✅/g, '<span class="text-success">✅</span>')
-                .replace(/⚠️/g, '<span class="text-warning">⚠️</span>')
-                .replace(/❌/g, '<span class="text-danger">❌</span>');
-
-              if (processedContent !== children) {
-                return <p data-source-line={lineNum} dangerouslySetInnerHTML={{ __html: processedContent }} />;
-              }
-            }
-            return <p data-source-line={lineNum}>{children}</p>;
-          },
-        }}
-      >
-        {content}
-      </ReactMarkdown>
+    <div className="md-code-block" data-source-line={srcLine(node, lineOffset)}>
+      <div className="md-code-block__bar">
+        <span className="md-code-block__lang">{language ?? "text"}</span>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="md-code-block__copy"
+          aria-label={copied ? "Copied" : "Copy code"}
+          data-testid="markdown-copy-code"
+        >
+          {copied ? <Check size={12} /> : <Copy size={12} />}
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+      <pre>
+        {highlighted ? (
+          <code className={language ? `language-${language}` : undefined}>
+            {renderHighlighted(highlighted.children)}
+          </code>
+        ) : (
+          children
+        )}
+      </pre>
     </div>
   );
 };
+
+/** Heading with a hover-revealed self link, at every level. */
+const heading = (level: 1 | 2 | 3 | 4 | 5 | 6, lineOffset: number) => {
+  const Tag = `h${level}` as const;
+
+  const Heading: Components["h1"] = ({ node, id, children }) => (
+    <Tag id={id} data-source-line={srcLine(node, lineOffset)}>
+      {children}
+      {id && (
+        <a className="md-anchor" href={`#${id}`} aria-label="Link to this section">
+          #
+        </a>
+      )}
+    </Tag>
+  );
+
+  return Heading;
+};
+
+/**
+ * Builds the component map for a given frontmatter offset.
+ *
+ * Every `data-source-line` has the offset added back: react-markdown only sees
+ * the body, so its line numbers start again at 1 after a frontmatter block, and
+ * editor sync would otherwise scroll to the wrong place.
+ */
+function buildComponents(lineOffset: number): Components {
+  return {
+    pre: ({ node, children }) => (
+      <CodeBlock node={node} lineOffset={lineOffset}>
+        {children}
+      </CodeBlock>
+    ),
+
+    table: ({ node, children }) => (
+      <div className="md-table-wrap" data-source-line={srcLine(node, lineOffset)}>
+        <table>{children}</table>
+      </div>
+    ),
+
+    a: ({ node, href, children }) => (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        data-source-line={srcLine(node, lineOffset)}
+      >
+        {children}
+      </a>
+    ),
+
+    h1: heading(1, lineOffset),
+    h2: heading(2, lineOffset),
+    h3: heading(3, lineOffset),
+    h4: heading(4, lineOffset),
+    h5: heading(5, lineOffset),
+    h6: heading(6, lineOffset),
+
+    p: ({ node, children }) => (
+      <p data-source-line={srcLine(node, lineOffset)}>{children}</p>
+    ),
+    li: ({ node, children }) => (
+      <li data-source-line={srcLine(node, lineOffset)}>{children}</li>
+    ),
+
+    blockquote: ({ node, children }) => {
+      const kind = node?.properties?.dataCallout;
+      if (!isCalloutKind(kind)) {
+        return (
+          <blockquote data-source-line={srcLine(node, lineOffset)}>
+            {children}
+          </blockquote>
+        );
+      }
+
+      const { icon: Icon, title } = CALLOUTS[kind];
+      return (
+        <blockquote
+          className={`md-callout md-callout--${kind}`}
+          data-callout={kind}
+          data-source-line={srcLine(node, lineOffset)}
+        >
+          <p className="md-callout__title">
+            <Icon size={15} aria-hidden="true" />
+            {title}
+          </p>
+          {children}
+        </blockquote>
+      );
+    },
+
+    hr: ({ node }) => <hr data-source-line={srcLine(node, lineOffset)} />,
+    img: ({ node, src, alt }) => (
+      <img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        data-source-line={srcLine(node, lineOffset)}
+      />
+    ),
+  };
+}
+
+const REHYPE_PLUGINS = [rehypeHeadingIds, rehypeCallouts];
+const REMARK_PLUGINS = [remarkGfm];
+
+/**
+ * Rendered Markdown for the side-by-side smart view.
+ *
+ * Styling lives in the `.md-preview` block in index.css so that every colour
+ * resolves from the semantic theme tokens. Inline vs. fenced code is
+ * distinguished there by selector (`:not(pre) > code` vs. `pre code`) rather
+ * than in JS - react-markdown no longer reports an `inline` flag.
+ */
+const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => {
+  const docRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+
+  const { entries, body, lineOffset } = useMemo(
+    () => splitFrontmatter(content),
+    [content],
+  );
+  const components = useMemo(() => buildComponents(lineOffset), [lineOffset]);
+  const { headings, activeId } = useOutline(docRef, body);
+
+  useEffect(() => {
+    const element = docRef.current;
+    if (!element || typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(([entry]) =>
+      setWidth(entry.contentRect.width),
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  const handleSelect = useCallback((id: string) => {
+    const target = docRef.current?.querySelector(`#${CSS.escape(id)}`);
+    target?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  const showOutline =
+    width >= OUTLINE_MIN_WIDTH && headings.length >= OUTLINE_MIN_HEADINGS;
+  // Width 0 means nothing has been measured yet; assume there is room rather
+  // than flashing the flush layout on first paint.
+  const narrow = width > 0 && width < PAPER_MIN_WIDTH;
+
+  return (
+    <div
+      className="md-doc"
+      ref={docRef}
+      data-outline={showOutline || undefined}
+      data-narrow={narrow || undefined}
+    >
+      {showOutline && (
+        <MarkdownOutline
+          headings={headings}
+          activeId={activeId}
+          onSelect={handleSelect}
+        />
+      )}
+
+      <div className="md-preview">
+        {entries.length > 0 && (
+          <dl className="md-frontmatter" data-testid="markdown-frontmatter">
+            {entries.map(({ key, value }) => (
+              <div key={key} className="md-frontmatter__row">
+                <dt>{key}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+
+        <ReactMarkdown
+          remarkPlugins={REMARK_PLUGINS}
+          rehypePlugins={REHYPE_PLUGINS}
+          components={components}
+        >
+          {body}
+        </ReactMarkdown>
+      </div>
+    </div>
+  );
+};
+
 export default MarkdownPreview;

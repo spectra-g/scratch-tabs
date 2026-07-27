@@ -1,4 +1,4 @@
-import React, { Suspense, useMemo, useCallback, useRef, useEffect } from "react";
+import React, { Suspense, useMemo, useCallback, useRef, useState, useEffect } from "react";
 import { useRootStore } from "../../stores";
 import { useTabsStore } from "../../stores/tabsStore";
 import { useSplitViewStore } from "../../stores/splitViewStore";
@@ -178,8 +178,20 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
   const editorInstanceRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const previewContainerRef = useRef<HTMLDivElement | null>(null);
 
+  // Sync needs these as state, not refs. A ref read during render is still null
+  // on the render that mounts the node, and assigning to it does not schedule
+  // another render - so useSmartViewSync would receive null and never attach.
+  const [syncEditor, setSyncEditor] = useState<Monaco.editor.IStandaloneCodeEditor | null>(null);
+  const [syncPreviewContainer, setSyncPreviewContainer] = useState<HTMLDivElement | null>(null);
+
   const handleEditorReady = useCallback((editor: Monaco.editor.IStandaloneCodeEditor | null) => {
     editorInstanceRef.current = editor;
+    setSyncEditor(editor);
+  }, []);
+
+  const attachPreviewContainer = useCallback((node: HTMLDivElement | null) => {
+    previewContainerRef.current = node;
+    setSyncPreviewContainer(node);
   }, []);
 
   // Macro engine for this pane
@@ -200,8 +212,8 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
 
   // Sync scroll and clicks between editor and preview
   useSmartViewSync({
-    editor: editorInstanceRef.current,
-    previewContainer: previewContainerRef.current,
+    editor: syncEditor,
+    previewContainer: syncPreviewContainer,
     syncConfig: extendedView?.syncConfig,
     content: previewContent,
     enabled: shouldShowSideBySidePreview && !!activeTab,
@@ -265,7 +277,7 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
           className="h-full flex flex-col overflow-hidden border-l border-base"
         >
           <div
-            ref={previewContainerRef}
+            ref={attachPreviewContainer}
             className="flex-1 w-full h-full overflow-auto custom-scrollbar bg-element"
             style={{ padding: "1rem" }}
           >
