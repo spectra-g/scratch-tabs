@@ -1,12 +1,13 @@
-import { Plus } from "../Icons";
+import { Plus, ClipboardPlus, Layers, Extension } from "../Icons";
 import { useRootStore } from "../../stores";
-import { NewDocumentMenu } from "./NewDocumentMenu";
 
 interface TabActionsProps {
   side?: "left" | "right";
   onShowTabletSelector: () => void;
   newTabButtonRef?: React.RefObject<HTMLButtonElement>;
 }
+
+const BUTTON_CLASS = "px-2 py-1 text-main flex items-center h-8";
 
 export const TabActions: React.FC<TabActionsProps> = ({
   side = "left",
@@ -20,20 +21,40 @@ export const TabActions: React.FC<TabActionsProps> = ({
       <button
         ref={newTabButtonRef}
         onClick={() => handleNewTab(side === "right")}
-        className="px-2 py-1 text-main flex items-center h-8"
+        className={BUTTON_CLASS}
         title="New tab"
         data-testid="icon-new-tab"
         data-side={side}
       >
         <Plus size={16} />
       </button>
-      <NewDocumentMenu
-        side={side}
-        onCreateText={() => handleNewTab(side === "right")}
-        onCreateCanvas={() => void handleNewCanvas(side === "right")}
-        onCreateFromClipboard={() => void handleNewTabFromPaste(side === "right")}
-        onOpenTools={onShowTabletSelector}
-      />
+      <button
+        onClick={() => void handleNewTabFromPaste(side === "right")}
+        className={BUTTON_CLASS}
+        title="Import from Paste"
+        data-testid="icon-new-tab-from-clipboard"
+        data-side={side}
+      >
+        <ClipboardPlus size={16} />
+      </button>
+      <button
+        onClick={() => void handleNewCanvas(side === "right")}
+        className={BUTTON_CLASS}
+        title="Canvas"
+        data-testid="icon-new-canvas"
+        data-side={side}
+      >
+        <Layers size={16} />
+      </button>
+      <button
+        onClick={onShowTabletSelector}
+        className={BUTTON_CLASS}
+        title="Developer Tool"
+        data-testid="icon-new-tools"
+        data-side={side}
+      >
+        <Extension size={16} />
+      </button>
     </div>
   );
 };

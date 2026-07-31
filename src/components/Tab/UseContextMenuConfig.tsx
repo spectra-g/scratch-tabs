@@ -290,7 +290,7 @@ Add any other context about the problem here.
       labels: "bug,tab-issue",
     });
 
-    return `https://github.com/spectra-g/scratch-tabs-feedback/issues/new?${params.toString()}`;
+    return `https://github.com/spectra-g/scratch-tabs/issues/new?${params.toString()}`;
   };
 
   const handleReportIssue = () => {

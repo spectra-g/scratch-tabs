@@ -23,9 +23,10 @@ import { useWorkspaceStore } from "../../../../stores/workspaceStore";
 import { useSplitViewStore } from "../../../../stores/splitViewStore";
 import { detectFormat } from "../../../../formats";
 import { useNavigatorStore } from "../../stores/useNavigatorStore";
+import { useFieldSuggestions, FieldSuggestion } from "../../hooks/useFieldSuggestions";
 
 // --- Interfaces ---
-interface JsonNodeData {
+export interface JsonNodeData {
   key: string | number;
   value: any;
   type: "object" | "array" | "string" | "number" | "boolean" | "null";
@@ -50,7 +51,7 @@ type SearchExpansion = "matched" | "children";
 
 // --- Helper Functions ---
 
-const buildTree = (
+export const buildTree = (
   key: string | number,
   value: any,
   depth: number,
@@ -358,6 +359,8 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect, t
     string | null
   >(null);
   const [openedItemId, setOpenedItemId] = useState<string | null>(null);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [highlightedSuggestion, setHighlightedSuggestion] = useState(0);
 
   const { addBackgroundTab } = useRootStore();
   const { activeWorkspaceId } = useWorkspaceStore();
@@ -404,6 +407,55 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect, t
       return null;
     }
   }, [parsedJson, parseError]);
+
+  // Suggestions for the key/value search box: matching field names typed so
+  // far, plus full paths once a field name is confidently matched.
+  const fieldSuggestions = useFieldSuggestions(
+    searchMode === "keyValue" ? rootNodeData : null,
+    inputValue,
+  );
+
+  useEffect(() => {
+    setHighlightedSuggestion(0);
+  }, [fieldSuggestions]);
+
+  useEffect(() => {
+    if (searchMode !== "keyValue" || !inputValue.trim() || fieldSuggestions.length === 0) {
+      setSuggestionsOpen(false);
+    }
+  }, [searchMode, inputValue, fieldSuggestions.length]);
+
+  const applySuggestion = useCallback(
+    (suggestion: FieldSuggestion) => {
+      if (suggestion.kind === "key") {
+        setInputValue(suggestion.matchedKey ?? suggestion.label);
+      } else {
+        setSearchMode("path");
+        setInputValue(suggestion.path);
+      }
+      setSuggestionsOpen(false);
+    },
+    [setInputValue, setSearchMode],
+  );
+
+  const handleSearchKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (!suggestionsOpen || fieldSuggestions.length === 0) return;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setHighlightedSuggestion((i) => (i + 1) % fieldSuggestions.length);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setHighlightedSuggestion((i) => (i - 1 + fieldSuggestions.length) % fieldSuggestions.length);
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        applySuggestion(fieldSuggestions[highlightedSuggestion]);
+      } else if (e.key === "Escape") {
+        setSuggestionsOpen(false);
+      }
+    },
+    [suggestionsOpen, fieldSuggestions, highlightedSuggestion, applySuggestion],
+  );
 
   // Memoize visible nodes based on expansion
   const visibleNodes = useMemo<VisibleJsonNode[]>(() => {
@@ -635,8 +687,15 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect, t
       setEvaluationStatus("Evaluating..."); // Provide feedback while typing/debouncing
     } else {
       setEvaluationStatus(null); // Clear status in key/value mode
+      setSuggestionsOpen(!!e.target.value.trim());
     }
   }, [setInputValue, searchMode]);
+
+  const handleSearchFocus = useCallback(() => {
+    if (searchMode === "keyValue" && inputValue.trim()) {
+      setSuggestionsOpen(true);
+    }
+  }, [searchMode, inputValue]);
 
   const handleModeChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const newMode = e.target.value as SearchMode;
@@ -645,6 +704,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect, t
     setEvaluationStatus(null);
     setSelectedPath("");
     setLastValidEvaluatedPath(null); // Clear evaluated path state
+    setSuggestionsOpen(false);
   }, [setSearchMode, setInputValue, setSelectedPath]);
 
   // Wrapper to work with the existing button onClick handlers
@@ -654,6 +714,7 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect, t
     setEvaluationStatus(null);
     setSelectedPath("");
     setLastValidEvaluatedPath(null); // Clear evaluated path state
+    setSuggestionsOpen(false);
   }, [setSearchMode, setInputValue, setSelectedPath]);
 
   // --- Rendering ---
@@ -870,18 +931,82 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ jsonString, onNodeSelect, t
               type="text"
               value={inputValue}
               onChange={handleInputChange}
+              onFocus={handleSearchFocus}
+              onKeyDown={handleSearchKeyDown}
               placeholder={
                 searchMode === "keyValue"
                   ? "Search keys/values..."
                   : "Evaluate path (e.g., users[0].name)"
               }
-              className="bg-element text-main border border-base pl-8 pr-2 py-1 rounded focus:outline-none focus:ring-2 focus:border-focus w-full text-sm placeholder:text-muted"
+              className="bg-element text-main border border-base pl-8 pr-2 py-1 rounded focus:outline-none focus:border-focus w-full text-sm placeholder:text-muted"
               aria-label={
                 searchMode === "keyValue"
                   ? "Search JSON Tree"
                   : "Evaluate JSON Path"
               }
+              role={searchMode === "keyValue" ? "combobox" : undefined}
+              aria-expanded={searchMode === "keyValue" ? suggestionsOpen && fieldSuggestions.length > 0 : undefined}
+              aria-controls={searchMode === "keyValue" ? "json-search-suggestions" : undefined}
+              aria-autocomplete={searchMode === "keyValue" ? "list" : undefined}
+              aria-activedescendant={
+                searchMode === "keyValue" && suggestionsOpen && fieldSuggestions.length > 0
+                  ? `json-search-suggestion-${highlightedSuggestion}`
+                  : undefined
+              }
             />
+
+            {searchMode === "keyValue" && suggestionsOpen && fieldSuggestions.length > 0 && (
+              <>
+                <div
+                  className="fixed inset-0 z-30"
+                  onClick={() => setSuggestionsOpen(false)}
+                />
+                <div
+                  id="json-search-suggestions"
+                  data-testid="json-search-suggestions"
+                  role="listbox"
+                  className="absolute top-full left-0 mt-1 w-full bg-surface border border-base rounded-lg shadow-xl z-40 max-h-64 overflow-auto text-xs"
+                >
+                  {fieldSuggestions.some((s) => s.kind === "key") && (
+                    <div className="px-2 pt-2 pb-1 text-secondary font-semibold uppercase tracking-wide text-[10px]">
+                      Matching fields
+                    </div>
+                  )}
+                  {fieldSuggestions.map((suggestion, index) => (
+                    <React.Fragment key={`${suggestion.kind}-${suggestion.path}`}>
+                      {suggestion.kind === "path" &&
+                        (index === 0 || fieldSuggestions[index - 1].kind === "key") && (
+                          <div className="px-2 pt-2 pb-1 text-secondary font-semibold uppercase tracking-wide text-[10px] border-t border-base">
+                            Suggested paths
+                          </div>
+                        )}
+                      <div
+                        id={`json-search-suggestion-${index}`}
+                        data-testid={`json-search-suggestion-${suggestion.kind}-${suggestion.path}`}
+                        role="option"
+                        aria-selected={index === highlightedSuggestion}
+                        onMouseDown={(e) => {
+                          e.preventDefault(); // keep focus on input so blur doesn't beat the click
+                          applySuggestion(suggestion);
+                        }}
+                        onMouseEnter={() => setHighlightedSuggestion(index)}
+                        className={`px-2 py-1 cursor-pointer truncate flex items-center gap-1.5 ${
+                          index === highlightedSuggestion
+                            ? "bg-element-active text-info"
+                            : "text-main hover:bg-element-hover"
+                        }`}
+                        title={suggestion.label}
+                      >
+                        {suggestion.kind === "path" && (
+                          <Route size={12} className="flex-shrink-0 text-secondary" />
+                        )}
+                        <span className="truncate">{suggestion.label}</span>
+                      </div>
+                    </React.Fragment>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Control Buttons */}

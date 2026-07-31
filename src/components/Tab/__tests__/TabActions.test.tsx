@@ -16,23 +16,52 @@ jest.mock("../../../stores", () => ({
 describe("TabActions", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it("keeps clipboard and Tool Selector actions exclusively in the document menu", () => {
+  it("renders New Tab, Import from Paste, Canvas, and Developer Tool as top-level buttons", () => {
     const onShowTabletSelector = jest.fn();
     render(<TabActions onShowTabletSelector={onShowTabletSelector} />);
 
     expect(screen.getByTestId("icon-new-tab")).toBeVisible();
-    expect(screen.getByTestId("new-document-menu-trigger")).toBeVisible();
+    expect(screen.getByTestId("icon-new-tab-from-clipboard")).toBeVisible();
+    expect(screen.getByTestId("icon-new-canvas")).toBeVisible();
+    expect(screen.getByTestId("icon-new-tools")).toBeVisible();
     expect(
-      screen.queryByTestId("icon-new-tab-from-clipboard"),
+      screen.queryByTestId("new-document-menu-trigger"),
     ).not.toBeInTheDocument();
-    expect(screen.queryByTestId("icon-new-tools")).not.toBeInTheDocument();
+  });
 
-    fireEvent.click(screen.getByTestId("new-document-menu-trigger"));
-    fireEvent.click(screen.getByRole("menuitem", { name: "From Clipboard" }));
+  it("creates a new tab directly", () => {
+    render(<TabActions onShowTabletSelector={jest.fn()} />);
+    fireEvent.click(screen.getByTestId("icon-new-tab"));
+    expect(mockHandleNewTab).toHaveBeenCalledWith(false);
+  });
+
+  it("imports from paste directly", () => {
+    render(<TabActions onShowTabletSelector={jest.fn()} />);
+    fireEvent.click(screen.getByTestId("icon-new-tab-from-clipboard"));
     expect(mockHandleNewTabFromPaste).toHaveBeenCalledWith(false);
+  });
 
-    fireEvent.click(screen.getByTestId("new-document-menu-trigger"));
-    fireEvent.click(screen.getByRole("menuitem", { name: "Developer Tool" }));
+  it("creates a canvas directly", () => {
+    render(<TabActions onShowTabletSelector={jest.fn()} />);
+    fireEvent.click(screen.getByTestId("icon-new-canvas"));
+    expect(mockHandleNewCanvas).toHaveBeenCalledWith(false);
+  });
+
+  it("opens the tablet selector directly", () => {
+    const onShowTabletSelector = jest.fn();
+    render(<TabActions onShowTabletSelector={onShowTabletSelector} />);
+    fireEvent.click(screen.getByTestId("icon-new-tools"));
     expect(onShowTabletSelector).toHaveBeenCalledTimes(1);
+  });
+
+  it("passes the right side flag through to store actions", () => {
+    render(<TabActions side="right" onShowTabletSelector={jest.fn()} />);
+    fireEvent.click(screen.getByTestId("icon-new-tab"));
+    fireEvent.click(screen.getByTestId("icon-new-tab-from-clipboard"));
+    fireEvent.click(screen.getByTestId("icon-new-canvas"));
+
+    expect(mockHandleNewTab).toHaveBeenCalledWith(true);
+    expect(mockHandleNewTabFromPaste).toHaveBeenCalledWith(true);
+    expect(mockHandleNewCanvas).toHaveBeenCalledWith(true);
   });
 });

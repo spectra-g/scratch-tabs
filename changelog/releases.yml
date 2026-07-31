@@ -3,8 +3,25 @@ config:
   max_versions: 100  # Maximum number of versions to display
 
 releases:
-  - version: "1.44.0"
+  - version: "1.45.0"
     type: "latest"
+    draft: false
+    date: "2026-07-31"
+    headline: "Top-Level Tab Actions + Markdown Diagrams"
+    summary: "Restored top-level Import/Canvas buttons, JSON search path suggestions, and mermaid diagram rendering with a repositioned copy/open toolbar in Markdown code blocks."
+    description: "Tab creation actions are back to top-level buttons instead of a dropdown. JSON smart view search now suggests field names and query paths as you type. Markdown code blocks got a repositioned copy/open-in-tab toolbar, and fenced mermaid blocks now render as diagrams."
+    categories:
+      - name: "🔧 Improvements"
+        changes:
+          - "**Top-level tab actions:** New Tab, Import from Paste, Canvas, and Developer Tool are top-level buttons again instead of a dropdown menu"
+          - "**JSON search suggestions:** Field-name and query-path autocomplete while typing in the JSON smart view search box"
+          - "**Markdown code block toolbar:** Copy and open-in-new-tab icons repositioned to the top-left of each code block"
+      - name: "✨ New Features"
+        changes:
+          - "**Mermaid diagrams in Markdown:** Fenced mermaid code blocks render as diagrams in the Markdown preview, with fallback to raw source on error"
+
+  - version: "1.44.0"
+    type: "release"
     draft: false
     date: "2026-07-24"
     headline: "Spatial Canvas"

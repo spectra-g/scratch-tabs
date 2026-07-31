@@ -44,5 +44,5 @@ Tabs can be more than just text editing. **Tablets** are isolated tools — thin
 | Toggle Sidebar | \`Ctrl+B\` | \`Cmd+B\` |
 
 ---
-Report issues: https://github.com/spectra-g/scratch-tabs-feedback/issues/new
+Report issues: https://github.com/spectra-g/scratch-tabs/issues/new
 `;

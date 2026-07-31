@@ -1278,9 +1278,15 @@ select::-webkit-scrollbar-thumb:hover {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  padding: 0.3rem 0.4rem 0.3rem 0.75rem;
+  padding: 0.3rem 0.75rem 0.3rem 0.4rem;
   border-bottom: 1px solid rgb(var(--color-border-base) / 0.7);
   background-color: rgb(var(--color-surface-highlight) / 0.4);
+}
+
+.md-code-block__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .md-code-block__lang {
@@ -1291,7 +1297,9 @@ select::-webkit-scrollbar-thumb:hover {
   color: rgb(var(--color-text-muted));
 }
 
-.md-code-block__copy {
+.md-code-block__copy,
+.md-code-block__open-tab,
+.md-code-block__toggle-mermaid {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
@@ -1304,13 +1312,48 @@ select::-webkit-scrollbar-thumb:hover {
 }
 
 .md-code-block:hover .md-code-block__copy,
-.md-code-block__copy:focus-visible {
+.md-code-block__copy:focus-visible,
+.md-code-block:hover .md-code-block__open-tab,
+.md-code-block__open-tab:focus-visible,
+.md-code-block:hover .md-code-block__toggle-mermaid,
+.md-code-block__toggle-mermaid:focus-visible {
   opacity: 1;
 }
 
-.md-code-block__copy:hover {
+.md-code-block__copy:hover,
+.md-code-block__open-tab:hover,
+.md-code-block__toggle-mermaid:hover {
   color: rgb(var(--color-text-main));
   background-color: rgb(var(--color-element-hover));
+}
+
+.md-mermaid-diagram {
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+.md-mermaid-diagram svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.md-mermaid-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 1.5rem 1rem;
+  font-size: 0.8125rem;
+  color: rgb(var(--color-text-muted));
+}
+
+.md-mermaid-error {
+  padding: 0.6rem 1rem;
+  font-size: 0.8125rem;
+  color: rgb(var(--color-danger-subtle-text));
+  background-color: rgb(var(--color-danger-subtle-bg) / 0.5);
+  border-bottom: 1px solid rgb(var(--color-border-base) / 0.7);
 }
 
 .md-preview pre {
