@@ -313,6 +313,7 @@ export const JsonSmartView: React.FC<SmartViewProps> = ({
         editor={editor}
         onContentChange={onContentChange}
         tabId={tabId}
+        content={content}
         searchText={searchText}
         onSearchTextChange={handleSearchTextChange}
         onFindNext={handleFindNext}
