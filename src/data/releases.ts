@@ -15,12 +15,35 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.44.0';
+export const APP_VERSION = '1.45.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.44.0",
+    "version": "1.45.0",
     "type": "latest",
+    "date": "2026-07-31",
+    "headline": "Top-Level Tab Actions + Markdown Diagrams",
+    "summary": "Restored top-level Import/Canvas buttons, JSON search path suggestions, and mermaid diagram rendering with a repositioned copy/open toolbar in Markdown code blocks.",
+    "categories": [
+      {
+        "name": "Improvements",
+        "changes": [
+          "**Top-level tab actions:** New Tab, Import from Paste, Canvas, and Developer Tool are top-level buttons again instead of a dropdown menu",
+          "**JSON search suggestions:** Field-name and query-path autocomplete while typing in the JSON smart view search box",
+          "**Markdown code block toolbar:** Copy and open-in-new-tab icons repositioned to the top-left of each code block"
+        ]
+      },
+      {
+        "name": "New Features",
+        "changes": [
+          "**Mermaid diagrams in Markdown:** Fenced mermaid code blocks render as diagrams in the Markdown preview, with fallback to raw source on error"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.44.0",
+    "type": "release",
     "date": "2026-07-24",
     "headline": "Spatial Canvas",
     "summary": "Arrange code, notes, images, links, and videos on a local-first infinite canvas.",

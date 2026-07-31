@@ -130,31 +130,44 @@
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
 
-        <!-- Version 1.44.0 -->
+        <!-- Version 1.45.0 -->
         <div class="changelog-entry latest">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-white">V1.44.0</h2>
+              <h2 class="text-2xl font-bold text-white">V1.45.0</h2>
               <span class="badge latest">LATEST</span>
             </div>
-            <span class="text-gray-500 text-xs font-mono">07/24/2026</span>
+            <span class="text-gray-500 text-xs font-mono">07/31/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">SPATIAL CANVAS</h3>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">TOP-LEVEL TAB ACTIONS + MARKDOWN DIAGRAMS</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">Spatial Canvas is a desktop workspace for keeping related developer context together.</p>
+            <p class="mb-4">Tab creation actions are back to top-level buttons instead of a dropdown. JSON smart view search now suggests field names and query paths as you type. Markdown code blocks got a repositioned copy/open-in-tab toolbar, and fenced mermaid blocks now render as diagrams.</p>
+
+            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># improvements</h4>
+            <ul class="space-y-2 mb-6">
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Top-level tab actions:</strong> New Tab, Import from Paste, Canvas, and Developer Tool are top-level buttons again instead of a dropdown menu</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>JSON search suggestions:</strong> Field-name and query-path autocomplete while typing in the JSON smart view search box</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Markdown code block toolbar:</strong> Copy and open-in-new-tab icons repositioned to the top-left of each code block</span></li>
+            </ul>
 
             <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
             <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Mixed content:</strong> Add text, code and JSON, local images, links, and click-to-load YouTube or Vimeo cards</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Spatial controls:</strong> Pan, zoom, resize, multi-select, layer, duplicate, undo, redo, and navigate by keyboard</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Fast capture:</strong> Paste or drop content, or send a tab or selection to a new or existing Canvas</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Mermaid diagrams in Markdown:</strong> Fenced mermaid code blocks render as diagrams in the Markdown preview, with fallback to raw source on error</span></li>
             </ul>
-
-            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># local-first_workspace</h4>
-            <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Private persistence:</strong> Canvas documents and images stay in local IndexedDB and work offline</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Workspace integration:</strong> Search cards, use split view, and preserve Canvas content through workspace import and export</span></li>
-            </ul>
+          </div>
+        </div>
+        <!-- Version 1.44.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.44.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">07/24/2026</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">SPATIAL CANVAS</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p>Arrange code, notes, images, links, and videos on a local-first infinite canvas.</p>
           </div>
         </div>
         <!-- Version 1.43.0 -->
@@ -926,7 +939,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.44.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.45.0</span>
         </div>
 
         <div class="flex space-x-8">
