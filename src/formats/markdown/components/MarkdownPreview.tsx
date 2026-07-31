@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   Check,
   Copy,
+  ExternalLink,
   Info,
   MessageSquare,
   ShieldAlert,
@@ -17,6 +18,8 @@ import { getLoadedHighlighter, highlightCode, loadHighlighter } from "../highlig
 import { rehypeCallouts, rehypeHeadingIds, CALLOUT_KINDS } from "../rehypePlugins";
 import MarkdownOutline from "./MarkdownOutline";
 import { useOutline } from "../useOutline";
+import { useRootStore } from "../../../stores/rootStore";
+import { createTab } from "../../../utils/tabUtils";
 
 interface MarkdownPreviewProps {
   content: string;
@@ -78,7 +81,7 @@ function renderHighlighted(nodes: RootContent[]): React.ReactNode {
   });
 }
 
-const CodeBlock: React.FC<{
+export const CodeBlock: React.FC<{
   node?: Element;
   children?: React.ReactNode;
   lineOffset: number;
@@ -86,6 +89,7 @@ const CodeBlock: React.FC<{
   const [copied, setCopied] = useState(false);
   const language = getCodeLanguage(node);
   const code = getCodeText(node);
+  const { addBackgroundTab } = useRootStore();
 
   const highlighterReady = useHighlighterReady();
   const highlighted = useMemo(
@@ -104,22 +108,43 @@ const CodeBlock: React.FC<{
     }
   }, [code]);
 
+  const handleOpenInTab = useCallback(() => {
+    const tab = createTab({
+      title: language ? `Code snippet.${language}` : "Code snippet",
+      content: code,
+      language: language ?? "plaintext",
+    });
+    addBackgroundTab(tab, false);
+  }, [code, language, addBackgroundTab]);
+
   return (
     <div className="md-code-block" data-source-line={srcLine(node, lineOffset)}>
       <div className="md-code-block__bar">
+        <div className="md-code-block__actions">
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="md-code-block__copy"
+            aria-label={copied ? "Copied" : "Copy code"}
+            data-testid="markdown-copy-code"
+          >
+            {copied ? <Check size={12} /> : <Copy size={12} />}
+            {copied ? "Copied" : "Copy"}
+          </button>
+          <button
+            type="button"
+            onClick={handleOpenInTab}
+            className="md-code-block__open-tab"
+            aria-label="Open in new tab"
+            data-testid="markdown-open-code-in-tab"
+          >
+            <ExternalLink size={12} />
+            Open in tab
+          </button>
+        </div>
         <span className="md-code-block__lang">{language ?? "text"}</span>
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="md-code-block__copy"
-          aria-label={copied ? "Copied" : "Copy code"}
-          data-testid="markdown-copy-code"
-        >
-          {copied ? <Check size={12} /> : <Copy size={12} />}
-          {copied ? "Copied" : "Copy"}
-        </button>
       </div>
-      <pre>
+      <pre className="custom-scrollbar">
         {highlighted ? (
           <code className={language ? `language-${language}` : undefined}>
             {renderHighlighted(highlighted.children)}
