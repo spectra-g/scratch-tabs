@@ -91,28 +91,20 @@ export class CanvasActions {
   }
 
   async createCanvas() {
-    const trigger = this.page.getByTestId("new-document-menu-trigger").first();
-    await expect(trigger).toBeVisible();
-    await trigger.click();
-    const button = this.page.getByTestId("icon-new-canvas");
+    const button = this.page.getByTestId("icon-new-canvas").first();
     await expect(button).toBeVisible();
     await button.click();
   }
 
   async createCanvasWithKeyboard() {
-    const trigger = this.page.getByTestId("new-document-menu-trigger").first();
-    await trigger.focus();
-    await this.page.keyboard.press("Enter");
-    const canvasChoice = this.page.getByRole("menuitem", { name: "Canvas" });
-    await expect(canvasChoice).toBeVisible();
-    await canvasChoice.focus();
+    const button = this.page.getByTestId("icon-new-canvas").first();
+    await button.focus();
     await this.page.keyboard.press("Enter");
     await expect(this.page.getByTestId("canvas-flow")).toBeVisible();
   }
 
   async createCanvasFromToolSelector() {
-    await this.page.getByTestId("new-document-menu-trigger").first().click();
-    await this.page.getByTestId("new-document-tool").click();
+    await this.page.getByTestId("icon-new-tools").first().click();
     const selector = this.page.getByRole("dialog", { name: "Tool Selector" });
     await expect(selector).toBeVisible();
     const canvas = selector

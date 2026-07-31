@@ -37,32 +37,12 @@ export class NavigationActions {
     await locator.click();
   }
 
-  async selectNewDocumentOption(
-    optionTestId: "new-document-clipboard" | "new-document-tool",
-    side: "left" | "right" = "left",
-  ) {
-    const splitViewExists = await this.page
-      .locator('[data-editor-pane-side="right"]')
-      .isVisible();
-    const trigger = splitViewExists
-      ? this.page.locator(
-          `[data-testid="new-document-menu-trigger"][data-side="${side}"]`,
-        )
-      : this.page.getByTestId("new-document-menu-trigger").first();
-
-    await expect(trigger).toBeVisible();
-    await trigger.click();
-    const option = this.page.getByTestId(optionTestId);
-    await expect(option).toBeVisible();
-    await option.click();
+  async createTabFromClipboardMenu(side: "left" | "right" = "left") {
+    await this.clickIcon("New tab from clipboard", side);
   }
 
-  async createTabFromClipboardMenu() {
-    await this.selectNewDocumentOption("new-document-clipboard");
-  }
-
-  async openToolSelectorFromDocumentMenu() {
-    await this.selectNewDocumentOption("new-document-tool");
+  async openToolSelectorFromDocumentMenu(side: "left" | "right" = "left") {
+    await this.clickIcon("New tools", side);
   }
 
   async doubleClickOnPage() {
