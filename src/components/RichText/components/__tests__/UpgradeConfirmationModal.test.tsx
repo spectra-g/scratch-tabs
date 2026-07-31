@@ -54,4 +54,12 @@ describe("UpgradeConfirmationModal", () => {
 
     expect(actions.onPasteAsDataUrl).toHaveBeenCalledTimes(1);
   });
+
+  it("closes when Escape is pressed", () => {
+    const actions = renderModal(true);
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(actions.onCancel).toHaveBeenCalledTimes(1);
+  });
 });
