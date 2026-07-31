@@ -5,9 +5,12 @@ import type { Element, RootContent } from "hast";
 import {
   AlertTriangle,
   Check,
+  Code,
   Copy,
   ExternalLink,
+  Eye,
   Info,
+  Loader2,
   MessageSquare,
   ShieldAlert,
   Sparkles,
@@ -18,6 +21,7 @@ import { getLoadedHighlighter, highlightCode, loadHighlighter } from "../highlig
 import { rehypeCallouts, rehypeHeadingIds, CALLOUT_KINDS } from "../rehypePlugins";
 import MarkdownOutline from "./MarkdownOutline";
 import { useOutline } from "../useOutline";
+import { useMermaidPreview } from "../hooks/useMermaidPreview";
 import { useRootStore } from "../../../stores/rootStore";
 import { createTab } from "../../../utils/tabUtils";
 
@@ -87,9 +91,29 @@ export const CodeBlock: React.FC<{
   lineOffset: number;
 }> = ({ node, children, lineOffset }) => {
   const [copied, setCopied] = useState(false);
+  const [showMermaidSource, setShowMermaidSource] = useState(false);
   const language = getCodeLanguage(node);
   const code = getCodeText(node);
   const { addBackgroundTab } = useRootStore();
+
+  const isMermaid = language === "mermaid";
+  const {
+    svg: mermaidSvg,
+    error: mermaidError,
+    isLoading: mermaidLoading,
+  } = useMermaidPreview(isMermaid ? code : "");
+
+  const mermaidState: "diagram" | "loading" | "error" | "source" = !isMermaid
+    ? "source"
+    : mermaidError
+      ? "error"
+      : showMermaidSource
+        ? "source"
+        : mermaidSvg
+          ? "diagram"
+          : mermaidLoading
+            ? "loading"
+            : "source";
 
   const highlighterReady = useHighlighterReady();
   const highlighted = useMemo(
@@ -141,18 +165,55 @@ export const CodeBlock: React.FC<{
             <ExternalLink size={12} />
             Open in tab
           </button>
+          {isMermaid && mermaidSvg && !mermaidError && (
+            <button
+              type="button"
+              onClick={() => setShowMermaidSource((v) => !v)}
+              className="md-code-block__toggle-mermaid"
+              aria-label={showMermaidSource ? "Show diagram" : "Show source"}
+              data-testid="markdown-mermaid-toggle"
+            >
+              {showMermaidSource ? <Eye size={12} /> : <Code size={12} />}
+              {showMermaidSource ? "Diagram" : "Source"}
+            </button>
+          )}
         </div>
         <span className="md-code-block__lang">{language ?? "text"}</span>
       </div>
-      <pre className="custom-scrollbar">
-        {highlighted ? (
-          <code className={language ? `language-${language}` : undefined}>
-            {renderHighlighted(highlighted.children)}
-          </code>
-        ) : (
-          children
-        )}
-      </pre>
+
+      {mermaidState === "diagram" && mermaidSvg && (
+        <div
+          className="md-mermaid-diagram"
+          data-testid="markdown-mermaid-diagram"
+          dangerouslySetInnerHTML={{ __html: mermaidSvg }}
+        />
+      )}
+
+      {mermaidState === "loading" && (
+        <div className="md-mermaid-loading" data-testid="markdown-mermaid-loading">
+          <Loader2 size={14} className="animate-spin" />
+          <span>Rendering diagram…</span>
+        </div>
+      )}
+
+      {(mermaidState === "source" || mermaidState === "error") && (
+        <>
+          {mermaidState === "error" && (
+            <div className="md-mermaid-error" data-testid="markdown-mermaid-error">
+              Diagram failed to render: {mermaidError}
+            </div>
+          )}
+          <pre className="custom-scrollbar">
+            {highlighted ? (
+              <code className={language ? `language-${language}` : undefined}>
+                {renderHighlighted(highlighted.children)}
+              </code>
+            ) : (
+              children
+            )}
+          </pre>
+        </>
+      )}
     </div>
   );
 };

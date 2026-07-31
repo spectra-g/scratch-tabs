@@ -9,6 +9,12 @@ jest.mock("../../../stores/rootStore", () => ({
   useRootStore: () => ({ addBackgroundTab }),
 }));
 
+const mockUseMermaidPreview = jest.fn();
+
+jest.mock("../hooks/useMermaidPreview", () => ({
+  useMermaidPreview: (code: string) => mockUseMermaidPreview(code),
+}));
+
 /** Mirrors the hast shape react-markdown passes to the `pre` component. */
 const preNode = (className: unknown, ...text: string[]) =>
   ({
@@ -28,6 +34,8 @@ const preNode = (className: unknown, ...text: string[]) =>
 describe("CodeBlock", () => {
   beforeEach(() => {
     addBackgroundTab.mockClear();
+    mockUseMermaidPreview.mockReset();
+    mockUseMermaidPreview.mockReturnValue({ svg: null, error: null, isLoading: false });
   });
 
   it("puts both the copy and open-in-tab actions on the left, language on the right", () => {
@@ -80,5 +88,103 @@ describe("CodeBlock", () => {
 
     const [tab] = addBackgroundTab.mock.calls[0];
     expect(tab.language).toBe("plaintext");
+  });
+
+  describe("mermaid diagrams", () => {
+    it("renders the diagram and a source toggle once the SVG is ready", () => {
+      mockUseMermaidPreview.mockReturnValue({
+        svg: "<svg><text>diagram</text></svg>",
+        error: null,
+        isLoading: false,
+      });
+
+      render(
+        <CodeBlock node={preNode(["language-mermaid"], "graph TD; A-->B;")} lineOffset={0}>
+          {"graph TD; A-->B;"}
+        </CodeBlock>,
+      );
+
+      const diagram = screen.getByTestId("markdown-mermaid-diagram");
+      expect(diagram.innerHTML).toContain("diagram");
+      expect(screen.getByTestId("markdown-mermaid-toggle")).toBeInTheDocument();
+      expect(screen.queryByTestId("markdown-mermaid-loading")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("markdown-mermaid-error")).not.toBeInTheDocument();
+    });
+
+    it("toggles between the diagram and raw source", async () => {
+      const user = userEvent.setup();
+      mockUseMermaidPreview.mockReturnValue({
+        svg: "<svg><text>diagram</text></svg>",
+        error: null,
+        isLoading: false,
+      });
+
+      render(
+        <CodeBlock node={preNode(["language-mermaid"], "graph TD; A-->B;")} lineOffset={0}>
+          {"graph TD; A-->B;"}
+        </CodeBlock>,
+      );
+
+      await user.click(screen.getByTestId("markdown-mermaid-toggle"));
+
+      expect(screen.queryByTestId("markdown-mermaid-diagram")).not.toBeInTheDocument();
+      expect(screen.getByText("graph TD; A-->B;")).toBeInTheDocument();
+
+      await user.click(screen.getByTestId("markdown-mermaid-toggle"));
+
+      expect(screen.getByTestId("markdown-mermaid-diagram")).toBeInTheDocument();
+    });
+
+    it("shows a loading indicator while the diagram is rendering", () => {
+      mockUseMermaidPreview.mockReturnValue({ svg: null, error: null, isLoading: true });
+
+      render(
+        <CodeBlock node={preNode(["language-mermaid"], "graph TD; A-->B;")} lineOffset={0}>
+          {"graph TD; A-->B;"}
+        </CodeBlock>,
+      );
+
+      expect(screen.getByTestId("markdown-mermaid-loading")).toBeInTheDocument();
+      expect(screen.queryByTestId("markdown-mermaid-diagram")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("markdown-mermaid-toggle")).not.toBeInTheDocument();
+    });
+
+    it("falls back to raw source with an error message on render failure", () => {
+      mockUseMermaidPreview.mockReturnValue({
+        svg: null,
+        error: "Parse error on line 1",
+        isLoading: false,
+      });
+
+      render(
+        <CodeBlock node={preNode(["language-mermaid"], "not a diagram")} lineOffset={0}>
+          {"not a diagram"}
+        </CodeBlock>,
+      );
+
+      expect(screen.getByTestId("markdown-mermaid-error")).toHaveTextContent(
+        "Parse error on line 1",
+      );
+      expect(screen.getByText("not a diagram")).toBeInTheDocument();
+      expect(screen.queryByTestId("markdown-mermaid-diagram")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("markdown-mermaid-toggle")).not.toBeInTheDocument();
+    });
+
+    it("never renders diagram UI for non-mermaid blocks", () => {
+      mockUseMermaidPreview.mockReturnValue({
+        svg: "<svg><text>diagram</text></svg>",
+        error: null,
+        isLoading: false,
+      });
+
+      render(
+        <CodeBlock node={preNode(["language-js"], "const a = 1;")} lineOffset={0}>
+          {"const a = 1;"}
+        </CodeBlock>,
+      );
+
+      expect(screen.queryByTestId("markdown-mermaid-diagram")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("markdown-mermaid-toggle")).not.toBeInTheDocument();
+    });
   });
 });
