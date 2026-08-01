@@ -977,10 +977,6 @@ select::-webkit-scrollbar-thumb:hover {
 }
 
 .md-preview {
-  /* Measure is the text column; the box is wider because the padding is inside
-     it. 74ch minus 6rem of gutters lands on the same reading width as before. */
-  --md-measure: 74ch;
-
   max-width: var(--md-measure);
   margin-inline: auto;
   margin-block: 0.25rem 2.5rem;
@@ -1462,17 +1458,38 @@ select::-webkit-scrollbar-thumb:hover {
 /* --- Document layout (prose + outline rail) ----------------------------- */
 
 .md-doc {
+  /* Measure is the text column; the box is wider because the padding is inside
+     it. 74ch minus 6rem of gutters lands on the same reading width as before. */
+  --md-measure: 74ch;
+  --md-outline-width: 12rem;
+  --md-outline-gap: 1rem;
+
   position: relative;
 }
 
-/* The rail lives in the gutter the centred measure leaves behind, so the prose
-   column stays exactly where it is whether or not the outline is showing.
-   Only rendered above 1040px, where that gutter is wider than the rail. */
+/* Centre the page and its outline as one composition. Keeping the rail out of
+   flow made an increasingly wide preview pin it to the far edge of the pane,
+   leaving the combined layout visually off-centre. */
+.md-doc[data-outline] {
+  display: grid;
+  grid-template-columns: minmax(0, var(--md-measure)) var(--md-outline-width);
+  column-gap: var(--md-outline-gap);
+  align-items: start;
+  justify-content: center;
+}
+
+.md-doc[data-outline] .md-preview {
+  grid-column: 1;
+  grid-row: 1;
+  width: 100%;
+  margin-inline: 0;
+}
+
 .md-outline {
-  position: absolute;
-  inset-block: 0;
-  right: 0;
-  width: 12rem;
+  grid-column: 2;
+  grid-row: 1;
+  align-self: stretch;
+  width: var(--md-outline-width);
 }
 
 .md-outline__inner {
