@@ -1462,27 +1462,23 @@ select::-webkit-scrollbar-thumb:hover {
      it. 74ch minus 6rem of gutters lands on the same reading width as before. */
   --md-measure: 74ch;
   --md-outline-width: 12rem;
-  --md-outline-gap: 1rem;
-
   position: relative;
 }
 
-/* Centre the page and its outline as one composition. Keeping the rail out of
-   flow made an increasingly wide preview pin it to the far edge of the pane,
-   leaving the combined layout visually off-centre. */
+/* Reserve the outline's fixed-width rail, then centre the page within the
+   remaining reading area. This keeps equal whitespace on both sides of the
+   paper instead of letting the paper touch the rail. */
 .md-doc[data-outline] {
   display: grid;
-  grid-template-columns: minmax(0, var(--md-measure)) var(--md-outline-width);
-  column-gap: var(--md-outline-gap);
+  grid-template-columns: minmax(0, 1fr) var(--md-outline-width);
   align-items: start;
-  justify-content: center;
 }
 
 .md-doc[data-outline] .md-preview {
   grid-column: 1;
   grid-row: 1;
   width: 100%;
-  margin-inline: 0;
+  margin-inline: auto;
 }
 
 .md-outline {
