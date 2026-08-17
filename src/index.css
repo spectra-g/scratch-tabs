@@ -7,6 +7,41 @@
 @tailwind components;
 @tailwind utilities;
 
+/* The status bar is also used inside split panes. Keep the new two-option
+   view switch visible while allowing lower-priority cursor details to yield
+   space at narrow pane widths. */
+@layer components {
+  .status-bar-container {
+    container-type: inline-size;
+  }
+
+  .status-bar-left {
+    scrollbar-width: none;
+  }
+
+  .status-bar-left::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@container (max-width: 520px) {
+  .status-bar-cursor-position,
+  .status-bar-cursor-divider {
+    display: none;
+  }
+
+  .status-bar-container {
+    gap: 0.375rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .status-bar-left,
+  .status-bar-right {
+    gap: 0.375rem;
+  }
+}
+
 @layer base {
   :root {
     /* Semantic Design Tokens - Surfaces */

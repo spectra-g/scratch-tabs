@@ -11,8 +11,8 @@ export class SmartViewCalloutActions {
     return this.page.locator('[data-testid="smart-view-callout-message"]');
   }
 
-  getSwitchButton() {
-    return this.page.locator('[data-testid="smart-view-callout-switch"]');
+  getDataViewButton() {
+    return this.page.locator('[data-testid="smart-view-callout-data-view"]');
   }
 
   getDismissButton() {
@@ -34,10 +34,10 @@ export class SmartViewCalloutActions {
     await expect(message).toContainText(text);
   }
 
-  async clickSwitchButton() {
-    const switchButton = this.getSwitchButton();
-    await expect(switchButton).toBeVisible();
-    await switchButton.click();
+  async clickDataViewButton() {
+    const dataViewButton = this.getDataViewButton();
+    await expect(dataViewButton).toBeVisible();
+    await dataViewButton.click();
   }
 
   async clickDismissButton() {
@@ -46,9 +46,8 @@ export class SmartViewCalloutActions {
     await dismissButton.click();
   }
 
-  async expectSwitchButtonVisible() {
-    const switchButton = this.getSwitchButton();
-    await expect(switchButton).toBeVisible();
+  async expectDataViewButtonVisible() {
+    await expect(this.getDataViewButton()).toBeVisible();
   }
 
   async expectDismissButtonVisible() {

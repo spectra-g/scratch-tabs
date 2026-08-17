@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { X, Sparkles } from '../Icons';
+import { Eye, X } from '../Icons';
 import { SmartView } from '../../views/registry';
 import { formatRegistry } from '../../formats';
 
@@ -38,30 +38,35 @@ export const SmartViewCalloutWidget: React.FC<SmartViewCalloutWidgetProps> = ({
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 20 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      className="flex items-center justify-between p-3 bg-surface border border-base border-l-4 border-l-primary text-main rounded shadow-xl max-w-sm backdrop-blur-sm"
+      className="flex items-center justify-between gap-3 rounded-lg border border-base bg-surface-raised/95 p-2.5 text-main shadow-xl backdrop-blur-sm max-w-sm"
       style={{
         position: 'relative',
         zIndex: 1000,
-        minWidth: '300px'
+        minWidth: '286px'
       }}
     >
-      <div className="flex items-center space-x-3 overflow-hidden">
-        <div className="p-1.5 bg-primary/10 rounded-full flex-shrink-0">
-           <Sparkles size={16} className="text-primary animate-pulse" />
+      <div className="flex min-w-0 items-center gap-2.5 overflow-hidden">
+        <div
+          data-testid="smart-view-callout-icon"
+          className="flex-shrink-0 rounded-md border border-base bg-element p-1.5 text-secondary"
+        >
+           <Eye size={15} aria-hidden="true" />
         </div>
-        <div className="flex flex-col" data-testid="smart-view-callout-message">
-          <span className="text-xs font-bold text-main">{formatName} Detected</span>
-          <span className="text-[10px] text-muted truncate">Smart View available</span>
+        <div className="flex min-w-0 flex-col" data-testid="smart-view-callout-message">
+          <span className="text-xs font-semibold text-main">Data View available</span>
+          <span className="truncate text-[10px] text-muted">{formatName} detected</span>
         </div>
       </div>
 
-      <div className="flex items-center space-x-2 ml-4 flex-shrink-0">
+      <div className="ml-2 flex flex-shrink-0 items-center gap-1.5">
         <button
-          data-testid="smart-view-callout-switch"
+          data-testid="smart-view-callout-data-view"
           onClick={onSwitch}
-          className="px-3 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-medium rounded transition-colors shadow-sm"
+          className="rounded-md border border-base bg-surface-raised px-2.5 py-1.5 text-xs font-semibold text-main shadow-sm transition-colors hover:bg-element-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+          aria-label="Open Data View"
+          title={`Open Data View (${view.label})`}
         >
-          Open View
+          Data View
         </button>
         <button
           data-testid="smart-view-callout-dismiss"

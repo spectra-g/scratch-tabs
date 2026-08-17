@@ -19,8 +19,8 @@ Then('the smart view callout message should contain "{string}"', async function(
 });
 
 // Button interactions
-When('I click the smart view callout switch button', async function() {
-  await this.smartViewCallout.clickSwitchButton();
+When('I click the Data View button in the smart view callout', async function() {
+  await this.smartViewCallout.clickDataViewButton();
 });
 
 When('I click the smart view callout dismiss button', async function() {

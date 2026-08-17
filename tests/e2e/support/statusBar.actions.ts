@@ -105,42 +105,41 @@ export class StatusBarActions {
     await this.expectStatusBarLanguage(toLanguage);
   }
 
-  // CSV-specific methods
-  getTableViewButton() {
-    return this.page.locator('[title="Open Table View"], [title="Close Table View"]');
+  // Smart view switch methods
+  getTextViewButton() {
+    return this.page.locator('[data-testid="text-view-button"]');
   }
 
-  async expectTableViewButtonVisible() {
-    const tableViewButton = this.getTableViewButton();
-    await expect(tableViewButton).toBeVisible();
+  getDataViewButton() {
+    return this.page.locator('[data-testid="data-view-button"]');
   }
 
-  async expectTableViewButtonNotVisible() {
-    const openButton = this.page.locator('[title="Open Table View"]');
-    const closeButton = this.page.locator('[title="Close Table View"]');
-    await expect(openButton).not.toBeVisible();
-    await expect(closeButton).not.toBeVisible();
+  async expectDataViewSwitchVisible() {
+    await expect(this.getTextViewButton()).toBeVisible();
+    await expect(this.getDataViewButton()).toBeVisible();
   }
 
-  async clickTableViewButton() {
-    const openButton = this.page.locator('[title="Open Table View"]');
-    const closeButton = this.page.locator('[title="Close Table View"]');
-
-    if (await openButton.isVisible()) {
-      await openButton.click();
-    } else if (await closeButton.isVisible()) {
-      await closeButton.click();
-    } else {
-      throw new Error('Table View button not found');
-    }
-
-    // Wait for view transition
-    await this.page.waitForTimeout(500);
+  async expectDataViewSwitchNotVisible() {
+    await expect(this.getTextViewButton()).not.toBeVisible();
+    await expect(this.getDataViewButton()).not.toBeVisible();
   }
 
-  async isTableViewOpen() {
-    const closeButton = this.page.locator('[title="Close Table View"]');
-    return await closeButton.isVisible();
+  async expectTextViewSelected() {
+    await expect(this.getTextViewButton()).toHaveAttribute('aria-pressed', 'true');
+    await expect(this.getDataViewButton()).toHaveAttribute('aria-pressed', 'false');
+  }
+
+  async expectDataViewSelected() {
+    await expect(this.getDataViewButton()).toHaveAttribute('aria-pressed', 'true');
+    await expect(this.getTextViewButton()).toHaveAttribute('aria-pressed', 'false');
+  }
+
+  async clickDataViewButton() {
+    await this.getDataViewButton().click();
+  }
+
+  async clickTextViewButton() {
+    await this.getTextViewButton().click();
   }
 
   async waitForLanguageDetection(expectedLanguage: string) {

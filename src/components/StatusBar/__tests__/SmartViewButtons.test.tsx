@@ -15,28 +15,11 @@ jest.mock("../../../stores", () => ({
   useRootStore: jest.fn(),
 }));
 
-// Render framer-motion primitives without animation so DOM state is testable
-jest.mock("framer-motion", () => ({
-  motion: {
-    button: ({ children, className, onClick, title, "data-testid": testId }: any) => (
-      <button className={className} onClick={onClick} title={title} data-testid={testId}>
-        {children}
-      </button>
-    ),
-    span: ({ children, className, style }: any) => (
-      <span className={className} style={style}>{children}</span>
-    ),
-  },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
-}));
-
-const MockIcon = ({ size }: { size: number }) => <svg data-testid="view-icon" width={size} />;
-
 const mockView = {
   id: "json-tree",
   label: "JSON Tree",
   languageId: "json",
-  icon: MockIcon,
+  icon: () => null,
   component: () => null,
   mode: "replaces" as const,
 };
@@ -54,41 +37,33 @@ describe("SmartViewButtons", () => {
 
   it("renders nothing when no views are registered for the language", () => {
     (smartViewRegistry.getViewsForLanguage as jest.Mock).mockReturnValue([]);
+
     const { container } = render(<SmartViewButtons language="plaintext" tabId="tab-1" />);
+
     expect(container.firstChild).toBeNull();
   });
 
-  it("renders an icon-only button when the view is inactive", () => {
+  it("renders both Text View and Data View with Text View selected by default", () => {
     (smartViewRegistry.getViewsForLanguage as jest.Mock).mockReturnValue([mockView]);
+
     render(<SmartViewButtons language="json" tabId="tab-1" />);
 
-    expect(screen.getByTestId("table-view-button")).toBeInTheDocument();
-    expect(screen.getByTestId("view-icon")).toBeInTheDocument();
-    expect(screen.queryByText("JSON Tree")).not.toBeInTheDocument();
+    expect(screen.getByTestId("text-view-button")).toHaveTextContent("Text View");
+    expect(screen.getByTestId("data-view-button")).toHaveTextContent("Data View");
+    expect(screen.getByTestId("text-view-button")).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByTestId("data-view-button")).toHaveAttribute("aria-pressed", "false");
   });
 
-  it("renders icon + label + × when the view is active", () => {
-    (smartViewRegistry.getViewsForLanguage as jest.Mock).mockReturnValue([mockView]);
-    (useRootStore as jest.Mock).mockReturnValue({
-      getActiveView: jest.fn(() => "json-tree"),
-      setActiveView: mockSetActiveView,
-    });
-
-    render(<SmartViewButtons language="json" tabId="tab-1" />);
-
-    expect(screen.getByText("JSON Tree")).toBeInTheDocument();
-    expect(screen.getByTestId("table-view-button")).toHaveAttribute("title", "Close JSON Tree");
-  });
-
-  it("calls setActiveView with the view id when clicking an inactive button", () => {
+  it("selects the primary Data View when the data option is clicked", () => {
     (smartViewRegistry.getViewsForLanguage as jest.Mock).mockReturnValue([mockView]);
     render(<SmartViewButtons language="json" tabId="tab-1" />);
 
-    fireEvent.click(screen.getByTestId("table-view-button"));
+    fireEvent.click(screen.getByTestId("data-view-button"));
+
     expect(mockSetActiveView).toHaveBeenCalledWith("tab-1", "json-tree");
   });
 
-  it("calls setActiveView with null when clicking an active button", () => {
+  it("returns to Text View when the selected text option is clicked", () => {
     (smartViewRegistry.getViewsForLanguage as jest.Mock).mockReturnValue([mockView]);
     (useRootStore as jest.Mock).mockReturnValue({
       getActiveView: jest.fn(() => "json-tree"),
@@ -96,17 +71,23 @@ describe("SmartViewButtons", () => {
     });
 
     render(<SmartViewButtons language="json" tabId="tab-1" />);
+    fireEvent.click(screen.getByTestId("text-view-button"));
 
-    fireEvent.click(screen.getByTestId("table-view-button"));
     expect(mockSetActiveView).toHaveBeenCalledWith("tab-1", null);
   });
 
-  it("renders one button per registered view", () => {
-    const secondView = { ...mockView, id: "json-schema", label: "Schema" };
-    (smartViewRegistry.getViewsForLanguage as jest.Mock).mockReturnValue([mockView, secondView]);
+  it("marks Data View selected for any registered active smart view", () => {
+    const secondaryView = { ...mockView, id: "json-schema", label: "Schema" };
+    (smartViewRegistry.getViewsForLanguage as jest.Mock).mockReturnValue([mockView, secondaryView]);
+    (useRootStore as jest.Mock).mockReturnValue({
+      getActiveView: jest.fn(() => "json-schema"),
+      setActiveView: mockSetActiveView,
+    });
 
     render(<SmartViewButtons language="json" tabId="tab-1" />);
 
-    expect(screen.getAllByTestId("table-view-button")).toHaveLength(2);
+    expect(screen.getByTestId("text-view-button")).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByTestId("data-view-button")).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByTestId("data-view-button")).toHaveAttribute("aria-label", "Data View (JSON Tree)");
   });
 });

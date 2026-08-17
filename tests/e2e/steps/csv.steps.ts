@@ -14,17 +14,21 @@ CsvThen('the status bar should show language "{string}"', async function(expecte
   await this.statusBar.expectStatusBarLanguage(expectedLanguage);
 });
 
-// Table view button steps
-CsvThen('the status bar should contain a Table View button', async function() {
-  await this.statusBar.expectTableViewButtonVisible();
+// Text/Data view switch steps
+CsvThen('the status bar should contain a Data View button', async function() {
+  await this.statusBar.expectDataViewSwitchVisible();
 });
 
-CsvThen('the status bar should not contain a Table View button', async function() {
-  await this.statusBar.expectTableViewButtonNotVisible();
+CsvThen('the status bar should not contain a Data View button', async function() {
+  await this.statusBar.expectDataViewSwitchNotVisible();
 });
 
-CsvWhen('I click the Table View button in the status bar', async function() {
-  await this.statusBar.clickTableViewButton();
+CsvWhen('I click the Data View button in the status bar', async function() {
+  await this.statusBar.clickDataViewButton();
+});
+
+CsvWhen('I click the Text View button in the status bar', async function() {
+  await this.statusBar.clickTextViewButton();
 });
 
 // CSV table view visibility steps

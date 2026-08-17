@@ -9,7 +9,7 @@
  */
 export const DEMO_JSON_CONTENT = {
   "welcome": "Smart View Demo",
-  "smartView": "Click the 'Open View' button in the Smart View popup to the right",
+  "smartView": "Click the 'Data View' button in the Smart View popup to the right",
   "features": {
     "autoDetection": "Paste any JSON to see it transform automatically",
     "treeView": "Navigate nested objects with expand/collapse",
@@ -18,7 +18,7 @@ export const DEMO_JSON_CONTENT = {
   },
   "howToUse": [
     "1. Everything starts off as a raw editor, until content is pasted in",
-    "2. Upon auto-detection, click the 'Open View' button to the right to transform the view",
+    "2. Upon auto-detection, click the 'Data View' button to the right to transform the view",
     "3. Click arrows to expand/collapse objects",
     "4. Paste your own JSON (Ctrl+V) to try it yourself"
   ],

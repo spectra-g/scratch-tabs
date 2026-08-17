@@ -133,23 +133,23 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-between px-3 py-0.5 bg-surface-tab-bar text-main text-xs border-t border-base" data-testid="status-bar">
+    <div className="status-bar-container flex min-w-0 items-center justify-between gap-2 border-t border-base bg-surface-tab-bar px-3 py-0.5 text-xs text-main" data-testid="status-bar">
       {/* Left side: Language/Position info */}
-      <div className="flex items-center space-x-4">
+      <div className="status-bar-left flex min-w-0 flex-1 items-center gap-3 overflow-x-auto">
         {activeTab && (
           <>
             {contentKind === "text" && (
-              <span>
+              <span className="status-bar-cursor-position shrink-0">
                 Ln {realTimeCursorPosition.lineNumber}, Col{" "}
                 {realTimeCursorPosition.column}
               </span>
             )}
             {contentKind === "text" && (
-              <div className="h-4 border-l border-gray-400 dark:border-gray-600"></div>
+              <div className="status-bar-cursor-divider h-4 shrink-0 border-l border-base"></div>
             )}
             {/* Only show language/format info when NOT in rich text mode */}
             {contentKind !== "rich-text" && (
-              <div className="p-0.5 flex items-center space-x-2">
+              <div className="flex min-w-0 shrink-0 items-center gap-2 p-0.5">
                 {renderLanguageSection()}
 
                 {/* REPLACE the old FormatStatusItem and SmartViewButtons with this */}
@@ -172,7 +172,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       </div>
 
       {/* Right side: New organized pattern with dividers */}
-      <div className="flex items-center space-x-3">
+      <div className="status-bar-right flex shrink-0 items-center gap-2">
         {/* Group 1: Font Size */}
         <div className="flex items-center">
           {contentKind !== "rich-text" && contentKind !== "canvas" && (
@@ -189,7 +189,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         </div>
 
         {/* Divider 1 - only show if Group 2 has content */}
-        {showAIIcon && <div className="h-4 border-l border-gray-400 dark:border-gray-600"></div>}
+        {showAIIcon && <div className="h-4 border-l border-base"></div>}
 
         {/* Group 2: Search and Init AI */}
         {showAIIcon && (
@@ -206,7 +206,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         )}
 
         {/* Divider 3 */}
-        {showAIIcon && <div className="h-4 border-l border-gray-400 dark:border-gray-600"></div>}
+        {showAIIcon && <div className="h-4 border-l border-base"></div>}
 
         {/* Group 3: Theme Toggle */}
         {showAIIcon && (

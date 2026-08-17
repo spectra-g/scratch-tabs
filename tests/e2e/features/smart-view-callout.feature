@@ -17,9 +17,9 @@ Feature: Smart View Callout Notification
     And I create a new tab from the document menu and clipboard
     Then the status bar language should be "JSON"
     And I should see the smart view callout
-    And the smart view callout message should contain "JSON Detected"
+    And the smart view callout message should contain "Data View"
 
-  Scenario: Clicking Switch button activates Smart View
+  Scenario: Clicking Data View button activates Smart View
     When I set clipboard content to:
       """
       {
@@ -29,7 +29,7 @@ Feature: Smart View Callout Notification
       """
     And I create a new tab from the document menu and clipboard
     Then I should see the smart view callout
-    When I click the smart view callout switch button
+    When I click the Data View button in the smart view callout
     Then I should not see the smart view callout
     And I should see the JSON Smart View
 
@@ -68,4 +68,4 @@ Feature: Smart View Callout Notification
     And I create a new tab from the document menu and clipboard
     Then the status bar language should be "CSV / TSV"
     And I should see the smart view callout
-    And the smart view callout message should contain "CSV / TSV Detected"
+    And the smart view callout message should contain "Data View"

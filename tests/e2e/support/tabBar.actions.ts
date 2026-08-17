@@ -35,7 +35,7 @@ export class TabBarActions {
   }
 
   async clickSmartViewButton() {
-    const button = this.page.locator('[data-testid="table-view-button"]');
+    const button = this.page.locator('[data-testid="data-view-button"]');
     await button.click();
   }
 
