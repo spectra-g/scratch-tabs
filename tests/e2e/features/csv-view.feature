@@ -219,6 +219,63 @@ Feature: CSV View and Auto-Detection
     When I click the "Export" dropdown
     Then I should see export options for "CSV", "JSON", "Markdown", and "SQL"
 
+  Scenario: CSV table view per-column text filtering
+    Given I click the icon for "New tab"
+    When I type the following content into the active editor:
+      """
+      ID,Name,Age,City
+      1,John Doe,28,New York
+      2,Jane Smith,32,San Francisco
+      3,Bob Johnson,25,Chicago
+      """
+    And the status bar should show language "CSV / TSV"
+    And I click the Data View button in the status bar
+    Then I should see the CSV table view
+    When I enable the CSV filter row
+    And I filter the "Name" column by "jane"
+    Then I should see 1 CSV data row
+    And I should see the filter chip for "Name"
+
+  Scenario: CSV table view per-column numeric filtering
+    Given I click the icon for "New tab"
+    When I type the following content into the active editor:
+      """
+      ID,Name,Age,City
+      1,John Doe,28,New York
+      2,Jane Smith,32,San Francisco
+      3,Bob Johnson,25,Chicago
+      """
+    And the status bar should show language "CSV / TSV"
+    And I click the Data View button in the status bar
+    Then I should see the CSV table view
+    When I enable the CSV filter row
+    And I filter the "Age" column to a minimum of "30"
+    Then I should see 1 CSV data row
+    And I should see the filter chip for "Age"
+    When I click the "Clear all filters" button
+    Then I should see 3 CSV data rows
+    And I should see no filter chips
+
+  Scenario: CSV table view removes an individual filter via its chip
+    Given I click the icon for "New tab"
+    When I type the following content into the active editor:
+      """
+      ID,Name,Age,City
+      1,John Doe,28,New York
+      2,Jane Smith,32,San Francisco
+      3,Bob Johnson,25,Chicago
+      """
+    And the status bar should show language "CSV / TSV"
+    And I click the Data View button in the status bar
+    Then I should see the CSV table view
+    When I enable the CSV filter row
+    And I filter the "City" column by "Chicago"
+    Then I should see 1 CSV data row
+    And I should see the filter chip for "City"
+    When I click the remove button on the "City" filter chip
+    Then I should see 3 CSV data rows
+    And I should see no filter chips
+
   Scenario: CSV table view undo/redo functionality
     Given I click the icon for "New tab"
     When I type the following content into the active editor:

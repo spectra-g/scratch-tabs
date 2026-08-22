@@ -245,6 +245,39 @@ CsvThen('I should see column sorting options', async function() {
   expect(count).toBeGreaterThan(0);
 });
 
+// Column filtering steps
+CsvWhen('I enable the CSV filter row', async function() {
+  await this.csvTableView.toggleFilterRow();
+});
+
+CsvWhen('I filter the {string} column by {string}', async function(columnName, value) {
+  await this.csvTableView.fillTextFilter(columnName, value);
+});
+
+CsvWhen('I filter the {string} column to a minimum of {string}', async function(columnName, min) {
+  await this.csvTableView.fillNumberRangeFilter(columnName, min);
+});
+
+CsvWhen('I click the "Clear all filters" button', async function() {
+  await this.csvTableView.clearAllFilters();
+});
+
+CsvWhen('I click the remove button on the {string} filter chip', async function(columnName) {
+  await this.csvTableView.clickRemoveFilterChip(columnName);
+});
+
+CsvThen('I should see {int} CSV data row(s)', async function(expectedCount) {
+  await this.csvTableView.expectCsvRows(expectedCount);
+});
+
+CsvThen('I should see the filter chip for {string}', async function(columnName) {
+  await this.csvTableView.expectFilterChipVisible(columnName);
+});
+
+CsvThen('I should see no filter chips', async function() {
+  await this.csvTableView.expectNoFilterChips();
+});
+
 // Generic CSV table element checks
 CsvThen('I should see {string}', async function(text) {
   const element = this.page.locator(`text=${text}`);

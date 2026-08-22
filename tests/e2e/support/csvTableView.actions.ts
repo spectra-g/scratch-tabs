@@ -308,6 +308,72 @@ export class CsvTableViewActions {
     await expect(specialChars).toBeVisible();
   }
 
+  // Column filtering
+  getToggleFiltersButton() {
+    return this.page.locator('[data-testid="toggle-filters-button"]');
+  }
+
+  getFilterRow() {
+    return this.page.locator('[data-testid="csv-filter-row"]');
+  }
+
+  getFilterInput(columnName: string) {
+    return this.page.locator(`[data-testid="filter-input-${columnName}"]`);
+  }
+
+  getFilterChip(columnName: string) {
+    // Chips are keyed by column id; resolve via the visible chip label
+    return this.page.locator(`[data-testid^="filter-chip-"]:has-text("${columnName}")`);
+  }
+
+  getClearFiltersButton() {
+    return this.page.locator('[data-testid="clear-filters-button"]');
+  }
+
+  async toggleFilterRow() {
+    await this.getToggleFiltersButton().click();
+    await expect(this.getFilterRow()).toBeVisible();
+  }
+
+  async fillTextFilter(columnName: string, value: string) {
+    const input = this.getFilterInput(columnName).locator(
+      `input[aria-label="Filter ${columnName}"]`,
+    );
+    await input.fill(value);
+  }
+
+  async fillNumberRangeFilter(columnName: string, min?: string, max?: string) {
+    const container = this.getFilterInput(columnName);
+    if (min !== undefined) {
+      await container.locator(`input[aria-label="Filter ${columnName} from"]`).fill(min);
+    }
+    if (max !== undefined) {
+      await container.locator(`input[aria-label="Filter ${columnName} to"]`).fill(max);
+    }
+  }
+
+  async clearAllFilters() {
+    await this.getClearFiltersButton().click();
+  }
+
+  async clickRemoveFilterChip(columnName: string) {
+    await this.getFilterChip(columnName)
+      .locator('button[aria-label^="Remove filter for"]')
+      .click();
+  }
+
+  async expectCsvRows(count: number) {
+    await expect(this.getAllCsvRows()).toHaveCount(count, { timeout: 5000 });
+  }
+
+  async expectFilterChipVisible(columnName: string) {
+    await expect(this.getFilterChip(columnName)).toBeVisible();
+  }
+
+  async expectNoFilterChips() {
+    await expect(this.page.locator('[data-testid^="filter-chip-"]')).toHaveCount(0);
+  }
+
   // General expectations
   async expectCsvTableViewVisible() {
     const csvTableViewer = this.getCsvTableViewer();

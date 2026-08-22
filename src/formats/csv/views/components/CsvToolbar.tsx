@@ -63,6 +63,10 @@ interface CsvToolbarProps {
   onExportJson: () => void;
   onExportMarkdown: () => void;
   onExportSql: (tableName: string) => void;
+  /** Rows visible after filtering; the export-scope toggle only shows when it differs from rowCount. */
+  visibleRowCount: number;
+  exportVisibleRowsOnly: boolean;
+  onToggleExportVisibleRowsOnly: (value: boolean) => void;
 
   // Header management
   onPromoteFirstRowToHeader: () => void;
@@ -107,6 +111,9 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
   onExportJson,
   onExportMarkdown,
   onExportSql,
+  visibleRowCount,
+  exportVisibleRowsOnly,
+  onToggleExportVisibleRowsOnly,
   onPromoteFirstRowToHeader,
   onDemoteHeaderToFirstRow,
   currentDelimiter,
@@ -290,6 +297,36 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
               />
               <div className="absolute top-full right-0 mt-1 bg-surface border border-base rounded-lg shadow-xl z-40 min-w-[200px]">
                 <div className="py-1">
+                  {visibleRowCount !== rowCount && (
+                    <div
+                      className="px-3 py-2 border-b border-base"
+                      role="radiogroup"
+                      aria-label="Export scope"
+                      data-testid="export-scope-toggle"
+                    >
+                      <div className="text-xs text-secondary mb-1">Rows to export:</div>
+                      <label className="flex items-center gap-2 text-sm text-main cursor-pointer">
+                        <input
+                          type="radio"
+                          name="export-scope"
+                          checked={exportVisibleRowsOnly}
+                          onChange={() => onToggleExportVisibleRowsOnly(true)}
+                          data-testid="export-scope-filtered"
+                        />
+                        Filtered ({visibleRowCount})
+                      </label>
+                      <label className="flex items-center gap-2 text-sm text-main cursor-pointer">
+                        <input
+                          type="radio"
+                          name="export-scope"
+                          checked={!exportVisibleRowsOnly}
+                          onChange={() => onToggleExportVisibleRowsOnly(false)}
+                          data-testid="export-scope-all"
+                        />
+                        All rows ({rowCount})
+                      </label>
+                    </div>
+                  )}
                   <button
                     onClick={handleExportCsv}
                     className="flex items-center justify-between w-full px-3 py-2 text-sm text-main hover:bg-element-hover transition-colors"

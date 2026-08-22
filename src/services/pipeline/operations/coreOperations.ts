@@ -1673,7 +1673,230 @@ const coreOperations: OperationDefinition[] = [
         keywords: ["column", "align", "pad", "table", "tabulate", "format", "column -t"],
         source: "core",
     },
+
+    // === UNICODE NORMALIZATION ===
+    {
+        id: "text.normalize-unicode",
+        name: "Normalize Unicode",
+        description:
+            "Normalize text to a canonical Unicode form (NFC, NFD, NFKC, or NFKD) via String.prototype.normalize",
+        categories: ["text", "utilities"],
+        parameters: [
+            {
+                name: "form",
+                label: "Normalization Form",
+                type: "select",
+                default: "NFC",
+                options: [
+                    { value: "NFC", label: "NFC — Canonical Composition" },
+                    { value: "NFD", label: "NFD — Canonical Decomposition" },
+                    { value: "NFKC", label: "NFKC — Compatibility Composition" },
+                    { value: "NFKD", label: "NFKD — Compatibility Decomposition" },
+                ],
+                description: "See Unicode Standard Annex #15 for details on each form",
+            },
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const form = ((params.form as string) ?? "NFC") as
+                | "NFC"
+                | "NFD"
+                | "NFKC"
+                | "NFKD";
+            return input.normalize(form);
+        },
+        keywords: ["normalize", "unicode", "nfc", "nfd", "nfkc", "nfkd", "canonical", "compatibility"],
+        source: "core",
+    },
+
+    // === TEMPLATE ===
+    {
+        id: "text.template",
+        name: "Template Substitution",
+        description:
+            "Substitute {{variable}} placeholders from a JSON object. Dot notation ({{user.name}}) accesses nested values.",
+        categories: ["text", "formatting"],
+        parameters: [
+            {
+                name: "data",
+                label: "Variables (JSON)",
+                type: "textarea",
+                default: "{}",
+                required: true,
+                placeholder: '{\n  "name": "World"\n}',
+                description: 'JSON object whose keys map to {{placeholder}} names',
+            },
+            {
+                name: "missing",
+                label: "Missing Variables",
+                type: "select",
+                default: "leave",
+                options: [
+                    { value: "leave", label: "Leave placeholder as-is" },
+                    { value: "empty", label: "Replace with empty string" },
+                ],
+            },
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const dataStr = ((params.data as string) ?? "").trim() || "{}";
+            let vars: unknown;
+            try {
+                vars = JSON.parse(dataStr);
+            } catch {
+                throw new Error("Variables must be valid JSON");
+            }
+            if (typeof vars !== "object" || vars === null || Array.isArray(vars)) {
+                throw new Error("Variables must be a JSON object");
+            }
+
+            const missing = (params.missing as string) ?? "leave";
+
+            return input.replace(/\{\{\s*([\w$][\w$.]*)\s*\}\}/g, (match, path: string) => {
+                const value = path.split(".").reduce<unknown>((acc, key) => {
+                    if (acc === null || acc === undefined) return undefined;
+                    return (acc as Record<string, unknown>)[key];
+                }, vars);
+
+                if (value === undefined || typeof value === "function") {
+                    return missing === "empty" ? "" : match;
+                }
+                if (typeof value === "object") return JSON.stringify(value);
+                return String(value);
+            });
+        },
+        keywords: ["template", "substitute", "placeholder", "mustache", "interpolate", "variables"],
+        source: "core",
+    },
+
+    // === REMOVE COMMENTS ===
+    {
+        id: "text.remove-comments",
+        name: "Remove Comments",
+        description:
+            "Strip comments from source code while preserving strings and line structure. Generic counterpart to the JSON-only json.removeComments.",
+        categories: ["text", "cleanup"],
+        parameters: [
+            {
+                name: "styles",
+                label: "Comment Styles",
+                type: "multiselect",
+                default: ["cLine", "cBlock"],
+                options: [
+                    { value: "cLine", label: "// line comments (JS, TS, C, Go, …)" },
+                    { value: "cBlock", label: "/* block comments */" },
+                    { value: "hash", label: "# hash comments (Shell, Python, YAML)" },
+                    { value: "sql", label: "-- SQL line comments" },
+                    { value: "html", label: "<!-- HTML/XML comments -->" },
+                ],
+                description: "Which comment syntaxes to strip",
+            },
+            {
+                name: "squeeze",
+                label: "Remove Leftover Blank Lines",
+                type: "boolean",
+                default: false,
+                description: "Drop lines that become blank after comment removal",
+            },
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const selected = (params.styles as string[]) ?? ["cLine", "cBlock"];
+            const styles = new Set(selected.length > 0 ? selected : ["cLine", "cBlock"]);
+            const squeeze = params.squeeze === true;
+
+            let result = stripComments(input, styles);
+            if (squeeze) {
+                result = result
+                    .split("\n")
+                    .filter((line) => line.trim() !== "")
+                    .join("\n");
+            }
+            return result;
+        },
+        keywords: [
+            "comments", "strip", "minify", "clean", "source", "code",
+            "javascript", "python", "shell", "sql", "html", "xml",
+        ],
+        source: "core",
+    },
 ];
+
+function keepOnlyNewlines(segment: string): string {
+    return segment.replace(/[^\n]/g, "");
+}
+
+function stripComments(input: string, styles: Set<string>): string {
+    let out = "";
+    let i = 0;
+    const n = input.length;
+
+    while (i < n) {
+        const ch = input[i];
+
+        if (ch === '"' || ch === "'" || ch === "`") {
+            out += ch;
+            i++;
+            while (i < n) {
+                if (input[i] === "\\") {
+                    out += input.slice(i, i + 2);
+                    i += 2;
+                    continue;
+                }
+                out += input[i];
+                i++;
+                if (input[i - 1] === ch) break;
+            }
+            continue;
+        }
+
+        if (
+            styles.has("sql") &&
+            input.startsWith("--", i) &&
+            !input.startsWith("-->", i)
+        ) {
+            let j = i + 2;
+            while (j < n && input[j] !== "\n") j++;
+            i = j;
+            continue;
+        }
+
+        if (styles.has("cLine") && input.startsWith("//", i)) {
+            let j = i + 2;
+            while (j < n && input[j] !== "\n") j++;
+            i = j;
+            continue;
+        }
+
+        if (styles.has("hash") && ch === "#") {
+            let j = i + 1;
+            while (j < n && input[j] !== "\n") j++;
+            i = j;
+            continue;
+        }
+
+        if (styles.has("cBlock") && input.startsWith("/*", i)) {
+            const end = input.indexOf("*/", i + 2);
+            const stop = end === -1 ? n : end + 2;
+            out += keepOnlyNewlines(input.slice(i, stop));
+            i = stop;
+            continue;
+        }
+
+        if (styles.has("html") && input.startsWith("<!--", i)) {
+            const end = input.indexOf("-->", i + 4);
+            const stop = end === -1 ? n : end + 3;
+            out += keepOnlyNewlines(input.slice(i, stop));
+            i = stop;
+            continue;
+        }
+
+        out += ch;
+        i++;
+    }
+
+    return out;
+}
 
 // Self-register
 coreOperations.forEach((op) => operationRegistry.register(op));

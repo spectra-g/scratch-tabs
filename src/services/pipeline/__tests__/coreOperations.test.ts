@@ -515,6 +515,33 @@ describe("Core Pipeline Operations", () => {
                 const result = await execute("text.add-suffix", input, { suffix: "" });
                 expect(result).toBe("line1\nline2");
             });
+
+            it("should add suffix per line for CRLF input without inserting extra lines", async () => {
+                const input = "line1\r\nline2\r\nline3";
+                const result = await execute("text.add-suffix", input, { suffix: " <<" });
+                expect(result.split("\n")).toHaveLength(3);
+                expect(result).toBe("line1 <<\r\nline2 <<\r\nline3 <<");
+            });
+
+            it("should add suffix per line for CR-only input", async () => {
+                const input = "line1\rline2\rline3";
+                const result = await execute("text.add-suffix", input, { suffix: " <<" });
+                expect(result).toBe("line1 <<\rline2 <<\rline3 <<");
+            });
+        });
+
+        describe("text.add-prefix with non-LF line endings", () => {
+            it("should add prefix per line for CRLF input", async () => {
+                const input = "line1\r\nline2";
+                const result = await execute("text.add-prefix", input, { prefix: ">> " });
+                expect(result).toBe(">> line1\r\n>> line2");
+            });
+
+            it("should add prefix per line for CR-only input", async () => {
+                const input = "line1\rline2";
+                const result = await execute("text.add-prefix", input, { prefix: ">> " });
+                expect(result).toBe(">> line1\r>> line2");
+            });
         });
     });
 

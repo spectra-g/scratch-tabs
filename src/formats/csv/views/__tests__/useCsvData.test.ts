@@ -464,6 +464,19 @@ Jane Smith,32,San Francisco,Extra`;
       expect(sqlOutput).toContain("INSERT INTO users (Name, Age, City)");
       expect(sqlOutput).toContain("VALUES ('John Doe', '28', 'New York')");
     });
+
+    it("should export only the provided (filtered) rows when given a subset", () => {
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange),
+      );
+
+      const subset = result.current.filteredData.slice(0, 1);
+      expect(result.current.toCsv(subset)).not.toContain("Jane Smith");
+      expect(JSON.parse(result.current.toJson(subset))).toHaveLength(1);
+
+      // Omitting the argument still exports every row
+      expect(result.current.toCsv()).toContain("Jane Smith");
+    });
   });
 
   describe("Snapshots", () => {
@@ -1070,6 +1083,409 @@ Bob Johnson,45,Chicago,USA`;
 
       const newContent: string = mockOnContentChange.mock.calls[0][0];
       expect(newContent.split("\n")[0]).toContain("Name|Age|City");
+    });
+  });
+
+  describe("Column filters", () => {
+    it("starts with no filters and unfiltered data", () => {
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange),
+      );
+
+      expect(result.current.filters).toEqual([]);
+      expect(result.current.filterMatchMode).toBe("and");
+      expect(result.current.filteredData).toEqual(result.current.data);
+    });
+
+    it("setColumnFilter adds a filter and narrows filteredData", () => {
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange),
+      );
+      const ageColumnId = result.current.columns[1].id;
+
+      act(() => {
+        result.current.setColumnFilter(ageColumnId, {
+          columnId: ageColumnId,
+          operator: "gte",
+          value: "40",
+        });
+      });
+
+      expect(result.current.filters).toHaveLength(1);
+      expect(result.current.filteredData.map((row) => row.cells[0].value)).toEqual([
+        "Bob Johnson",
+      ]);
+      // Underlying data is untouched
+      expect(result.current.data).toHaveLength(3);
+    });
+
+    it("setColumnFilter replaces an existing filter in place", () => {
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange),
+      );
+      const ageColumnId = result.current.columns[1].id;
+
+      act(() => {
+        result.current.setColumnFilter(ageColumnId, {
+          columnId: ageColumnId,
+          operator: "gte",
+          value: "30",
+        });
+      });
+      act(() => {
+        result.current.setColumnFilter(ageColumnId, {
+          columnId: ageColumnId,
+          operator: "lte",
+          value: "30",
+        });
+      });
+
+      expect(result.current.filters).toHaveLength(1);
+      expect(result.current.filters[0].operator).toBe("lte");
+      // Ages <= 30: John Doe (28) only
+      expect(
+        result.current.filteredData.map((row) => row.cells[0].value),
+      ).toEqual(["John Doe"]);
+    });
+
+    it("removeColumnFilter removes only that column's filter", () => {
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange),
+      );
+      const nameColumnId = result.current.columns[0].id;
+      const ageColumnId = result.current.columns[1].id;
+
+      act(() => {
+        result.current.setColumnFilter(nameColumnId, {
+          columnId: nameColumnId,
+          operator: "contains",
+          value: "Johnson",
+        });
+        result.current.setColumnFilter(ageColumnId, {
+          columnId: ageColumnId,
+          operator: "gte",
+          value: "30",
+        });
+      });
+      expect(result.current.filteredData).toHaveLength(1); // Bob Johnson (45)
+
+      act(() => {
+        result.current.removeColumnFilter(nameColumnId);
+      });
+
+      expect(result.current.filters).toHaveLength(1);
+      expect(result.current.filters[0].columnId).toBe(ageColumnId);
+      expect(result.current.filteredData).toHaveLength(2); // Jane Smith + Bob Johnson
+    });
+
+    it("clearFilters removes every filter", () => {
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange),
+      );
+      const nameColumnId = result.current.columns[0].id;
+
+      act(() => {
+        result.current.setColumnFilter(nameColumnId, {
+          columnId: nameColumnId,
+          operator: "contains",
+          value: "John",
+        });
+      });
+      act(() => {
+        result.current.clearFilters();
+      });
+
+      expect(result.current.filters).toEqual([]);
+      expect(result.current.filteredData).toEqual(result.current.data);
+    });
+
+    it("supports OR match mode across columns", () => {
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange),
+      );
+      const nameColumnId = result.current.columns[0].id;
+      const cityColumnId = result.current.columns[2].id;
+
+      act(() => {
+        result.current.setFilterMatchMode("or");
+        result.current.setColumnFilter(nameColumnId, {
+          columnId: nameColumnId,
+          operator: "equals",
+          value: "John Doe",
+        });
+        result.current.setColumnFilter(cityColumnId, {
+          columnId: cityColumnId,
+          operator: "equals",
+          value: "Chicago",
+        });
+      });
+
+      expect(result.current.filterMatchMode).toBe("or");
+      expect(
+        result.current.filteredData.map((row) => row.cells[0].value).sort(),
+      ).toEqual(["Bob Johnson", "John Doe"]);
+    });
+
+    it("keeps filters when content is re-parsed", () => {
+      const { result, rerender } = renderHook(
+        ({ content }: { content: string }) =>
+          useCsvData(content, mockOnContentChange),
+        { initialProps: { content: sampleCsv } },
+      );
+      const nameColumnId = result.current.columns[0].id;
+
+      act(() => {
+        result.current.setColumnFilter(nameColumnId, {
+          columnId: nameColumnId,
+          operator: "equals",
+          value: "John Doe",
+        });
+      });
+
+      rerender({ content: `${sampleCsv}\nExtra Person,50,Boston` });
+
+      expect(result.current.data).toHaveLength(4);
+      expect(
+        result.current.filteredData.map((row) => row.cells[0].value),
+      ).toEqual(["John Doe"]);
+    });
+
+    it("prunes filters whose columns no longer exist after re-parse", () => {
+      const { result, rerender } = renderHook(
+        ({ content }: { content: string }) =>
+          useCsvData(content, mockOnContentChange),
+        { initialProps: { content: sampleCsv } },
+      );
+      // Filter the last column ("City", col_2)
+      const cityColumnId = result.current.columns[2].id;
+
+      act(() => {
+        result.current.setColumnFilter(cityColumnId, {
+          columnId: cityColumnId,
+          operator: "contains",
+          value: "York",
+        });
+      });
+      expect(result.current.filters).toHaveLength(1);
+
+      // Re-parse content with fewer columns so col_2 no longer exists
+      rerender({ content: "A,B\n1,2" });
+
+      expect(result.current.filters).toEqual([]);
+      expect(result.current.filteredData).toHaveLength(1);
+    });
+
+    it("keeps filters when rows are added or removed between re-parses", () => {
+      const { result, rerender } = renderHook(
+        ({ content }: { content: string }) =>
+          useCsvData(content, mockOnContentChange),
+        { initialProps: { content: sampleCsv } },
+      );
+      const cityColumnId = result.current.columns[2].id;
+
+      act(() => {
+        result.current.setColumnFilter(cityColumnId, {
+          columnId: cityColumnId,
+          operator: "contains",
+          value: "York",
+        });
+      });
+
+      rerender({ content: `${sampleCsv}\nAmy Lee,29,Boston\n` });
+
+      expect(result.current.filters).toHaveLength(1);
+      expect(result.current.filters[0].columnId).toBe(cityColumnId);
+      expect(
+        result.current.filteredData.map((row) => row.cells[0].value),
+      ).toEqual(["John Doe"]);
+    });
+
+    it("drops filters whose column was renamed by a re-parse instead of re-targeting them", () => {
+      const { result, rerender } = renderHook(
+        ({ content }: { content: string }) =>
+          useCsvData(content, mockOnContentChange),
+        { initialProps: { content: sampleCsv } },
+      );
+      const ageColumnId = result.current.columns[1].id;
+
+      act(() => {
+        result.current.setColumnFilter(ageColumnId, {
+          columnId: ageColumnId,
+          operator: "gte",
+          value: "30",
+        });
+      });
+      expect(result.current.filters).toHaveLength(1);
+
+      // "Age" becomes "Score": the old filter must not silently apply to it
+      rerender({ content: sampleCsv.replace("Age", "Score") });
+
+      expect(result.current.filters).toEqual([]);
+      expect(result.current.filteredData).toHaveLength(3);
+    });
+
+    it("drops filters when columns are reordered by a re-parse", () => {
+      const { result, rerender } = renderHook(
+        ({ content }: { content: string }) =>
+          useCsvData(content, mockOnContentChange),
+        { initialProps: { content: sampleCsv } },
+      );
+      const cityColumnId = result.current.columns[2].id;
+
+      act(() => {
+        result.current.setColumnFilter(cityColumnId, {
+          columnId: cityColumnId,
+          operator: "equals",
+          value: "Chicago",
+        });
+      });
+      expect(result.current.filteredData.map((row) => row.cells[0].value)).toEqual(
+        ["Bob Johnson"],
+      );
+
+      // City moved to the front: positional reuse of the old id would filter
+      // names instead of cities
+      rerender({ content: `City,Name,Age\nChicago,Bob Johnson,45` });
+
+      expect(result.current.filters).toEqual([]);
+      expect(result.current.filteredData).toHaveLength(1);
+    });
+  });
+
+  describe("Filter presets", () => {
+    const applyAgeFilter = (result: { current: ReturnType<typeof useCsvData> }) => {
+      const ageColumnId = result.current.columns[1].id;
+      act(() => {
+        result.current.setColumnFilter(ageColumnId, {
+          columnId: ageColumnId,
+          operator: "gte",
+          value: "40",
+        });
+      });
+      return ageColumnId;
+    };
+
+    it("starts with no presets", () => {
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange),
+      );
+
+      expect(result.current.filterPresets).toEqual([]);
+    });
+
+    it("ignores blank preset names", () => {
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange),
+      );
+      applyAgeFilter(result);
+
+      act(() => {
+        result.current.saveFilterPreset("   ");
+      });
+
+      expect(result.current.filterPresets).toEqual([]);
+    });
+
+    it("saves the current filter set and match mode under a name", () => {
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange),
+      );
+      applyAgeFilter(result);
+      act(() => {
+        result.current.setFilterMatchMode("or");
+      });
+
+      act(() => {
+        result.current.saveFilterPreset("Older folks");
+      });
+
+      expect(result.current.filterPresets).toHaveLength(1);
+      const preset = result.current.filterPresets[0];
+      expect(preset.name).toBe("Older folks");
+      expect(preset.matchMode).toBe("or");
+      expect(preset.filters.map((filter) => filter.operator)).toEqual(["gte"]);
+    });
+
+    it("applies a preset by restoring its filters without aliasing them", () => {
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange),
+      );
+      const ageColumnId = applyAgeFilter(result);
+      act(() => {
+        result.current.saveFilterPreset("P1");
+      });
+      act(() => {
+        result.current.clearFilters();
+      });
+      expect(result.current.filters).toEqual([]);
+
+      act(() => {
+        result.current.applyFilterPreset(result.current.filterPresets[0].id);
+      });
+
+      expect(result.current.filters).toHaveLength(1);
+      expect(result.current.filters[0]).toMatchObject({
+        columnId: ageColumnId,
+        operator: "gte",
+      });
+
+      // Mutating the applied filter must not corrupt the stored preset
+      act(() => {
+        result.current.setColumnFilter(ageColumnId, {
+          columnId: ageColumnId,
+          operator: "lt",
+          value: "5",
+        });
+      });
+      expect(result.current.filterPresets[0].filters[0].operator).toBe("gte");
+    });
+
+    it("overwrites a preset with the same name but keeps its identity", () => {
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange),
+      );
+      const ageColumnId = applyAgeFilter(result);
+      act(() => {
+        result.current.saveFilterPreset("Same");
+      });
+      const original = result.current.filterPresets[0];
+
+      act(() => {
+        result.current.removeColumnFilter(ageColumnId);
+      });
+      act(() => {
+        result.current.setColumnFilter(result.current.columns[0].id, {
+          columnId: result.current.columns[0].id,
+          operator: "contains",
+          value: "John",
+        });
+      });
+      act(() => {
+        result.current.saveFilterPreset("Same");
+      });
+
+      expect(result.current.filterPresets).toHaveLength(1);
+      expect(result.current.filterPresets[0].id).toBe(original.id);
+      expect(
+        result.current.filterPresets[0].filters.map((f) => f.columnId),
+      ).toEqual([result.current.columns[0].id]);
+    });
+
+    it("deletes a preset", () => {
+      const { result } = renderHook(() =>
+        useCsvData(sampleCsv, mockOnContentChange),
+      );
+      applyAgeFilter(result);
+      act(() => {
+        result.current.saveFilterPreset("Temp");
+      });
+      const id = result.current.filterPresets[0].id;
+
+      act(() => {
+        result.current.deleteFilterPreset(id);
+      });
+
+      expect(result.current.filterPresets).toEqual([]);
     });
   });
 });

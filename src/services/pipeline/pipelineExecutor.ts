@@ -28,6 +28,21 @@ const DEFAULT_OPTIONS: Required<PipelineExecutionOptions> = {
 };
 
 /**
+ * Split input into lines, recognizing LF, CRLF, and lone CR line endings.
+ */
+function splitLines(input: string): string[] {
+  return input.split(/\r\n|\r|\n/);
+}
+
+/**
+ * Detect the line ending style of the input (falls back to "\n").
+ */
+function detectLineEnding(input: string): string {
+  const match = input.match(/\r\n|\r|\n/);
+  return match ? match[0] : "\n";
+}
+
+/**
  * Create an execution context for a step
  */
 export function createExecutionContext(
@@ -100,7 +115,8 @@ export async function executeStep(
     let stringOutput: string;
 
     if (mode === "line") {
-      const lines = input.split("\n");
+      const eol = detectLineEnding(input);
+      const lines = splitLines(input);
       const processedLines = await Promise.all(
         lines.map(async (line, idx) => {
           // Add line info to context for this specific line execution
@@ -119,7 +135,7 @@ export async function executeStep(
             : String(lineResult ?? "");
         }),
       );
-      stringOutput = processedLines.join("\n");
+      stringOutput = processedLines.join(eol);
     } else {
       const output = await operation.execute(input, step.params, context);
       stringOutput = typeof output === "string" ? output : String(output ?? "");
@@ -290,7 +306,8 @@ export async function executeSingleOperation(
     let finalOutput: string;
 
     if (mode === "line") {
-      const lines = input.split("\n");
+      const eol = detectLineEnding(input);
+      const lines = splitLines(input);
       const processedLines = await Promise.all(
         lines.map(async (line, idx) => {
           const lineContext: ExecutionContext = {
@@ -304,7 +321,7 @@ export async function executeSingleOperation(
             : String(lineResult ?? "");
         }),
       );
-      finalOutput = processedLines.join("\n");
+      finalOutput = processedLines.join(eol);
     } else {
       const output = await operation.execute(input, params, context);
       finalOutput = typeof output === "string" ? output : String(output ?? "");

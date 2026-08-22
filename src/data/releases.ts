@@ -15,12 +15,40 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.45.0';
+export const APP_VERSION = '1.46.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.45.0",
+    "version": "1.46.0",
     "type": "latest",
+    "date": "2026-08-22",
+    "headline": "CSV Smart View Filtering + Six New Pipeline Operations",
+    "summary": "Type-aware column filtering for CSV tables with facets and presets, plus RSA encrypt/decrypt, JSON-to-type-definition, template substitution, Unicode normalization, and comment removal operations.",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Per-column CSV filters:** Filter row under headers with operators like equals, contains, regex, range, between, and is-empty - matched with AND or OR across columns",
+          "**Type-aware filter inputs:** Columns are typed as number, date, boolean, or text by sampling rows; number columns get min/max ranges and date columns get date pickers",
+          "**Value facets:** Excel-style checkbox list of distinct values per column with live counts that update as other filters apply",
+          "**Filter presets:** Save the active filter set under a name and reapply it later; active filters show as removable chips with a clear-all action"
+        ]
+      },
+      {
+        "name": "New Pipeline Operations",
+        "changes": [
+          "**RSA Encrypt / Decrypt:** RSA-OAEP (SHA-256) with PEM public/private keys via Web Crypto, Node.js fallback",
+          "**JSON To Type Definition:** Infer TypeScript interfaces, Go structs, Python TypedDicts, or Rust structs from JSON",
+          "**Template Substitution:** Fill {{variable}} placeholders from a JSON object, with dot notation for nested values",
+          "**Normalize Unicode:** Convert text to NFC, NFD, NFKC, or NFKD form",
+          "**Remove Comments:** Strip line and block comments across JS, Python, Shell, SQL, HTML, and XML styles while preserving strings"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.45.0",
+    "type": "release",
     "date": "2026-07-31",
     "headline": "Top-Level Tab Actions + Markdown Diagrams",
     "summary": "Restored top-level Import/Canvas buttons, JSON search path suggestions, and mermaid diagram rendering with a repositioned copy/open toolbar in Markdown code blocks.",

@@ -9,6 +9,12 @@ import {
   UseCsvDataOptions,
   CsvColumnStats,
 } from "../types";
+import { inferColumnTypes } from "../utils/typeInference";
+import {
+  applyFilters,
+  ColumnFilter,
+  FilterMatchMode,
+} from "../utils/filtering";
 
 export interface UseCsvDataReturn {
   // Data state
@@ -51,14 +57,31 @@ export interface UseCsvDataReturn {
   deleteSnapshot: (snapshotId: string) => void;
 
   // Export
-  toCsv: () => string;
-  toJson: () => string;
-  toMarkdown: () => string;
-  toSql: (tableName: string) => string;
+  // All exporters accept an optional subset of rows (e.g. the filtered view);
+  // omitting it exports every row.
+  toCsv: (rows?: CsvRow[]) => string;
+  toJson: (rows?: CsvRow[]) => string;
+  toMarkdown: (rows?: CsvRow[]) => string;
+  toSql: (tableName: string, rows?: CsvRow[]) => string;
 
   // Delimiter
   detectedDelimiter: string;
   changeDelimiter: (newDelimiter: string) => void;
+
+  // Column filters (view state; survives content re-parses)
+  filters: ColumnFilter[];
+  filterMatchMode: FilterMatchMode;
+  filteredData: CsvRow[];
+  setColumnFilter: (columnId: string, filter?: ColumnFilter) => void;
+  removeColumnFilter: (columnId: string) => void;
+  clearFilters: () => void;
+  setFilterMatchMode: (mode: FilterMatchMode) => void;
+
+  // Saved filter presets
+  filterPresets: FilterPreset[];
+  saveFilterPreset: (name: string) => void;
+  applyFilterPreset: (presetId: string) => void;
+  deleteFilterPreset: (presetId: string) => void;
 
   // Statistics
   getColumnStats: (columnId: string) => CsvColumnStats;
@@ -68,6 +91,15 @@ interface CsvState {
   data: CsvRow[];
   columns: CsvColumn[];
 }
+
+export interface FilterPreset {
+  id: string;
+  name: string;
+  filters: ColumnFilter[];
+  matchMode: FilterMatchMode;
+}
+
+const makePresetId = () => `preset_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
 export const useCsvData = (
   content: string,
@@ -105,6 +137,17 @@ export const useCsvData = (
   const [error, setError] = useState<string | null>(null);
   const [diagnostics, setDiagnostics] = useState<CsvDiagnostic[]>([]);
   const [snapshots, setSnapshots] = useState<CsvSnapshot[]>([]);
+
+  // Column filter view state.
+  // Deliberately excluded from undo/redo history: filters never mutate content
+  // (Monaco model stays the source of truth) and undoing a data edit should not
+  // silently discard the user's view configuration.
+  const [filters, setFilters] = useState<ColumnFilter[]>([]);
+  const [filterMatchMode, setFilterMatchModeState] =
+    useState<FilterMatchMode>("and");
+
+  // Saved filter presets (named snapshots of the current filter set)
+  const [filterPresets, setFilterPresets] = useState<FilterPreset[]>([]);
 
   // Simple undo/redo
   const [history, setHistory] = useState<CsvState[]>([]);
@@ -196,13 +239,23 @@ export const useCsvData = (
           dataRows = rawData as string[][];
         }
 
-        // Create columns
-        const columns: CsvColumn[] = headers.map((header, index) => ({
-          id: `col_${index}`,
-          name: header || `Column ${index + 1}`,
-          type: "text",
-          index,
-        }));
+        // Create columns with inferred types.
+        // Ids embed the header name so a re-parse that renames, reorders or
+        // inserts columns yields fresh ids — the filter-pruning effect below
+        // then drops stale filters instead of silently re-targeting them at
+        // different data. Ids stay stable when only rows change.
+        const sanitizeIdPart = (name: string) =>
+          name.replace(/[^A-Za-z0-9_-]/g, "_");
+        const inferredTypes = inferColumnTypes(dataRows);
+        const columns: CsvColumn[] = headers.map((header, index) => {
+          const name = header || `Column ${index + 1}`;
+          return {
+            id: `col_${index}_${sanitizeIdPart(name)}`,
+            name,
+            type: inferredTypes[index] ?? "text",
+            index,
+          };
+        });
 
         // Create rows
         const data: CsvRow[] = dataRows.map((row, index) => ({
@@ -250,6 +303,99 @@ export const useCsvData = (
 
     setLoading(false);
   }, [content, parseCsv]);
+
+  // Drop filters whose column no longer exists. Parse-generated column ids
+  // embed the header name, so a re-parse that renames, reorders or removes
+  // columns invalidates the affected ids instead of silently re-targeting
+  // existing filters at different data.
+  useEffect(() => {
+    setFilters((prev) => {
+      if (prev.length === 0) return prev;
+      const columnIds = new Set(csvState.columns.map((column) => column.id));
+      const kept = prev.filter((filter) => columnIds.has(filter.columnId));
+      return kept.length === prev.length ? prev : kept;
+    });
+  }, [csvState.columns]);
+
+  const setColumnFilter = useCallback(
+    (columnId: string, filter?: ColumnFilter) => {
+      setFilters((prev) => {
+        const index = prev.findIndex((existing) => existing.columnId === columnId);
+        if (!filter) {
+          return index === -1 ? prev : prev.filter((_, i) => i !== index);
+        }
+        if (index === -1) return [...prev, filter];
+        const next = [...prev];
+        next[index] = { ...filter, columnId };
+        return next;
+      });
+    },
+    [],
+  );
+
+  const removeColumnFilter = useCallback((columnId: string) => {
+    setFilters((prev) => prev.filter((filter) => filter.columnId !== columnId));
+  }, []);
+
+  const clearFilters = useCallback(() => setFilters([]), []);
+
+  const setFilterMatchMode = useCallback((mode: FilterMatchMode) => {
+    setFilterMatchModeState(mode);
+  }, []);
+
+  const saveFilterPreset = useCallback(
+    (name: string) => {
+      const trimmed = name.trim();
+      if (trimmed === "") return;
+      setFilterPresets((prev) => {
+        const existingIndex = prev.findIndex(
+          (preset) => preset.name === trimmed,
+        );
+        const preset: FilterPreset = {
+          id:
+            existingIndex === -1
+              ? makePresetId()
+              : prev[existingIndex].id,
+          name: trimmed,
+          filters: filters.map((filter) => ({ ...filter })),
+          matchMode: filterMatchMode,
+        };
+        if (existingIndex === -1) return [...prev, preset];
+        const next = [...prev];
+        next[existingIndex] = preset;
+        return next;
+      });
+    },
+    [filters, filterMatchMode],
+  );
+
+  const applyFilterPreset = useCallback(
+    (presetId: string) => {
+      const preset = filterPresets.find(
+        (candidate) => candidate.id === presetId,
+      );
+      if (!preset) return;
+      // State updaters must stay pure, so side-effecting setState calls for
+      // filters happen here instead of inside a setFilterPresets updater.
+      setFilters(preset.filters.map((filter) => ({ ...filter })));
+      setFilterMatchModeState(preset.matchMode);
+    },
+    [filterPresets],
+  );
+
+  const deleteFilterPreset = useCallback((presetId: string) => {
+    setFilterPresets((prev) =>
+      prev.filter((preset) => preset.id !== presetId),
+    );
+  }, []);
+
+  const filteredData = useMemo(
+    () =>
+      applyFilters(csvState.data, filters, csvState.columns, {
+        matchMode: filterMatchMode,
+      }),
+    [csvState.data, filters, csvState.columns, filterMatchMode],
+  );
 
   // Save state to history for undo/redo
   const saveToHistory = useCallback((newState: CsvState) => {
@@ -779,19 +925,21 @@ export const useCsvData = (
   }, [history, historyIndex, syncToContent]);
 
   // Export functions
-  const toCsv = useCallback((): string => {
+  const toCsv = useCallback((rows?: CsvRow[]): string => {
+    const sourceRows = rows ?? csvState.data;
     const headers = hasHeader ? [csvState.columns.map((col) => col.name)] : [];
-    const rows = csvState.data.map((row) =>
+    const data = sourceRows.map((row) =>
       row.cells.map((cell) => cell.value),
     );
-    const allRows = [...headers, ...rows];
+    const allRows = [...headers, ...data];
 
     const result = Papa.unparse(allRows, { delimiter });
     return result;
   }, [csvState, hasHeader, delimiter]);
 
-  const toJson = useCallback((): string => {
-    const jsonData = csvState.data.map((row) => {
+  const toJson = useCallback((rows?: CsvRow[]): string => {
+    const sourceRows = rows ?? csvState.data;
+    const jsonData = sourceRows.map((row) => {
       const obj: Record<string, string> = {};
       csvState.columns.forEach((col, index) => {
         obj[col.name] = row.cells[index]?.value || "";
@@ -801,23 +949,25 @@ export const useCsvData = (
     return JSON.stringify(jsonData, null, 2);
   }, [csvState]);
 
-  const toMarkdown = useCallback((): string => {
-    if (csvState.data.length === 0) return "";
+  const toMarkdown = useCallback((rows?: CsvRow[]): string => {
+    const sourceRows = rows ?? csvState.data;
+    if (sourceRows.length === 0) return "";
 
     const headers = `| ${csvState.columns.map((col) => col.name).join(" | ")} |`;
     const separator = `| ${csvState.columns.map(() => "---").join(" | ")} |`;
-    const rows = csvState.data.map(
+    const dataRows = sourceRows.map(
       (row) => `| ${row.cells.map((cell) => cell.value || "").join(" | ")} |`,
     );
 
-    return [headers, separator, ...rows].join("\n");
+    return [headers, separator, ...dataRows].join("\n");
   }, [csvState]);
 
   const toSql = useCallback(
-    (tableName: string): string => {
-      if (csvState.data.length === 0) return "";
+    (tableName: string, rows?: CsvRow[]): string => {
+      const sourceRows = rows ?? csvState.data;
+      if (sourceRows.length === 0) return "";
 
-      const insertStatements = csvState.data.map((row) => {
+      const insertStatements = sourceRows.map((row) => {
         const values = row.cells.map(
           (cell) => `'${cell.value.replace(/'/g, "''")}'`,
         );
@@ -1033,6 +1183,21 @@ export const useCsvData = (
     // Delimiter
     detectedDelimiter: delimiter,
     changeDelimiter,
+
+    // Column filters
+    filters,
+    filterMatchMode,
+    filteredData,
+    setColumnFilter,
+    removeColumnFilter,
+    clearFilters,
+    setFilterMatchMode,
+
+    // Saved filter presets
+    filterPresets,
+    saveFilterPreset,
+    applyFilterPreset,
+    deleteFilterPreset,
 
     // Statistics
     getColumnStats,

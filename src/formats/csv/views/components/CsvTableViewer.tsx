@@ -21,6 +21,7 @@ import {
   Eye,
   EyeOff,
   ClipboardPaste,
+  ListFilter,
 } from "lucide-react";
 import * as Papa from "papaparse";
 import { SmartViewProps } from "../../../../views/registry";
@@ -28,7 +29,19 @@ import { useCsvData } from "../hooks/useCsvData";
 import { CsvRow } from "../types";
 import { ColumnStatsPopover } from "./ColumnStatsPopover";
 import { CsvToolbar } from "./CsvToolbar";
+import { CsvFilterBar } from "./CsvFilterBar";
+import { ColumnFilterInput } from "./ColumnFilterInput";
 import { CsvSnapshotsPanel } from "./CsvSnapshotsPanel";
+import { FacetFilterPopover } from "./FacetFilterPopover";
+import { CsvFilterPresetsPanel } from "./CsvFilterPresetsPanel";
+import { computeFacetCounts } from "../utils/facets";
+import {
+  FACET_MAX_VISIBLE_VALUES,
+  facetSelectionToFilter,
+  quickFilterFromCell,
+  toFacetSelection,
+  QuickFilterAction,
+} from "../utils/filterWidgetModel";
 import { CsvDiagnosticsFooter } from "./CsvDiagnosticsFooter";
 import { useRootStore } from "../../../../stores/rootStore";
 import { tabletActionService } from "../../../../services/tabletActionService";
@@ -79,6 +92,11 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
   const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
   const [showSnapshotsPanel, setShowSnapshotsPanel] = useState(false);
   const [duplicateSearchPerformed, setDuplicateSearchPerformed] = useState(false);
+  const [showFilterRow, setShowFilterRow] = useState(false);
+  const [showPresetsPanel, setShowPresetsPanel] = useState(false);
+  // Export scope: export the filtered (visible) rows or every row. Only
+  // meaningful while a filter actually hides rows.
+  const [exportVisibleRowsOnly, setExportVisibleRowsOnly] = useState(true);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -100,6 +118,12 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
 
   // Stats popover state
   const [statsPopover, setStatsPopover] = useState<{
+    columnId: string;
+    position: { x: number; y: number };
+  } | null>(null);
+
+  // Facet (value list) popover state
+  const [facetPopover, setFacetPopover] = useState<{
     columnId: string;
     position: { x: number; y: number };
   } | null>(null);
@@ -141,6 +165,17 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
     demoteHeaderToFirstRow,
     detectedDelimiter,
     changeDelimiter,
+    filters,
+    filterMatchMode,
+    filteredData: typeFilteredRows,
+    setColumnFilter,
+    removeColumnFilter,
+    clearFilters,
+    setFilterMatchMode,
+    filterPresets,
+    saveFilterPreset,
+    applyFilterPreset,
+    deleteFilterPreset,
     toCsv,
     toJson,
     toMarkdown,
@@ -552,6 +587,76 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
     setContextMenu(null);
   }, []);
 
+  // Quick filters from the right-clicked cell ("Filter by this value", etc.)
+  const applyQuickFilter = useCallback(
+    (action: QuickFilterAction) => {
+      if (!contextMenu?.rowId) return;
+      const column = columns.find((c) => c.id === contextMenu.columnId);
+      const row = data.find((candidate) => candidate.id === contextMenu.rowId);
+      const cellValue =
+        column && row ? row.cells[column.index]?.value : undefined;
+      const filter = quickFilterFromCell(
+        action,
+        contextMenu.columnId,
+        cellValue,
+      );
+      setContextMenu(null);
+      if (filter) setColumnFilter(filter.columnId, filter);
+    },
+    [contextMenu, columns, data, setColumnFilter],
+  );
+
+  // Facet popover helpers
+  const facetColumn = facetPopover
+    ? columns.find((column) => column.id === facetPopover.columnId)
+    : undefined;
+
+  // Memoized distinct-value counts; recomputed when data/filters change so
+  // counts stay live as other filters apply.
+  const facetValues = useMemo(
+    () =>
+      facetPopover && facetColumn
+        ? computeFacetCounts(
+            data,
+            columns,
+            facetPopover.columnId,
+            filters,
+            filterMatchMode,
+          )
+        : [],
+    [facetPopover, facetColumn, data, columns, filters, filterMatchMode],
+  );
+
+  const facetSelection = useMemo(
+    () =>
+      facetPopover
+        ? toFacetSelection(
+            filters.find((filter) => filter.columnId === facetPopover.columnId),
+          )
+        : null,
+    [facetPopover, filters],
+  );
+
+  const handleFacetSelectionChange = useCallback(
+    (selectedValues: string[]) => {
+      if (!facetPopover || !facetColumn) return;
+      // Only the values actually offered in the popover are selectable, so
+      // "select all" compares against that (capped) count — never the total
+      // distinct count, which would leave an in-filter silently hiding rows.
+      const selectableCount = Math.min(
+        FACET_MAX_VISIBLE_VALUES,
+        facetValues.length,
+      );
+      const filter = facetSelectionToFilter(
+        facetPopover.columnId,
+        selectedValues,
+        selectableCount,
+      );
+      setColumnFilter(facetPopover.columnId, filter);
+    },
+    [facetPopover, facetColumn, facetValues.length, setColumnFilter],
+  );
+
   // Check if shift right action is safe for selected cells
   const canShiftRight = useCallback(() => {
     return canPerformShiftRight(selectedCells, data, columns);
@@ -767,29 +872,6 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
     [addBackgroundTab],
   );
 
-  const handleExportCsv = useCallback(() => {
-    const csvContent = toCsv();
-    exportToTab(csvContent, "Export.csv", "csv");
-  }, [toCsv, exportToTab]);
-
-  const handleExportJson = useCallback(() => {
-    const jsonContent = toJson();
-    exportToTab(jsonContent, "Export.json", "json");
-  }, [toJson, exportToTab]);
-
-  const handleExportMarkdown = useCallback(() => {
-    const markdownContent = toMarkdown();
-    exportToTab(markdownContent, "Export.md", "markdown");
-  }, [toMarkdown, exportToTab]);
-
-  const handleExportSql = useCallback(
-    (tableName: string) => {
-      const sqlContent = toSql(tableName);
-      exportToTab(sqlContent, `${tableName}_inserts.sql`, "sql");
-    },
-    [toSql, exportToTab],
-  );
-
   const columnHelper = createColumnHelper<CsvRow>();
 
   // Get all duplicate row IDs for highlighting
@@ -801,11 +883,36 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
     return ids;
   }, [duplicateGroups]);
 
-  // Filter data based on duplicate view mode
+  // Filter data based on duplicate view mode (column filters already applied in useCsvData)
   const filteredData = useMemo(() => {
-    if (!showDuplicatesOnly) return data;
-    return data.filter((row) => duplicateRowIds.has(row.id));
-  }, [data, showDuplicatesOnly, duplicateRowIds]);
+    if (!showDuplicatesOnly) return typeFilteredRows;
+    return typeFilteredRows.filter((row) => duplicateRowIds.has(row.id));
+  }, [typeFilteredRows, showDuplicatesOnly, duplicateRowIds]);
+
+  // Export handlers — export the filtered (visible) rows or every row,
+  // depending on the scope chosen in the export menu.
+  const handleExportCsv = useCallback(() => {
+    const csvContent = toCsv(exportVisibleRowsOnly ? filteredData : undefined);
+    exportToTab(csvContent, "Export.csv", "csv");
+  }, [toCsv, exportToTab, exportVisibleRowsOnly, filteredData]);
+
+  const handleExportJson = useCallback(() => {
+    const jsonContent = toJson(exportVisibleRowsOnly ? filteredData : undefined);
+    exportToTab(jsonContent, "Export.json", "json");
+  }, [toJson, exportToTab, exportVisibleRowsOnly, filteredData]);
+
+  const handleExportMarkdown = useCallback(() => {
+    const markdownContent = toMarkdown(exportVisibleRowsOnly ? filteredData : undefined);
+    exportToTab(markdownContent, "Export.md", "markdown");
+  }, [toMarkdown, exportToTab, exportVisibleRowsOnly, filteredData]);
+
+  const handleExportSql = useCallback(
+    (tableName: string) => {
+      const sqlContent = toSql(tableName, exportVisibleRowsOnly ? filteredData : undefined);
+      exportToTab(sqlContent, `${tableName}_inserts.sql`, "sql");
+    },
+    [toSql, exportToTab, exportVisibleRowsOnly, filteredData],
+  );
 
   const tableColumns = useMemo<ColumnDef<CsvRow, any>[]>(() => {
     return [
@@ -1453,11 +1560,14 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
         onExportJson={handleExportJson}
         onExportMarkdown={handleExportMarkdown}
         onExportSql={handleExportSql}
+        exportVisibleRowsOnly={exportVisibleRowsOnly}
+        onToggleExportVisibleRowsOnly={setExportVisibleRowsOnly}
         onPromoteFirstRowToHeader={promoteFirstRowToHeader}
         onDemoteHeaderToFirstRow={demoteHeaderToFirstRow}
         currentDelimiter={detectedDelimiter}
         onChangeDelimiter={changeDelimiter}
         rowCount={data.length}
+        visibleRowCount={filteredData.length}
         columnCount={columns.length}
         diagnostics={diagnostics}
         isValid={isValid}
@@ -1468,6 +1578,46 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
           source: { tabId, titleHint: "Data Reconcile", side },
         })}
       />
+
+      {/* Filter Bar */}
+      <CsvFilterBar
+        columns={columns}
+        filters={filters}
+        matchMode={filterMatchMode}
+        showFilterRow={showFilterRow}
+        visibleRowCount={typeFilteredRows.length}
+        totalRowCount={data.length}
+        showPresetsPanel={showPresetsPanel}
+        onToggleFilterRow={setShowFilterRow}
+        onRemoveFilter={removeColumnFilter}
+        onClearFilters={clearFilters}
+        onMatchModeChange={setFilterMatchMode}
+        onTogglePresetsPanel={setShowPresetsPanel}
+      />
+
+      {/* Saved Filter Presets Panel */}
+      {showPresetsPanel && (
+        <CsvFilterPresetsPanel
+          presets={filterPresets}
+          canSave={filters.length > 0}
+          onSave={saveFilterPreset}
+          onApply={applyFilterPreset}
+          onDelete={deleteFilterPreset}
+          onClose={() => setShowPresetsPanel(false)}
+        />
+      )}
+
+      {/* Facet (value list) Popover */}
+      {facetPopover && facetColumn && (
+        <FacetFilterPopover
+          column={facetColumn}
+          values={facetValues}
+          selection={facetSelection}
+          onSelectionChange={handleFacetSelectionChange}
+          onClose={() => setFacetPopover(null)}
+          position={facetPopover.position}
+        />
+      )}
 
       {/* Snapshots Panel */}
       {showSnapshotsPanel && snapshots.length > 0 && (
@@ -1487,38 +1637,88 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
         data-testid="csv-table-container"
       >
         {/* Fixed Header */}
-        <div
-          className="bg-surface-secondary sticky top-0 z-10 border-b border-base"
-          style={{
-            display: "grid",
-            gridTemplateColumns,
-            width: "fit-content",
-          }}
-          data-testid="csv-table"
-        >
-          {table.getHeaderGroups()[0]?.headers.map((header) => (
+        <div className="sticky top-0 z-10">
+          <div
+            className="bg-surface-secondary border-b border-base"
+            style={{
+              display: "grid",
+              gridTemplateColumns,
+              width: "fit-content",
+            }}
+            data-testid="csv-table"
+          >
+            {table.getHeaderGroups()[0]?.headers.map((header) => (
+              <div
+                key={header.id}
+                className="border-r border-base p-2 text-left font-medium text-main bg-surface-secondary"
+                data-testid="column-header"
+                onClick={(e) => {
+                  if (
+                    e.detail <= 1 &&
+                    header.id !== "rowNumber" &&
+                    header.id !== "actions"
+                  ) {
+                    handleSelectColumn(header.id, e);
+                  }
+                }}
+                onContextMenu={(e) => {
+                  if (header.id !== "rowNumber" && header.id !== "actions") {
+                    handleColumnRightClick(e, header.id);
+                  }
+                }}
+              >
+                <span className="flex items-center justify-between gap-1 min-w-0">
+                  <span className="truncate">
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                  </span>
+                  {header.id !== "rowNumber" && header.id !== "actions" && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFacetPopover({
+                          columnId: header.id,
+                          position: { x: e.clientX, y: e.clientY },
+                        });
+                      }}
+                      aria-label={`Filter ${
+                        columns.find((c) => c.id === header.id)?.name ?? header.id
+                      } by value`}
+                      title="Filter by value"
+                      className="flex-none rounded hover:bg-element-hover p-0.5 text-secondary"
+                      data-testid={`facet-button-${header.id}`}
+                    >
+                      <ListFilter size={12} />
+                    </button>
+                  )}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Column Filter Row */}
+          {showFilterRow && columns.length > 0 && (
             <div
-              key={header.id}
-              className="border-r border-base p-2 text-left font-medium text-main bg-surface-secondary"
-              data-testid="column-header"
-              onClick={(e) => {
-                if (
-                  e.detail <= 1 &&
-                  header.id !== "rowNumber" &&
-                  header.id !== "actions"
-                ) {
-                  handleSelectColumn(header.id, e);
-                }
+              className="bg-surface-secondary border-b border-base"
+              style={{
+                display: "grid",
+                gridTemplateColumns,
+                width: "fit-content",
               }}
-              onContextMenu={(e) => {
-                if (header.id !== "rowNumber" && header.id !== "actions") {
-                  handleColumnRightClick(e, header.id);
-                }
-              }}
+              data-testid="csv-filter-row"
             >
-              {flexRender(header.column.columnDef.header, header.getContext())}
+              <div className="border-r border-base" aria-hidden="true" />
+              {columns.map((column) => (
+                <div key={column.id} className="border-r border-base">
+                  <ColumnFilterInput
+                    column={column}
+                    filter={filters.find((f) => f.columnId === column.id)}
+                    onChange={(next) => setColumnFilter(column.id, next)}
+                  />
+                </div>
+              ))}
+              <div aria-hidden="true" />
             </div>
-          ))}
+          )}
         </div>
 
         {/* Virtual Rows Container */}
@@ -1623,6 +1823,48 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
             }}
           >
             <div className="py-1">
+              {contextMenu.kind === "cell" && (
+                <>
+                  <button
+                    onClick={() => applyQuickFilter("equals")}
+                    className="flex items-center w-full px-3 py-2 text-sm text-left transition-colors text-main hover:bg-element-hover"
+                    title="Show only rows with this value"
+                  >
+                    <ListFilter size={14} className="mr-2" />
+                    <span>Filter by this value</span>
+                  </button>
+                  <button
+                    onClick={() => applyQuickFilter("notEquals")}
+                    className="flex items-center w-full px-3 py-2 text-left transition-colors text-sm text-main hover:bg-element-hover"
+                    title="Hide rows with this value"
+                  >
+                    <ListFilter size={14} className="mr-2" />
+                    <span>Exclude this value</span>
+                  </button>
+                  {(columns.find((c) => c.id === contextMenu.columnId)?.type ===
+                    "number" ||
+                    columns.find((c) => c.id === contextMenu.columnId)?.type ===
+                      "date") && (
+                    <>
+                      <button
+                        onClick={() => applyQuickFilter("gt")}
+                        className="flex items-center w-full px-3 py-2 text-sm text-left transition-colors text-main hover:bg-element-hover"
+                        title="Keep rows greater than this value"
+                      >
+                        <span>Filter &gt; this</span>
+                      </button>
+                      <button
+                        onClick={() => applyQuickFilter("lt")}
+                        className="flex items-center w-full px-3 py-2 text-sm text-left transition-colors text-main hover:bg-element-hover"
+                        title="Keep rows less than this value"
+                      >
+                        <span>Filter &lt; this</span>
+                      </button>
+                    </>
+                  )}
+                  <div className="border-t border-base my-1" />
+                </>
+              )}
               <button
                 onClick={handleCopySelectedCells}
                 className="flex items-center w-full px-3 py-2 text-sm text-left transition-colors text-main hover:bg-element-hover"

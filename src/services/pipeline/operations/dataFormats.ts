@@ -1380,7 +1380,443 @@ export const dataFormatOperations: OperationDefinition[] = [
         keywords: ["csv", "statistics", "stats", "summary", "describe", "analyze", "profile", "column"],
         source: "core",
     },
+
+    // === JSON TO TYPE DEFINITION ===
+    {
+        id: "json.to-type-definition",
+        name: "JSON To Type Definition",
+        description:
+            "Infer typed model definitions from JSON: TypeScript interfaces, Go structs, Python TypedDicts, or Rust structs. Replaces online generators like json-to-go.",
+        categories: ["json", "conversion"],
+        parameters: [
+            {
+                name: "language",
+                label: "Target Language",
+                type: "select",
+                default: "typescript",
+                options: [
+                    { value: "typescript", label: "TypeScript interface" },
+                    { value: "go", label: "Go struct" },
+                    { value: "python", label: "Python TypedDict" },
+                    { value: "rust", label: "Rust struct" },
+                ],
+            },
+            {
+                name: "rootName",
+                label: "Root Type Name",
+                type: "string",
+                default: "Root",
+                placeholder: "Root",
+            },
+            {
+                name: "optionalNullable",
+                label: "Nullables As Optional",
+                type: "boolean",
+                default: true,
+                description:
+                    "Fields seen with a null value become optional / pointer / Option types instead of union-with-null",
+            },
+        ],
+        processingMode: "entire",
+        execute: (input, params) => {
+            const language = (params.language as string) ?? "typescript";
+            const rawRootName = ((params.rootName as string) ?? "").trim() || "Root";
+            const nullableOptional = params.optionalNullable !== false;
+
+            let data: unknown;
+            try {
+                data = JSON.parse(input);
+            } catch (e) {
+                throw new Error(
+                    `Invalid JSON input: ${e instanceof Error ? e.message : String(e)}`,
+                );
+            }
+
+            return buildTypeDefinition(data, {
+                language,
+                rootName: rawRootName,
+                nullableAsOptional: nullableOptional,
+            });
+        },
+        keywords: [
+            "type", "definition", "interface", "struct", "typeddict", "model",
+            "typescript", "golang", "python", "rust", "codegen", "json-to-go", "infer",
+        ],
+        source: "core",
+    },
 ];
+
+type InferredType =
+    | { kind: "string" | "number" | "boolean" | "any" }
+    | { kind: "ref"; name: string }
+    | { kind: "array"; element: InferredType };
+
+interface FieldInfo {
+    type: InferredType;
+    nullable: boolean;
+    partial?: boolean;
+}
+
+interface ObjectDef {
+    name: string;
+    fields: Map<string, FieldInfo>;
+}
+
+const PRIMITIVE_NAMES: Record<string, Record<string, string>> = {
+    typescript: { string: "string", number: "number", boolean: "boolean", any: "unknown" },
+    go: { string: "string", number: "float64", boolean: "bool", any: "any" },
+    python: { string: "str", number: "float", boolean: "bool", any: "Any" },
+    rust: { string: "String", number: "f64", boolean: "bool", any: "serde_json::Value" },
+};
+
+function singularize(word: string): string {
+    if (/ies$/.test(word) && word.length > 3) return `${word.slice(0, -3)}y`;
+    if (/(ss|us|is)$/.test(word) || word.length <= 2 || !/s$/.test(word)) return word;
+    return word.slice(0, -1);
+}
+
+function pascalCaseName(hint: string): string {
+    const words = hint.replace(/[^A-Za-z0-9]+/g, " ").trim().split(/\s+/).filter(Boolean);
+    if (words.length === 0) return "Item";
+    const pascal = words.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join("");
+    return /^[0-9]/.test(pascal) ? `Item${pascal}` : pascal;
+}
+
+function goExportedField(jsonKey: string): string {
+    const parts = jsonKey.split(/[^A-Za-z0-9]+/).filter(Boolean);
+    let base = parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join("");
+    if (!base) base = "Field";
+    if (/^[0-9]/.test(base)) base = `Field${base}`;
+    return base.charAt(0).toUpperCase() + base.slice(1);
+}
+
+function rustIdentifier(jsonKey: string): { ident: string; renamed: boolean } {
+    let ident = jsonKey.replace(/[^A-Za-z0-9_]/g, "_");
+    if (!ident || /^_*$/.test(ident)) ident = "field";
+    if (/^[0-9]/.test(ident)) ident = `_${ident}`;
+    const snake = ident.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase();
+    return { ident: snake, renamed: snake !== jsonKey };
+}
+
+class TypeInference {
+    private defs: ObjectDef[] = [];
+    private usedNames = new Set<string>();
+
+    get objectDefs(): readonly ObjectDef[] {
+        return this.defs;
+    }
+
+    private uniqueName(preferred: string): string {
+        if (!this.usedNames.has(preferred)) {
+            this.usedNames.add(preferred);
+            return preferred;
+        }
+        let counter = 2;
+        while (this.usedNames.has(`${preferred}${counter}`)) counter++;
+        const name = `${preferred}${counter}`;
+        this.usedNames.add(name);
+        return name;
+    }
+
+    infer(value: unknown, hint: string): InferredType {
+        if (typeof value === "string") return { kind: "string" };
+        if (typeof value === "number") return { kind: "number" };
+        if (typeof value === "boolean") return { kind: "boolean" };
+        if (Array.isArray(value)) {
+            const nonNull = value.filter((v) => v !== null);
+            if (nonNull.length === 0) return { kind: "array", element: { kind: "any" } };
+
+            const allPlainObjects = nonNull.every(
+                (v) => typeof v === "object" && !Array.isArray(v),
+            );
+            if (allPlainObjects) {
+                const def = this.mergeObjectElements(
+                    nonNull as Record<string, unknown>[],
+                    singularize(hint),
+                );
+                return { kind: "array", element: { kind: "ref", name: def.name } };
+            }
+
+            const elements = nonNull.map((v) => this.infer(v, singularize(hint)));
+            return { kind: "array", element: this.mergeTypes(elements) };
+        }
+        if (value !== null && typeof value === "object") {
+            const obj = value as Record<string, unknown>;
+            const keys = Object.keys(obj);
+            let def = this.defs.find(
+                (d) => d.fields.size === keys.length && keys.every((k) => d.fields.has(k)),
+            );
+            if (!def) {
+                def = { name: this.uniqueName(pascalCaseName(hint)), fields: new Map() };
+                this.defs.push(def);
+                for (const [key, val] of Object.entries(obj)) {
+                    def.fields.set(key, {
+                        type: val === null ? { kind: "any" } : this.infer(val, key),
+                        nullable: val === null,
+                    });
+                }
+            } else {
+                for (const [key, val] of Object.entries(obj)) {
+                    const info: FieldInfo = {
+                        type: val === null ? { kind: "any" } : this.infer(val, key),
+                        nullable: val === null,
+                    };
+                    const existing = def.fields.get(key)!;
+                    existing.nullable = existing.nullable || info.nullable;
+                    if (JSON.stringify(existing.type) !== JSON.stringify(info.type)) {
+                        existing.type = { kind: "any" };
+                    }
+                }
+            }
+            return { kind: "ref", name: def.name };
+        }
+        return { kind: "any" };
+    }
+
+    private mergeObjectElements(
+        objects: Record<string, unknown>[],
+        hint: string,
+    ): ObjectDef {
+        const def: ObjectDef = { name: this.uniqueName(pascalCaseName(hint)), fields: new Map() };
+        this.defs.push(def);
+        for (const obj of objects) {
+            for (const [key, val] of Object.entries(obj)) {
+                const info: FieldInfo = {
+                    type: val === null ? { kind: "any" } : this.infer(val, key),
+                    nullable: val === null,
+                };
+                const existing = def.fields.get(key);
+                if (!existing) {
+                    def.fields.set(key, info);
+                } else {
+                    if (JSON.stringify(existing.type) !== JSON.stringify(info.type)) {
+                        existing.type = { kind: "any" };
+                    }
+                    existing.nullable = existing.nullable || info.nullable;
+                }
+            }
+            for (const [key, info] of def.fields) {
+                if (!(key in obj)) info.partial = true;
+            }
+        }
+        return def;
+    }
+
+    private mergeTypes(types: InferredType[]): InferredType {
+        const distinct: InferredType[] = [];
+        outer: for (const t of types) {
+            for (const d of distinct) {
+                if (JSON.stringify(d) === JSON.stringify(t)) continue outer;
+            }
+            distinct.push(t);
+        }
+        return distinct.length === 1 ? distinct[0] : { kind: "any" };
+    }
+}
+
+function collectRefs(type: InferredType, into: Set<string>): void {
+    switch (type.kind) {
+        case "ref":
+            into.add(type.name);
+            break;
+        case "array":
+            collectRefs(type.element, into);
+            break;
+        default:
+            break;
+    }
+}
+
+function buildTypeDefinition(
+    data: unknown,
+    options: { language: string; rootName: string; nullableAsOptional: boolean },
+): string {
+    if (!(options.language in PRIMITIVE_NAMES)) {
+        throw new Error(`Unsupported language: ${options.language}`);
+    }
+
+    const inference = new TypeInference(options.rootName);
+    const rootType = inference.infer(data, options.rootName);
+
+    const reachable = new Set<string>();
+    collectRefs(rootType, reachable);
+    for (const def of inference.objectDefs) {
+        if (reachable.has(def.name)) {
+            for (const info of def.fields.values()) collectRefs(info.type, reachable);
+        }
+    }
+    const liveDefs = inference.objectDefs.filter((d) => reachable.has(d.name));
+
+    switch (options.language) {
+        case "typescript":
+            return emitTypeScript(options.rootName, rootType, liveDefs, options.nullableAsOptional);
+        case "go":
+            return emitGo(options.rootName, rootType, liveDefs, options.nullableAsOptional);
+        case "python":
+            return emitPython(options.rootName, rootType, liveDefs, options.nullableAsOptional);
+        case "rust":
+            return emitRust(options.rootName, rootType, liveDefs, options.nullableAsOptional);
+        default:
+            throw new Error(`Unsupported language: ${options.language}`);
+    }
+}
+
+function emitTypeScript(
+    rootName: string,
+    rootType: InferredType,
+    defs: ObjectDef[],
+    nullableAsOptional: boolean,
+): string {
+    const render = (t: InferredType): string => {
+        switch (t.kind) {
+            case "ref":
+                return t.name;
+            case "array": {
+                const el = render(t.element);
+                return /\s/.test(el) ? `(${el})[]` : `${el}[]`;
+            }
+            default:
+                return PRIMITIVE_NAMES.typescript[t.kind];
+        }
+    };
+
+    const blocks = defs.map((def) => {
+        const lines = [`export interface ${def.name} {`];
+        for (const [key, info] of def.fields) {
+            const optional = nullableAsOptional && (info.nullable || info.partial === true);
+            const rendered =
+                !optional && info.nullable ? `${render(info.type)} | null` : render(info.type);
+            lines.push(`  ${JSON.stringify(key)}${optional ? "?" : ""}: ${rendered};`);
+        }
+        lines.push("}");
+        return lines.join("\n");
+    });
+
+    if (!(rootType.kind === "ref" && rootType.name === rootName)) {
+        blocks.push(`export type ${rootName} = ${render(rootType)};`);
+    }
+    return blocks.join("\n\n");
+}
+
+function emitGo(
+    rootName: string,
+    rootType: InferredType,
+    defs: ObjectDef[],
+    nullableAsOptional: boolean,
+): string {
+    const render = (t: InferredType): string => {
+        switch (t.kind) {
+            case "ref":
+                return t.name;
+            case "array": {
+                if (t.element.kind === "ref") return `[]${t.element.name}`;
+                return `[]${render(t.element)}`;
+            }
+            default:
+                return PRIMITIVE_NAMES.go[t.kind];
+        }
+    };
+    const pointerize = (goType: string): string =>
+        goType.startsWith("*") || goType.startsWith("[]") || goType.startsWith("map[")
+            ? goType
+            : `*${goType}`;
+
+    const blocks = defs.map((def) => {
+        const lines = [`type ${def.name} struct {`];
+        for (const [key, info] of def.fields) {
+            const wrap = info.nullable || (info.partial === true && nullableAsOptional);
+            const fieldType = wrap ? pointerize(render(info.type)) : render(info.type);
+            const tag = wrap ? ` \`json:"${key},omitempty"\`` : ` \`json:"${key}"\``;
+            lines.push(`\t${goExportedField(key)} ${fieldType}${tag}`);
+        }
+        lines.push("}");
+        return lines.join("\n");
+    });
+
+    if (!(rootType.kind === "ref" && rootType.name === rootName)) {
+        blocks.push(`type ${rootName} = ${render(rootType)}`);
+    }
+    return blocks.join("\n\n");
+}
+
+function emitPython(
+    rootName: string,
+    rootType: InferredType,
+    defs: ObjectDef[],
+    nullableAsOptional: boolean,
+): string {
+    const render = (t: InferredType, quoteRefs: boolean): string => {
+        switch (t.kind) {
+            case "ref":
+                return quoteRefs ? `"${t.name}"` : t.name;
+            case "array":
+                return `list[${render(t.element, quoteRefs)}]`;
+            default:
+                return PRIMITIVE_NAMES.python[t.kind];
+        }
+    };
+
+    const blocks = defs.map((def) => {
+        const lines = [`class ${def.name}(TypedDict):`];
+        if (def.fields.size === 0) {
+            lines.push("    pass");
+        }
+        for (const [key, info] of def.fields) {
+            const wrap = info.nullable || (info.partial === true && nullableAsOptional);
+            const inner = render(info.type, true);
+            lines.push(`    ${JSON.stringify(key)}: ${wrap ? `Optional[${inner}]` : inner}`);
+        }
+        return lines.join("\n");
+    });
+
+    if (!(rootType.kind === "ref" && rootType.name === rootName)) {
+        blocks.push(`${rootName} = ${render(rootType, false)}`);
+    }
+    return `from typing import Any, Optional\n\n\n${blocks.join("\n\n\n")}\n`;
+}
+
+function emitRust(
+    rootName: string,
+    rootType: InferredType,
+    defs: ObjectDef[],
+    nullableAsOptional: boolean,
+): string {
+    const render = (t: InferredType): string => {
+        switch (t.kind) {
+            case "ref":
+                return t.name;
+            case "array":
+                return `Vec<${render(t.element)}>`;
+            default:
+                return PRIMITIVE_NAMES.rust[t.kind];
+        }
+    };
+
+    const derive = "#[derive(Debug, Clone, Serialize, Deserialize)]";
+    const blocks = defs.map((def) => {
+        const lines = [derive, `pub struct ${def.name} {`];
+        for (const [key, info] of def.fields) {
+            const { ident, renamed } = rustIdentifier(key);
+            const inner = render(info.type);
+            const wrap = info.nullable || (info.partial === true && nullableAsOptional);
+            const fieldType = wrap ? `Option<${inner}>` : inner;
+            const attrs: string[] = [];
+            if (renamed) attrs.push(`rename = ${JSON.stringify(key)}`);
+            if (wrap && nullableAsOptional) {
+                attrs.push('skip_serializing_if = "Option::is_none"');
+            }
+            if (attrs.length > 0) lines.push(`  #[serde(${attrs.join(", ")})]`);
+            lines.push(`  ${ident}: ${fieldType},`);
+        }
+        lines.push("}");
+        return lines.join("\n");
+    });
+
+    if (!(rootType.kind === "ref" && rootType.name === rootName)) {
+        blocks.push(`pub type ${rootName} = ${render(rootType)};`);
+    }
+    return blocks.join("\n\n");
+}
 
 // Self-register all operations
 dataFormatOperations.forEach(op => operationRegistry.register(op));

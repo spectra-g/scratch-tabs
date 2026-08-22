@@ -660,7 +660,200 @@ export const cryptoOperations: OperationDefinition[] = [
         keywords: ["keccak", "keccak256", "sha3", "ethereum", "hash", "digest", "web3", "solidity"],
         source: "core",
     },
+
+    // === RSA-OAEP ===
+    {
+        id: "crypto.rsa-encrypt",
+        name: "RSA Encrypt",
+        description:
+            "Encrypt text with RSA-OAEP (SHA-256) using a PEM public key (SPKI format). Output is Base64 ciphertext.",
+        categories: ["encryption"],
+        parameters: [
+            {
+                name: "publicKey",
+                label: "Public Key (PEM)",
+                type: "textarea",
+                default: "",
+                required: true,
+                placeholder: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkq…\n-----END PUBLIC KEY-----",
+                description: "PEM-encoded SubjectPublicKeyInfo key ('BEGIN PUBLIC KEY')",
+            },
+        ],
+        processingMode: "entire",
+        execute: async (input, params) => {
+            const pem = ((params.publicKey as string) ?? "").trim();
+            if (!pem) throw new Error("Public key (PEM) is required");
+
+            const hasWebCrypto =
+                typeof crypto !== "undefined" &&
+                !!crypto.subtle &&
+                typeof TextEncoder !== "undefined";
+
+            if (hasWebCrypto) {
+                try {
+                    const key = await crypto.subtle.importKey(
+                        "spki",
+                        pemToDer(pem),
+                        { name: "RSA-OAEP", hash: "SHA-256" },
+                        false,
+                        ["encrypt"],
+                    );
+                    const ciphertext = await crypto.subtle.encrypt(
+                        { name: "RSA-OAEP" },
+                        key,
+                        new TextEncoder().encode(input),
+                    );
+                    return bytesToBase64(new Uint8Array(ciphertext));
+                } catch (e) {
+                    if (isPkcs1Label(pem)) {
+                        throw new Error(
+                            "PKCS#1 keys ('BEGIN RSA PUBLIC KEY') are not supported — convert to SPKI ('BEGIN PUBLIC KEY')",
+                        );
+                    }
+                    throw new Error(
+                        `RSA encryption failed: ${e instanceof Error ? e.message : String(e)}`,
+                    );
+                }
+            }
+
+            const nc = await import(/* @vite-ignore */ "crypto");
+            const encrypted = nc.publicEncrypt(
+                {
+                    key: nc.createPublicKey(pem),
+                    padding: nc.constants.RSA_PKCS1_OAEP_PADDING,
+                    oaepHash: "sha256",
+                },
+                Buffer.from(input, "utf8"),
+            );
+            return encrypted.toString("base64");
+        },
+        keywords: ["rsa", "encrypt", "oaep", "asymmetric", "public key", "pem", "cipher"],
+        source: "core",
+    },
+    {
+        id: "crypto.rsa-decrypt",
+        name: "RSA Decrypt",
+        description:
+            "Decrypt Base64 RSA-OAEP (SHA-256) ciphertext using a PEM private key (PKCS#8 format).",
+        categories: ["encryption"],
+        parameters: [
+            {
+                name: "privateKey",
+                label: "Private Key (PEM)",
+                type: "textarea",
+                default: "",
+                required: true,
+                placeholder: "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADAN…\n-----END PRIVATE KEY-----",
+                description: "PEM-encoded PKCS#8 key ('BEGIN PRIVATE KEY')",
+            },
+            {
+                name: "inputFormat",
+                label: "Input Format",
+                type: "select",
+                default: "base64",
+                options: [
+                    { value: "base64", label: "Base64" },
+                    { value: "hex", label: "Hexadecimal" },
+                ],
+            },
+        ],
+        processingMode: "entire",
+        execute: async (input, params) => {
+            const pem = ((params.privateKey as string) ?? "").trim();
+            if (!pem) throw new Error("Private key (PEM) is required");
+
+            const inputFormat = (params.inputFormat as string) ?? "base64";
+            let cipherBytes: Uint8Array;
+            if (inputFormat === "hex") {
+                const hex = input.trim().replace(/\s/g, "");
+                if (hex.length % 2 !== 0) throw new Error("Invalid hex input: odd length");
+                cipherBytes = new Uint8Array(hex.length / 2);
+                for (let i = 0; i < hex.length; i += 2)
+                    cipherBytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+            } else {
+                cipherBytes = base64ToBytes(input.trim());
+            }
+
+            const hasWebCrypto =
+                typeof crypto !== "undefined" &&
+                !!crypto.subtle &&
+                typeof TextDecoder !== "undefined";
+
+            if (hasWebCrypto) {
+                try {
+                    const key = await crypto.subtle.importKey(
+                        "pkcs8",
+                        pemToDer(pem),
+                        { name: "RSA-OAEP", hash: "SHA-256" },
+                        false,
+                        ["decrypt"],
+                    );
+                    const plaintext = await crypto.subtle.decrypt(
+                        { name: "RSA-OAEP" },
+                        key,
+                        cipherBytes,
+                    );
+                    return new TextDecoder().decode(plaintext);
+                } catch (e) {
+                    if (isPkcs1Label(pem)) {
+                        throw new Error(
+                            "PKCS#1 keys ('BEGIN RSA PRIVATE KEY') are not supported — convert to PKCS#8 ('BEGIN PRIVATE KEY')",
+                        );
+                    }
+                    throw new Error(
+                        `RSA decryption failed: ${e instanceof Error ? e.message : String(e)}`,
+                    );
+                }
+            }
+
+            const nc = await import(/* @vite-ignore */ "crypto");
+            const decrypted = nc.privateDecrypt(
+                {
+                    key: nc.createPrivateKey(pem),
+                    padding: nc.constants.RSA_PKCS1_OAEP_PADDING,
+                    oaepHash: "sha256",
+                },
+                Buffer.from(cipherBytes),
+            );
+            return decrypted.toString("utf8");
+        },
+        keywords: ["rsa", "decrypt", "oaep", "asymmetric", "private key", "pem", "cipher"],
+        source: "core",
+    },
 ];
+
+function isPkcs1Label(pem: string): boolean {
+    return /-----BEGIN RSA (PUBLIC|PRIVATE) KEY-----/.test(pem);
+}
+
+function pemToDer(pem: string): Uint8Array {
+    const body = pem
+        .replace(/-----BEGIN [^-]+-----/, "")
+        .replace(/-----END [^-]+-----/, "")
+        .replace(/\s+/g, "");
+    if (!body) throw new Error("Invalid PEM: no key data found");
+    return base64ToBytes(body);
+}
+
+function base64ToBytes(base64: string): Uint8Array {
+    let binary: string;
+    try {
+        binary = atob(base64);
+    } catch {
+        throw new Error("Invalid Base64 input");
+    }
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+}
+
+function bytesToBase64(bytes: Uint8Array): string {
+    let binary = "";
+    bytes.forEach((byte) => {
+        binary += String.fromCharCode(byte);
+    });
+    return btoa(binary);
+}
 
 // Self-register all operations
 cryptoOperations.forEach(op => operationRegistry.register(op));
