@@ -5,6 +5,7 @@ import type { CanvasCopyState } from "../../hooks/useCanvasCopyFeedback";
 
 interface ImageNodeActionsProps {
   disabled: boolean;
+  alwaysVisible?: boolean;
   copyState: CanvasCopyState;
   onCopy: () => void;
   onDownload: () => void;
@@ -17,6 +18,7 @@ const actionClass =
 
 export const ImageNodeActions = ({
   disabled,
+  alwaysVisible = false,
   copyState,
   onCopy,
   onDownload,
@@ -26,7 +28,11 @@ export const ImageNodeActions = ({
   const replaceInputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div className="nodrag absolute right-2 top-2 z-10 flex flex-wrap justify-end gap-1">
+    <div
+      className={`nodrag absolute right-2 top-2 z-10 flex flex-wrap justify-end gap-1 rounded p-0.5 transition-opacity duration-150 focus-within:opacity-100 ${
+        alwaysVisible ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+      }`}
+    >
       <button
         type="button"
         className={actionClass}

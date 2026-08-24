@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import { db, getSetting } from "../db";
+import { formatBytes } from "../utils/formatBytes";
+
+export { formatBytes };
 
 export interface AppStats {
   storageUsedBytes: number;
@@ -12,18 +15,6 @@ export interface AppStats {
 }
 
 const TABS_CREATED_KEY = "tabs.created.total";
-
-/**
- * Format bytes to human-readable string
- */
-export function formatBytes(bytes: number): string {
-  if (bytes === 0) return "0 B";
-  const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  const value = bytes / Math.pow(k, i);
-  return `${value.toFixed(1)} ${sizes[i]}`;
-}
 
 /**
  * Format relative time from date

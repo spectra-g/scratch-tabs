@@ -3,11 +3,24 @@ import {
   createImageCanvasItem,
   type CanvasPoint,
 } from "../utils/canvasItemFactory";
-import { prepareCanvasImageAsset } from "../utils/canvasImageValidation";
+import {
+  createCanvasStorageFullError,
+  isQuotaExceededError,
+  prepareCanvasImageAsset,
+} from "../utils/canvasImageValidation";
 import {
   canvasDocumentManager,
   type CanvasDocumentManager,
 } from "./CanvasDocumentManager";
+
+const saveImageAsset = async <T>(save: () => Promise<T>): Promise<T> => {
+  try {
+    return await save();
+  } catch (error) {
+    if (isQuotaExceededError(error)) throw createCanvasStorageFullError();
+    throw error;
+  }
+};
 
 export class CanvasImageIngestService {
   constructor(
@@ -41,7 +54,7 @@ export class CanvasImageIngestService {
       altText: file.name,
       originalName: file.name,
     });
-    await this.manager.addImage(tabId, item, asset);
+    await saveImageAsset(() => this.manager.addImage(tabId, item, asset));
     return item;
   }
 
@@ -57,11 +70,8 @@ export class CanvasImageIngestService {
     file: File;
   }): Promise<CanvasImageItem> {
     const asset = await this.prepareAsset(file, workspaceId);
-    const document = await this.manager.replaceImage(
-      tabId,
-      item.id,
-      asset,
-      file.name,
+    const document = await saveImageAsset(() =>
+      this.manager.replaceImage(tabId, item.id, asset, file.name),
     );
     const replacement = document.items.find(
       (candidate): candidate is CanvasImageItem =>

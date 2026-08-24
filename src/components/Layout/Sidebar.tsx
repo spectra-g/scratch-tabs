@@ -39,6 +39,7 @@ import {
     Upload,
     Download,
     Clock,
+    HardDrive,
 } from "../Icons";
 import { ExportWorkspacesModal } from "../Workspace/ExportWorkspacesModal";
 import { ImportWorkspacesModal } from "../Workspace/ImportWorkspacesModal";
@@ -48,6 +49,7 @@ import { SidebarTabContextMenu } from "./SidebarTabContextMenu";
 import { IconRail } from "./IconRail";
 import { SidebarDraggableTab } from "./SidebarDraggableTab";
 import { SidebarDraggableWorkspace } from "./SidebarDraggableWorkspace";
+import { StorageQuickPanel } from "./StorageQuickPanel";
 
 const ROW_HEIGHT = 28;
 const MIN_WIDTH = 120;
@@ -185,7 +187,7 @@ export const Sidebar: React.FC = () => {
 
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const { isImportModalActive, openImportModal, closeImportModal } = useModalStore();
-    const [quickPanel, setQuickPanel] = useState<"pinned" | "modified" | null>(null);
+    const [quickPanel, setQuickPanel] = useState<"pinned" | "modified" | "storage" | null>(null);
 
     // Drag and drop state
     const [draggedTab, setDraggedTab] = useState<SidebarTabInfo | null>(null);
@@ -224,6 +226,8 @@ export const Sidebar: React.FC = () => {
     const isResizingRef = useRef(false);
     const sidebarRef = useRef<HTMLDivElement>(null);
     const [isDraggingBelowThreshold, setIsDraggingBelowThreshold] = useState(false);
+    // Live width while dragging so label visibility reacts immediately
+    const [resizeWidth, setResizeWidth] = useState<number | null>(null);
 
     const handleMouseMove = useCallback((e: MouseEvent) => {
         if (!isResizingRef.current || !sidebarRef.current) return;
@@ -248,6 +252,7 @@ export const Sidebar: React.FC = () => {
 
             sidebarRef.current.style.width = `${clampedWidth}px`;
             sidebarRef.current.style.opacity = '1';
+            setResizeWidth(clampedWidth);
         }
     }, []);
 
@@ -264,6 +269,7 @@ export const Sidebar: React.FC = () => {
 
         // Clear dragging state
         setIsDraggingBelowThreshold(false);
+        setResizeWidth(null);
 
         // Restore transitions (we removed them on mouse down to avoid drag lag)
         if (sidebarRef.current) {
@@ -477,6 +483,12 @@ export const Sidebar: React.FC = () => {
 
     const quickPanelTabs = quickPanel === "pinned" ? pinnedQuickTabs : recentlyModifiedQuickTabs;
     const quickPanelTitle = quickPanel === "pinned" ? "Pinned Tabs" : "Recently Modified";
+
+    // Footer buttons drop their labels when the sidebar is too narrow to fit
+    // them without cropping (three icon+label buttons need ~260px).
+    const isMobileViewport = typeof window !== 'undefined' && window.innerWidth < 768;
+    const effectiveSidebarWidth = resizeWidth ?? sidebarWidth;
+    const showFooterLabels = isMobileViewport || effectiveSidebarWidth >= 260;
 
     const formatQuickPanelTime = (timestamp?: number) => {
         if (!timestamp) return "";
@@ -942,7 +954,13 @@ export const Sidebar: React.FC = () => {
                     </div>
 
                     <div className="relative px-2 h-[29px] border-t border-base flex items-center justify-between gap-1 flex-shrink-0">
-                        {quickPanel && (
+                        {quickPanel === "storage" ? (
+                            <StorageQuickPanel
+                                onClose={() => setQuickPanel(null)}
+                                onNavigate={handleTabClick}
+                                getWorkspaceName={getWorkspaceName}
+                            />
+                        ) : quickPanel && (
                             <div
                                 className="absolute left-2 right-2 bottom-[34px] z-30 bg-surface border border-base rounded shadow-lg overflow-hidden"
                                 data-testid={`sidebar-quick-panel-${quickPanel}`}
@@ -1000,7 +1018,7 @@ export const Sidebar: React.FC = () => {
                             data-testid="sidebar-pinned-tabs-button"
                         >
                             <Pin size={12} />
-                            <span className="truncate">Pinned</span>
+                            {showFooterLabels && <span className="truncate">Pinned</span>}
                         </button>
                         <div className="w-px h-3 bg-base self-center" />
                         <button
@@ -1014,7 +1032,21 @@ export const Sidebar: React.FC = () => {
                             data-testid="sidebar-recent-tabs-button"
                         >
                             <Clock size={12} />
-                            <span className="truncate">Recent</span>
+                            {showFooterLabels && <span className="truncate">Recent</span>}
+                        </button>
+                        <div className="w-px h-3 bg-base self-center" />
+                        <button
+                            onClick={() => setQuickPanel((current) => current === "storage" ? null : "storage")}
+                            className={clsx(
+                                "flex-1 flex items-center justify-center gap-1.5 px-2 h-full text-[12px] hover:bg-element-hover rounded transition-colors",
+                                quickPanel === "storage" ? "text-main bg-element-hover" : "text-secondary hover:text-main",
+                            )}
+                            title="Heaviest Tabs by storage usage"
+                            aria-label="Heaviest Tabs"
+                            data-testid="sidebar-storage-tabs-button"
+                        >
+                            <HardDrive size={12} />
+                            {showFooterLabels && <span className="truncate">Storage</span>}
                         </button>
                     </div>
 
@@ -1026,7 +1058,7 @@ export const Sidebar: React.FC = () => {
                             title="Import Workspaces"
                         >
                             <Upload size={12} />
-                            <span className="truncate">Import</span>
+                            {showFooterLabels && <span className="truncate">Import</span>}
                         </button>
                         <div className="w-px h-3 bg-base self-center" />
                         <button
@@ -1035,7 +1067,7 @@ export const Sidebar: React.FC = () => {
                             title="Export Workspaces"
                         >
                             <Download size={12} />
-                            <span className="truncate">Export</span>
+                            {showFooterLabels && <span className="truncate">Export</span>}
                         </button>
                     </div>
 

@@ -465,7 +465,12 @@ export const useRootStore = create<RootStore>((set, get) => {
 
     removeTab: async (id) => {
       const tabToRemove = await _findTabForLifecycle(id);
-      if (!tabToRemove) return;
+      if (!tabToRemove) {
+        // The tab's workspace no longer exists (orphaned record), so the
+        // normal lifecycle path cannot find it. Hard-delete it instead.
+        await storage.purgeOrphanedTabData(id);
+        return;
+      }
 
       const isCanvas = getTabContentKind(tabToRemove) === "canvas";
       const activeWorkspaceId =

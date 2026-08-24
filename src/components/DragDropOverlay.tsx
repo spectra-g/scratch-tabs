@@ -317,11 +317,35 @@ const DragDropOverlay: React.FC = () => {
       }
     };
 
+    // Capture phase: canvas zones stopPropagation during bubbling, so these
+    // are the only handlers guaranteed to see drags over the canvas and hide
+    // the "open in new tabs" popup.
+    const hideOverlayOverCanvasZones = (e: DragEvent) => {
+      if (isCanvasDropZoneEvent(e)) {
+        setIsDragging(false);
+      }
+    };
+
+    document.addEventListener("dragover", hideOverlayOverCanvasZones, true);
+    document.addEventListener("dragleave", hideOverlayOverCanvasZones, true);
+    document.addEventListener("drop", hideOverlayOverCanvasZones, true);
+
     document.addEventListener("dragover", handleDragOver);
     document.addEventListener("dragleave", handleDragLeave);
     document.addEventListener("drop", handleDrop);
 
     return () => {
+      document.removeEventListener(
+        "dragover",
+        hideOverlayOverCanvasZones,
+        true,
+      );
+      document.removeEventListener(
+        "dragleave",
+        hideOverlayOverCanvasZones,
+        true,
+      );
+      document.removeEventListener("drop", hideOverlayOverCanvasZones, true);
       document.removeEventListener("dragover", handleDragOver);
       document.removeEventListener("dragleave", handleDragLeave);
       document.removeEventListener("drop", handleDrop);

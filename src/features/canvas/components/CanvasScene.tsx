@@ -358,8 +358,11 @@ export const CanvasScene = ({
   return (
     <div
       ref={rootRef}
-      className="canvas-flow-root h-full w-full bg-canvas text-main"
+      className={`canvas-flow-root h-full w-full bg-canvas text-main transition-shadow duration-150 ${
+        canvasDrop.isDragOver ? "ring-2 ring-inset ring-primary" : ""
+      }`}
       data-testid="canvas-flow"
+      data-canvas-drop-active={canvasDrop.isDragOver}
       data-canvas-document-id={tab.documentId}
       data-canvas-drop-zone="true"
       data-canvas-mode={canvasItems.interactionState.mode}
@@ -382,6 +385,7 @@ export const CanvasScene = ({
       onKeyUp={keyboardShortcuts.handleKeyUp}
       onPointerMove={canvasDrop.handlePointerMove}
       onDragOver={canvasDrop.handleDragOver}
+      onDragLeave={canvasDrop.handleDragLeave}
       onDrop={canvasDrop.handleDrop}
       onCopy={canvasClipboard.handleCopy}
       onCut={canvasClipboard.handleCut}
@@ -534,6 +538,14 @@ export const CanvasScene = ({
           )}
         </ReactFlow>
       </CanvasNodeInteractionContext.Provider>
+      {canvasDrop.isDragOver && (
+        <div
+          className="pointer-events-none absolute left-1/2 top-4 z-30 -translate-x-1/2 rounded-full border border-base bg-surface px-3 py-1 text-xs font-medium text-main shadow-md"
+          data-testid="canvas-drop-hint"
+        >
+          Drop to add to Canvas
+        </div>
+      )}
       {(imageError || canvasIngest.error) && (
         <div
           className="absolute left-1/2 top-20 z-20 max-w-md -translate-x-1/2 rounded border border-danger/40 bg-surface px-4 py-3 text-sm text-danger shadow"

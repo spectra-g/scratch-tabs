@@ -1,6 +1,8 @@
 import { CANVAS_IMAGE_MAX_BYTES } from "../../constants";
 import {
   CanvasImageValidationError,
+  createCanvasStorageFullError,
+  isQuotaExceededError,
   prepareCanvasImageAsset,
   sanitizeCanvasSvg,
 } from "../canvasImageValidation";
@@ -14,7 +16,6 @@ describe("Canvas image validation", () => {
     const asset = await prepareCanvasImageAsset(file, "workspace-1", {
       createId: () => "asset-1",
       now: () => 123,
-      estimateStorage: async () => ({ quota: 100_000_000, usage: 10 }),
       decodeDimensions: async () => ({ width: 800, height: 600 }),
     });
 
@@ -59,14 +60,34 @@ describe("Canvas image validation", () => {
     ).rejects.toMatchObject({ code: "dimensions-too-large" });
   });
 
-  it("rejects an image when quota preflight cannot preserve its safety reserve", async () => {
-    await expect(
-      prepareCanvasImageAsset(pngFile(), "workspace-1", {
-        estimateStorage: async () => ({ quota: 1_000, usage: 999 }),
-        decodeDimensions: async () => ({ width: 1, height: 1 }),
-      }),
-    ).rejects.toMatchObject({ code: "quota-exceeded" });
+  it("does not consult storage estimates, even when the browser reports a full disk", async () => {
+    const estimateStorage = jest.fn().mockResolvedValue({
+      usage: Number.MAX_SAFE_INTEGER,
+      quota: 1,
+    });
+    const asset = await prepareCanvasImageAsset(pngFile(), "workspace-1", {
+      createId: () => "asset-1",
+      decodeDimensions: async () => ({ width: 1, height: 1 }),
+    });
+    expect(asset.byteLength).toBeGreaterThan(0);
+    expect(estimateStorage).not.toHaveBeenCalled();
   });
+
+  it.each([
+    [Object.assign(new Error("quota reached"), { name: "QuotaExceededError" })],
+    [new DOMException("denied", "QuotaExceededError")],
+    [Object.assign(new Error("boom"), { name: "NS_ERROR_DOM_QUOTA_REACHED" })],
+  ])("detects real quota errors: %s", (error) => {
+    expect(isQuotaExceededError(error)).toBe(true);
+    expect(createCanvasStorageFullError().code).toBe("storage-full");
+  });
+
+  it.each([[new Error("plain failure")], ["nope"], [null]])(
+    "ignores non-quota errors: %s",
+    (error) => {
+      expect(isQuotaExceededError(error)).toBe(false);
+    },
+  );
 
   it("removes executable and remote SVG content while retaining safe geometry", () => {
     const sanitized = sanitizeCanvasSvg(`

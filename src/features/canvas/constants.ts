@@ -25,7 +25,6 @@ export const MIN_VIDEO_ITEM_HEIGHT = 260;
 export const CANVAS_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
 export const CANVAS_IMAGE_MAX_DIMENSION = 16_384;
 export const CANVAS_IMAGE_MAX_PIXELS = 40_000_000;
-export const CANVAS_IMAGE_QUOTA_RESERVE_BYTES = 5 * 1024 * 1024;
 export const CANVAS_IMAGE_MIME_TYPES = [
   "image/png",
   "image/jpeg",

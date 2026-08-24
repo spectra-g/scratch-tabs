@@ -3,7 +3,6 @@ import {
   CANVAS_IMAGE_MAX_DIMENSION,
   CANVAS_IMAGE_MAX_PIXELS,
   CANVAS_IMAGE_MIME_TYPES,
-  CANVAS_IMAGE_QUOTA_RESERVE_BYTES,
 } from "../constants";
 import type { CanvasAssetRecord } from "../types";
 
@@ -14,7 +13,7 @@ export type CanvasImageValidationErrorCode =
   | "file-too-large"
   | "invalid-image"
   | "dimensions-too-large"
-  | "quota-exceeded"
+  | "storage-full"
   | "unsafe-svg";
 
 export class CanvasImageValidationError extends Error {
@@ -27,13 +26,35 @@ export class CanvasImageValidationError extends Error {
   }
 }
 
+/**
+ * navigator.storage.estimate() is unreliable (it reports un-compacted disk
+ * usage and often exceeds the quota it reports), so storage fullness is only
+ * detected from the real IndexedDB QuotaExceededError raised on write.
+ */
+export const isQuotaExceededError = (error: unknown): boolean => {
+  const name =
+    typeof error === "object" && error !== null && "name" in error
+      ? (error as { name?: unknown }).name
+      : undefined;
+  return (
+    name === "QuotaExceededError" ||
+    name === "NS_ERROR_DOM_QUOTA_REACHED" ||
+    (error instanceof Error && /quota/i.test(error.message))
+  );
+};
+
+export const createCanvasStorageFullError = () =>
+  new CanvasImageValidationError(
+    "storage-full",
+    "There is not enough local storage available for this image.",
+  );
+
 export interface CanvasImageDimensions {
   width: number;
   height: number;
 }
 
 interface ImagePreparationDependencies {
-  estimateStorage?: () => Promise<StorageEstimate>;
   decodeDimensions?: (blob: Blob) => Promise<CanvasImageDimensions>;
   createId?: () => string;
   now?: () => number;
@@ -239,23 +260,6 @@ const assertDimensions = ({ width, height }: CanvasImageDimensions): void => {
   }
 };
 
-const preflightStorageQuota = async (
-  byteLength: number,
-  estimateStorage?: () => Promise<StorageEstimate>,
-): Promise<void> => {
-  const estimate = estimateStorage
-    ? await estimateStorage()
-    : await navigator.storage?.estimate?.();
-  if (!estimate?.quota) return;
-  const usage = estimate.usage ?? 0;
-  if (usage + byteLength + CANVAS_IMAGE_QUOTA_RESERVE_BYTES > estimate.quota) {
-    throw new CanvasImageValidationError(
-      "quota-exceeded",
-      "There is not enough local storage available for this image.",
-    );
-  }
-};
-
 export const prepareCanvasImageAsset = async (
   file: File,
   workspaceId: string,
@@ -270,7 +274,6 @@ export const prepareCanvasImageAsset = async (
       `Images must be ${CANVAS_IMAGE_MAX_BYTES / 1024 / 1024} MB or smaller.`,
     );
   }
-  await preflightStorageQuota(blob.size, dependencies.estimateStorage);
   const dimensions = await (
     dependencies.decodeDimensions ?? decodeCanvasImageDimensions
   )(blob);

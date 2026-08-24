@@ -189,4 +189,25 @@ describe("Canvas editing controls", () => {
       expect(action).toHaveClass("focus-visible:ring-primary");
     }
   });
+
+  it("reveals image actions on hover and keeps them pinned while alwaysVisible", () => {
+    const props = {
+      disabled: false,
+      copyState: "idle" as const,
+      onCopy: jest.fn(),
+      onDownload: jest.fn(),
+      onOpen: jest.fn(),
+      onReplace: jest.fn(),
+    };
+    const { rerender } = render(<ImageNodeActions {...props} />);
+
+    const container = screen.getByTestId("canvas-image-copy")
+      .parentElement as HTMLDivElement;
+    expect(container.className).toContain("opacity-0");
+    expect(container.className).toContain("group-hover:opacity-100");
+
+    rerender(<ImageNodeActions {...props} alwaysVisible />);
+    expect(container.className).toContain("opacity-100");
+    expect(container.className).not.toContain("opacity-0");
+  });
 });

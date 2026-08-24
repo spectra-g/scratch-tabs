@@ -7,26 +7,26 @@ describe("useAppStats utility functions", () => {
     });
 
     it("should format bytes under 1KB correctly", () => {
-      expect(formatBytes(100)).toBe("100.0 B");
-      expect(formatBytes(500)).toBe("500.0 B");
-      expect(formatBytes(1023)).toBe("1023.0 B");
+      expect(formatBytes(100)).toBe("100 B");
+      expect(formatBytes(500)).toBe("500 B");
+      expect(formatBytes(1023)).toBe("1023 B");
     });
 
     it("should format kilobytes correctly", () => {
-      expect(formatBytes(1024)).toBe("1.0 KB");
+      expect(formatBytes(1024)).toBe("1 KB");
       expect(formatBytes(1536)).toBe("1.5 KB");
-      expect(formatBytes(10240)).toBe("10.0 KB");
+      expect(formatBytes(10240)).toBe("10 KB");
     });
 
     it("should format megabytes correctly", () => {
-      expect(formatBytes(1048576)).toBe("1.0 MB");
-      expect(formatBytes(5242880)).toBe("5.0 MB");
-      expect(formatBytes(104857600)).toBe("100.0 MB");
+      expect(formatBytes(1048576)).toBe("1 MB");
+      expect(formatBytes(5242880)).toBe("5 MB");
+      expect(formatBytes(104857600)).toBe("100 MB");
     });
 
     it("should format gigabytes correctly", () => {
-      expect(formatBytes(1073741824)).toBe("1.0 GB");
-      expect(formatBytes(5368709120)).toBe("5.0 GB");
+      expect(formatBytes(1073741824)).toBe("1 GB");
+      expect(formatBytes(5368709120)).toBe("5 GB");
     });
   });
 

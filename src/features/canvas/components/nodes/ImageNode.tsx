@@ -77,7 +77,7 @@ const ImageNodeComponent = ({
   return (
     <article
       ref={cardRef}
-      className="canvas-image-node relative h-full w-full overflow-hidden rounded-lg border bg-surface shadow-sm"
+      className="group canvas-image-node relative h-full w-full overflow-hidden rounded-lg border bg-surface shadow-sm"
       data-testid={`canvas-item-${id}`}
       data-item-id={id}
       data-item-type="image"
@@ -121,6 +121,9 @@ const ImageNodeComponent = ({
       />
       <ImageNodeActions
         disabled={unavailable}
+        alwaysVisible={
+          isEditing || copyFeedback.state !== "idle" || actionError !== null
+        }
         copyState={copyFeedback.state}
         onCopy={() => runAction(copyFeedback.copy)}
         onDownload={() => runAction(() => downloadImage(item.assetId))}

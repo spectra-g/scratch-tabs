@@ -8,6 +8,7 @@ const mockStorageProvider = {
   updateTabPinned: jest.fn().mockResolvedValue(undefined),
   getTabsByWorkspace: jest.fn().mockResolvedValue([]),
   getSplitViewByWorkspace: jest.fn().mockResolvedValue(null),
+  purgeOrphanedTabData: jest.fn().mockResolvedValue(undefined),
 };
 
 const mockTabDocumentAdapter = {
@@ -204,6 +205,7 @@ describe("RootStore - Pinned Tabs Protection", () => {
     mockStorageProvider.updateTabPinned.mockClear();
     mockStorageProvider.getTabsByWorkspace.mockClear();
     mockStorageProvider.getSplitViewByWorkspace.mockClear();
+    mockStorageProvider.purgeOrphanedTabData.mockClear();
     mockStorageProvider.getTabsByWorkspace.mockResolvedValue([]);
     mockStorageProvider.getSplitViewByWorkspace.mockResolvedValue(null);
 
@@ -310,6 +312,18 @@ describe("RootStore - Pinned Tabs Protection", () => {
 
     expect(mockStorageProvider.updateTabPinned).toHaveBeenCalledWith("inactive-tab", true);
     expect(refreshWorkspaceMetadata).toHaveBeenCalledWith("workspace2");
+  });
+
+  it("should hard-delete orphaned tabs whose workspace no longer exists", async () => {
+    mockStorageProvider.getTabsByWorkspace.mockResolvedValue([]);
+
+    await rootStore.removeTab("orphaned-tab");
+
+    expect(mockStorageProvider.purgeOrphanedTabData).toHaveBeenCalledWith(
+      "orphaned-tab",
+    );
+    expect(mockTabDocumentAdapter.remove).not.toHaveBeenCalled();
+    expect(tabsStoreMock.removeTab).not.toHaveBeenCalled();
   });
 
   it("should update tab access time when setting the active tab", () => {

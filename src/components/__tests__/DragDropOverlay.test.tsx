@@ -1,5 +1,5 @@
 import React from "react";
-import { act, render, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import DragDropOverlay from "../DragDropOverlay";
 
@@ -88,6 +88,16 @@ const dropFile = (file: File) => {
   document.dispatchEvent(event);
 };
 
+const dragOverWithFiles = (target: EventTarget, withFiles = true) => {
+  const event = new Event("dragover", { bubbles: true, cancelable: true });
+  Object.defineProperty(event, "dataTransfer", {
+    value: withFiles
+      ? { items: [{ kind: "file" }] }
+      : { items: [], files: [] },
+  });
+  target.dispatchEvent(event);
+};
+
 describe("DragDropOverlay file reading", () => {
   beforeEach(() => jest.clearAllMocks());
 
@@ -148,6 +158,52 @@ describe("DragDropOverlay file reading", () => {
 
     expect(mockHandleNewPopulatedTab).not.toHaveBeenCalled();
     expect(mockReadAsText).not.toHaveBeenCalled();
+    dropZone.remove();
+  });
+
+  it("hides the new-tab popup while dragging over a Canvas drop zone", () => {
+    render(<DragDropOverlay />);
+
+    act(() => {
+      dragOverWithFiles(document);
+    });
+    expect(
+      screen.getByText("Drop files or folders to open"),
+    ).toBeInTheDocument();
+
+    const dropZone = document.createElement("div");
+    dropZone.dataset.canvasDropZone = "true";
+    document.body.appendChild(dropZone);
+
+    // The canvas stops drag-event propagation, so the overlay must react to
+    // events dispatched from within the canvas zone (capture phase).
+    act(() => {
+      dragOverWithFiles(dropZone);
+    });
+    expect(
+      screen.queryByText("Drop files or folders to open"),
+    ).not.toBeInTheDocument();
+
+    act(() => {
+      dropZone.remove();
+      dragOverWithFiles(document);
+    });
+    expect(screen.getByText("Drop files or folders to open")).toBeInTheDocument();
+  });
+
+  it("never shows the popup when a drag starts directly over a Canvas drop zone", () => {
+    render(<DragDropOverlay />);
+    const dropZone = document.createElement("div");
+    dropZone.dataset.canvasDropZone = "true";
+    document.body.appendChild(dropZone);
+
+    act(() => {
+      dragOverWithFiles(dropZone);
+    });
+
+    expect(
+      screen.queryByText("Drop files or folders to open"),
+    ).not.toBeInTheDocument();
     dropZone.remove();
   });
 });

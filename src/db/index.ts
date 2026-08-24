@@ -300,6 +300,7 @@ export interface StorageProvider {
     tabId: string,
     cursorPosition: { lineNumber: number; column: number },
   ): Promise<void>;
+  purgeOrphanedTabData(tabId: string): Promise<void>;
 }
 
 export class IndexedDBStorage implements StorageProvider {
@@ -554,6 +555,66 @@ export class IndexedDBStorage implements StorageProvider {
   ): Promise<void> {
     await this.withRetry(async () => {
       await db.tabs.update(tabId, { cursorPosition });
+    });
+  }
+
+  /**
+   * Hard-deletes a tab record plus any canvas documents, sessions, and
+   * no-longer-referenced assets. Used for orphaned tabs whose workspace no
+   * longer exists, where the normal lifecycle path cannot find them.
+   */
+  async purgeOrphanedTabData(tabId: string): Promise<void> {
+    await this.withRetry(async () => {
+      await db.transaction(
+        "rw",
+        db.tabs,
+        db.canvasDocuments,
+        db.canvasAssets,
+        db.canvasSessions,
+        async () => {
+          await db.tabs.delete(tabId);
+
+          const orphanedDocuments = await db.canvasDocuments
+            .where("tabId")
+            .equals(tabId)
+            .toArray();
+          if (orphanedDocuments.length === 0) return;
+
+          const orphanedAssetIds = new Set(
+            orphanedDocuments.flatMap((document) =>
+              document.items
+                .filter((item) => item.type === "image")
+                .map((item) =>
+                  "assetId" in item && item.assetId ? item.assetId : null,
+                )
+                .filter((assetId): assetId is string => assetId !== null),
+            ),
+          );
+
+          await db.canvasDocuments.where("tabId").equals(tabId).delete();
+          await db.canvasSessions.where("tabId").equals(tabId).delete();
+
+          if (orphanedAssetIds.size === 0) return;
+
+          const remainingDocuments = await db.canvasDocuments.toArray();
+          const stillReferenced = new Set(
+            remainingDocuments.flatMap((document) =>
+              document.items
+                .filter((item) => item.type === "image")
+                .map((item) =>
+                  "assetId" in item && item.assetId ? item.assetId : null,
+                )
+                .filter((assetId): assetId is string => assetId !== null),
+            ),
+          );
+          const deletableAssetIds = Array.from(orphanedAssetIds).filter(
+            (assetId) => !stillReferenced.has(assetId),
+          );
+          if (deletableAssetIds.length > 0) {
+            await db.canvasAssets.bulkDelete(deletableAssetIds);
+          }
+        },
+      );
     });
   }
 }
