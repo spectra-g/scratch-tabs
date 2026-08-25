@@ -124,6 +124,21 @@ describe('Tablet Metadata Actions', () => {
     });
   });
 
+  describe('SpinTheWheel metadata', () => {
+    it('is registered with correct identity and keywords', () => {
+      const spinMeta = tabletMetadata.find(meta => meta.id === 'spinthewheel');
+      expect(spinMeta).toEqual({
+        id: 'spinthewheel',
+        label: 'Spin the Wheel',
+        description: expect.any(String),
+        keywords: expect.arrayContaining([
+          'wheel', 'spin', 'random', 'picker', 'names', 'raffle',
+          'roulette', 'lottery', 'prize', 'decision',
+        ]),
+      });
+    });
+  });
+
   describe('Data Reconcile metadata getActionsForContext', () => {
     const tab: Tab = {
       id: 'csv-tab', title: 'Customers', content: 'email\na@example.com',

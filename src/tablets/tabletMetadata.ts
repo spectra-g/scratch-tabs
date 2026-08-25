@@ -481,6 +481,16 @@ export const tabletMetadata: TabletMetadata[] = [
     },
   },
   {
+    id: 'spinthewheel',
+    label: 'Spin the Wheel',
+    description:
+      'Colourful spinning wheel for random picks, raffles, and decisions — with history, snapshots, sharing, and confetti.',
+    keywords: [
+      'wheel', 'spin', 'random', 'picker', 'names', 'raffle',
+      'roulette', 'lottery', 'prize', 'decision',
+    ],
+  },
+  {
     id: 'sshkeygen',
     label: 'SSH Key Generator',
     description:
