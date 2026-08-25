@@ -15,12 +15,40 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.46.0';
+export const APP_VERSION = '1.47.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.46.0",
+    "version": "1.47.0",
     "type": "latest",
+    "date": "2026-08-25",
+    "headline": "Spin the Wheel + Canvas & Storage Polish",
+    "summary": "A new Spin the Wheel tablet for weighted random picks with history, snapshots, and shareable links - plus Canvas drag-drop polish and a Storage panel showing what's using space.",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Spin the Wheel tablet:** Add entries to the wheel and spin for a weighted, crypto-RNG winner - drawn before the animation so the wheel is visually honest",
+          "**Winner modal:** Spin again, remove the winner and respin, or copy the result as an image with the winner overlaid on the wheel",
+          "**History and snapshots:** Past spins are logged per tab, and entry lists can be saved as named snapshots and restored later",
+          "**Shareable links:** Share wheels via link from the tablet or send text tabs straight in with Open in → Spin the Wheel",
+          "**Storage quick panel:** Sidebar panel listing heaviest tabs by live size with a quota bar - click to navigate, bin to close"
+        ]
+      },
+      {
+        "name": "Improvements",
+        "changes": [
+          "**Canvas drop targeting:** The global drop popup stays hidden over Canvas while dragging; the canvas highlights with a drop ring instead",
+          "**Cleaner image cards:** Canvas image actions reveal on hover rather than covering the picture",
+          "**Honest storage errors:** Real QuotaExceededError detection with a friendly message replaces the unreliable pre-flight estimate",
+          "**Orphaned tab cleanup:** Tabs whose workspace no longer exists are hard-deleted along with their canvas documents and unreferenced assets"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.46.0",
+    "type": "release",
     "date": "2026-08-22",
     "headline": "CSV Smart View Filtering + Six New Pipeline Operations",
     "summary": "Type-aware column filtering for CSV tables with facets and presets, plus RSA encrypt/decrypt, JSON-to-type-definition, template substitution, Unicode normalization, and comment removal operations.",
