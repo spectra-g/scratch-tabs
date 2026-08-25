@@ -1,45 +1,10 @@
 import React, { useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Coffee, Sparkles } from "lucide-react";
-import confetti from "canvas-confetti";
+import { fireCelebrationConfetti } from "../../utils/confetti";
 import { useMilestoneCelebrationStore } from "../../stores/milestoneCelebrationStore";
 
 const KOFI_URL = "https://ko-fi.com/scratchtabs";
-
-/**
- * Fires a celebration confetti effect
- */
-const fireConfetti = () => {
-  const duration = 3000;
-  const animationEnd = Date.now() + duration;
-  const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
-
-  const randomInRange = (min: number, max: number) =>
-    Math.random() * (max - min) + min;
-
-  const interval = window.setInterval(() => {
-    const timeLeft = animationEnd - Date.now();
-
-    if (timeLeft <= 0) {
-      clearInterval(interval);
-      return;
-    }
-
-    const particleCount = 50 * (timeLeft / duration);
-
-    // Fire confetti from both sides
-    confetti({
-      ...defaults,
-      particleCount,
-      origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
-    });
-    confetti({
-      ...defaults,
-      particleCount,
-      origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
-    });
-  }, 250);
-};
 
 export const MilestoneModal: React.FC = () => {
   const { isModalOpen, milestoneCount, closeModal } =
@@ -48,7 +13,8 @@ export const MilestoneModal: React.FC = () => {
   // Fire confetti when modal opens
   useEffect(() => {
     if (isModalOpen) {
-      fireConfetti();
+      const celebration = fireCelebrationConfetti();
+      return () => celebration.stop();
     }
   }, [isModalOpen]);
 

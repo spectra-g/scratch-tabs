@@ -15,20 +15,25 @@ interface EntriesPanelProps {
 export const EntriesPanel: React.FC<EntriesPanelProps> = ({ entries, onChange }) => {
   const [text, setText] = useState(() => entriesToText(entries));
   // Text that produced the entries the parent currently holds; external
-  // updates (payload import, restore) are detected by diverging from it.
+  // updates (payload import, restore, remove-winner) diverge from it.
   const emittedTextRef = useRef(entriesToText(entries));
+  const textRef = useRef(text);
 
   useEffect(() => {
     const external = entriesToText(entries);
-    if (external !== emittedTextRef.current) {
-      emittedTextRef.current = external;
-      setText(external);
-    }
+    if (external === emittedTextRef.current) return;
+    // Echo of our own emission: parsing normalizes the raw text (trims lines,
+    // drops blanks), so the round-tripped labels differ from what the user is
+    // typing. Keep the raw text in that case — only adopt genuine external changes.
+    if (external === entriesToText(parseEntriesText(textRef.current))) return;
+    emittedTextRef.current = external;
+    setText(external);
   }, [entries]);
 
   const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     const next = event.target.value;
     emittedTextRef.current = next;
+    textRef.current = next;
     setText(next);
     onChange(parseEntriesText(next));
   };

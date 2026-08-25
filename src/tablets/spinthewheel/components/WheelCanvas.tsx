@@ -6,10 +6,18 @@ import { drawWheel } from "../utils/wheelRenderer";
 interface WheelCanvasProps {
   entries: WheelEntry[];
   rotationDeg?: number;
+  /** Clicking the wheel triggers a spin. */
+  onSpin?: () => void;
+  spinning?: boolean;
 }
 
-/** Canvas-drawn wheel, HiDPI-aware, sized to fill its container. */
-export const WheelCanvas: React.FC<WheelCanvasProps> = ({ entries, rotationDeg = 0 }) => {
+/** Canvas-drawn wheel with top pointer, HiDPI-aware, sized to its container. */
+export const WheelCanvas: React.FC<WheelCanvasProps> = ({
+  entries,
+  rotationDeg = 0,
+  onSpin,
+  spinning = false,
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -54,11 +62,26 @@ export const WheelCanvas: React.FC<WheelCanvasProps> = ({ entries, rotationDeg =
       ref={containerRef}
       className="w-full h-full flex items-center justify-center min-h-0"
     >
-      <canvas
-        ref={canvasRef}
-        role="img"
-        aria-label={`Prize wheel with ${entries.length} ${entries.length === 1 ? "entry" : "entries"}`}
-      />
+      <div
+        className={`relative select-none ${onSpin && !spinning ? "cursor-pointer" : "cursor-default"}`}
+        onClick={spinning ? undefined : onSpin}
+        role={onSpin ? "button" : undefined}
+        aria-label={onSpin ? "Spin the wheel" : undefined}
+      >
+        <canvas
+          ref={canvasRef}
+          role="img"
+          aria-label={`Prize wheel with ${entries.length} ${entries.length === 1 ? "entry" : "entries"}`}
+        />
+        <svg
+          viewBox="0 0 24 24"
+          className="absolute left-1/2 -translate-x-1/2 -top-1 w-6 h-6 drop-shadow"
+          aria-hidden="true"
+        >
+          <polygon points="4,2 20,2 12,16" className="fill-main" />
+          <circle cx="12" cy="5" r="3.5" className="fill-surface stroke-base" strokeWidth="1.5" />
+        </svg>
+      </div>
     </div>
   );
 };
