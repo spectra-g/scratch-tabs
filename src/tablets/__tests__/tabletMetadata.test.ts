@@ -125,8 +125,13 @@ describe('Tablet Metadata Actions', () => {
   });
 
   describe('SpinTheWheel metadata', () => {
+    let spinMeta: any;
+
+    beforeEach(() => {
+      spinMeta = tabletMetadata.find(meta => meta.id === 'spinthewheel');
+    });
+
     it('is registered with correct identity and keywords', () => {
-      const spinMeta = tabletMetadata.find(meta => meta.id === 'spinthewheel');
       expect(spinMeta).toEqual({
         id: 'spinthewheel',
         label: 'Spin the Wheel',
@@ -135,7 +140,69 @@ describe('Tablet Metadata Actions', () => {
           'wheel', 'spin', 'random', 'picker', 'names', 'raffle',
           'roulette', 'lottery', 'prize', 'decision',
         ]),
+        getActionsForContext: expect.any(Function),
       });
+    });
+
+    it('offers an Open-in action for editor tabs with content', () => {
+      const tab: Tab = {
+        id: 'tab-1',
+        title: 'Prize List',
+        content: 'Alice\nBob',
+        language: 'plaintext',
+        languageLocked: false,
+        workspaceId: 'ws-1',
+        dateCreated: Date.now(),
+        lastModified: Date.now(),
+        cursorPosition: { lineNumber: 1, column: 1 },
+      };
+      const actions = spinMeta.getActionsForContext({
+        source: 'editor-tab',
+        tab,
+        content: tab.content,
+      } as TabletActionContext);
+
+      expect(actions).toHaveLength(1);
+      expect(actions[0].id).toBe('spinthewheel.new-tab-from-content');
+      expect(actions[0].label).toBe('Spin the wheel');
+      expect(actions[0].icon).toBeDefined();
+    });
+
+    it('dispatches a new-tab action carrying the tab content as entries', () => {
+      const tab: Tab = {
+        id: 'tab-1',
+        title: 'Prize List',
+        content: 'Alice\nBob',
+        language: 'plaintext',
+        languageLocked: false,
+        workspaceId: 'ws-1',
+        dateCreated: Date.now(),
+        lastModified: Date.now(),
+        cursorPosition: { lineNumber: 1, column: 1 },
+      };
+      const actions = spinMeta.getActionsForContext({
+        source: 'editor-tab',
+        tab,
+        content: tab.content,
+        side: 'right',
+      } as unknown as TabletActionContext);
+
+      actions[0].action();
+
+      expect(mockTabletActionService.handleAction).toHaveBeenCalledWith({
+        targetTablet: 'spinthewheel',
+        action: 'new-tab',
+        payload: { content: 'Alice\nBob', title: 'Prize List' },
+        source: { tabId: 'tab-1', titleHint: 'Prize List (Wheel)', side: 'right' },
+      });
+    });
+
+    it.each([
+      ['whitespace-only content', { source: 'editor-tab', content: '   ' }],
+      ['missing tab', { source: 'editor-tab', content: 'Alice' }],
+      ['non editor-tab source', { source: 'editor-selection', content: 'Alice' }],
+    ])('returns no actions for %s', (_name, context) => {
+      expect(spinMeta.getActionsForContext(context as TabletActionContext)).toEqual([]);
     });
   });
 

@@ -64,8 +64,7 @@ function defaultEntries(): WheelEntry[] {
 export function createDefaultData(payload?: {
   content?: string;
   title?: string;
-}): SpinTheWheelData {
-  const content = payload?.content?.trim();
+}): SpinTheWheelData {  const content = payload?.content?.trim();
   return {
     entries: content ? parseEntriesText(content) : defaultEntries(),
     title: payload?.title ?? "",
@@ -155,4 +154,20 @@ export function coerceData(raw: unknown): SpinTheWheelData {
     }),
     settings: coerceSettings(input.settings),
   };
+}
+
+/** The tablet id used as the share-URL type for Spin the Wheel payloads. */
+export const SPIN_THE_WHEEL_SHARE_TYPE = "spinthewheel";
+
+/** Compact portable payload (title + entries + settings — no history/snapshots).
+ *  Shaped so `deserializeState`/`coerceData` can ingest it directly on arrival. */
+export function createSharePayload(data: SpinTheWheelData): string {
+  return JSON.stringify({
+    type: SPIN_THE_WHEEL_SHARE_TYPE,
+    data: {
+      title: data.title,
+      entries: data.entries,
+      settings: data.settings,
+    },
+  });
 }

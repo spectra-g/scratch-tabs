@@ -1,11 +1,13 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { shareService } from "../../services/shareService";
+import { dynamicTabletRegistry } from "../../tablets/dynamicRegistry";
 
 /**
  * Handler for share URLs (hash-based: #/s/v1/type/metadata/content)
  * Uses hash routing to ensure content never reaches server logs (privacy-focused)
- * Decompresses content and creates a new tab
+ * Decompresses content and creates a new tab — an editor tab for format types,
+ * or the matching tablet tab when the type is a registered tablet id.
  */
 export const ShareURLHandler: React.FC = () => {
   const navigate = useNavigate();
@@ -47,6 +49,35 @@ export const ShareURLHandler: React.FC = () => {
         if (!decompressedContent) {
           window.location.hash = '';
           navigate("/", { replace: true });
+          return;
+        }
+
+        // Tablet payloads (e.g. spinthewheel) open as tablet tabs via the registry
+        const tabletDef = await dynamicTabletRegistry.getById(parsed.type);
+        if (tabletDef) {
+          window.location.hash = '';
+
+          let pendingShare;
+          try {
+            const state = tabletDef.deserializeState(decompressedContent);
+            pendingShare = {
+              title: `Shared ${tabletDef.label}`,
+              content: '',
+              language: 'plaintext',
+              languageLocked: true,
+              isTablet: true,
+              tabletState: tabletDef.serializeState(state),
+            };
+          } catch (error) {
+            console.error("Error restoring shared tablet state:", error);
+            navigate("/", { replace: true });
+            return;
+          }
+
+          navigate("/", {
+            replace: true,
+            state: { pendingShare },
+          });
           return;
         }
 

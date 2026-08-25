@@ -1,9 +1,17 @@
 import { tabletBridge } from "../implementation";
 import { detectFormat } from "../../../formats";
+import { shareService } from "../../../services/shareService";
 
 // Mock the detectFormat function
 jest.mock("../../../formats", () => ({
   detectFormat: jest.fn(),
+}));
+
+jest.mock("../../../services/shareService", () => ({
+  shareService: {
+    generateShareUrl: jest.fn(),
+    canFitInUrl: jest.fn(),
+  },
 }));
 
 // Mock useWorkspaceStore — implementation now calls getState() directly
@@ -665,6 +673,47 @@ describe("TabletBridge Implementation", () => {
       ];
 
       expect(tabletBridge.getTabContent("t1")).toBeNull();
+    });
+  });
+
+  describe("sharing operations", () => {
+    beforeEach(() => {
+      tabletBridge.initialize(mockRootStore, mockWorkspaceStore, mockSplitViewStore, mockModalStore, false);
+    });
+
+    it("delegates generateUrl to shareService.generateShareUrl", () => {
+      (shareService.generateShareUrl as jest.Mock).mockReturnValue("#/s/v1/x/full/abc");
+
+      const url = tabletBridge.sharing.generateUrl("spinthewheel", "payload");
+
+      expect(shareService.generateShareUrl).toHaveBeenCalledWith("spinthewheel", "payload", "full");
+      expect(url).toBe("#/s/v1/x/full/abc");
+    });
+
+    it("passes custom metadata through to generateUrl", () => {
+      (shareService.generateShareUrl as jest.Mock).mockReturnValue("#/s/v1/x/r500-800/abc");
+
+      tabletBridge.sharing.generateUrl("json", "{}", "r500-800");
+
+      expect(shareService.generateShareUrl).toHaveBeenCalledWith("json", "{}", "r500-800");
+    });
+
+    it("delegates canFitInUrl to shareService.canFitInUrl", () => {
+      const sizeCheck = { fits: true, size: 100, maxSize: 1800, percentUsed: 5.5 };
+      (shareService.canFitInUrl as jest.Mock).mockReturnValue(sizeCheck);
+
+      const result = tabletBridge.sharing.canFitInUrl("content", "spinthewheel");
+
+      expect(shareService.canFitInUrl).toHaveBeenCalledWith("content", "spinthewheel", "full");
+      expect(result).toEqual(sizeCheck);
+    });
+
+    it("defaults type and metadata in canFitInUrl", () => {
+      (shareService.canFitInUrl as jest.Mock).mockReturnValue({ fits: false, size: 0, maxSize: 1800, percentUsed: 0 });
+
+      tabletBridge.sharing.canFitInUrl("content");
+
+      expect(shareService.canFitInUrl).toHaveBeenCalledWith("content", "", "full");
     });
   });
 

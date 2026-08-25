@@ -1,5 +1,5 @@
 import { TabletActionContext, TabletAction } from "./types";
-import { FileText, Type, Shield, Network, Palette, QrCode, Binary, ShieldAlert, Database } from "../components/Icons";
+import { FileText, Type, Shield, Network, Palette, QrCode, Binary, ShieldAlert, Database, LoaderPinwheel } from "../components/Icons";
 import { tabletActionService } from "../services/tabletActionService";
 
 export interface TabletMetadata {
@@ -489,6 +489,35 @@ export const tabletMetadata: TabletMetadata[] = [
       'wheel', 'spin', 'random', 'picker', 'names', 'raffle',
       'roulette', 'lottery', 'prize', 'decision',
     ],
+    getActionsForContext: (context) => {
+      if (context.source !== 'editor-tab' || !context.tab || !context.content?.trim()) {
+        return [];
+      }
+
+      return [
+        {
+          id: 'spinthewheel.new-tab-from-content',
+          label: 'Spin the wheel',
+          icon: LoaderPinwheel,
+          action: () => {
+            if (!context.tab) return;
+            tabletActionService.handleAction({
+              targetTablet: 'spinthewheel',
+              action: 'new-tab',
+              payload: {
+                content: context.content || '',
+                title: context.tab.title,
+              },
+              source: {
+                tabId: context.tab.id,
+                titleHint: `${context.tab.title} (Wheel)`,
+                side: context.side,
+              },
+            });
+          },
+        },
+      ];
+    },
   },
   {
     id: 'sshkeygen',

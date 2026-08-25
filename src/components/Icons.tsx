@@ -197,6 +197,7 @@ export {
   QrCode,
   ScanQrCode,
   Replace,
+  LoaderPinwheel,
 } from 'lucide-react';
 
 // Export types separately

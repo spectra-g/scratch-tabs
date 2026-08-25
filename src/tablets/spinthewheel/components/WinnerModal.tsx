@@ -1,32 +1,66 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PartyPopper, RotateCw, Trash2, X } from "lucide-react";
+import { Check, ImageDown, PartyPopper, RotateCw, Trash2, X } from "lucide-react";
+import type { ImageExportResult } from "../utils/imageExport";
 
 interface WinnerModalProps {
   winnerLabel: string | null;
   onRemoveAndSpin: () => void;
   onSpinAgain: () => void;
   onClose: () => void;
+  /** Exports the winning wheel as an image; omit to hide the action. */
+  onCopyImage?: () => Promise<ImageExportResult>;
 }
 
+const COPY_FEEDBACK: Record<ImageExportResult, string> = {
+  copied: "Image copied",
+  downloaded: "Image saved",
+  failed: "Couldn't export image",
+};
+
 /**
- * Winner announcement overlay. Big name up front, three actions:
- * remove the entry and re-spin, re-spin keeping it, or just close.
+ * Winner announcement overlay. Big name up front, three spin actions plus
+ * copy-as-image (only offered while there is a winner to celebrate).
  */
 export const WinnerModal: React.FC<WinnerModalProps> = ({
   winnerLabel,
   onRemoveAndSpin,
   onSpinAgain,
   onClose,
+  onCopyImage,
 }) => {
+  const [copyState, setCopyState] = useState<ImageExportResult | null>(null);
+  const feedbackTimer = useRef<number | null>(null);
+
+  const clearFeedbackTimer = useCallback(() => {
+    if (feedbackTimer.current !== null) {
+      window.clearTimeout(feedbackTimer.current);
+      feedbackTimer.current = null;
+    }
+  }, []);
+
   useEffect(() => {
     if (!winnerLabel) return undefined;
+    setCopyState(null);
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [winnerLabel, onClose]);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      clearFeedbackTimer();
+    };
+  }, [winnerLabel, onClose, clearFeedbackTimer]);
+
+  const handleCopyImage = useCallback(async () => {
+    if (!onCopyImage) return;
+    clearFeedbackTimer();
+    setCopyState(await onCopyImage());
+    feedbackTimer.current = window.setTimeout(() => {
+      feedbackTimer.current = null;
+      setCopyState(null);
+    }, 2000);
+  }, [onCopyImage, clearFeedbackTimer]);
 
   const handleBackdropClick = useCallback(
     (event: React.MouseEvent) => {
@@ -43,7 +77,7 @@ export const WinnerModal: React.FC<WinnerModalProps> = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
-          className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[60]"
+          className="absolute inset-0 bg-black/60 flex items-center justify-center p-4 z-[60]"
           onClick={handleBackdropClick}
           role="dialog"
           aria-modal="true"
@@ -80,7 +114,24 @@ export const WinnerModal: React.FC<WinnerModalProps> = ({
                 {winnerLabel}
               </p>
             </div>
-            <div className="flex flex-col gap-2 p-4">
+            <div className="flex flex-col gap-2 p-4 pt-3">
+              {onCopyImage && (
+                <button
+                  onClick={handleCopyImage}
+                  className={`flex items-center justify-center gap-2 w-full px-4 py-2 border font-medium rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary ${
+                    copyState === "copied" || copyState === "downloaded"
+                      ? "border-success text-success"
+                      : "border-base text-secondary hover:text-main hover:bg-element-hover"
+                  }`}
+                >
+                  {copyState === "copied" || copyState === "downloaded" ? (
+                    <Check size={16} />
+                  ) : (
+                    <ImageDown size={16} />
+                  )}
+                  {copyState ? COPY_FEEDBACK[copyState] : "Copy result as image"}
+                </button>
+              )}
               <button
                 onClick={onSpinAgain}
                 autoFocus

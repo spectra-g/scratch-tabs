@@ -1,16 +1,21 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Camera, Eye, History as HistoryIcon, ListChecks, Settings as SettingsIcon, Volume2, VolumeX } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Camera, Eye, History as HistoryIcon, ListChecks, Settings as SettingsIcon, Share2, Volume2, VolumeX } from "lucide-react";
 import type { Tablet, TabletState } from "../types";
 import type { WheelSettings } from "./types";
 import {
   coerceData,
   createDefaultData,
+  createSharePayload,
+  entriesToText,
+  SPIN_THE_WHEEL_SHARE_TYPE,
   type SpinTheWheelData,
   type SpinTheWheelState,
 } from "./contentModel";
+import { useTabletBridge } from "../bridge/hook";
 import { WheelCanvas } from "./components/WheelCanvas";
 import { EntriesPanel } from "./components/EntriesPanel";
 import { WinnerModal } from "./components/WinnerModal";
+import { ShareModal } from "./components/ShareModal";
 import { SidePanel, type SidePanelTab } from "./components/SidePanel";
 import { HistoryPanel } from "./components/HistoryPanel";
 import { SnapshotsPanel } from "./components/SnapshotsPanel";
@@ -20,6 +25,12 @@ import { fireCelebrationConfetti } from "../../utils/confetti";
 import { createTickPlayer } from "./utils/tickSound";
 import { recordWinner } from "./utils/historyModel";
 import { createSnapshot } from "./utils/snapshotModel";
+import { renderWheelCard } from "./utils/wheelImageComposer";
+import {
+  exportWheelImage,
+  sanitizeImageFilename,
+  type ImageExportResult,
+} from "./utils/imageExport";
 
 interface SpinTheWheelUIProps {
   state: SpinTheWheelState;
@@ -29,6 +40,12 @@ interface SpinTheWheelUIProps {
 const SpinTheWheelUI: React.FC<SpinTheWheelUIProps> = ({ state, onChange }) => {
   const { data } = state;
   const [winnerRevealed, setWinnerRevealed] = useState(false);
+  const [shareInfo, setShareInfo] = useState<{
+    url: string | null;
+    percentUsed: number;
+  } | null>(null);
+  const wheelCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const bridge = useTabletBridge();
 
   const updateData = useCallback(
     (patch: Partial<SpinTheWheelData>) => {
@@ -125,6 +142,34 @@ const SpinTheWheelUI: React.FC<SpinTheWheelUIProps> = ({ state, onChange }) => {
   const hideWinner =
     phase === "result" && winner !== null && data.settings.hideWinnerUntilClick && !winnerRevealed;
 
+  const handleCopyWinnerImage = useCallback(async (): Promise<ImageExportResult> => {
+    const wheelCanvas = wheelCanvasRef.current;
+    if (!wheelCanvas || !winner) return "failed";
+    const card = renderWheelCard(wheelCanvas, {
+      title: data.title.trim() || undefined,
+      winnerLabel: winner.label,
+    });
+    if (!card) return "failed";
+    return exportWheelImage(card, sanitizeImageFilename(data.title || "wheel"));
+  }, [data.title, winner]);
+
+  const handleOpenShare = useCallback(() => {
+    const payload = createSharePayload(data);
+    const sizeCheck = bridge.sharing.canFitInUrl(
+      payload,
+      SPIN_THE_WHEEL_SHARE_TYPE,
+    );
+    const hash = bridge.sharing.generateUrl(SPIN_THE_WHEEL_SHARE_TYPE, payload);
+    setShareInfo({
+      url: sizeCheck.fits
+        ? `${window.location.origin}${window.location.pathname}${hash}`
+        : null,
+      percentUsed: sizeCheck.percentUsed,
+    });
+  }, [bridge, data]);
+
+  const handleCloseShare = useCallback(() => setShareInfo(null), []);
+
   const tabs: SidePanelTab[] = [
     {
       id: "entries",
@@ -179,7 +224,7 @@ const SpinTheWheelUI: React.FC<SpinTheWheelUIProps> = ({ state, onChange }) => {
       <div className="flex-1 flex min-h-0 overflow-hidden">
         <div className="w-[60%] p-6 min-h-0 min-w-0 flex flex-col items-center gap-4">
           <div
-            className="flex-1 w-full min-h-0"
+            className="relative flex-1 w-full min-h-0"
             style={{ maxWidth: "min(100%, calc(100vh - 220px))" }}
           >
             <WheelCanvas
@@ -187,6 +232,20 @@ const SpinTheWheelUI: React.FC<SpinTheWheelUIProps> = ({ state, onChange }) => {
               rotationDeg={rotationDeg}
               spinning={phase === "spinning"}
               onSpin={canSpin ? () => spin() : undefined}
+              canvasRef={wheelCanvasRef}
+            />
+            <WinnerModal
+              winnerLabel={
+                phase === "result" && winner && !hideWinner ? winner.label : null
+              }
+              onRemoveAndSpin={handleRemoveWinnerAndSpin}
+              onSpinAgain={handleSpinAgain}
+              onClose={reset}
+              onCopyImage={
+                phase === "result" && winner && !hideWinner
+                  ? handleCopyWinnerImage
+                  : undefined
+              }
             />
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
@@ -208,6 +267,14 @@ const SpinTheWheelUI: React.FC<SpinTheWheelUIProps> = ({ state, onChange }) => {
               </button>
             ) : null}
             <button
+              onClick={handleOpenShare}
+              className="p-2 text-secondary hover:text-main hover:bg-element-hover rounded-full transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary"
+              aria-label="Share this wheel"
+              title="Share this wheel"
+            >
+              <Share2 size={18} />
+            </button>
+            <button
               onClick={toggleSound}
               className="p-2 text-secondary hover:text-main hover:bg-element-hover rounded-full transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary"
               aria-label={data.settings.soundEnabled ? "Mute spin sounds" : "Unmute spin sounds"}
@@ -221,14 +288,14 @@ const SpinTheWheelUI: React.FC<SpinTheWheelUIProps> = ({ state, onChange }) => {
           <SidePanel tabs={tabs} />
         </div>
       </div>
-      <WinnerModal
-        winnerLabel={
-          phase === "result" && winner && !hideWinner ? winner.label : null
-        }
-        onRemoveAndSpin={handleRemoveWinnerAndSpin}
-        onSpinAgain={handleSpinAgain}
-        onClose={reset}
-      />
+      {shareInfo ? (
+        <ShareModal
+          url={shareInfo.url}
+          percentUsed={shareInfo.percentUsed}
+          entriesText={entriesToText(data.entries)}
+          onClose={handleCloseShare}
+        />
+      ) : null}
     </div>
   );
 };

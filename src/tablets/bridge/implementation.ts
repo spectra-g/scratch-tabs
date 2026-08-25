@@ -10,6 +10,7 @@ import { useSplitViewStore } from '../../stores/splitViewStore';
 import { useModalStore } from '../../stores/modalStore';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import { detectFormat } from '../../formats';
+import { shareService } from '../../services/shareService';
 import type { Tab } from '../../types';
 import type {
   TabletBridge,
@@ -19,6 +20,7 @@ import type {
   SplitViewOperations,
   ModalOperations,
   WorkspaceTab,
+  SharingOperations,
 } from './types';
 
 // Define store interfaces to avoid unknown types
@@ -220,6 +222,22 @@ class TabletBridgeImpl implements TabletBridge {
   getTabContent(tabId: string): string | null {
     const tab = useTabsStore.getState().tabs.find((t) => t.id === tabId);
     return tab?.content ?? null;
+  }
+
+  /**
+   * Shareable-URL operations, delegated to the share service
+   */
+  get sharing(): SharingOperations {
+    return {
+      generateUrl: (type: string, content: string, metadata: string = 'full') =>
+        shareService.generateShareUrl(type, content, metadata),
+
+      canFitInUrl: (
+        content: string,
+        type: string = '',
+        metadata: string = 'full',
+      ) => shareService.canFitInUrl(content, type, metadata),
+    };
   }
 }
 

@@ -2,6 +2,7 @@ import {
   coerceSettings,
   createDefaultData,
   createEntryId,
+  createSharePayload,
   DEFAULT_SETTINGS,
   entriesToText,
   parseEntriesText,
@@ -260,5 +261,45 @@ describe('coerceSettings', () => {
     expect(coerceSettings({ spinDurationMs: 'fast' }).spinDurationMs).toBe(
       DEFAULT_SETTINGS.spinDurationMs,
     );
+  });
+});
+
+describe('createSharePayload', () => {
+  const base = createDefaultData({ content: 'Alice\nBob', title: 'Team Wheel' });
+
+  it('produces a payload the tablet deserializeState can ingest directly', () => {
+    const payload = createSharePayload(base);
+    const restored = SpinTheWheelTablet.deserializeState(payload);
+
+    expect(restored.type).toBe('spinthewheel');
+    expect(restored.data.title).toBe('Team Wheel');
+    expect(restored.data.entries.map((e) => e.label)).toEqual(['Alice', 'Bob']);
+  });
+
+  it('excludes history and snapshots from the payload', () => {
+    const withExtras: typeof base = {
+      ...base,
+      winnerHistory: [{ id: 'h1', entryId: null, label: 'Alice', timestamp: 1 }],
+      snapshots: [{ id: 's1', name: 'snap', createdAt: 1, entries: [] }],
+    };
+
+    const parsed = JSON.parse(createSharePayload(withExtras));
+
+    expect(parsed.data.winnerHistory).toBeUndefined();
+    expect(parsed.data.snapshots).toBeUndefined();
+  });
+
+  it('carries settings through so they survive a share round-trip', () => {
+    const data = { ...base, settings: { ...DEFAULT_SETTINGS, soundEnabled: false } };
+    const restored = SpinTheWheelTablet.deserializeState(createSharePayload(data));
+
+    expect(restored.data.settings.soundEnabled).toBe(false);
+  });
+
+  it('fills missing collections with defaults on restore', () => {
+    const restored = SpinTheWheelTablet.deserializeState(createSharePayload(base));
+
+    expect(restored.data.winnerHistory).toEqual([]);
+    expect(restored.data.snapshots).toEqual([]);
   });
 });

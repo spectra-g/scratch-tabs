@@ -59,6 +59,30 @@ export interface WorkspaceTab {
 }
 
 /**
+ * Result of a shareable-URL size check
+ */
+export interface UrlSizeCheck {
+  fits: boolean;
+  size: number;
+  maxSize: number;
+  percentUsed: number;
+}
+
+/**
+ * Shareable-URL operations for tablets
+ */
+export interface SharingOperations {
+  /** Returns the shareable hash path (#/s/v1/{type}/{metadata}/{compressed}). */
+  generateUrl: (type: string, content: string, metadata?: string) => string;
+  /** Estimates whether `content` fits inside the safe URL length limit. */
+  canFitInUrl: (
+    content: string,
+    type?: string,
+    metadata?: string,
+  ) => UrlSizeCheck;
+}
+
+/**
  * Main bridge interface that tablets should use
  * This is the single point of contact for all external dependencies
  */
@@ -84,4 +108,7 @@ export interface TabletBridge {
   // Cross-tab data access
   getTabsInWorkspace: () => WorkspaceTab[];
   getTabContent: (tabId: string) => string | null;
+
+  // Shareable URLs
+  sharing: SharingOperations;
 }

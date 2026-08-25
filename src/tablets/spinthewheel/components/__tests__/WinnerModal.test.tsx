@@ -1,10 +1,13 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { WinnerModal } from '../WinnerModal';
 
 describe('WinnerModal', () => {
-  const setup = (winnerLabel: string | null = 'Alice') => {
+  const setup = (
+    winnerLabel: string | null = 'Alice',
+    onCopyImage?: () => Promise<'copied' | 'downloaded' | 'failed'>,
+  ) => {
     const onRemoveAndSpin = jest.fn();
     const onSpinAgain = jest.fn();
     const onClose = jest.fn();
@@ -14,6 +17,7 @@ describe('WinnerModal', () => {
         onRemoveAndSpin={onRemoveAndSpin}
         onSpinAgain={onSpinAgain}
         onClose={onClose}
+        onCopyImage={onCopyImage}
       />,
     );
     return { onRemoveAndSpin, onSpinAgain, onClose };
@@ -52,5 +56,38 @@ describe('WinnerModal', () => {
 
     await userEvent.keyboard('{Escape}');
     expect(onClose).toHaveBeenCalledTimes(3);
+  });
+
+  it('hides the copy-image action when no handler is provided', () => {
+    setup('Alice');
+    expect(
+      screen.queryByRole('button', { name: /copy result as image/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('offers copy-as-image and confirms success on the button', async () => {
+    const onCopyImage = jest.fn().mockResolvedValue('copied');
+    setup('Alice', onCopyImage);
+
+    await act(async () => {
+      await userEvent.click(
+        screen.getByRole('button', { name: /copy result as image/i }),
+      );
+    });
+
+    expect(onCopyImage).toHaveBeenCalledTimes(1);
+    expect(screen.getByText(/image copied/i)).toBeInTheDocument();
+  });
+
+  it('shows a failure message when the export fails', async () => {
+    setup('Alice', jest.fn().mockResolvedValue('failed'));
+
+    await act(async () => {
+      await userEvent.click(
+        screen.getByRole('button', { name: /copy result as image/i }),
+      );
+    });
+
+    expect(screen.getByText(/couldn't export image/i)).toBeInTheDocument();
   });
 });

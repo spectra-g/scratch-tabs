@@ -9,6 +9,8 @@ interface WheelCanvasProps {
   /** Clicking the wheel triggers a spin. */
   onSpin?: () => void;
   spinning?: boolean;
+  /** Optional external ref to the rendered canvas (e.g. for image export). */
+  canvasRef?: React.MutableRefObject<HTMLCanvasElement | null>;
 }
 
 /** Canvas-drawn wheel with top pointer, HiDPI-aware, sized to its container. */
@@ -17,13 +19,21 @@ export const WheelCanvas: React.FC<WheelCanvasProps> = ({
   rotationDeg = 0,
   onSpin,
   spinning = false,
+  canvasRef,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const internalCanvasRef = useRef<HTMLCanvasElement>(null);
+  const setCanvasRef = React.useCallback(
+    (node: HTMLCanvasElement | null) => {
+      (internalCanvasRef as React.MutableRefObject<HTMLCanvasElement | null>).current = node;
+      if (canvasRef) canvasRef.current = node;
+    },
+    [canvasRef],
+  );
 
   useEffect(() => {
     const container = containerRef.current;
-    const canvas = canvasRef.current;
+    const canvas = internalCanvasRef.current;
     if (!container || !canvas) return;
 
     const render = () => {
@@ -69,7 +79,7 @@ export const WheelCanvas: React.FC<WheelCanvasProps> = ({
         aria-label={onSpin ? "Spin the wheel" : undefined}
       >
         <canvas
-          ref={canvasRef}
+          ref={setCanvasRef}
           role="img"
           aria-label={`Prize wheel with ${entries.length} ${entries.length === 1 ? "entry" : "entries"}`}
         />
