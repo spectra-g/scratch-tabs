@@ -1,9 +1,11 @@
 import {
+  coerceSettings,
   createDefaultData,
   createEntryId,
   DEFAULT_SETTINGS,
   entriesToText,
   parseEntriesText,
+  SPIN_DURATION_PRESETS,
 } from '../contentModel';
 import SpinTheWheelTablet from '../SpinTheWheelTablet';
 
@@ -33,6 +35,44 @@ describe('parseEntriesText', () => {
     expect(a.id).not.toBe(b.id);
     expect(a.enabled).toBe(true);
     expect(b.enabled).toBe(true);
+  });
+
+  describe('with previous entries (attribute carry-over)', () => {
+    const previous = [
+      { id: 'p1', label: 'Alice', color: '#ff0000', weight: 3, enabled: false },
+      { id: 'p2', label: 'Bob', enabled: true },
+    ];
+
+    it('carries id, color, weight, and enabled through unchanged labels', () => {
+      const entries = parseEntriesText('Bob\nAlice', previous);
+      expect(entries[0]).toMatchObject({ id: 'p2', label: 'Bob', enabled: true });
+      expect(entries[1]).toMatchObject({
+        id: 'p1',
+        label: 'Alice',
+        color: '#ff0000',
+        weight: 3,
+        enabled: false,
+      });
+    });
+
+    it('creates fresh entries for new labels only', () => {
+      const entries = parseEntriesText('Alice\nCarol', previous);
+      expect(entries[0].id).toBe('p1');
+      expect(entries[1].id).not.toBe('p1');
+      expect(entries[1].id).not.toBe('p2');
+      expect(entries[1].enabled).toBe(true);
+    });
+
+    it('matches labels after trimming', () => {
+      const entries = parseEntriesText('  Alice  ', previous);
+      expect(entries[0].id).toBe('p1');
+    });
+
+    it('works without previous entries as before', () => {
+      const entries = parseEntriesText('Alice');
+      expect(entries[0].id).toBeTruthy();
+      expect(entries[0].enabled).toBe(true);
+    });
   });
 });
 
@@ -172,5 +212,53 @@ describe('deserializeState (coercion contract)', () => {
     );
     expect(restored.data.entries[0].weight).toBeUndefined();
     expect(restored.data.entries[1].weight).toBeUndefined();
+  });
+});
+
+describe('coerceSettings', () => {
+  it('returns defaults for missing or non-object input', () => {
+    expect(coerceSettings(undefined)).toEqual(DEFAULT_SETTINGS);
+    expect(coerceSettings(null)).toEqual(DEFAULT_SETTINGS);
+    expect(coerceSettings('junk')).toEqual(DEFAULT_SETTINGS);
+  });
+
+  it.each([
+    ['soundEnabled', 'soundEnabled'],
+    ['removeWinnerAfterSpin', 'removeWinnerAfterSpin'],
+    ['hideWinnerUntilClick', 'hideWinnerUntilClick'],
+  ] as const)('sanitizes %s to a strict boolean', (field) => {
+    expect(coerceSettings({ [field]: true })[field]).toBe(true);
+    expect(coerceSettings({ [field]: false })[field]).toBe(false);
+    expect(coerceSettings({ [field]: 'yes' })[field]).toBe(false);
+    expect(coerceSettings({ [field]: 1 })[field]).toBe(false);
+  });
+
+  it('keeps defaults for fields that are absent', () => {
+    const settings = coerceSettings({});
+    expect(settings).toEqual(DEFAULT_SETTINGS);
+  });
+
+  it.each(SPIN_DURATION_PRESETS.map((p) => [p.id, p.ms] as const))(
+    'snaps duration to the nearest preset (%s)',
+    (_id, ms) => {
+      expect(coerceSettings({ spinDurationMs: ms }).spinDurationMs).toBe(ms);
+    },
+  );
+
+  it('clamps unknown durations to the nearest preset value', () => {
+    const fast = SPIN_DURATION_PRESETS.find((p) => p.id === 'fast')!.ms;
+    const normal = SPIN_DURATION_PRESETS.find((p) => p.id === 'normal')!.ms;
+    expect(coerceSettings({ spinDurationMs: fast + 100 }).spinDurationMs).toBe(fast);
+    // Midpoint between fast and normal rounds down to the earlier preset.
+    expect(coerceSettings({ spinDurationMs: (fast + normal) / 2 }).spinDurationMs).toBe(fast);
+  });
+
+  it('falls back to default duration for NaN/garbage numbers', () => {
+    expect(coerceSettings({ spinDurationMs: NaN }).spinDurationMs).toBe(
+      DEFAULT_SETTINGS.spinDurationMs,
+    );
+    expect(coerceSettings({ spinDurationMs: 'fast' }).spinDurationMs).toBe(
+      DEFAULT_SETTINGS.spinDurationMs,
+    );
   });
 });
