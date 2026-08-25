@@ -37,6 +37,11 @@ describe('QueryPanel', () => {
   const sampleContent = JSON.stringify({ foo: 'bar', items: [1, 2, 3] });
   const testTabId = 'test-tab-id';
 
+  // Never leak fake timers into other tests, even when a test fails midway.
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
 
@@ -132,8 +137,9 @@ describe('QueryPanel', () => {
       );
     });
 
-    // Should show "Copied" feedback
-    expect(screen.getByText('Copied')).toBeInTheDocument();
+    // setIsCopied lands in a microtask after the clipboard promise resolves,
+    // so poll for the feedback instead of asserting synchronously.
+    expect(await screen.findByText('Copied')).toBeInTheDocument();
   });
 
   it('should not copy when results are empty', async () => {
@@ -278,7 +284,5 @@ describe('QueryPanel', () => {
     await waitFor(() => {
       expect(screen.getByText('Copy')).toBeInTheDocument();
     });
-
-    jest.useRealTimers();
   });
 });
