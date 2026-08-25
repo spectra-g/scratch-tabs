@@ -29,12 +29,33 @@ export interface WheelSettings {
   hideWinnerUntilClick: boolean;
 }
 
+export type RotaOrder = "cycle" | "shuffle";
+export type RotaFrequency = "daily" | "weekly";
+
+/** Config for the generated rota (who is on duty for each period). */
+export interface RotaConfig {
+  order: RotaOrder;
+  frequency: RotaFrequency;
+  skipWeekends: boolean;
+  /** ISO date (yyyy-mm-dd) the rota starts from. */
+  startDate: string;
+  periods: number;
+  seed: number;
+}
+
+export interface RotaSlot {
+  /** ISO date (yyyy-mm-dd) of the change. */
+  date: string;
+  name: string;
+}
+
 export interface SpinTheWheelData {
   entries: WheelEntry[];
   title: string;
   winnerHistory: WinnerHistoryItem[];
   snapshots: WheelSnapshot[];
   settings: WheelSettings;
+  rota: RotaConfig;
 }
 
 export interface SpinTheWheelState extends TabletState {

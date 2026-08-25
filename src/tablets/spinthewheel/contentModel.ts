@@ -1,4 +1,5 @@
 import type {
+  RotaConfig,
   SpinTheWheelData,
   WheelEntry,
   WinnerHistoryItem,
@@ -19,6 +20,20 @@ export const DEFAULT_SETTINGS: Readonly<WheelSettings> = Object.freeze({
   spinDurationMs: 5000,
   removeWinnerAfterSpin: false,
   hideWinnerUntilClick: false,
+});
+
+function defaultRotaStartDate(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${`${now.getMonth() + 1}`.padStart(2, "0")}-${`${now.getDate()}`.padStart(2, "0")}`;
+}
+
+export const DEFAULT_ROTA_CONFIG: Readonly<RotaConfig> = Object.freeze({
+  order: "cycle",
+  frequency: "weekly",
+  skipWeekends: false,
+  startDate: defaultRotaStartDate(),
+  periods: 8,
+  seed: 1,
 });
 
 const DEFAULT_ENTRY_LABELS = ["Alice", "Bob", "Charlie", "Diana", "Ethan", "Fiona"];
@@ -71,6 +86,7 @@ export function createDefaultData(payload?: {
     winnerHistory: [],
     snapshots: [],
     settings: { ...DEFAULT_SETTINGS },
+    rota: { ...DEFAULT_ROTA_CONFIG },
   };
 }
 
@@ -121,6 +137,30 @@ function nearestDurationPreset(ms: number): (typeof SPIN_DURATION_PRESETS)[numbe
   );
 }
 
+function coerceRotaConfig(raw: unknown): RotaConfig {
+  const input = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const order = input.order === "shuffle" ? "shuffle" : "cycle";
+  const frequency = input.frequency === "daily" ? "daily" : "weekly";
+  const periods =
+    typeof input.periods === "number" && Number.isFinite(input.periods) && input.periods > 0
+      ? Math.min(Math.floor(input.periods), 52)
+      : DEFAULT_ROTA_CONFIG.periods;
+  return {
+    order,
+    frequency,
+    skipWeekends: input.skipWeekends === true,
+    startDate:
+      typeof input.startDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(input.startDate)
+        ? input.startDate
+        : defaultRotaStartDate(),
+    periods,
+    seed:
+      typeof input.seed === "number" && Number.isFinite(input.seed)
+        ? input.seed
+        : DEFAULT_ROTA_CONFIG.seed,
+  };
+}
+
 export function coerceData(raw: unknown): SpinTheWheelData {
   if (!raw || typeof raw !== "object") return createDefaultData();
   const input = raw as Record<string, unknown>;
@@ -153,6 +193,7 @@ export function coerceData(raw: unknown): SpinTheWheelData {
       };
     }),
     settings: coerceSettings(input.settings),
+    rota: coerceRotaConfig(input.rota),
   };
 }
 
@@ -168,6 +209,7 @@ export function createSharePayload(data: SpinTheWheelData): string {
       title: data.title,
       entries: data.entries,
       settings: data.settings,
+      rota: data.rota,
     },
   });
 }

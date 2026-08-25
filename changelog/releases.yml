@@ -17,6 +17,7 @@ releases:
           - "**Winner modal:** Spin again, remove the winner and respin, or copy the result as an image with the winner overlaid on the wheel"
           - "**History and snapshots:** Past spins are logged per tab, and entry lists can be saved as named snapshots and restored later"
           - "**Shareable links:** Share wheels via link from the tablet or send text tabs straight in with Open in → Spin the Wheel"
+          - "**Rota generator:** Build a who's-on-when rota from the wheel's names - cycled or shuffled order, daily or weekly changes, optional weekend skipping - with a live preview and one-click copy as date-then-name lines"
           - "**Storage quick panel:** Sidebar panel listing heaviest tabs by live size with a quota bar - click to navigate, bin to close"
       - name: "🔧 Improvements"
         changes:

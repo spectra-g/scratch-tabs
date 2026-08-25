@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Camera, Eye, History as HistoryIcon, ListChecks, Settings as SettingsIcon, Share2, Volume2, VolumeX } from "lucide-react";
+import { CalendarDays, Camera, Eye, History as HistoryIcon, ListChecks, Settings as SettingsIcon, Share2, Volume2, VolumeX } from "lucide-react";
 import type { Tablet, TabletState } from "../types";
-import type { WheelSettings } from "./types";
+import type { RotaConfig, WheelSettings } from "./types";
 import {
   coerceData,
   createDefaultData,
@@ -20,6 +20,7 @@ import { SidePanel, type SidePanelTab } from "./components/SidePanel";
 import { HistoryPanel } from "./components/HistoryPanel";
 import { SnapshotsPanel } from "./components/SnapshotsPanel";
 import { SettingsPanel } from "./components/SettingsPanel";
+import { RotaPanel } from "./components/RotaPanel";
 import { useSpin } from "./hooks/useSpin";
 import { fireCelebrationConfetti } from "../../utils/confetti";
 import { createTickPlayer } from "./utils/tickSound";
@@ -107,6 +108,13 @@ const SpinTheWheelUI: React.FC<SpinTheWheelUIProps> = ({ state, onChange }) => {
       updateData({ settings: { ...data.settings, ...patch } });
     },
     [data.settings, updateData],
+  );
+
+  const updateRota = useCallback(
+    (patch: Partial<RotaConfig>) => {
+      updateData({ rota: { ...data.rota, ...patch } });
+    },
+    [data.rota, updateData],
   );
 
   const toggleSound = useCallback(() => {
@@ -198,6 +206,18 @@ const SpinTheWheelUI: React.FC<SpinTheWheelUIProps> = ({ state, onChange }) => {
           onSave={handleSaveSnapshot}
           onRestore={handleRestoreSnapshot}
           onDelete={handleDeleteSnapshot}
+        />
+      ),
+    },
+    {
+      id: "rota",
+      label: "Rota",
+      icon: <CalendarDays size={14} />,
+      content: (
+        <RotaPanel
+          names={enabledEntries.map((entry) => entry.label)}
+          config={data.rota}
+          onChange={updateRota}
         />
       ),
     },
