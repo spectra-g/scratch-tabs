@@ -7,7 +7,7 @@ import { useSplitViewStore } from "../../stores/splitViewStore";
 import { Search } from "../Icons";
 import { useSearchStore } from "../../stores/searchStore";
 import { ThemeToggle } from "../ThemeToggle";
-import { FormatSelectionPopup } from "./FormatSelectionPopup";
+import { FormatSelectionPopup, type PopupAnchor } from "./FormatSelectionPopup";
 import { FontSizeControls } from "./FontSizeControls";
 import { RichTextControls } from "./RichTextControls";
 import { useActiveEditorStore } from "../../stores/activeEditorStore";
@@ -49,6 +49,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   const { updateTabLanguage } = useRootStore();
   const { toggleSearch } = useSearchStore();
   const [showLanguagePopup, setShowLanguagePopup] = useState(false);
+  const [popupAnchor, setPopupAnchor] = useState<PopupAnchor | null>(null);
   const languageLabelRef = useRef<HTMLDivElement>(null);
   const contentKind = getTabContentKind(activeTab);
   const showRichTextControls =
@@ -64,17 +65,16 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       ? getFormatOptionsMenu(languageForOptions || 'plaintext', editor)
       : null;
 
-  // Handle opening the language popup
+  // Handle opening/closing the language popup
   const handleOpenLanguagePopup = () => {
-    if (contentKind === "text") {
-      // Always ensure we close any existing popup before opening a new one
+    if (contentKind !== "text") return;
+    if (showLanguagePopup) {
       setShowLanguagePopup(false);
-
-      // Use setTimeout to ensure React has time to process the state change
-      setTimeout(() => {
-        setShowLanguagePopup(true);
-      }, 0);
+      return;
     }
+    const rect = languageLabelRef.current?.getBoundingClientRect();
+    setPopupAnchor(rect ? { left: rect.left, top: rect.top } : null);
+    setShowLanguagePopup(true);
   };
 
   // Handle selecting a language from the popup
@@ -121,6 +121,8 @@ export const StatusBar: React.FC<StatusBarProps> = ({
             formats={getPopupLanguages(showLanguagePopup)}
             onSelectFormat={handleSelectLanguage}
             onClose={() => setShowLanguagePopup(false)}
+            anchor={popupAnchor}
+            triggerRef={languageLabelRef}
             title={
               activeTab?.languageLocked
                 ? "Other Format Options"

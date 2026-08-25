@@ -1,18 +1,39 @@
 import React, { useRef, useEffect, useState, useMemo } from "react";
+import { createPortal } from "react-dom";
 import type { PopupMenuItem } from "./types";
+
+export interface PopupAnchor {
+  /** Viewport-space left edge of the trigger label. */
+  left: number;
+  /** Viewport-space top edge of the trigger label. */
+  top: number;
+}
 
 interface FormatSelectionPopupProps {
   formats: PopupMenuItem[];
   onSelectFormat: (formatId: string) => void;
   onClose: () => void;
   title?: string;
+  /** Trigger label position - used to place the portal above it. */
+  anchor: PopupAnchor | null;
+  /** Clicks inside the trigger must not count as "outside" so the
+   *  label can close the popup without instantly reopening it. */
+  triggerRef?: React.RefObject<HTMLElement | null>;
 }
 
+const POPUP_WIDTH = 170;
+
+/**
+ * Rendered into document.body so ancestor overflow/scroll containers
+ * (e.g. the horizontally scrollable status bar) can never clip it.
+ */
 export const FormatSelectionPopup: React.FC<FormatSelectionPopupProps> = ({
   formats,
   onSelectFormat,
   onClose,
   title,
+  anchor,
+  triggerRef,
 }) => {
   const popupRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -35,9 +56,11 @@ export const FormatSelectionPopup: React.FC<FormatSelectionPopupProps> = ({
   // Handle click outside to close - using a more direct approach that works better with Monaco editor
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (triggerRef?.current?.contains(target)) return;
       if (
         popupRef.current &&
-        !popupRef.current.contains(event.target as Node)
+        !popupRef.current.contains(target)
       ) {
         onClose();
       }
@@ -45,23 +68,31 @@ export const FormatSelectionPopup: React.FC<FormatSelectionPopupProps> = ({
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [onClose]);
+  }, [onClose, triggerRef]);
 
   const handleSelectFormat = (formatId: string) => {
     onSelectFormat(formatId);
     onClose();
   };
 
-  return (
+  // Open upwards from the trigger, clamped to the viewport.
+  const left = Math.min(
+    Math.max(anchor?.left ?? 0, 8),
+    Math.max((typeof window !== "undefined" ? window.innerWidth : 0) - POPUP_WIDTH - 8, 8),
+  );
+  const bottom =
+    typeof window !== "undefined" && anchor ? window.innerHeight - anchor.top + 4 : 28;
+
+  return createPortal(
     <div
       ref={popupRef}
       data-testid="format-selection-popup"
-      className="absolute z-50 bg-surface border border-base rounded shadow-lg overflow-hidden custom-scrollbar"
+      className="fixed z-[60] bg-surface border border-base rounded shadow-lg overflow-hidden custom-scrollbar"
       style={{
-        bottom: "28px",
-        left: "0px",
+        bottom: `${bottom}px`,
+        left: `${left}px`,
         maxHeight: "300px",
-        width: "170px",
+        width: `${POPUP_WIDTH}px`,
         overflowY: "auto",
       }}
     >
@@ -109,6 +140,7 @@ export const FormatSelectionPopup: React.FC<FormatSelectionPopupProps> = ({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };

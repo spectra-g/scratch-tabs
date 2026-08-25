@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { StatusBar } from '../index';
 import { useTabsStore } from '../../../stores/tabsStore';
@@ -54,6 +54,7 @@ jest.mock('../../../hooks/useIsMobile', () => ({
 jest.mock('../../../formats', () => ({
   formatRegistry: {
     getById: jest.fn(() => null),
+    getAll: jest.fn(() => []),
   },
   getPotentialFormatMatches: jest.fn(),
 }));
@@ -532,6 +533,38 @@ describe('StatusBar - Font Size Controls Integration', () => {
 
       // Should not show line/column info
       expect(screen.queryByText(/Ln \d+, Col \d+/)).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Format popup toggle', () => {
+    const textTab = {
+      id: 'tab-1',
+      title: 'Plain Tab',
+      content: 'content',
+      language: 'javascript',
+      languageLocked: false,
+      isTablet: false,
+      fontSize: 16,
+      workspaceId: 'workspace-1',
+      dateCreated: Date.now(),
+      lastModified: Date.now(),
+      cursorPosition: { lineNumber: 1, column: 1 },
+    };
+
+    it('opens the format popup when the format label is clicked', () => {
+      render(<StatusBar activeTab={textTab} side="left" />);
+      expect(screen.queryByTestId('format-popup')).not.toBeInTheDocument();
+      fireEvent.click(screen.getByTestId('status-language'));
+      expect(screen.getByTestId('format-popup')).toBeInTheDocument();
+    });
+
+    it('closes the format popup when the format label is clicked again', () => {
+      render(<StatusBar activeTab={textTab} side="left" />);
+      const label = screen.getByTestId('status-language');
+      fireEvent.click(label);
+      expect(screen.getByTestId('format-popup')).toBeInTheDocument();
+      fireEvent.click(label);
+      expect(screen.queryByTestId('format-popup')).not.toBeInTheDocument();
     });
   });
 });
