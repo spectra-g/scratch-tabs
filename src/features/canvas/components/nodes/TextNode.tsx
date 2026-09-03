@@ -4,6 +4,7 @@ import { MIN_TEXT_ITEM_HEIGHT, MIN_TEXT_ITEM_WIDTH } from "../../constants";
 import type { CanvasFlowNode } from "../../utils/canvasFlowMapping";
 import { getCanvasItemAccessibleLabel } from "../../utils/canvasAccessibility";
 import { useCanvasNodeInteraction } from "./CanvasNodeInteractionContext";
+import { CanvasNodeHandles } from "./CanvasNodeHandles";
 
 const TextNodeComponent = ({
   id,
@@ -81,6 +82,7 @@ const TextNodeComponent = ({
         beginEditing(id);
       }}
     >
+      <CanvasNodeHandles />
       <NodeResizer
         isVisible={selected && !isEditing}
         minWidth={MIN_TEXT_ITEM_WIDTH}

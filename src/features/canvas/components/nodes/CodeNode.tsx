@@ -8,6 +8,7 @@ import type { CanvasCodeFlowNode } from "../../utils/canvasFlowMapping";
 import { getCanvasItemAccessibleLabel } from "../../utils/canvasAccessibility";
 import { getCanvasCodePreview } from "../../utils/canvasCode";
 import { useCanvasNodeInteraction } from "./CanvasNodeInteractionContext";
+import { CanvasNodeHandles } from "./CanvasNodeHandles";
 import { CodeNodeActions } from "./CodeNodeActions";
 import { HighlightedCode } from "./HighlightedCode";
 import { useCanvasCodeCopy } from "../../hooks/useCanvasCodeCopy";
@@ -26,6 +27,8 @@ const CodeNodeComponent = ({
     completePointerSelection,
     formatCode,
     openCodeInTab,
+    detachDerived,
+    requestTransform,
     preparePointerSelection,
     syncFocusedItem,
     toggleCodeCollapsed,
@@ -53,8 +56,7 @@ const CodeNodeComponent = ({
     requestAnimationFrame(() => editorRef.current?.focus());
   }, [isEditing, item.source]);
 
-  const commit = () => commitCode(id, draft);
-  const cancel = () => {
+  const commit = () => commitCode(id, draft);  const cancel = () => {
     setDraft(initialSourceRef.current);
     cancelEditing(id);
     requestAnimationFrame(() =>
@@ -67,6 +69,8 @@ const CodeNodeComponent = ({
     setFormatError(result.ok ? null : result.error);
   };
 
+  const isDerived = item.derivedFrom !== undefined;
+
   return (
     <article
       ref={cardRef}
@@ -78,6 +82,7 @@ const CodeNodeComponent = ({
       data-language-locked={item.languageLocked}
       data-collapsed={item.collapsed}
       data-wrap={item.wrap}
+      data-derived={isDerived}
       data-preview-truncated={preview.isTruncated}
       data-x={item.x}
       data-y={item.y}
@@ -108,13 +113,14 @@ const CodeNodeComponent = ({
         beginEditing(id);
       }}
     >
+      <CanvasNodeHandles />
       <NodeResizer
         isVisible={selected && !isEditing && !item.collapsed}
         minWidth={MIN_CODE_ITEM_WIDTH}
         minHeight={MIN_CODE_ITEM_HEIGHT}
         onResizeEnd={(_event, bounds) => commitResize(id, bounds)}
       />
-      {isEditing ? (
+      {isEditing && !isDerived ? (
         <textarea
           ref={editorRef}
           className="nodrag nowheel custom-scrollbar h-full w-full resize-none overflow-auto bg-transparent p-4 font-mono text-xs leading-5 text-main outline-none"
@@ -153,15 +159,40 @@ const CodeNodeComponent = ({
             <CodeNodeActions
               collapsed={item.collapsed}
               wrap={item.wrap}
+              isDerived={isDerived}
               formatError={formatError}
               copyState={codeCopy.state}
               onCopy={() => void codeCopy.copy()}
               onFormat={format}
+              onTransform={() => requestTransform(id)}
               onToggleCollapsed={() => toggleCodeCollapsed(id)}
               onToggleWrap={() => toggleCodeWrap(id)}
               onOpenInTab={() => void openCodeInTab(id)}
             />
           </header>
+          {isDerived && item.derivedFrom ? (
+            <div
+              className="nodrag flex items-center gap-2 border-b border-base bg-element px-2 py-1 text-[11px] text-secondary"
+              data-testid="canvas-code-derived-badge"
+              title={`Derived from a linked card via ${item.derivedFrom.operationName}`}
+            >
+              <span className="min-w-0 flex-1 truncate">
+                {item.derivedFrom.operationName}
+                {item.transformError ? ` - ${item.transformError}` : ""}
+              </span>
+              <button
+                type="button"
+                className="shrink-0 rounded px-1.5 py-0.5 text-[11px] font-medium text-secondary hover:bg-element-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                data-testid="canvas-code-detach"
+                aria-label="Detach from source and edit directly"
+                onClick={() => detachDerived(id)}
+                onPointerDown={(event) => event.stopPropagation()}
+                onDoubleClick={(event) => event.stopPropagation()}
+              >
+                Detach
+              </button>
+            </div>
+          ) : null}
           {!item.collapsed && (
             <div className="nowheel custom-scrollbar min-h-0 flex-1 overflow-auto">
               <HighlightedCode

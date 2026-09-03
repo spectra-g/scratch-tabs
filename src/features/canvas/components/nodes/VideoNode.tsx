@@ -11,6 +11,7 @@ import { getCanvasItemAccessibleLabel } from "../../utils/canvasAccessibility";
 import type { CanvasVideoFlowNode } from "../../utils/canvasFlowMapping";
 import { parseCanvasVideoUrl } from "../../utils/canvasVideoProviders";
 import { useCanvasNodeInteraction } from "./CanvasNodeInteractionContext";
+import { CanvasNodeHandles } from "./CanvasNodeHandles";
 import { CanvasUrlNodeActions } from "./CanvasUrlNodeActions";
 
 const VideoNodeComponent = ({
@@ -112,6 +113,7 @@ const VideoNodeComponent = ({
         }
       }}
     >
+      <CanvasNodeHandles />
       <NodeResizer
         isVisible={selected && !isEditing}
         minWidth={MIN_VIDEO_ITEM_WIDTH}

@@ -18,6 +18,8 @@ interface CanvasNodeInteraction {
   toggleCodeCollapsed: (itemId: string) => void;
   toggleCodeWrap: (itemId: string) => void;
   openCodeInTab: (itemId: string) => Promise<void>;
+  detachDerived: (itemId: string) => void;
+  requestTransform: (itemId: string) => void;
   replaceImage: (itemId: string, file: File) => Promise<void>;
   copyImage: (assetId: string) => Promise<void>;
   downloadImage: (assetId: string) => Promise<void>;

@@ -26,19 +26,23 @@ import { useCanvasClipboard } from "../hooks/useCanvasClipboard";
 import { useCanvasDrop } from "../hooks/useCanvasDrop";
 import { useCanvasIngest } from "../hooks/useCanvasIngest";
 import { useSpatialNavigation } from "../hooks/useSpatialNavigation";
-import type { CanvasItem, CanvasSaveStatus } from "../types";
+import type { CanvasEdge, CanvasItem, CanvasSaveStatus } from "../types";
 import {
   getCanvasViewportCenter,
   getCombinedCanvasBounds,
   getViewportToRevealCanvasBounds,
 } from "../utils/canvasCoordinates";
-import type { CanvasFlowNode } from "../utils/canvasFlowMapping";
+import {
+  canvasEdgesToFlowEdges,
+  type CanvasFlowNode,
+} from "../utils/canvasFlowMapping";
 import { shouldRenderOnlyVisibleCanvasItems } from "../utils/canvasPerformance";
 import { CanvasToolbar } from "./CanvasToolbar";
 import {
   CanvasContextMenu,
   type CanvasContextMenuPosition,
 } from "./CanvasContextMenu";
+import { CanvasTransformDialog } from "./CanvasTransformDialog";
 import { CanvasSelectionToolbar } from "./CanvasSelectionToolbar";
 import { CanvasShortcutHelp } from "./CanvasShortcutHelp";
 import { CanvasConflictNotice } from "./CanvasConflictNotice";
@@ -65,7 +69,7 @@ const multiSelectionKeyCodes = ["Meta", "Control", "Shift"];
 interface CanvasSceneProps {
   tab: Tab;
   initialItems: CanvasItem[];
-  edges: Array<{ id: string; source: string; target: string }>;
+  initialEdges: CanvasEdge[];
   viewport: Viewport;
   background: "dots" | "grid" | "none";
   status: CanvasSaveStatus;
@@ -74,7 +78,7 @@ interface CanvasSceneProps {
   remoteRevision: number | null;
   isResolvingConflict: boolean;
   isRetryingSave: boolean;
-  updateItems: (items: CanvasItem[]) => void;
+  updateDocument: (items: CanvasItem[], edges: CanvasEdge[]) => void;
   imageOperations: CanvasImageOperations;
   saveViewport: (viewport: Viewport) => Promise<void>;
   onReloadConflict: () => void;
@@ -85,7 +89,7 @@ interface CanvasSceneProps {
 export const CanvasScene = ({
   tab,
   initialItems,
-  edges,
+  initialEdges,
   viewport,
   background,
   status,
@@ -94,7 +98,7 @@ export const CanvasScene = ({
   remoteRevision,
   isResolvingConflict,
   isRetryingSave,
-  updateItems,
+  updateDocument,
   imageOperations,
   saveViewport,
   onReloadConflict,
@@ -114,11 +118,24 @@ export const CanvasScene = ({
   const [contextMenuPosition, setContextMenuPosition] =
     useState<CanvasContextMenuPosition | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [transformSourceId, setTransformSourceId] = useState<string | null>(
+    null,
+  );
+  const persistDocument = useCallback(
+    (items: CanvasItem[], edges: CanvasEdge[]) => {
+      updateDocument(items, edges);
+    },
+    [updateDocument],
+  );
   const canvasItems = useCanvasItems(
     initialItems,
-    updateItems,
+    persistDocument,
     tab.id,
     imageOperations,
+    initialEdges,
+    {
+      onRequestTransform: (itemId) => setTransformSourceId(itemId),
+    },
   );
   const canvasIngest = useCanvasIngest({
     rootRef,
@@ -414,7 +431,7 @@ export const CanvasScene = ({
       <CanvasNodeInteractionContext.Provider value={canvasItems.interaction}>
         <ReactFlow<CanvasFlowNode>
           nodes={canvasItems.nodes}
-          edges={edges}
+          edges={canvasEdgesToFlowEdges(canvasItems.edges)}
           nodeTypes={nodeTypes}
           defaultViewport={viewport}
           minZoom={0.1}
@@ -561,6 +578,17 @@ export const CanvasScene = ({
         <CanvasContextMenu
           position={contextMenuPosition}
           selectedCount={canvasItems.selectedCount}
+          canTransform={(() => {
+            const selected = canvasItems.getSelectedItems();
+            return (
+              selected.length === 1 &&
+              (selected[0].type === "code" || selected[0].type === "text")
+            );
+          })()}
+          onTransform={() => {
+            const selected = canvasItems.getSelectedItems();
+            if (selected.length === 1) setTransformSourceId(selected[0].id);
+          }}
           onDuplicate={canvasItems.duplicateSelection}
           onBringForward={() => canvasItems.moveSelectionOneLayer("forward")}
           onSendBackward={() => canvasItems.moveSelectionOneLayer("backward")}
@@ -571,6 +599,18 @@ export const CanvasScene = ({
       {keyboardShortcuts.isShortcutHelpOpen && (
         <CanvasShortcutHelp onClose={keyboardShortcuts.closeShortcutHelp} />
       )}
+      {transformSourceId ? (
+        <CanvasTransformDialog
+          sourceTitle={
+            canvasItems.items.find((item) => item.id === transformSourceId)
+              ?.type ?? "card"
+          }
+          onClose={() => setTransformSourceId(null)}
+          onRun={(operationId, params) =>
+            canvasItems.quickTransform(transformSourceId, operationId, params)
+          }
+        />
+      ) : null}
       <div
         className="sr-only"
         role="status"

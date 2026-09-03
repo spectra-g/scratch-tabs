@@ -22,6 +22,7 @@ const item = (text: string): CanvasTextItem => ({
 
 const snapshot = (text: string): CanvasHistorySnapshot => ({
   items: [item(text)],
+  edges: [],
   selectedItemIds: ["item-1"],
   focusedItemId: "item-1",
 });
@@ -63,6 +64,22 @@ describe("CanvasHistory", () => {
     expect(history.past.map((entry) => entry.items[0].text)).toEqual([
       "two",
       "three",
+    ]);
+  });
+
+  it("restores transform edges alongside items", () => {
+    const withEdge: CanvasHistorySnapshot = {
+      ...snapshot("before"),
+      edges: [
+        { id: "e1", sourceItemId: "item-1", targetItemId: "item-2", label: "Op" },
+      ],
+    };
+    const recorded = recordCanvasHistory(createCanvasHistory(), withEdge);
+    withEdge.edges[0].label = "mutated outside history";
+
+    const undone = undoCanvasHistory(recorded, snapshot("after"));
+    expect(undone.snapshot?.edges).toEqual([
+      { id: "e1", sourceItemId: "item-1", targetItemId: "item-2", label: "Op" },
     ]);
   });
 });

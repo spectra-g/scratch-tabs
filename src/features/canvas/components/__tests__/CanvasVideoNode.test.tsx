@@ -6,6 +6,8 @@ import type { CanvasLinkItem, CanvasVideoItem } from "../../types";
 
 jest.mock("@xyflow/react", () => ({
   NodeResizer: () => null,
+  Handle: () => null,
+  Position: { Top: "top", Bottom: "bottom", Left: "left", Right: "right" },
 }));
 
 const item: CanvasVideoItem = {
@@ -33,6 +35,8 @@ const interaction = {
   toggleCodeCollapsed: jest.fn(),
   toggleCodeWrap: jest.fn(),
   openCodeInTab: jest.fn(),
+  detachDerived: jest.fn(),
+  requestTransform: jest.fn(),
   replaceImage: jest.fn(),
   copyImage: jest.fn(),
   downloadImage: jest.fn(),

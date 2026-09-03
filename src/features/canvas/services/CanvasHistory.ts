@@ -1,8 +1,9 @@
 import { CANVAS_HISTORY_LIMIT } from "../constants";
-import type { CanvasItem } from "../types";
+import type { CanvasEdge, CanvasItem } from "../types";
 
 export interface CanvasHistorySnapshot {
   items: CanvasItem[];
+  edges: CanvasEdge[];
   selectedItemIds: string[];
   focusedItemId: string | null;
 }
@@ -21,6 +22,7 @@ const cloneSnapshot = (
   snapshot: CanvasHistorySnapshot,
 ): CanvasHistorySnapshot => ({
   items: snapshot.items.map((item) => ({ ...item })),
+  edges: (snapshot.edges ?? []).map((edge) => ({ ...edge })),
   selectedItemIds: [...snapshot.selectedItemIds],
   focusedItemId: snapshot.focusedItemId,
 });

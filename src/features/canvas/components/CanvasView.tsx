@@ -2,7 +2,6 @@ import "@xyflow/react/dist/style.css";
 import type { Tab } from "../../../types";
 import { useCanvasDocument } from "../hooks/useCanvasDocument";
 import { useCanvasImageOperations } from "../hooks/useCanvasImageOperations";
-import { canvasEdgesToFlowEdges } from "../utils/canvasFlowMapping";
 import { CanvasScene } from "./CanvasScene";
 import "./canvas.css";
 
@@ -22,7 +21,7 @@ const CanvasView = ({ tab }: CanvasViewProps) => {
     isResolvingConflict,
     isRetryingSave,
     saveViewport,
-    updateItems,
+    updateDocument,
     reloadAfterConflict,
     takeOverAfterConflict,
     retrySave,
@@ -56,7 +55,7 @@ const CanvasView = ({ tab }: CanvasViewProps) => {
       key={`${activeDocument.document.id}:${reloadKey}`}
       tab={tab}
       initialItems={activeDocument.document.items}
-      edges={canvasEdgesToFlowEdges(activeDocument.document.edges)}
+      initialEdges={activeDocument.document.edges}
       viewport={activeDocument.session.viewport}
       background={activeDocument.document.settings.background}
       status={status}
@@ -65,7 +64,7 @@ const CanvasView = ({ tab }: CanvasViewProps) => {
       remoteRevision={remoteRevision}
       isResolvingConflict={isResolvingConflict}
       isRetryingSave={isRetryingSave}
-      updateItems={updateItems}
+      updateDocument={updateDocument}
       imageOperations={imageOperations}
       saveViewport={saveViewport}
       onReloadConflict={() => void reloadAfterConflict()}

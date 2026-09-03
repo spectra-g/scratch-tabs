@@ -10,6 +10,7 @@ import { canvasUrlActionService } from "../../services/CanvasUrlActionService";
 import { getCanvasItemAccessibleLabel } from "../../utils/canvasAccessibility";
 import type { CanvasLinkFlowNode } from "../../utils/canvasFlowMapping";
 import { useCanvasNodeInteraction } from "./CanvasNodeInteractionContext";
+import { CanvasNodeHandles } from "./CanvasNodeHandles";
 import { CanvasUrlNodeActions } from "./CanvasUrlNodeActions";
 
 const LinkNodeComponent = ({
@@ -100,6 +101,7 @@ const LinkNodeComponent = ({
         }
       }}
     >
+      <CanvasNodeHandles />
       <NodeResizer
         isVisible={selected && !isEditing}
         minWidth={MIN_LINK_ITEM_WIDTH}

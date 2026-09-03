@@ -1,4 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
+import { operationRegistry } from "../../../../services/pipeline/OperationRegistry";
 import type { CanvasCodeItem, CanvasTextItem } from "../../types";
 import { useCanvasItems } from "../useCanvasItems";
 
@@ -409,5 +410,219 @@ describe("useCanvasItems", () => {
     expect(result.current.items.map(({ x }) => x)).toEqual([10, 400]);
     act(() => result.current.redo());
     expect(result.current.items.map(({ x }) => x)).toEqual([20, 410]);
+  });
+
+  describe("quick transforms", () => {
+    const upperRunner = jest.fn(
+      async (operationId: string, input: string) => ({
+        success: true as const,
+        output: `${input.toUpperCase()} [${operationId}]`,
+      }),
+    );
+
+    beforeAll(() => {
+      operationRegistry.register({
+        id: "test.upper",
+        name: "Upper",
+        description: "Uppercase for tests",
+        categories: ["Text"],
+        parameters: [],
+        execute: (input: string) => input.toUpperCase(),
+      });
+    });
+
+    afterAll(() => {
+      operationRegistry.clear();
+    });
+
+    beforeEach(() => {
+      upperRunner.mockClear();
+    });
+
+    const renderWithUpper = (
+      items: Array<CanvasTextItem | CanvasCodeItem>,
+      persistItems = jest.fn(),
+    ) =>
+      renderHook(() =>
+        useCanvasItems(items, persistItems, "canvas-tab", undefined, [], {
+          transformRunner: upperRunner,
+        }),
+      );
+
+    it("creates a linked derived card plus an edge in one undo step", async () => {
+      const persistItems = jest.fn();
+      const { result } = renderWithUpper(
+        [makeCodeItem("src", { source: "hello" })],
+        persistItems,
+      );
+
+      let targetId = "";
+      await act(async () => {
+        targetId = await result.current.quickTransform("src", "test.upper");
+      });
+
+      expect(result.current.items).toHaveLength(2);
+      const target = result.current.items.find(
+        (item) => item.id === targetId,
+      );
+      expect(target).toEqual(
+        expect.objectContaining({
+          type: "code",
+          source: "HELLO [test.upper]",
+        }),
+      );
+      if (target?.type !== "code") throw new Error("expected code target");
+      expect(target.derivedFrom).toEqual({
+        sourceItemId: "src",
+        operationId: "test.upper",
+        operationName: "Upper",
+        params: {},
+      });
+      expect(result.current.edges).toEqual([
+        expect.objectContaining({
+          sourceItemId: "src",
+          targetItemId: targetId,
+          label: "Upper",
+        }),
+      ]);
+      expect(result.current.interactionState.selectedItemIds).toEqual([
+        targetId,
+      ]);
+      expect(persistItems).toHaveBeenLastCalledWith(
+        result.current.items,
+        result.current.edges,
+      );
+
+      act(() => result.current.undo());
+      expect(result.current.items.map(({ id }) => id)).toEqual(["src"]);
+      expect(result.current.edges).toEqual([]);
+      act(() => result.current.redo());
+      expect(result.current.items.map(({ id }) => id)).toEqual([
+        "src",
+        targetId,
+      ]);
+    });
+
+    it("fans out many outputs from one source without overlapping", async () => {
+      const { result } = renderWithUpper([
+        makeCodeItem("src", { source: "hello" }),
+      ]);
+
+      await act(async () => {
+        await result.current.quickTransform("src", "test.upper");
+      });
+      await act(async () => {
+        await result.current.quickTransform("src", "test.upper");
+      });
+
+      expect(result.current.items).toHaveLength(3);
+      expect(result.current.edges).toHaveLength(2);
+      const positions = result.current.items
+        .slice(1)
+        .map((item) => `${item.x},${item.y}`);
+      expect(new Set(positions).size).toBe(2);
+    });
+
+    it("surfaces runner failures without creating cards", async () => {
+      const failing = jest.fn().mockResolvedValue({
+        success: false,
+        output: "hello",
+        error: "bad query",
+      });
+      const persistItems = jest.fn();
+      const { result } = renderHook(() =>
+        useCanvasItems([makeCodeItem("src")], persistItems, "canvas-tab", undefined, [], {
+          transformRunner: failing,
+        }),
+      );
+
+      await act(async () => {
+        await expect(
+          result.current.quickTransform("src", "test.upper"),
+        ).rejects.toThrow("bad query");
+      });
+      expect(result.current.items).toHaveLength(1);
+      expect(result.current.edges).toEqual([]);
+      expect(persistItems).not.toHaveBeenCalled();
+    });
+
+    it("refreshes derived cards when their source is edited", async () => {
+      const { result } = renderWithUpper([
+        makeCodeItem("src", { source: "hello" }),
+      ]);
+
+      await act(async () => {
+        await result.current.quickTransform("src", "test.upper");
+      });
+      act(() => result.current.interaction.commitCode("src", "bye"));
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+
+      const target = result.current.items.find((item) => item.id !== "src");
+      expect(target?.type).toBe("code");
+      if (target?.type !== "code") throw new Error("expected code target");
+      expect(target.source).toBe("BYE [test.upper]");
+    });
+
+    it("keeps derived cards read-only until detached", async () => {
+      const { result } = renderWithUpper([
+        makeCodeItem("src", { source: "hello" }),
+      ]);
+
+      let targetId = "";
+      await act(async () => {
+        targetId = await result.current.quickTransform("src", "test.upper");
+      });
+
+      act(() => result.current.beginEditing(targetId));
+      expect(result.current.interactionState.mode).toBe("navigation");
+      act(() => result.current.interaction.commitCode(targetId, "hacked"));
+      expect(
+        result.current.items.find((item) => item.id === targetId),
+      ).toEqual(expect.objectContaining({ source: "HELLO [test.upper]" }));
+      expect(result.current.interaction.formatCode(targetId)).toEqual({
+        ok: false,
+        error: expect.stringContaining("Detach"),
+      });
+
+      act(() => result.current.interaction.detachDerived(targetId));
+      const detached = result.current.items.find(
+        (item) => item.id === targetId,
+      );
+      if (detached?.type !== "code") throw new Error("expected code target");
+      expect(detached.derivedFrom).toBeUndefined();
+      expect(result.current.edges).toEqual([]);
+
+      act(() => result.current.interaction.commitCode(targetId, "edited"));
+      expect(
+        result.current.items.find((item) => item.id === targetId),
+      ).toEqual(expect.objectContaining({ source: "edited" }));
+    });
+
+    it("drops incident edges on delete and strips derivation on duplicate", async () => {
+      const { result } = renderWithUpper([
+        makeCodeItem("src", { source: "hello" }),
+      ]);
+
+      let targetId = "";
+      await act(async () => {
+        targetId = await result.current.quickTransform("src", "test.upper");
+      });
+
+      act(() => result.current.selectOnly("src"));
+      act(() => result.current.deleteSelection());
+      expect(result.current.items.map(({ id }) => id)).toEqual([targetId]);
+      expect(result.current.edges).toEqual([]);
+
+      act(() => result.current.selectOnly(targetId));
+      act(() => result.current.duplicateSelection());
+      const copy = result.current.items.find(
+        (item) => item.id !== targetId,
+      );
+      if (copy?.type !== "code") throw new Error("expected code copy");
+      expect(copy.derivedFrom).toBeUndefined();
+      expect(copy.source).toBe("HELLO [test.upper]");
+    });
   });
 });

@@ -122,6 +122,7 @@ export const canvasEdgesToFlowEdges = (edges: CanvasEdge[]): Edge[] =>
     id: edge.id,
     source: edge.sourceItemId,
     target: edge.targetItemId,
+    ...(edge.label === undefined ? {} : { label: edge.label }),
   }));
 
 export const flowEdgesToCanvasEdges = (edges: Edge[]): CanvasEdge[] =>

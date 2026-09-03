@@ -4,10 +4,12 @@ import type { CanvasCodeCopyState } from "../../hooks/useCanvasCodeCopy";
 interface CodeNodeActionsProps {
   collapsed: boolean;
   wrap: boolean;
+  isDerived: boolean;
   formatError: string | null;
   copyState: CanvasCodeCopyState;
   onCopy: () => void;
   onFormat: () => void;
+  onTransform: () => void;
   onToggleCollapsed: () => void;
   onToggleWrap: () => void;
   onOpenInTab: () => void;
@@ -19,10 +21,12 @@ const actionClassName =
 export const CodeNodeActions = ({
   collapsed,
   wrap,
+  isDerived,
   formatError,
   copyState,
   onCopy,
   onFormat,
+  onTransform,
   onToggleCollapsed,
   onToggleWrap,
   onOpenInTab,
@@ -60,9 +64,20 @@ export const CodeNodeActions = ({
       data-testid="canvas-code-format"
       aria-label="Format JSON"
       aria-describedby={formatError ? "canvas-code-format-error" : undefined}
+      disabled={isDerived}
+      title={isDerived ? "Detach this card before formatting it directly" : undefined}
       onClick={onFormat}
     >
       Format
+    </button>
+    <button
+      type="button"
+      className={actionClassName}
+      data-testid="canvas-code-transform"
+      aria-label="Quick transform into a linked card"
+      onClick={onTransform}
+    >
+      Transform
     </button>
     <button
       type="button"

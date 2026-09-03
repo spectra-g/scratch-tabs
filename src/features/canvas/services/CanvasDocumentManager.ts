@@ -8,6 +8,7 @@ import type {
   CanvasDocument,
   CanvasDocumentSaveState,
   CanvasAssetRecord,
+  CanvasEdge,
   CanvasImageItem,
   CanvasItem,
   CanvasViewport,
@@ -148,10 +149,20 @@ export class CanvasDocumentManager {
 
   setItems(tabId: string, items: CanvasItem[]): CanvasDocument {
     const active = this.requireActive(tabId);
+    return this.setItemsAndEdges(tabId, items, active.document.edges);
+  }
+
+  setItemsAndEdges(
+    tabId: string,
+    items: CanvasItem[],
+    edges: CanvasEdge[],
+  ): CanvasDocument {
+    const active = this.requireActive(tabId);
     const updatedAt = this.now();
     active.document = {
       ...active.document,
       items: items.map((item) => ({ ...item })),
+      edges: edges.map((edge) => ({ ...edge })),
       updatedAt,
     };
     this.searchIndexer.schedule(tabId, active.document.items, (searchText) => {

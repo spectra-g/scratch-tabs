@@ -164,6 +164,8 @@ export const parseCanvasItem = (value: unknown): CanvasItem => {
       collapsed: requireBoolean(value, "collapsed"),
       ...(expandedHeight === undefined ? {} : { expandedHeight }),
       wrap: requireBoolean(value, "wrap"),
+      ...parseTransformDerivation(value),
+      ...parseTransformError(value),
     };
   }
 
@@ -259,14 +261,48 @@ export const parseCanvasItem = (value: unknown): CanvasItem => {
   throw new Error("Invalid Canvas schema: unsupported item type");
 };
 
+const parseTransformDerivation = (value: Record<string, unknown>) => {
+  const derivedFrom = value.derivedFrom;
+  if (derivedFrom === undefined) return {};
+  if (!isRecord(derivedFrom)) {
+    throw new Error("Invalid Canvas schema: derivedFrom must be an object");
+  }
+  const params = derivedFrom.params;
+  if (!isRecord(params)) {
+    throw new Error("Invalid Canvas schema: derivedFrom params must be an object");
+  }
+  return {
+    derivedFrom: {
+      sourceItemId: requireString(derivedFrom, "sourceItemId"),
+      operationId: requireString(derivedFrom, "operationId"),
+      operationName: requireString(derivedFrom, "operationName"),
+      params: { ...params },
+    },
+  };
+};
+
+const parseTransformError = (value: Record<string, unknown>) => {
+  const transformError = value.transformError;
+  if (transformError === undefined) return {};
+  if (typeof transformError !== "string") {
+    throw new Error("Invalid Canvas schema: transformError must be a string");
+  }
+  return { transformError };
+};
+
 const parseCanvasEdge = (value: unknown): CanvasEdge => {
   if (!isRecord(value)) {
     throw new Error("Invalid Canvas schema: edge must be an object");
+  }
+  const label = value.label;
+  if (label !== undefined && typeof label !== "string") {
+    throw new Error("Invalid Canvas schema: edge label must be a string");
   }
   return {
     id: requireString(value, "id"),
     sourceItemId: requireString(value, "sourceItemId"),
     targetItemId: requireString(value, "targetItemId"),
+    ...(label === undefined ? {} : { label }),
   };
 };
 

@@ -38,11 +38,14 @@ describe("Canvas editing controls", () => {
 
   it("closes the context menu after running an action", () => {
     const onDuplicate = jest.fn();
+    const onTransform = jest.fn();
     const onClose = jest.fn();
     render(
       <CanvasContextMenu
         position={{ x: 100, y: 120 }}
         selectedCount={1}
+        canTransform
+        onTransform={onTransform}
         onDuplicate={onDuplicate}
         onBringForward={jest.fn()}
         onSendBackward={jest.fn()}
@@ -55,6 +58,39 @@ describe("Canvas editing controls", () => {
 
     expect(onDuplicate).toHaveBeenCalledTimes(1);
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("offers quick transform in the context menu only for a single text-like card", () => {
+    const onClose = jest.fn();
+    const { rerender } = render(
+      <CanvasContextMenu
+        position={{ x: 0, y: 0 }}
+        selectedCount={1}
+        canTransform
+        onTransform={jest.fn()}
+        onDuplicate={jest.fn()}
+        onBringForward={jest.fn()}
+        onSendBackward={jest.fn()}
+        onDelete={jest.fn()}
+        onClose={onClose}
+      />,
+    );
+    expect(screen.getByTestId("canvas-context-transform")).toBeInTheDocument();
+
+    rerender(
+      <CanvasContextMenu
+        position={{ x: 0, y: 0 }}
+        selectedCount={2}
+        canTransform={false}
+        onTransform={jest.fn()}
+        onDuplicate={jest.fn()}
+        onBringForward={jest.fn()}
+        onSendBackward={jest.fn()}
+        onDelete={jest.fn()}
+        onClose={onClose}
+      />,
+    );
+    expect(screen.queryByTestId("canvas-context-transform")).not.toBeInTheDocument();
   });
 
   it("reflects undo and redo availability", () => {
@@ -117,6 +153,7 @@ describe("Canvas editing controls", () => {
   it("routes code-card actions and exposes persistent toggle state", () => {
     const onCopy = jest.fn();
     const onFormat = jest.fn();
+    const onTransform = jest.fn();
     const onToggleCollapsed = jest.fn();
     const onToggleWrap = jest.fn();
     const onOpenInTab = jest.fn();
@@ -124,10 +161,12 @@ describe("Canvas editing controls", () => {
       <CodeNodeActions
         collapsed
         wrap
+        isDerived={false}
         formatError={null}
         copyState="copied"
         onCopy={onCopy}
         onFormat={onFormat}
+        onTransform={onTransform}
         onToggleCollapsed={onToggleCollapsed}
         onToggleWrap={onToggleWrap}
         onOpenInTab={onOpenInTab}
@@ -136,12 +175,14 @@ describe("Canvas editing controls", () => {
 
     fireEvent.click(screen.getByTestId("canvas-code-copy"));
     fireEvent.click(screen.getByTestId("canvas-code-format"));
+    fireEvent.click(screen.getByTestId("canvas-code-transform"));
     fireEvent.click(screen.getByTestId("canvas-code-collapse"));
     fireEvent.click(screen.getByTestId("canvas-code-wrap"));
     fireEvent.click(screen.getByTestId("canvas-code-open-tab"));
 
     expect(onCopy).toHaveBeenCalledTimes(1);
     expect(onFormat).toHaveBeenCalledTimes(1);
+    expect(onTransform).toHaveBeenCalledTimes(1);
     expect(onToggleCollapsed).toHaveBeenCalledTimes(1);
     expect(onToggleWrap).toHaveBeenCalledTimes(1);
     expect(onOpenInTab).toHaveBeenCalledTimes(1);

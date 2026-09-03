@@ -9,6 +9,14 @@ export interface CanvasEdge {
   id: string;
   sourceItemId: string;
   targetItemId: string;
+  label?: string;
+}
+
+export interface CanvasTransformDerivation {
+  sourceItemId: string;
+  operationId: string;
+  operationName: string;
+  params: Record<string, unknown>;
 }
 
 export type CanvasVideoProvider = "youtube" | "vimeo";
@@ -42,6 +50,8 @@ export interface CanvasCodeItem extends CanvasItemBase {
   collapsed: boolean;
   expandedHeight?: number;
   wrap: boolean;
+  derivedFrom?: CanvasTransformDerivation;
+  transformError?: string;
 }
 
 export interface CanvasImageItem extends CanvasItemBase {

@@ -100,6 +100,19 @@
   background: rgb(var(--color-primary));
 }
 
+.canvas-flow-root .canvas-node-handle {
+  width: 8px;
+  height: 8px;
+  border: 1px solid rgb(var(--color-surface));
+  background: rgb(var(--color-border-base));
+  opacity: 0;
+}
+
+.canvas-flow-root .react-flow__node.selected .canvas-node-handle,
+.canvas-flow-root .react-flow__node:hover .canvas-node-handle {
+  opacity: 1;
+}
+
 .canvas-toolbar {
   display: flex;
   gap: 0.25rem;

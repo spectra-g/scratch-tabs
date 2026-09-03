@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { applyNodeChanges, type NodeChange } from "@xyflow/react";
 import type {
+  CanvasEdge,
   CanvasFocusOrigin,
   CanvasInteractionState,
   CanvasItem,
@@ -20,6 +21,22 @@ import {
 import type { CanvasNodeBounds } from "../components/nodes/CanvasNodeInteractionContext";
 import type { CanvasHistorySnapshot } from "../services/CanvasHistory";
 import { useCanvasHistory } from "./useCanvasHistory";
+import {
+  applyRefreshOutcomes,
+  collectRefreshOrder,
+  detachDerivedItem,
+  getTransformSourceContent,
+  planQuickTransform,
+  removeItemsWithEdges,
+  withoutDerivation,
+  type RefreshOutcome,
+} from "../transforms/transformGraph";
+import {
+  executeCanvasTransform,
+  getTransformOperation,
+  resolveDefaultParams,
+  type SingleOperationRunner,
+} from "../transforms/transformExecutor";
 import {
   duplicateCanvasItems,
   getSelectionFallbackAfterDeletion,
@@ -65,12 +82,20 @@ const sameBounds = (item: CanvasItem, node: CanvasFlowNode): boolean =>
 
 export const useCanvasItems = (
   initialItems: CanvasItem[],
-  persistItems: (items: CanvasItem[]) => void,
+  persistItems: (items: CanvasItem[], edges: CanvasEdge[]) => void,
   canvasTabId?: string,
   imageOperations?: CanvasImageOperations,
+  initialEdges: CanvasEdge[] = [],
+  options: {
+    onRequestTransform?: (itemId: string) => void;
+    transformRunner?: SingleOperationRunner;
+  } = {},
 ) => {
   const [items, setItems] = useState<CanvasItem[]>(initialItems);
   const itemsRef = useRef(items);
+  const [edges, setEdges] = useState<CanvasEdge[]>(initialEdges);
+  const edgesRef = useRef(edges);
+  const { onRequestTransform, transformRunner } = options;
   const [nodes, setNodes] = useState<CanvasFlowNode[]>(() =>
     canvasItemsToFlowNodes(initialItems),
   );
@@ -105,6 +130,7 @@ export const useCanvasItems = (
   const currentSnapshot = useCallback(
     (): CanvasHistorySnapshot => ({
       items: itemsRef.current,
+      edges: edgesRef.current,
       selectedItemIds: [...selectedItemIds()],
       focusedItemId: focusedItemIdRef.current,
     }),
@@ -116,9 +142,10 @@ export const useCanvasItems = (
     setNodes(nextNodes);
   }, []);
 
-  const applyItems = useCallback(
+  const applyDocument = useCallback(
     (
       nextItems: CanvasItem[],
+      nextEdges: CanvasEdge[],
       {
         editingItemId: requestedEditingItemId,
         selectedIds: requestedSelectedIds,
@@ -137,9 +164,11 @@ export const useCanvasItems = (
           : requestedFocusedItemId;
 
       itemsRef.current = nextItems;
+      edgesRef.current = nextEdges;
       editingItemIdRef.current = nextEditingItemId;
       focusedItemIdRef.current = nextFocusedItemId;
       setItems(nextItems);
+      setEdges(nextEdges);
       setEditingItemId(nextEditingItemId);
       setFocusedItemId(nextFocusedItemId);
       replaceFlowNodes(
@@ -150,18 +179,41 @@ export const useCanvasItems = (
           nextFocusedItemId,
         ),
       );
-      if (persist) persistItems(nextItems);
+      if (persist) persistItems(nextItems, nextEdges);
     },
     [persistItems, replaceFlowNodes, selectedItemIds],
   );
 
+  const applyItems = useCallback(
+    (nextItems: CanvasItem[], options: ReplaceItemsOptions = {}) => {
+      applyDocument(nextItems, edgesRef.current, options);
+    },
+    [applyDocument],
+  );
+
+  const commitDocument = useCallback(
+    (
+      nextItems: CanvasItem[],
+      nextEdges: CanvasEdge[],
+      options: ReplaceItemsOptions = {},
+    ) => {
+      if (
+        nextItems === itemsRef.current &&
+        nextEdges === edgesRef.current
+      ) {
+        return;
+      }
+      recordHistory(currentSnapshot());
+      applyDocument(nextItems, nextEdges, options);
+    },
+    [applyDocument, currentSnapshot, recordHistory],
+  );
+
   const commitOperation = useCallback(
     (nextItems: CanvasItem[], options: ReplaceItemsOptions = {}) => {
-      if (nextItems === itemsRef.current) return;
-      recordHistory(currentSnapshot());
-      applyItems(nextItems, options);
+      commitDocument(nextItems, edgesRef.current, options);
     },
-    [applyItems, currentSnapshot, recordHistory],
+    [commitDocument],
   );
 
   const replaceSelection = useCallback(
@@ -193,6 +245,8 @@ export const useCanvasItems = (
       const item = itemsRef.current.find(
         (candidate) => candidate.id === itemId,
       );
+      // Derived cards are read-only: their content comes from the transform.
+      if (item?.type === "code" && item.derivedFrom) return;
       if (item?.type === "code" && item.collapsed) {
         recordHistory(currentSnapshot());
         applyItems(
@@ -257,6 +311,64 @@ export const useCanvasItems = (
     [replaceFlowNodes],
   );
 
+  const refreshTokenRef = useRef(0);
+
+  /**
+   * Re-run every derived card downstream of a changed source, parents first.
+   * Failures keep the previous output and record an error on the card.
+   */
+  const refreshDownstream = useCallback(
+    async (changedSourceId: string) => {
+      const token = refreshTokenRef.current + 1;
+      refreshTokenRef.current = token;
+      const order = collectRefreshOrder(itemsRef.current, changedSourceId);
+      if (order.length === 0) return;
+
+      const outcomes = new Map<string, RefreshOutcome>();
+      const byId = new Map(itemsRef.current.map((item) => [item.id, item]));
+      for (const targetId of order) {
+        if (refreshTokenRef.current !== token) return;
+        const target = byId.get(targetId);
+        if (!target || target.type !== "code" || !target.derivedFrom) continue;
+        const source = byId.get(target.derivedFrom.sourceItemId);
+        const input =
+          source === undefined ? null : getTransformSourceContent(source);
+        if (source === undefined || input === null) {
+          outcomes.set(targetId, {
+            ok: false,
+            error: "The source card is no longer available.",
+          });
+          continue;
+        }
+        const result = await executeCanvasTransform(
+          input,
+          target.derivedFrom.operationId,
+          target.derivedFrom.params,
+          transformRunner,
+        );
+        if (refreshTokenRef.current !== token) return;
+        if (result.ok) {
+          outcomes.set(targetId, { ok: true, output: result.output });
+          byId.set(targetId, { ...target, source: result.output });
+        } else {
+          outcomes.set(targetId, {
+            ok: false,
+            error: result.error ?? "Transform failed.",
+          });
+        }
+      }
+      if (refreshTokenRef.current !== token || outcomes.size === 0) return;
+      const nextItems = applyRefreshOutcomes(itemsRef.current, outcomes);
+      if (nextItems.some((item, index) => item !== itemsRef.current[index])) {
+        commitDocument(nextItems, edgesRef.current, {
+          selectedIds: selectedItemIds(),
+          focusedItemId: focusedItemIdRef.current,
+        });
+      }
+    },
+    [commitDocument, transformRunner, selectedItemIds],
+  );
+
   const commitText = useCallback(
     (itemId: string, text: string) => {
       const current = itemsRef.current.find((item) => item.id === itemId);
@@ -277,14 +389,15 @@ export const useCanvasItems = (
           focusedItemId: itemId,
         },
       );
+      void refreshDownstream(itemId);
     },
-    [cancelEditing, commitOperation],
+    [cancelEditing, commitOperation, refreshDownstream],
   );
 
   const commitCode = useCallback(
     (itemId: string, source: string) => {
       const current = itemsRef.current.find((item) => item.id === itemId);
-      if (!current || current.type !== "code") return;
+      if (!current || current.type !== "code" || current.derivedFrom) return;
       if (current.source === source) {
         cancelEditing(itemId);
         return;
@@ -308,8 +421,9 @@ export const useCanvasItems = (
           focusedItemId: itemId,
         },
       );
+      void refreshDownstream(itemId);
     },
-    [cancelEditing, commitOperation],
+    [cancelEditing, commitOperation, refreshDownstream],
   );
 
   const commitImageAlt = useCallback(
@@ -364,6 +478,12 @@ export const useCanvasItems = (
       const current = itemsRef.current.find((item) => item.id === itemId);
       if (!current || current.type !== "code") {
         return { ok: false, error: "Code card not found." };
+      }
+      if (current.derivedFrom) {
+        return {
+          ok: false,
+          error: "Detach this card before editing it directly.",
+        };
       }
       const result = formatCanvasJson(current.source);
       if (!result.ok || result.source === current.source) return result;
@@ -584,25 +704,94 @@ export const useCanvasItems = (
       selectedIds,
       focusedItemIdRef.current,
     );
-    commitOperation(
-      itemsRef.current.filter((item) => !selectedIds.has(item.id)),
-      {
-        editingItemId: null,
-        selectedIds: fallbackId ? new Set([fallbackId]) : new Set(),
-        focusedItemId: fallbackId,
-      },
+    const next = removeItemsWithEdges(
+      itemsRef.current,
+      edgesRef.current,
+      selectedIds,
     );
-  }, [commitOperation, selectedItemIds]);
+    commitDocument(next.items, next.edges, {
+      editingItemId: null,
+      selectedIds: fallbackId ? new Set([fallbackId]) : new Set(),
+      focusedItemId: fallbackId,
+    });
+  }, [commitDocument, selectedItemIds]);
 
   const duplicateSelection = useCallback(() => {
     const result = duplicateCanvasItems(itemsRef.current, selectedItemIds());
     if (result.duplicatedItemIds.length === 0) return;
-    commitOperation(result.items, {
+    // Copies are independent cards: derivation never carries over.
+    const duplicatedIds = new Set(result.duplicatedItemIds);
+    const nextItems = result.items.map((item) =>
+      duplicatedIds.has(item.id) ? withoutDerivation(item) : item,
+    );
+    commitDocument(nextItems, edgesRef.current, {
       editingItemId: null,
       selectedIds: new Set(result.duplicatedItemIds),
       focusedItemId: result.duplicatedItemIds[0],
     });
-  }, [commitOperation, selectedItemIds]);
+  }, [commitDocument, selectedItemIds]);
+
+  const quickTransform = useCallback(
+    async (
+      sourceId: string,
+      operationId: string,
+      params?: Record<string, unknown>,
+    ): Promise<string> => {
+      const source = itemsRef.current.find((item) => item.id === sourceId);
+      const input = source ? getTransformSourceContent(source) : null;
+      if (!source || input === null) {
+        throw new Error("Only text and code cards can be transformed.");
+      }
+      const operation = getTransformOperation(operationId);
+      const resolvedParams = params ?? resolveDefaultParams(operation);
+      const result = await executeCanvasTransform(
+        input,
+        operation.id,
+        resolvedParams,
+        transformRunner,
+      );
+      if (!result.ok) {
+        throw new Error(result.error ?? "Transform failed.");
+      }
+      const plan = planQuickTransform({
+        items: itemsRef.current,
+        edges: edgesRef.current,
+        sourceId,
+        operation: { id: operation.id, name: operation.name },
+        params: resolvedParams,
+        output: result.output,
+      });
+      commitDocument(plan.items, plan.edges, {
+        editingItemId: null,
+        selectedIds: new Set([plan.targetId]),
+        focusedItemId: plan.targetId,
+      });
+      return plan.targetId;
+    },
+    [commitDocument, transformRunner],
+  );
+
+  const detachDerived = useCallback(
+    (targetId: string) => {
+      const next = detachDerivedItem(
+        itemsRef.current,
+        edgesRef.current,
+        targetId,
+      );
+      commitDocument(next.items, next.edges, {
+        selectedIds: selectedItemIds(),
+        focusedItemId: targetId,
+      });
+    },
+    [commitDocument, selectedItemIds],
+  );
+
+  const requestTransform = useCallback(
+    (itemId: string) => {
+      onRequestTransform?.(itemId);
+    },
+    [onRequestTransform],
+  );
 
   const selectAll = useCallback(() => {
     if (itemsRef.current.length === 0) return;
@@ -777,13 +966,13 @@ export const useCanvasItems = (
         snapshot.focusedItemId && availableIds.has(snapshot.focusedItemId)
           ? snapshot.focusedItemId
           : (selectedIds.values().next().value ?? null);
-      applyItems(snapshot.items, {
+      applyDocument(snapshot.items, snapshot.edges ?? [], {
         editingItemId: null,
         selectedIds,
         focusedItemId: nextFocusedItemId,
       });
     },
-    [applyItems],
+    [applyDocument],
   );
 
   const undo = useCallback(() => {
@@ -808,6 +997,8 @@ export const useCanvasItems = (
       toggleCodeCollapsed,
       toggleCodeWrap,
       openCodeInTab,
+      detachDerived,
+      requestTransform,
       replaceImage,
       copyImage,
       downloadImage,
@@ -827,6 +1018,8 @@ export const useCanvasItems = (
       toggleCodeCollapsed,
       toggleCodeWrap,
       openCodeInTab,
+      detachDerived,
+      requestTransform,
       replaceImage,
       copyImage,
       downloadImage,
@@ -848,6 +1041,7 @@ export const useCanvasItems = (
 
   return {
     items,
+    edges,
     nodes,
     editingItemId,
     focusedItemId,
@@ -866,6 +1060,10 @@ export const useCanvasItems = (
     getSelectedItems,
     deleteSelection,
     duplicateSelection,
+    quickTransform,
+    detachDerived,
+    requestTransform,
+    refreshDownstream,
     selectAll,
     nudgeSelection,
     moveSelectionOneLayer,

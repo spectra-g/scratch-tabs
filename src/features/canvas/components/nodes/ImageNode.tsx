@@ -6,6 +6,7 @@ import { useCanvasCopyFeedback } from "../../hooks/useCanvasCopyFeedback";
 import type { CanvasImageFlowNode } from "../../utils/canvasFlowMapping";
 import { getCanvasItemAccessibleLabel } from "../../utils/canvasAccessibility";
 import { useCanvasNodeInteraction } from "./CanvasNodeInteractionContext";
+import { CanvasNodeHandles } from "./CanvasNodeHandles";
 import { ImageNodeActions } from "./ImageNodeActions";
 
 const ImageNodeComponent = ({
@@ -112,6 +113,7 @@ const ImageNodeComponent = ({
         beginEditing(id);
       }}
     >
+      <CanvasNodeHandles />
       <NodeResizer
         isVisible={selected && !isEditing}
         minWidth={MIN_IMAGE_ITEM_WIDTH}

@@ -9,6 +9,8 @@ export interface CanvasContextMenuPosition {
 interface CanvasContextMenuProps {
   position: CanvasContextMenuPosition;
   selectedCount: number;
+  canTransform: boolean;
+  onTransform: () => void;
   onDuplicate: () => void;
   onBringForward: () => void;
   onSendBackward: () => void;
@@ -19,6 +21,8 @@ interface CanvasContextMenuProps {
 export const CanvasContextMenu = ({
   position,
   selectedCount,
+  canTransform,
+  onTransform,
   onDuplicate,
   onBringForward,
   onSendBackward,
@@ -60,6 +64,17 @@ export const CanvasContextMenu = ({
       >
         Duplicate
       </button>
+      {canTransform ? (
+        <button
+          type="button"
+          role="menuitem"
+          className="canvas-context-menu-item"
+          data-testid="canvas-context-transform"
+          onClick={() => run(onTransform)}
+        >
+          Quick transform...
+        </button>
+      ) : null}
       <button
         type="button"
         role="menuitem"

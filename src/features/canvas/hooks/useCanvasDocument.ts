@@ -4,6 +4,7 @@ import { useRootStore } from "../../../stores/rootStore";
 import { canvasDocumentManager } from "../services/CanvasDocumentManager";
 import type {
   ActiveCanvasDocument,
+  CanvasEdge,
   CanvasItem,
   CanvasSaveStatus,
   CanvasViewport,
@@ -110,6 +111,30 @@ export const useCanvasDocument = (tab: Tab) => {
     [tabId],
   );
 
+  const updateDocument = useCallback(
+    (items: CanvasItem[], edges: CanvasEdge[]) => {
+      setError(null);
+      const document = canvasDocumentManager.setItemsAndEdges(
+        tabId,
+        items,
+        edges,
+      );
+      setActiveDocument((current) =>
+        current
+          ? {
+              ...current,
+              document: {
+                ...document,
+                items: document.items.map((item) => ({ ...item })),
+                edges: document.edges.map((edge) => ({ ...edge })),
+              },
+            }
+          : current,
+      );
+    },
+    [tabId],
+  );
+
   const updateItems = useCallback(
     (items: CanvasItem[]) => {
       setError(null);
@@ -210,6 +235,7 @@ export const useCanvasDocument = (tab: Tab) => {
     isResolvingConflict,
     isRetryingSave,
     saveViewport,
+    updateDocument,
     updateItems,
     reloadAfterConflict,
     takeOverAfterConflict,
