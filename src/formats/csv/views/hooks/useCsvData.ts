@@ -43,6 +43,7 @@ export interface UseCsvDataReturn {
   demoteHeaderToFirstRow: () => void;
   pasteCells: (startRowId: string, startColumnId: string, pastedGrid: string[][]) => void;
   insertColumnsFromGrid: (targetColumnId: string, columnNames: string[], columnRows: string[][]) => void;
+  fillDown: (rowId: string, columnId: string) => number;
 
   // Undo/Redo (simplified)
   canUndo: boolean;
@@ -1134,6 +1135,51 @@ export const useCsvData = (
 
   const isValid = diagnostics.every((d) => d.type !== "error");
 
+  // Copy-down (fill down): copy the source cell's value (empty or not) into
+  // every cell below it in the same column. Overwrites existing values.
+  // Returns the number of cells actually changed. No-op (0, no history entry)
+  // when ids are unknown, source is the last row, or everything below
+  // already matches.
+  const fillDown = useCallback(
+    (rowId: string, columnId: string): number => {
+      const sourceRowIndex = csvState.data.findIndex(
+        (row) => row.id === rowId,
+      );
+      const columnIndex = csvState.columns.findIndex(
+        (col) => col.id === columnId,
+      );
+      if (sourceRowIndex === -1 || columnIndex === -1) return 0;
+      if (sourceRowIndex >= csvState.data.length - 1) return 0;
+
+      const sourceValue =
+        csvState.data[sourceRowIndex].cells[columnIndex]?.value ?? "";
+
+      let changedCount = 0;
+      const newData = csvState.data.map((row, index) => {
+        if (index <= sourceRowIndex) return row;
+        const currentValue = row.cells[columnIndex]?.value ?? "";
+        const hasCell = row.cells.length > columnIndex;
+        if (hasCell && currentValue === sourceValue) return row;
+        changedCount += 1;
+        const newCells = [...row.cells];
+        while (newCells.length <= columnIndex) {
+          newCells.push({ value: "", isValid: true });
+        }
+        newCells[columnIndex] = { value: sourceValue, isValid: true };
+        return { ...row, cells: newCells };
+      });
+
+      if (changedCount === 0) return 0;
+
+      const newState = { ...csvState, data: newData };
+      setCsvState(newState);
+      saveToHistory(newState);
+      syncToContent(newState);
+      return changedCount;
+    },
+    [csvState, saveToHistory, syncToContent],
+  );
+
   return {
     // Data state
     data: csvState.data,
@@ -1161,6 +1207,7 @@ export const useCsvData = (
     demoteHeaderToFirstRow,
     pasteCells,
     insertColumnsFromGrid,
+    fillDown,
 
     // Undo/Redo
     canUndo: historyIndex > 0,

@@ -16,6 +16,7 @@ import {
   SortAsc,
   SortDesc,
   ArrowUpDown,
+  ArrowDown,
   Copy,
   BarChart3,
   Eye,
@@ -165,6 +166,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
     demoteHeaderToFirstRow,
     detectedDelimiter,
     changeDelimiter,
+    fillDown,
     filters,
     filterMatchMode,
     filteredData: typeFilteredRows,
@@ -675,6 +677,30 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
     setContextMenu(null);
     setSelectedCells(new Set());
   }, [canShiftRight, selectedCells, insertAndShift]);
+
+  // Rows below the right-clicked cell in the same column (data order).
+  // Works for empty and non-empty source values; 0 means nothing to fill.
+  const fillDownRowCount = useMemo(() => {
+    if (!contextMenu?.rowId) return 0;
+    const sourceIndex = data.findIndex((row) => row.id === contextMenu.rowId);
+    if (sourceIndex === -1) return 0;
+    return Math.max(0, data.length - sourceIndex - 1);
+  }, [contextMenu, data]);
+
+  const canFillDown = useCallback(() => {
+    return (
+      contextMenu?.kind === "cell" &&
+      !!contextMenu?.rowId &&
+      fillDownRowCount > 0
+    );
+  }, [contextMenu, fillDownRowCount]);
+
+  // Handle fill down (copy down) action
+  const handleFillDown = useCallback(() => {
+    if (!contextMenu?.rowId || !canFillDown()) return;
+    fillDown(contextMenu.rowId, contextMenu.columnId);
+    setContextMenu(null);
+  }, [contextMenu, canFillDown, fillDown]);
 
   // Handle copy selected cells
   const handleCopySelectedCells = useCallback(async () => {
@@ -1916,6 +1942,29 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
                 <Minus size={14} className="mr-2" />
                 <span>Clear ({selectedCells.size} cell{selectedCells.size !== 1 ? 's' : ''})</span>
               </button>
+              {contextMenu.kind === "cell" && (
+                <button
+                  onClick={handleFillDown}
+                  disabled={!canFillDown()}
+                  data-testid="fill-down-button"
+                  className={`flex items-center w-full px-3 py-2 text-sm text-left transition-colors ${canFillDown()
+                    ? 'text-main hover:bg-element-hover'
+                    : 'text-muted cursor-not-allowed'
+                    }`}
+                  title={
+                    canFillDown()
+                      ? `Copy this cell's value into the ${fillDownRowCount} cell${fillDownRowCount !== 1 ? 's' : ''} below in the same column`
+                      : 'No rows below to fill'
+                  }
+                >
+                  <ArrowDown size={14} className="mr-2" />
+                  <span>
+                    {fillDownRowCount > 0
+                      ? `Copy down (${fillDownRowCount} row${fillDownRowCount !== 1 ? 's' : ''})`
+                      : 'Copy down'}
+                  </span>
+                </button>
+              )}
               <div className="border-t border-base my-1" />
               <button
                 onClick={handleShiftRight}
