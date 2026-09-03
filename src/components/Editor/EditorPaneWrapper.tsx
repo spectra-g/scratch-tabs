@@ -22,6 +22,11 @@ import { useMacroEngine } from "../Macro/useMacroEngine";
 import { useMacroStore } from "../../stores/macroStore";
 import { QuickTransformModalWrapper } from "../QuickTransform/QuickTransformModalWrapper";
 import { getTabContentKind } from "../../utils/tabContentKind";
+import {
+  isNonEmptyRange,
+  resolvePipelineApplyRange,
+  resolvePipelineInitialContent,
+} from "./pipelineSelection";
 
 interface EditorPaneWrapperProps {
   side: "left" | "right";
@@ -31,7 +36,6 @@ const PreviewLoadingFallback = () => (
   <div className="text-muted p-4 animate-pulse">Loading Preview...</div>
 );
 
-// Wrapper component for PipelineEditorModal that reads from the store
 const PipelineModalWrapper: React.FC<{ onApply: (content: string, range?: EditorRange | null) => void }> = ({ onApply }) => {
   const { isOpen, content, selectionRange, selectedText, closeModal } = usePipelineStore();
 
@@ -39,8 +43,8 @@ const PipelineModalWrapper: React.FC<{ onApply: (content: string, range?: Editor
 
   return (
     <PipelineEditorModal
-      initialContent={selectionRange ? selectedText : content}
-      onApply={(newContent) => onApply(newContent, selectionRange)}
+      initialContent={resolvePipelineInitialContent(content, selectedText, selectionRange)}
+      onApply={(newContent) => onApply(newContent, resolvePipelineApplyRange(selectionRange, selectedText))}
       onClose={closeModal}
     />
   );
@@ -144,9 +148,9 @@ export const EditorPaneWrapper: React.FC<EditorPaneWrapperProps> = ({
   const handlePipelineApply = useCallback((content: string, range?: EditorRange | null) => {
     if (!activeTabId) return;
 
-    if (range) {
+    if (isNonEmptyRange(range)) {
       // Apply only to the selected range
-      modelManager.replaceModelRangeWithUndo(activeTabId, content, range);
+      modelManager.replaceModelRangeWithUndo(activeTabId, content, range!);
     } else {
       // Update tab content in store for full content replacement
       updateTabState(activeTabId, {

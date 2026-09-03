@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react";
 import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
+import { EditorRange } from "../types";
 import { useAIStore } from "../stores/aiStore";
 import { usePipelineStore } from "../stores/pipelineStore";
 import { useQuickTransformStore } from "../stores/quickTransformStore";
@@ -13,6 +14,31 @@ interface UseEditorActionsProps {
   isCodegenReady: boolean;
   isCodegenGenerating: boolean;
 }
+
+interface TransformationsModalArgs {
+  content: string;
+  selectedText: string;
+  selectionRange: EditorRange | null;
+}
+
+interface SelectionLike {
+  isEmpty(): boolean;
+}
+
+export const buildTransformationsModalArgs = <TSelection extends SelectionLike>(
+  fullContent: string,
+  selection: TSelection | null | undefined,
+  getValueInRange: (selection: TSelection) => string,
+): TransformationsModalArgs => {
+  const hasSelection = !!selection && !selection.isEmpty();
+  return {
+    content: fullContent,
+    selectedText: hasSelection ? getValueInRange(selection as TSelection) : "",
+    selectionRange: hasSelection
+      ? (selection as unknown as EditorRange)
+      : null,
+  };
+};
 
 export const useEditorActions = ({
   editor,
@@ -112,14 +138,16 @@ export const useEditorActions = ({
           if (!model || model.isDisposed()) return;
 
           const selection = ed.getSelection();
-          let selectedText = "";
-          let fullContent = model.getValue();
+          const fullContent = model.getValue();
+          const args = buildTransformationsModalArgs(fullContent, selection, (
+            range,
+          ) => model.getValueInRange(range));
 
-          if (selection && !selection.isEmpty()) {
-            selectedText = model.getValueInRange(selection);
-          }
-
-          openPipelineModal(fullContent, selectedText, selection);
+          openPipelineModal(
+            args.content,
+            args.selectedText,
+            args.selectionRange,
+          );
         } catch (error) {
           console.warn(
             "[useEditorActions] Failed to open transformations pipeline:",
