@@ -52,6 +52,14 @@ import { MaskedCell } from "./MaskedCell";
 import { isSensitiveHeader } from "../utils/sensitiveUtils";
 import { createCellKey, parseCellKey } from "../utils/cellUtils";
 import { canPerformShiftRight, getShiftRightCellIdentifiers } from "../utils/shiftRightUtils";
+import { CsvFindReplaceBar } from "./CsvFindReplaceBar";
+import {
+  buildReplaceUpdates,
+  cellMatchesFind,
+  findReplaceMatches,
+  ReplaceScope,
+  summarizeReplaceMatches,
+} from "../utils/findReplace";
 
 interface DuplicateGroup {
   rowString: string;
@@ -103,6 +111,14 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [searchMatches, setSearchMatches] = useState<SearchMatch[]>([]);
   const [searchActiveIndex, setSearchActiveIndex] = useState(0);
+
+  // Find & Replace state (find text reuses the search bar)
+  const [showReplace, setShowReplace] = useState(false);
+  const [replaceValue, setReplaceValue] = useState("");
+  const [replaceScope, setReplaceScope] = useState<ReplaceScope>("all");
+  const [replaceColumnId, setReplaceColumnId] = useState("");
+  const [matchCase, setMatchCase] = useState(false);
+  const [exactCell, setExactCell] = useState(false);
 
   // Context menu state
   const [contextMenu, setContextMenu] = useState<{
@@ -804,7 +820,10 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
     setSelectedCells(new Set());
   }, [selectedCells, updateCells]);
 
-  // Close context menu and clear table selection when clicking outside the table.
+  // Close context menu and clear table selection when clicking outside the viewer.
+  // Clicks on viewer chrome (toolbar, filter bar, replace bar) preserve the
+  // selection so scope-aware actions like selection-scoped Find & Replace keep
+  // working after interacting with the toolbar.
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (contextMenu) {
@@ -819,6 +838,7 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
       const targetElement =
         target instanceof Element ? target : target.parentElement;
       if (targetElement?.closest("[data-testid='csv-context-menu']")) return;
+      if (targetElement?.closest("[data-testid='csv-table-viewer']")) return;
 
       clearSelection();
     };
@@ -1285,19 +1305,21 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
   });
 
   // Search functionality (moved here to access filteredData and rowVirtualizer)
-  const performSearch = useCallback((query: string) => {
-    if (!query.trim()) {
+  // Matching honors the Find & Replace toggles so the highlighted search
+  // results and the replace preview stay in sync.
+  const performSearch = useCallback((query: string, options?: { matchCase?: boolean; exactCell?: boolean }) => {
+    const { matchCase: caseSensitive = false, exactCell: wholeCell = false } = options ?? {};
+    if (!query.trim() && !(wholeCell && query === "")) {
       setSearchMatches([]);
       setSearchActiveIndex(0);
       return;
     }
 
     const matches: SearchMatch[] = [];
-    const lowerQuery = query.toLowerCase();
 
     filteredData.forEach((row, rowIndex) => {
       row.cells.forEach((cell, cellIndex) => {
-        if (cell.value && cell.value.toLowerCase().includes(lowerQuery)) {
+        if (cellMatchesFind(cell.value ?? "", query, { matchCase: caseSensitive, exactCell: wholeCell })) {
           const column = columns[cellIndex];
           if (column) {
             matches.push({
@@ -1340,8 +1362,48 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
   const handleSearchChange = useCallback((query: string) => {
     setSearchQuery(query);
     // Pass the new query directly, as the state update is async
-    performSearch(query);
-  }, [performSearch]);
+    performSearch(query, { matchCase, exactCell });
+  }, [performSearch, matchCase, exactCell]);
+
+  // Re-run search when the match toggles change so highlights track options
+  const handleMatchCaseChange = useCallback((value: boolean) => {
+    setMatchCase(value);
+    performSearch(searchQuery, { matchCase: value, exactCell });
+  }, [performSearch, searchQuery, exactCell]);
+
+  const handleExactCellChange = useCallback((value: boolean) => {
+    setExactCell(value);
+    performSearch(searchQuery, { matchCase, exactCell: value });
+  }, [performSearch, searchQuery, matchCase]);
+
+  // Find & Replace preview: same matcher as search, narrowed by scope.
+  // Computed against the filtered (visible) rows so the count matches the grid.
+  const effectiveReplaceColumnId = replaceColumnId
+    || selectedCell?.columnId
+    || columns[0]?.id
+    || "";
+  const replaceMatches = useMemo(() => findReplaceMatches(filteredData, columns, {
+    find: searchQuery,
+    replace: replaceValue,
+    scope: replaceScope,
+    columnId: effectiveReplaceColumnId,
+    selectionKeys: selectedCells,
+    matchCase,
+    exactCell,
+  }), [filteredData, columns, searchQuery, replaceValue, replaceScope, effectiveReplaceColumnId, selectedCells, matchCase, exactCell]);
+  const replaceSummary = useMemo(
+    () => summarizeReplaceMatches(replaceMatches),
+    [replaceMatches],
+  );
+
+  // Single updateCells() call = single undo step (same pattern as fillDown).
+  // Works for value->empty and empty->value since replace values pass through untouched.
+  const handleReplaceAll = useCallback(() => {
+    if (replaceMatches.length === 0) return;
+    updateCells(buildReplaceUpdates(replaceMatches));
+    // Refresh highlights against the new data
+    performSearch(searchQuery, { matchCase, exactCell });
+  }, [replaceMatches, updateCells, performSearch, searchQuery, matchCase, exactCell]);
 
   // Search navigation functions
   const handleSearchNext = useCallback(() => {
@@ -1569,6 +1631,8 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
         onSearchNext={handleSearchNext}
         onSearchPrevious={handleSearchPrevious}
         onClearSearch={handleClearSearch}
+        showReplace={showReplace}
+        onToggleReplace={setShowReplace}
         snapshots={snapshots}
         showSnapshotsPanel={showSnapshotsPanel}
         onToggleSnapshotsPanel={setShowSnapshotsPanel}
@@ -1620,6 +1684,28 @@ export const CsvTableViewer: React.FC<SmartViewProps> = ({
         onMatchModeChange={setFilterMatchMode}
         onTogglePresetsPanel={setShowPresetsPanel}
       />
+
+      {/* Find & Replace Bar */}
+      {showReplace && (
+        <CsvFindReplaceBar
+          columns={columns}
+          replaceValue={replaceValue}
+          onReplaceChange={setReplaceValue}
+          scope={replaceScope}
+          onScopeChange={setReplaceScope}
+          columnId={effectiveReplaceColumnId}
+          onColumnChange={setReplaceColumnId}
+          matchCase={matchCase}
+          onMatchCaseChange={handleMatchCaseChange}
+          exactCell={exactCell}
+          onExactCellChange={handleExactCellChange}
+          previewText={replaceSummary.text}
+          matchCount={replaceSummary.cellCount}
+          selectionCount={selectedCells.size}
+          onReplaceAll={handleReplaceAll}
+          onClose={() => setShowReplace(false)}
+        />
+      )}
 
       {/* Saved Filter Presets Panel */}
       {showPresetsPanel && (

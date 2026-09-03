@@ -41,6 +41,10 @@ interface CsvToolbarProps {
   onSearchPrevious: () => void;
   onClearSearch: () => void;
 
+  // Find & Replace
+  showReplace: boolean;
+  onToggleReplace: (show: boolean) => void;
+
   // Snapshots
   snapshots: CsvSnapshot[];
   showSnapshotsPanel: boolean;
@@ -96,6 +100,8 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
   onSearchNext,
   onSearchPrevious,
   onClearSearch,
+  showReplace,
+  onToggleReplace,
   snapshots,
   showSnapshotsPanel,
   onToggleSnapshotsPanel,
@@ -148,14 +154,14 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
   }, [onExportMarkdown]);
 
   return (
-    <div className="flex-none border-b border-base p-3 flex items-center justify-between bg-canvas">
-      <div className="flex items-center space-x-2">
+    <div className="flex-none border-b border-base p-3 flex items-center justify-between gap-x-3 gap-y-2 flex-wrap bg-canvas">
+      <div className="flex items-center gap-2 flex-wrap min-w-0">
         {/* Undo/Redo */}
         <button
           onClick={onUndo}
           disabled={!canUndo}
           title="Undo"
-          className={`p-2 rounded ${canUndo ? "hover:bg-element-hover" : "opacity-50 cursor-not-allowed"}`}
+          className={`p-2 rounded shrink-0 ${canUndo ? "hover:bg-element-hover" : "opacity-50 cursor-not-allowed"}`}
           data-testid="undo-button"
         >
           <RotateCcw size={16} />
@@ -164,16 +170,16 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
           onClick={onRedo}
           disabled={!canRedo}
           title="Redo"
-          className={`p-2 rounded transform scale-x-[-1] ${canRedo ? "hover:bg-element-hover" : "opacity-50 cursor-not-allowed"}`}
+          className={`p-2 rounded transform scale-x-[-1] shrink-0 ${canRedo ? "hover:bg-element-hover" : "opacity-50 cursor-not-allowed"}`}
           data-testid="redo-button"
         >
           <RotateCcw size={16} />
         </button>
 
-        <div className="w-px h-6 bg-element mx-2" />
+        <div className="w-px h-6 bg-element shrink-0" />
 
         {/* Search */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2 shrink-0">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search size={16} className="text-main" />
@@ -207,7 +213,7 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
 
           {searchQuery && (
             <>
-              <span className="text-sm text-secondary" data-testid="search-match-count">
+              <span className="text-sm text-secondary whitespace-nowrap" data-testid="search-match-count">
                 {searchMatchCount > 0
                   ? `${searchActiveIndex + 1} of ${searchMatchCount}`
                   : "0 matches"
@@ -236,15 +242,25 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
               </div>
             </>
           )}
+
+          <button
+            onClick={() => onToggleReplace(!showReplace)}
+            title="Find & Replace"
+            aria-pressed={showReplace}
+            className={`p-2 rounded shrink-0 ${showReplace ? "bg-primary/20 text-primary" : "hover:bg-element-hover"}`}
+            data-testid="toggle-replace"
+          >
+            <Replace size={16} />
+          </button>
         </div>
 
-        <div className="w-px h-6 bg-element mx-2" />
+        <div className="w-px h-6 bg-element shrink-0" />
 
         {/* Snapshots */}
         <button
           onClick={() => onCreateSnapshot(`Snapshot ${snapshots.length + 1}`)}
           title="Create snapshot"
-          className="p-2 rounded hover:bg-element-hover"
+          className="p-2 rounded hover:bg-element-hover shrink-0"
           data-testid="create-snapshot-button"
         >
           <Camera size={16} />
@@ -253,28 +269,28 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
           <button
             onClick={() => onToggleSnapshotsPanel(!showSnapshotsPanel)}
             title="Manage snapshots"
-            className={`p-2 rounded ${showSnapshotsPanel ? "bg-primary/20 text-primary" : "hover:bg-element-hover"}`}
+            className={`p-2 rounded shrink-0 ${showSnapshotsPanel ? "bg-primary/20 text-primary" : "hover:bg-element-hover"}`}
           >
             <History size={16} />
           </button>
         )}
 
-        <div className="w-px h-6 bg-element mx-2" />
+        <div className="w-px h-6 bg-element shrink-0" />
 
         <button
           onClick={onReconcileTab}
           title="Reconcile this CSV tab with another tab"
-          className="flex items-center space-x-1 px-3 py-2 rounded hover:bg-element-hover"
+          className="flex items-center space-x-1 px-3 py-2 rounded hover:bg-element-hover shrink-0"
           data-testid="csv-reconcile-tab"
         >
           <Database size={16} />
-          <span className="text-sm">Reconcile data</span>
+          <span className="text-sm whitespace-nowrap">Reconcile data</span>
         </button>
 
-        <div className="w-px h-6 bg-element mx-2" />
+        <div className="w-px h-6 bg-element shrink-0" />
 
         {/* Export Dropdown */}
-        <div className="relative">
+        <div className="relative shrink-0">
           <button
             onClick={() => setShowExportMenu(!showExportMenu)}
             title="Export data"
@@ -398,15 +414,15 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
           )}
         </div>
 
-        <div className="w-px h-6 bg-element mx-2" />
+        <div className="w-px h-6 bg-element shrink-0" />
 
         {/* Header management */}
-        <div className="flex items-center space-x-1">
+        <div className="flex items-center gap-1 shrink-0">
           {rowCount > 0 && (
             <button
               onClick={onPromoteFirstRowToHeader}
               title="Use the first data row as column headers"
-              className="px-3 py-1 rounded text-sm bg-element text-main hover:bg-element-hover"
+              className="px-3 py-1 rounded text-sm bg-element text-main hover:bg-element-hover whitespace-nowrap"
               data-testid="promote-row-to-header"
             >
               Row 1 → Header
@@ -415,18 +431,18 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
           <button
             onClick={onDemoteHeaderToFirstRow}
             title="Move column headers down as first data row"
-            className="px-3 py-1 rounded text-sm bg-element text-main hover:bg-element-hover"
+            className="px-3 py-1 rounded text-sm bg-element text-main hover:bg-element-hover whitespace-nowrap"
             data-testid="demote-header-to-row"
           >
             Header → Row 1
           </button>
         </div>
 
-        <div className="w-px h-6 bg-element mx-2" />
+        <div className="w-px h-6 bg-element shrink-0" />
 
         {/* Delimiter selector */}
-        <div className="flex items-center space-x-1">
-          <span className="text-xs text-secondary">Delimiter:</span>
+        <div className="flex items-center gap-1 shrink-0">
+          <span className="text-xs text-secondary whitespace-nowrap">Delimiter:</span>
           <select
             value={currentDelimiter}
             onChange={(e) => onChangeDelimiter(e.target.value)}
@@ -441,7 +457,7 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
           </select>
         </div>
 
-        <div className="w-px h-6 bg-element mx-2" />
+        <div className="w-px h-6 bg-element shrink-0" />
 
         {/* Duplicates Controls */}
         {duplicateGroups.length === 0 ? (
@@ -449,14 +465,14 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
             <button
               onClick={onFindDuplicates}
               title="Find duplicate rows"
-              className="p-2 rounded hover:bg-element-hover"
+              className="p-2 rounded hover:bg-element-hover shrink-0"
               data-testid="find-duplicates-button"
             >
               <Replace size={16} />
             </button>
             {duplicateSearchPerformed && (
               <span
-                className="text-sm text-success"
+                className="text-sm text-success whitespace-nowrap"
                 data-testid="duplicate-message"
               >
                 No duplicates found
@@ -464,13 +480,13 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
             )}
           </>
         ) : (
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={() => onToggleDuplicatesOnly(!showDuplicatesOnly)}
               title={
                 showDuplicatesOnly ? "Show all rows" : "Show only duplicates"
               }
-              className={`px-3 py-1 rounded text-sm ${showDuplicatesOnly
+              className={`px-3 py-1 rounded text-sm whitespace-nowrap ${showDuplicatesOnly
                 ? "bg-warning/20 text-warning hover:bg-warning/30"
                 : "bg-element text-main hover:bg-element-hover"
                 }`}
@@ -480,14 +496,14 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
             <button
               onClick={onRemoveDuplicates}
               title="Remove duplicate rows (keep first occurrence)"
-              className="px-3 py-1 rounded text-sm bg-danger/20 text-danger hover:bg-danger/30"
+              className="px-3 py-1 rounded text-sm bg-danger/20 text-danger hover:bg-danger/30 whitespace-nowrap"
             >
               Remove Duplicates
             </button>
             <button
               onClick={onClearDuplicates}
               title="Clear duplicate analysis"
-              className="p-1 rounded hover:bg-element-hover text-main"
+              className="p-1 rounded hover:bg-element-hover text-main shrink-0"
             >
               <X size={14} />
             </button>
@@ -496,12 +512,12 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
       </div>
 
       {/* Status Info */}
-      <div className="flex items-center space-x-4 text-sm text-main">
-        <span data-testid="row-column-status">
+      <div className="flex items-center gap-4 shrink-0 text-sm text-main">
+        <span className="whitespace-nowrap" data-testid="row-column-status">
           {rowCount} rows × {columnCount} columns
         </span>
         {duplicateGroups.length > 0 && (
-          <span className="text-warning">
+          <span className="text-warning whitespace-nowrap">
             {duplicateGroups.reduce((sum, group) => sum + group.count, 0)}{" "}
             duplicate rows in {duplicateGroups.length} groups
           </span>
@@ -512,7 +528,7 @@ export const CsvToolbar: React.FC<CsvToolbarProps> = ({
           ) : (
             <AlertTriangle size={16} className="text-warning" />
           )}
-          <span className="text-xs">
+          <span className="text-xs whitespace-nowrap">
             {diagnostics.filter((d) => d.type === "error").length} errors,{" "}
             {diagnostics.filter((d) => d.type === "warning").length} warnings
           </span>
