@@ -1276,6 +1276,79 @@ export class CanvasActions {
     ).not.toContainText("changedOutsideCanvas");
   }
 
+  async openQuickTransformForCodeCard() {
+    await this.codeCard().getByTestId("canvas-code-transform").click();
+    await expect(
+      this.page.getByTestId("canvas-transform-dialog"),
+    ).toBeVisible();
+  }
+
+  async searchCanvasTransform(query: string) {
+    const search = this.page.getByTestId("canvas-transform-search");
+    await expect(search).toBeVisible();
+    await search.fill(query);
+  }
+
+  async runCanvasTransform(operationId: string) {
+    await this.markPendingSceneChange();
+    await this.page.getByTestId(`canvas-transform-op-${operationId}`).click();
+    await this.page.getByTestId("canvas-transform-run").click();
+    await expect(
+      this.page.getByTestId("canvas-transform-dialog"),
+    ).not.toBeVisible();
+  }
+
+  private derivedCodeCard() {
+    return this.page.locator('[data-item-type="code"][data-derived="true"]');
+  }
+
+  async expectDerivedCodeCardContaining(text: string) {
+    await expect(
+      this.derivedCodeCard().filter({ hasText: text }),
+    ).toBeVisible();
+  }
+
+  async expectDerivedBadgeToShow(name: string) {
+    await expect(
+      this.page.getByTestId("canvas-code-derived-badge"),
+    ).toContainText(name);
+  }
+
+  async expectTransformEdgeCount(count: number) {
+    await expect(this.page.locator(".react-flow__edge")).toHaveCount(count);
+  }
+
+  async editCodeCardContaining(current: string, next: string) {
+    const card = this.page
+      .locator('[data-item-type="code"]')
+      .filter({ hasText: current })
+      .first();
+    await expect(card).toBeVisible();
+    await this.markPendingSceneChange();
+    await card.dblclick();
+    const editor = this.page.getByTestId("canvas-code-editor");
+    await expect(editor).toBeVisible();
+    await editor.fill(next);
+    await editor.press("Control+Enter");
+    await expect(editor).toHaveCount(0);
+  }
+
+  async detachDerivedCard() {
+    await this.markPendingSceneChange();
+    await this.page.getByTestId("canvas-code-detach").click();
+    await expect(
+      this.page.getByTestId("canvas-code-derived-badge"),
+    ).toHaveCount(0);
+  }
+
+  async expectCodeCardContainingEditable(text: string) {
+    const card = this.page
+      .locator('[data-item-type="code"]')
+      .filter({ hasText: text })
+      .first();
+    await expect(card).toHaveAttribute("data-derived", "false");
+  }
+
   async multiSelectTextCards(firstText: string, secondText: string) {
     const first = this.textCardContaining(firstText).first();
     const second = this.textCardContaining(secondText).first();

@@ -367,11 +367,73 @@ When(
     await this.canvas.openCodeCardInTextTab();
   },
 );
-
 When(
   "I edit the opened code tab and return to the Canvas",
   async function (this: E2EWorld) {
     await this.canvas.editOpenedCodeTabWithoutChangingCanvas();
+  },
+);
+
+When(
+  "I open Quick Transform for the Canvas code card",
+  async function (this: E2EWorld) {
+    await this.canvas.openQuickTransformForCodeCard();
+  },
+);
+
+When(
+  "I search for {string} in the Canvas transform dialog",
+  async function (this: E2EWorld, query: string) {
+    await this.canvas.searchCanvasTransform(query);
+  },
+);
+
+When(
+  "I run the Canvas transform {string}",
+  async function (this: E2EWorld, operationId: string) {
+    await this.canvas.runCanvasTransform(operationId);
+  },
+);
+
+Then(
+  "the Canvas derived card should contain {string}",
+  async function (this: E2EWorld, text: string) {
+    await this.canvas.expectDerivedCodeCardContaining(text);
+  },
+);
+
+Then(
+  "the Canvas transform badge should show {string}",
+  async function (this: E2EWorld, name: string) {
+    await this.canvas.expectDerivedBadgeToShow(name);
+  },
+);
+
+Then(
+  "{int} Canvas transform edges should be visible",
+  async function (this: E2EWorld, count: number) {
+    await this.canvas.expectTransformEdgeCount(count);
+  },
+);
+
+When(
+  "I edit the Canvas code card containing {string} to contain {string}",
+  async function (this: E2EWorld, current: string, next: string) {
+    await this.canvas.editCodeCardContaining(current, next);
+  },
+);
+
+When(
+  "I detach the Canvas derived card",
+  async function (this: E2EWorld) {
+    await this.canvas.detachDerivedCard();
+  },
+);
+
+Then(
+  "the Canvas card containing {string} should be editable",
+  async function (this: E2EWorld, text: string) {
+    await this.canvas.expectCodeCardContainingEditable(text);
   },
 );
 

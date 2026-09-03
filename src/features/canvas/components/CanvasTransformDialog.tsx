@@ -80,7 +80,7 @@ export const CanvasTransformDialog = ({
         if (event.key === "Escape") onClose();
       }}
     >
-      <div className="flex max-h-[80vh] w-full max-w-lg flex-col overflow-hidden rounded-lg border border-base bg-surface shadow-xl">
+      <div className="flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-lg border border-base bg-surface shadow-xl">
         <header className="flex items-center justify-between border-b border-base px-4 py-3">
           <h2 className="text-sm font-semibold text-main">
             Quick transform <span className="text-muted">{sourceTitle}</span>
@@ -109,7 +109,7 @@ export const CanvasTransformDialog = ({
           />
         </div>
 
-        <div className="min-h-0 flex-1 overflow-auto px-2 py-2">
+        <div className="min-h-32 flex-1 overflow-auto px-2 py-2">
           {operations.length === 0 ? (
             <p className="px-2 py-4 text-sm text-muted" data-testid="canvas-transform-empty">
               No transforms match this search.
@@ -143,8 +143,8 @@ export const CanvasTransformDialog = ({
           )}
         </div>
 
-        {selected ? (
-          <div className="max-h-48 overflow-auto border-t border-base px-4 py-3">
+        {selected && selected.parameters.length > 0 ? (
+          <div className="max-h-80 shrink-0 overflow-auto border-t border-base px-4 py-3">
             <CanvasTransformParamsForm
               parameters={selected.parameters}
               values={params}
