@@ -15,12 +15,35 @@ export interface Release {
   categories: ReleaseCategory[];
 }
 
-export const APP_VERSION = '1.47.0';
+export const APP_VERSION = '1.48.0';
 
 export const RELEASES: Release[] = [
   {
-    "version": "1.47.0",
+    "version": "1.48.0",
     "type": "latest",
+    "date": "2026-09-03",
+    "headline": "Canvas Quick Transform + CSV Find and Replace",
+    "summary": "Run any pipeline operation right from a Canvas card, plus CSV find and replace and one-click copy down for faster table cleanup.",
+    "categories": [
+      {
+        "name": "New Features",
+        "changes": [
+          "**Canvas quick transform:** Search any pipeline operation from a text or code card, tweak params, and run it with the result placed as a linked card beside the source",
+          "**CSV find and replace:** Replace across the whole table, one column, or just the selected cells, with match case and whole cell options",
+          "**CSV copy down:** Right click any cell to copy its value into every cell below it in the same column, with full undo support"
+        ]
+      },
+      {
+        "name": "Bug Fixes",
+        "changes": [
+          "**Pipeline menu with no selection:** Right clicking with nothing selected now opens the pipeline with full tab content instead of an empty input"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.47.0",
+    "type": "release",
     "date": "2026-08-25",
     "headline": "Spin the Wheel + Canvas & Storage Polish",
     "summary": "A new Spin the Wheel tablet for weighted random picks with history, snapshots, and shareable links - plus Canvas drag-drop polish and a Storage panel showing what's using space.",

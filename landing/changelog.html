@@ -130,36 +130,44 @@
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
 
-        <!-- Version 1.47.0 -->
+        <!-- Version 1.48.0 -->
         <div class="changelog-entry latest">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
             <div class="flex items-center gap-3">
-              <h2 class="text-2xl font-bold text-white">V1.47.0</h2>
+              <h2 class="text-2xl font-bold text-white">V1.48.0</h2>
               <span class="badge latest">LATEST</span>
             </div>
-            <span class="text-gray-500 text-xs font-mono">08/25/2026</span>
+            <span class="text-gray-500 text-xs font-mono">09/03/2026</span>
           </div>
-          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">SPIN THE WHEEL + CANVAS & STORAGE POLISH</h3>
+          <h3 class="text-lg font-bold text-emerald-500 mb-4 font-mono">CANVAS QUICK TRANSFORM + CSV FIND AND REPLACE</h3>
           <div class="changelog-content text-gray-400 text-sm leading-relaxed">
-            <p class="mb-4">Spin the Wheel picks winners from a list of entries with fair, crypto-random weighted spins, celebration confetti, and a winner modal that can spin again or remove the winner and respin. Every spin lands in a history log, entries can be snapshotted and restored, and results export as an image or shareable link. This release also smooths out Canvas drag-and-drop and adds a sidebar Storage panel so you can see which tabs are eating your quota.</p>
+            <p class="mb-4">Canvas cards can now run pipeline operations in place from a quick search dialog, with results landing as a linked card next to the source. CSV tables get a proper find and replace bar and a copy down action for filling columns fast. This update also fixes the pipeline menu opening empty when you right click with no text selected.</p>
 
             <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># new_features</h4>
             <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Spin the Wheel tablet:</strong> Add entries to the wheel and spin for a weighted, crypto-RNG winner - drawn before the animation so the wheel is visually honest</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Winner modal:</strong> Spin again, remove the winner and respin, or copy the result as an image with the winner overlaid on the wheel</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>History and snapshots:</strong> Past spins are logged per tab, and entry lists can be saved as named snapshots and restored later</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Shareable links:</strong> Share wheels via link from the tablet or send text tabs straight in with Open in → Spin the Wheel</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Rota generator:</strong> Build a who's-on-when rota from the wheel's names - cycled or shuffled order, daily or weekly changes, optional weekend skipping - with a live preview and one-click copy as date-then-name lines</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Storage quick panel:</strong> Sidebar panel listing heaviest tabs by live size with a quota bar - click to navigate, bin to close</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Canvas quick transform:</strong> Search any pipeline operation from a text or code card, tweak params, and run it with the result placed as a linked card beside the source</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>CSV find and replace:</strong> Replace across the whole table, one column, or just the selected cells, with match case and whole cell options</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>CSV copy down:</strong> Right click any cell to copy its value into every cell below it in the same column, with full undo support</span></li>
             </ul>
 
-            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># improvements</h4>
+            <h4 class="text-white text-xs font-mono uppercase tracking-widest mb-3"># bug_fixes</h4>
             <ul class="space-y-2 mb-6">
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Canvas drop targeting:</strong> The global drop popup stays hidden over Canvas while dragging; the canvas highlights with a drop ring instead</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Cleaner image cards:</strong> Canvas image actions reveal on hover rather than covering the picture</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Honest storage errors:</strong> Real QuotaExceededError detection with a friendly message replaces the unreliable pre-flight estimate</span></li>
-              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Orphaned tab cleanup:</strong> Tabs whose workspace no longer exists are hard-deleted along with their canvas documents and unreferenced assets</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-500 mt-1">+</span> <span><strong>Pipeline menu with no selection:</strong> Right clicking with nothing selected now opens the pipeline with full tab content instead of an empty input</span></li>
             </ul>
+          </div>
+        </div>
+        <!-- Version 1.47.0 -->
+        <div class="changelog-entry release">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold text-white uppercase">V1.47.0</h2>
+              <span class="badge release">RELEASE</span>
+            </div>
+            <span class="text-gray-500 text-xs font-mono">08/25/2026</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-400 mb-4 font-mono">SPIN THE WHEEL + CANVAS & STORAGE POLISH</h3>
+          <div class="changelog-content text-gray-400 text-sm leading-relaxed">
+            <p>A new Spin the Wheel tablet for weighted random picks with history, snapshots, and shareable links - plus Canvas drag-drop polish and a Storage panel showing what's using space.</p>
           </div>
         </div>
         <!-- Version 1.46.0 -->
@@ -973,7 +981,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center space-x-3">
           <img src="https://scratchtabs.b-cdn.net/favicon-gray.svg" alt="Scratch Tabs" class="logo-size" />
-          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.47.0</span>
+          <span class="text-gray-400 font-mono text-sm">SCRATCH_TABS // v1.48.0</span>
         </div>
 
         <div class="flex space-x-8">

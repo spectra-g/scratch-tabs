@@ -3,8 +3,25 @@ config:
   max_versions: 100  # Maximum number of versions to display
 
 releases:
-  - version: "1.47.0"
+  - version: "1.48.0"
     type: "latest"
+    draft: false
+    date: "2026-09-03"
+    headline: "Canvas Quick Transform + CSV Find and Replace"
+    summary: "Run any pipeline operation right from a Canvas card, plus CSV find and replace and one-click copy down for faster table cleanup."
+    description: "Canvas cards can now run pipeline operations in place from a quick search dialog, with results landing as a linked card next to the source. CSV tables get a proper find and replace bar and a copy down action for filling columns fast. This update also fixes the pipeline menu opening empty when you right click with no text selected."
+    categories:
+      - name: "✨ New Features"
+        changes:
+          - "**Canvas quick transform:** Search any pipeline operation from a text or code card, tweak params, and run it with the result placed as a linked card beside the source"
+          - "**CSV find and replace:** Replace across the whole table, one column, or just the selected cells, with match case and whole cell options"
+          - "**CSV copy down:** Right click any cell to copy its value into every cell below it in the same column, with full undo support"
+      - name: "🐛 Bug Fixes"
+        changes:
+          - "**Pipeline menu with no selection:** Right clicking with nothing selected now opens the pipeline with full tab content instead of an empty input"
+
+  - version: "1.47.0"
+    type: "release"
     draft: false
     date: "2026-08-25"
     headline: "Spin the Wheel + Canvas & Storage Polish"
